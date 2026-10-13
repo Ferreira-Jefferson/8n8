@@ -258,13 +258,15 @@ T48 → T49
 
 **Done when**:
 
-- [ ] O arquivo tem exatamente `OPENROUTER_API_KEY=` e `CODE2N8N_MODEL=`, sem valor.
-- [ ] O arquivo entra no git: `git check-ignore .env.example` sai com código 1.
+- [x] O arquivo tem exatamente `OPENROUTER_API_KEY=` e `CODE2N8N_MODEL=`, sem valor.
+- [x] O arquivo entra no git: `git check-ignore .env.example` sai com código 1.
 
 **Tests**: none (config)
 **Gate**: build · `grep -cE '^(OPENROUTER_API_KEY|CODE2N8N_MODEL)=$' .env.example` imprime `2`
 
 **Commit**: `chore(repo): add env example with empty llm variables`
+
+**Status**: ✅ Complete
 
 ---
 
