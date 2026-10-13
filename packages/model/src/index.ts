@@ -1,9 +1,14 @@
 export type {
+  Claim,
+  ClaimId,
   ExplainRequest,
   ExplainResponse,
   Explanation,
+  ExternalEffect,
+  ReviewStatus,
   Severity,
   Suggestion,
+  UpdateReason,
 } from "./explanation";
 export type {
   EdgeKind,

@@ -147,14 +147,15 @@ T24 → T26
 
 **Done when**:
 
-- [ ] Os tipos batem com o bloco "Data Models" do design, campo a campo.
-- [ ] `index.ts` exporta `Claim`, `ClaimId`, `ReviewStatus`, `UpdateReason` e `ExternalEffect` só como tipos (sem `node:*`, AD-005).
-- [ ] Gate parcial da fase 1 passa.
+- [x] Os tipos batem com o bloco "Data Models" do design, campo a campo.
+- [x] `index.ts` exporta `Claim`, `ClaimId`, `ReviewStatus`, `UpdateReason` e `ExternalEffect` só como tipos (sem `node:*`, AD-005).
+- [x] Gate parcial da fase 1 passa.
 
 **Tests**: none (tipos)
 **Gate**: build (parcial) · `pnpm --filter @code2n8n/model --filter @code2n8n/extract-python typecheck && pnpm check && pnpm --filter @code2n8n/model --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(model)!: add claim-based explanation contract with review and update`
+**Status**: ✅ Complete
 
 ---
 
