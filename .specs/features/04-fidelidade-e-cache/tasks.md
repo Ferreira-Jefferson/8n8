@@ -547,17 +547,19 @@ T24 → T26
 
 **Done when**:
 
-- [ ] Independent Test P1: no grafo real da fixture `pedido_frete.py` (gerado com `@code2n8n/extract-python` no teste ou em JSON fixo), `fn:calcular_frete` dá `[{ callee: "requests.get", category: "HTTP", line: 5 }]`.
-- [ ] `fn:processar_pedido` dá `[]`.
-- [ ] Efeitos dentro de condição e laço (netos) entram; efeitos de outro nó não.
-- [ ] Uma classe lista os efeitos dos métodos.
-- [ ] A ordem segue `range.start`.
-- [ ] Gate passa.
+- [x] Independent Test P1: no grafo real da fixture `pedido_frete.py` (gerado com `@code2n8n/extract-python` no teste ou em JSON fixo), `fn:calcular_frete` dá `[{ callee: "requests.get", category: "HTTP", line: 5 }]`.
+- [x] `fn:processar_pedido` dá `[]`.
+- [x] Efeitos dentro de condição e laço (netos) entram; efeitos de outro nó não.
+- [x] Uma classe lista os efeitos dos métodos.
+- [x] A ordem segue `range.start`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): derive external effects of a node from the graph`
+
+**Status**: ✅ Complete
 
 ---
 
