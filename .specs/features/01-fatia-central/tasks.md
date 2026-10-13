@@ -563,14 +563,16 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Testes: `import requests` → `requests`; `import requests as r` → `r` vira `requests`; `from pathlib import Path` → `Path` vira `pathlib.Path`; `from smtplib import SMTP as S` → `S` vira `smtplib.SMTP`; `import os.path` → raiz `os`.
-- [ ] Teste: um `import` dentro de uma função também entra no mapa.
-- [ ] Gate passa. Test count: ≥ 6 testes.
+- [x] Testes: `import requests` → `requests`; `import requests as r` → `r` vira `requests`; `from pathlib import Path` → `Path` vira `pathlib.Path`; `from smtplib import SMTP as S` → `S` vira `smtplib.SMTP`; `import os.path` → raiz `os`.
+- [x] Teste: um `import` dentro de uma função também entra no mapa.
+- [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): map import aliases to full names`
+
+**Status**: ✅ Complete
 
 ---
 
