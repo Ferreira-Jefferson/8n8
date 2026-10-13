@@ -208,14 +208,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Os tipos batem com o bloco `project.ts` de C1.
-- [ ] `fileNodeOf`: de um passo dentro de uma função devolve o nó `file`; do próprio nó `file` devolve ele; de um nó `folder` devolve `undefined`; de um ID ausente devolve `undefined`; num grafo de trecho (sem nó `file`) devolve `undefined`.
-- [ ] Gate passa.
+- [x] Os tipos batem com o bloco `project.ts` de C1.
+- [x] `fileNodeOf`: de um passo dentro de uma função devolve o nó `file`; do próprio nó `file` devolve ele; de um nó `folder` devolve `undefined`; de um ID ausente devolve `undefined`; num grafo de trecho (sem nó `file`) devolve `undefined`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/model test`
 
 **Commit**: `feat(model): add the project contract and fileNodeOf`
+**Status**: ✅ Complete
 
 ---
 

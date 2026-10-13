@@ -23,3 +23,11 @@ export type {
 } from "./graph";
 export { childId, fileId, folderId, topLevelId } from "./ids";
 export { sliceLines, syntaxErrorLabel } from "./lines";
+export type {
+  IgnoredFile,
+  IgnoreReason,
+  ProjectExtractor,
+  ProjectResponse,
+  SourceFile,
+} from "./project";
+export { fileNodeOf } from "./project";
