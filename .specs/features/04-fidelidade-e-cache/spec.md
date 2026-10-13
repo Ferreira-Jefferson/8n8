@@ -25,6 +25,7 @@ Depende de: 01-fatia-central.
 **Deferred** (a feature funciona sem estes itens):
 
 - Observabilidade: log das frases cortadas pelo revisor, para medir a taxa de invenção. Adiado até ter volume de uso.
+- Limpeza dos arquivos de cache no formato da feature 01 (`<dir>/<chave>.json`), que ficam órfãos.
 - Limpeza de entradas de nós que não existem mais em nenhum trecho. Adiado porque cada nó já tem no máximo 1 entrada (CACHE-06).
 
 ---
@@ -36,6 +37,7 @@ Depende de: 01-fatia-central.
 | Camadas de revisão | Duas camadas: (1) checagens determinísticas no código, sem LLM; (2) um revisor LLM que julga frase a frase e dá as linhas de evidência | A camada 1 pega invenções baratas e certas, como números, unidades e identificadores. A camada 2 pega afirmações que nenhuma regra fixa detecta. | y |
 | Modelo do revisor | `CODE2N8N_REVIEW_MODEL`. Sem a variável, usa o mesmo modelo de `CODE2N8N_MODEL`. | O pedido é barato e não exige mais configuração. | n |
 | O que é "frase" | Cada frase do resumo, cada entrada, cada saída e cada sugestão (o comando e o motivo juntos) | São todos os textos do LLM que o usuário vê. | n |
+| Como as unidades casam | Unidades de uma letra (`g`, `t`, `m`, `l`, `s`, `h`) só contam logo depois de um número. As demais contam em qualquer lugar. A presença no código é checada por token inteiro, sem diferenciar maiúsculas, e identificadores são quebrados em `_` e na fronteira entre dígito e letra. Uma unidade de uma letra que aparece só dentro de uma palavra do código (`status`) não conta como presente. | Evita falso positivo em prosa comum e falso negativo por pedaço de texto. | y |
 | Unidades checadas na camada 1 | `kg`, `g`, `mg`, `t`, `km`, `m`, `cm`, `mm`, `l`, `ml`, `R$`, `US$`, `€`, `%`, `ms`, `s`, `seg`, `segundos`, `min`, `minutos`, `h`, `horas`, `dias`, `KB`, `MB`, `GB` | São as unidades mais comuns. A lista é extensível. | n |
 | Novas tentativas | No máximo 2 novos rascunhos, cada um com a lista de problemas encontrados | Mantém o custo limitado. | n |
 | Identidade do nó no cache | O ID estrutural do nó (AD-006), por exemplo `fn:calcular_frete` | É estável entre trechos. Se dois trechos têm o mesmo nome com código diferente, a impressão digital resolve a diferença. | n |
@@ -97,7 +99,7 @@ Depende de: 01-fatia-central.
 4. WHEN uma explicação é substituída pelo CACHE-03 THEN o sistema SHALL mostrar "Resumo atualizado: <motivo>", com o motivo sendo "o código mudou", "os vizinhos mudaram" ou "o modelo ou o prompt mudou" (vários motivos, separados por vírgula).  <!-- CACHE-04 -->
 5. WHEN o código do nó é igual mas está em outra posição do trecho THEN o sistema SHALL usar o cache e mostrar as linhas de evidência e de sugestão ajustadas à nova posição.  <!-- CACHE-05 -->
 6. The system SHALL manter no máximo uma entrada de cache por identidade de nó.  <!-- CACHE-06 -->
-7. IF a entrada de cache não pode ser lida ou está em formato antigo THEN o sistema SHALL tratá-la como ausente e gravar uma nova por cima.  <!-- CACHE-07 -->
+7. IF a entrada de cache do nó não pode ser lida ou está num formato de versão antiga THEN o sistema SHALL tratá-la como ausente e gravar uma nova no lugar dela. Os arquivos da feature 01, que ficam em outro caminho, nunca são lidos. Eles contam como ausentes e ficam no disco até a limpeza adiada.  <!-- CACHE-07 -->
 
 **Independent Test**: Abrir `calcular_frete` e gravar no cache. Renomear `processar_pedido` para `processar` e reabrir: deve aparecer "Resumo atualizado: os vizinhos mudaram". Inserir 3 linhas em branco antes de `calcular_frete` e reabrir: deve vir do cache, com as linhas de evidência 3 a mais.
 
