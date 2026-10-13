@@ -158,14 +158,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Os tipos batem com C1 campo a campo.
-- [ ] O stub de `host-guard.test.ts` (`{ language, extract }`) continua compilando sem mudança.
-- [ ] Build não-web passa. O typecheck de `apps/web` fica vermelho só em `StepNode.tsx` (`ICONS`), como previsto; T21 fecha.
+- [x] Os tipos batem com C1 campo a campo.
+- [x] O stub de `host-guard.test.ts` (`{ language, extract }`) continua compilando sem mudança.
+- [x] Build não-web passa. O typecheck de `apps/web` fica vermelho só em `StepNode.tsx` (`ICONS`), como previsto; T21 fecha.
 
 **Tests**: none (tipos)
 **Gate**: build (não-web)
 
 **Commit**: `feat(model): add folder, file and imports kinds to the graph contract`
+**Status**: ✅ Complete
 
 ---
 
