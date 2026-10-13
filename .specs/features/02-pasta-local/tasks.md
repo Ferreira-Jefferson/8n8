@@ -824,14 +824,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Lista vazia não desenha a seção.
-- [ ] Os quatro motivos geram os textos exatos acima, na ordem recebida, um `listitem` cada.
-- [ ] Gate passa.
+- [x] Lista vazia não desenha a seção.
+- [x] Os quatro motivos geram os textos exatos acima, na ordem recebida, um `listitem` cada.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): list ignored files with their reason`
+**Status**: ✅ Complete
 
 ---
 
