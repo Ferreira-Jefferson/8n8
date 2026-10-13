@@ -301,16 +301,17 @@ T24 → T26
 
 **Done when**:
 
-- [ ] Com `CODE2N8N_REVIEW_MODEL=r/x` devolve `r/x`.
-- [ ] Sem a variável devolve o mesmo que `resolveModel` (com e sem `CODE2N8N_MODEL`).
-- [ ] String vazia conta como ausente.
-- [ ] `model-env.test.ts` (feature 01): os testes atuais passam sem mudança.
-- [ ] Gate passa.
+- [x] Com `CODE2N8N_REVIEW_MODEL=r/x` devolve `r/x`.
+- [x] Sem a variável devolve o mesmo que `resolveModel` (com e sem `CODE2N8N_MODEL`).
+- [x] String vazia conta como ausente.
+- [x] `model-env.test.ts` (feature 01): os testes atuais passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): resolve the reviewer model with summary model fallback`
+**Status**: ✅ Complete
 
 ---
 
