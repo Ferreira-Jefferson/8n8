@@ -61,6 +61,52 @@
 - **Decision:** Uma visão deterministicamente derivada do `Graph`, como os efeitos externos de um nó, é uma função pura em `apps/web` sobre o `Graph` já carregado. Ela não entra na resposta de `/api/explain` e não cria outra rota.
 - **Consequence:** Essas listas aparecem sem chave de LLM e com o explain falhando. A web continua importando só tipos de `model`.
 
+### AD-011 — Decoradores no contrato do grafo
+- **Date:** 2026-10-13
+- **Context:** A feature 03 (GRAPH-05) precisa saber se uma função tem decorador, para tratá-la como ponto de entrada. Na feature 02 a web não tem o fonte de cada arquivo.
+- **Decision:** `FlowNode` ganha o campo `decorators?: string[]`, com o texto de cada decorador sem `@` e sem argumentos (ex.: `"app.route"`). O extrator preenche o campo em funções, métodos e classes decorados.
+- **Consequence:** O campo é aditivo e opcional, e outro `Extractor` preenche o mesmo campo. A web detecta pontos de entrada sem ler o texto do código.
+
+### AD-012 — Modo grafo: layout determinístico com d3-force, desenho com React Flow
+- **Date:** 2026-10-13
+- **Context:** Feature 03. Os testes E2E precisam de posições estáveis e de seletores no DOM.
+- **Decision:** O layout de forças é uma função pura em `apps/web` (`d3-force` 3.0.0, `.stop().tick(300)`, posições inteiras). O desenho usa o React Flow, que já está instalado. O modo (`flow`/`graph`) fica no `navReducer`, e trocar de modo nunca muda `nav.selected`.
+- **Consequence:** A mesma entrada gera o mesmo grafo, e os seletores do E2E servem para os dois modos. A escala para milhares de nós fica adiada.
+
+### AD-013 — IDs de projeto
+- **Date:** 2026-10-13
+- **Context:** Feature 02. A AD-006 previa um prefixo de arquivo nos IDs.
+- **Decision:**
+  - Formatos de ID:
+    - pastas: `dir:<rel>`;
+    - arquivos da raiz: ficam sob `dir:.`, rotulado "raiz";
+    - arquivos: `file:<rel>`;
+    - nós internos: `childId(fileId, <id do trecho>)`.
+  - `<rel>` é o caminho POSIX relativo à raiz.
+  - As entradas são ordenadas por unidade de código, nunca por `localeCompare`.
+  - Os IDs de trecho não mudam. `Graph.project` marca um grafo de projeto.
+- **Consequence:** IDs determinísticos entre execuções e sistemas operacionais. Refina a AD-006.
+
+### AD-014 — Pacote `input`
+- **Date:** 2026-10-13
+- **Decision:** O pacote `input` só lê o disco (API somente leitura, sem seguir links simbólicos) e só depende de `model`. Um `extract-*` recebe `SourceFile[]` e nunca toca no disco. A resolução de módulos é da linguagem. O `server` compõe `input` com `extract-*`.
+- **Consequence:** Trocar a fonte (por exemplo, um repositório remoto) afeta só o `input`.
+
+### AD-015 — Explicação de nó de projeto
+- **Date:** 2026-10-13
+- **Decision:**
+  - O cliente envia `{root,nodeId}`.
+  - A cada pedido, o servidor relê e reextrai a pasta, e nunca usa código vindo do cliente.
+  - A identidade no cache é `<raiz real POSIX>|<nodeId>`.
+  - Um vizinho de outro arquivo vai como `<caminho>:<rótulo>`.
+- **Consequence:** O servidor não guarda estado e nunca explica código velho. Uma sessão no servidor fica como plano B se reler a pasta ficar lento.
+
+### AD-016 — API local só aceita JSON
+- **Date:** 2026-10-13
+- **Context:** Um POST "simples" de outra página escapa da preflight do CORS, e a guarda de `Host` não cobre esse caso.
+- **Decision:** A API local recusa com 415 qualquer `content-type` diferente de `application/json`.
+- **Consequence:** Outras páginas não conseguem disparar a API sem preflight.
+
 ## Handoff
 
 *Pausado a pedido do usuário em 2026-10-13.*
