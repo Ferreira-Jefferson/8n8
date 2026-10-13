@@ -213,3 +213,68 @@ describe("extractProject: determinism and edge cases", () => {
     ).toThrow(/file:a\.py\/fn:y/);
   });
 });
+
+function importIds(graph: Graph): string[] {
+  return graph.edges
+    .filter((e) => e.kind === "imports")
+    .map((e) => e.id)
+    .sort();
+}
+
+describe("extractProject: imports wires (PROJ-03)", () => {
+  it("wires exactly the four imports of the fixture", async () => {
+    const graph = await projectOf(lojaFiles());
+
+    expect(importIds(graph)).toEqual(
+      [
+        "imports:file:main.py->file:pedidos/pedidos.py",
+        "imports:file:pedidos/pedidos.py->file:frete/__init__.py",
+        "imports:file:pedidos/pedidos.py->file:pedidos/itens.py",
+        "imports:file:frete/__init__.py->file:frete/calculo.py",
+      ].sort(),
+    );
+    expect(graph.edges).toContainEqual({
+      id: "imports:file:main.py->file:pedidos/pedidos.py",
+      kind: "imports",
+      source: "file:main.py",
+      target: "file:pedidos/pedidos.py",
+    });
+  });
+
+  it("wires from a import b to the submodule a/b.py", async () => {
+    const graph = await projectOf([
+      { path: "a/__init__.py", source: "" },
+      { path: "a/b.py", source: "def f():\n    pass\n" },
+      { path: "m.py", source: "from a import b\n" },
+    ]);
+
+    expect(importIds(graph)).toEqual(["imports:file:m.py->file:a/b.py"]);
+  });
+
+  it("wires from a import b to a/__init__.py when b is not a submodule", async () => {
+    const graph = await projectOf([
+      { path: "a/__init__.py", source: "def b():\n    pass\n" },
+      { path: "m.py", source: "from a import b\n" },
+    ]);
+
+    expect(importIds(graph)).toEqual(["imports:file:m.py->file:a/__init__.py"]);
+  });
+
+  it("wires nothing for a module outside the root or the file itself", async () => {
+    const graph = await projectOf([
+      { path: "m.py", source: "import os\nimport m\n" },
+    ]);
+
+    expect(importIds(graph)).toEqual([]);
+  });
+
+  it("wires two imports of the same file once", async () => {
+    const graph = await projectOf([
+      { path: "a/__init__.py", source: "" },
+      { path: "a/b.py", source: "def f():\n    pass\n" },
+      { path: "m.py", source: "import a.b\nfrom a.b import f\n" },
+    ]);
+
+    expect(importIds(graph)).toEqual(["imports:file:m.py->file:a/b.py"]);
+  });
+});

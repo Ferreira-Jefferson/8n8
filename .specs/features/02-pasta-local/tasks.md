@@ -531,16 +531,17 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Na fixture, os fios `imports` são exatamente quatro: `main.py → pedidos/pedidos.py`, `pedidos/pedidos.py → frete/__init__.py`, `pedidos/pedidos.py → pedidos/itens.py`, `frete/__init__.py → frete/calculo.py` (IDs com `file:`).
-- [ ] `from a import b` com `a/b.py` liga a `a/b.py`; sem submódulo, liga a `a/__init__.py`.
-- [ ] `import os` e um import do próprio módulo não geram fio.
-- [ ] Dois imports do mesmo destino geram um fio só.
-- [ ] Gate passa.
+- [x] Na fixture, os fios `imports` são exatamente quatro: `main.py → pedidos/pedidos.py`, `pedidos/pedidos.py → frete/__init__.py`, `pedidos/pedidos.py → pedidos/itens.py`, `frete/__init__.py → frete/calculo.py` (IDs com `file:`).
+- [x] `from a import b` com `a/b.py` liga a `a/b.py`; sem submódulo, liga a `a/__init__.py`.
+- [x] `import os` e um import do próprio módulo não geram fio.
+- [x] Dois imports do mesmo destino geram um fio só.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): wire imports between project files`
+**Status**: ✅ Complete
 
 ---
 

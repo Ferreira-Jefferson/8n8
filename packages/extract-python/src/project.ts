@@ -7,10 +7,17 @@ import {
   type NodeId,
   type SourceFile,
 } from "@code2n8n/model";
-import type { Parser, Tree } from "web-tree-sitter";
+import type { Node, Parser, Tree } from "web-tree-sitter";
 import { allocateTopLevel, buildGraph } from "./build-graph";
 import { markSyntaxErrors } from "./errors";
-import { buildModuleIndex, type ModuleIndex, resolveName } from "./modules";
+import {
+  absoluteName,
+  buildModuleIndex,
+  type ModuleEntry,
+  type ModuleIndex,
+  packageOf,
+  resolveName,
+} from "./modules";
 
 interface Parsed {
   file: SourceFile;
@@ -121,8 +128,67 @@ function layoutProject(graphs: Map<string, Graph>): FlowNode[] {
   return nodes;
 }
 
+/** Dotted names each import statement brings in (`a.b`, `.x`, `a` for `*`). */
+function importedNames(root: Node): string[] {
+  const names: string[] = [];
+  const statements = root.descendantsOfType([
+    "import_statement",
+    "import_from_statement",
+  ]);
+  for (const statement of statements) {
+    const module = statement.childForFieldName("module_name")?.text;
+    const imported = statement
+      .childrenForFieldName("name")
+      .map((n) => n.childForFieldName("name")?.text ?? n.text);
+    if (module === undefined) names.push(...imported);
+    else if (imported.length === 0) names.push(module);
+    else {
+      const joiner = module.endsWith(".") ? "" : ".";
+      names.push(...imported.map((n) => `${module}${joiner}${n}`));
+    }
+  }
+  return names;
+}
+
+/** The deepest project module named by a prefix of `name`, root first. */
+function deepestModule(
+  index: ModuleIndex,
+  callerPath: string,
+  name: string,
+): ModuleEntry | undefined {
+  const absolute = absoluteName(callerPath, name);
+  if (absolute === null) return undefined;
+  const pkg = packageOf(callerPath);
+  const candidates = pkg === "" ? [absolute] : [absolute, `${pkg}.${absolute}`];
+  for (const candidate of candidates) {
+    const segments = candidate.split(".");
+    for (let n = segments.length; n >= 1; n--) {
+      const entry = index.get(segments.slice(0, n).join("."));
+      if (entry !== undefined) return entry;
+    }
+  }
+  return undefined;
+}
+
+/** One `imports` wire per (file, file) pair (PROJ-03). */
+function importsEdges(parsed: Parsed[], index: ModuleIndex): FlowEdge[] {
+  const edges = new Map<string, FlowEdge>();
+  for (const { file, tree } of parsed) {
+    for (const name of importedNames(tree.rootNode)) {
+      const entry = deepestModule(index, file.path, name);
+      if (entry === undefined || entry.path === file.path) continue;
+      const source = fileId(file.path);
+      const target = fileId(entry.path);
+      const id = `imports:${source}->${target}`;
+      if (!edges.has(id))
+        edges.set(id, { id, kind: "imports", source, target });
+    }
+  }
+  return [...edges.values()];
+}
+
 /**
- * Builds the graph of a project (PROJ-02, 04, 09): one pass indexes the
+ * Builds the graph of a project (PROJ-02, 03, 04, 09): one pass indexes the
  * modules, a second builds each file under its `file:` prefix.
  */
 export function extractProject(parser: Parser, files: SourceFile[]): Graph {
@@ -149,7 +215,10 @@ export function extractProject(parser: Parser, files: SourceFile[]): Graph {
     );
 
     const nodes = layoutProject(graphs);
-    const edges: FlowEdge[] = [...graphs.values()].flatMap((g) => g.edges);
+    const edges: FlowEdge[] = [
+      ...[...graphs.values()].flatMap((g) => g.edges),
+      ...importsEdges(parsed, index),
+    ];
     const seen = new Set<NodeId>();
     for (const node of nodes) {
       if (seen.has(node.id)) throw new Error(`duplicate node id: ${node.id}`);
