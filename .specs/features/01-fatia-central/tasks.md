@@ -308,16 +308,18 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Começa com `import requests`.
-- [ ] Define `calcular_frete(...)` e `processar_pedido(...)` no nível superior.
-- [ ] `processar_pedido` tem um `for item in itens:` e chama `calcular_frete` no corpo do laço.
-- [ ] `calcular_frete`, nesta ordem: uma instrução com `requests.get(...)`; duas ou mais atribuições sem chamada; `if peso > 30:` com `else:`; cada ramo com um `return`.
-- [ ] É Python 3 válido (sem erro de sintaxe).
+- [x] Começa com `import requests`.
+- [x] Define `calcular_frete(...)` e `processar_pedido(...)` no nível superior.
+- [x] `processar_pedido` tem um `for item in itens:` e chama `calcular_frete` no corpo do laço.
+- [x] `calcular_frete`, nesta ordem: uma instrução com `requests.get(...)`; duas ou mais atribuições sem chamada; `if peso > 30:` com `else:`; cada ramo com um `return`.
+- [x] É Python 3 válido (sem erro de sintaxe).
 
 **Tests**: none (fixture de teste)
 **Gate**: build · `grep -nE "^import requests|def (processar_pedido|calcular_frete)|requests\.get|for item in itens|if peso > 30" packages/extract-python/src/__tests__/fixtures/pedido_frete.py` imprime 6 linhas
 
 **Commit**: `test(extract-python): add concept video fixture`
+
+**Status**: ✅ Complete
 
 ---
 
