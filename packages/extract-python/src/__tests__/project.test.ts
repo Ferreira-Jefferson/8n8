@@ -289,4 +289,15 @@ describe("extractProject: imports wires (PROJ-03)", () => {
       "imports:file:pedidos/a.py->file:pedidos/b.py",
     ]);
   });
+
+  it("wires a script-style import b through the caller's folder", async () => {
+    const graph = await projectOf([
+      { path: "scripts/a.py", source: "import b\n" },
+      { path: "scripts/b.py", source: "def f():\n    pass\n" },
+    ]);
+
+    expect(importIds(graph)).toEqual([
+      "imports:file:scripts/a.py->file:scripts/b.py",
+    ]);
+  });
 });
