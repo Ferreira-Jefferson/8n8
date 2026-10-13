@@ -419,19 +419,20 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `frete.calculo.calcular_frete` resolve para `file:frete/calculo.py/fn:calcular_frete`.
-- [ ] `frete.calcular_frete` resolve pelo alias de `frete/__init__.py` (`from .calculo import calcular_frete`) para o mesmo ID.
-- [ ] Dois `__init__.py` que se reexportam em ciclo devolvem `null`, sem laço infinito.
-- [ ] Relativo nível 1 e nível 2 resolvem; nível acima da raiz devolve `null`.
-- [ ] Fallback da pasta do script: `scripts/run.py` com `import util` resolve `util.f` para `file:scripts/util.py/fn:f`. Se `util.py` existir também na raiz, a raiz vence.
-- [ ] `mod.Classe.metodo` devolve `null`; módulo fora do índice (`os.path.join`) devolve `null`.
-- [ ] `from x import *` não cria alias: o nome não resolve.
-- [ ] Gate passa.
+- [x] `frete.calculo.calcular_frete` resolve para `file:frete/calculo.py/fn:calcular_frete`.
+- [x] `frete.calcular_frete` resolve pelo alias de `frete/__init__.py` (`from .calculo import calcular_frete`) para o mesmo ID.
+- [x] Dois `__init__.py` que se reexportam em ciclo devolvem `null`, sem laço infinito.
+- [x] Relativo nível 1 e nível 2 resolvem; nível acima da raiz devolve `null`.
+- [x] Fallback da pasta do script: `scripts/run.py` com `import util` resolve `util.f` para `file:scripts/util.py/fn:f`. Se `util.py` existir também na raiz, a raiz vence.
+- [x] `mod.Classe.metodo` devolve `null`; módulo fora do índice (`os.path.join`) devolve `null`.
+- [x] `from x import *` não cria alias: o nome não resolve.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): index project modules and resolve imported names`
+**Status**: ✅ Complete
 
 ---
 

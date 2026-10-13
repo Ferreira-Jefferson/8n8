@@ -1,5 +1,114 @@
 import { describe, expect, it } from "vitest";
-import { moduleNameOf, packageOf, relativeBase } from "../modules";
+import {
+  buildModuleIndex,
+  type ModuleIndex,
+  moduleNameOf,
+  packageOf,
+  relativeBase,
+  resolveName,
+} from "../modules";
+import { loadPythonParser } from "../parse";
+
+/** Index of in-memory files given as `path → source`. */
+async function indexOf(files: Record<string, string>): Promise<ModuleIndex> {
+  const parser = await loadPythonParser();
+  const parsed = Object.entries(files).map(([path, source]) => {
+    const tree = parser.parse(source);
+    if (!tree) throw new Error("parse failed");
+    return { path, root: tree.rootNode };
+  });
+  return buildModuleIndex(parsed);
+}
+
+const FRETE = {
+  "frete/__init__.py": "from .calculo import calcular_frete\n",
+  "frete/calculo.py": "def calcular_frete(peso):\n    return peso\n",
+};
+
+describe("resolveName", () => {
+  it("resolves a module path to its top-level def", async () => {
+    const index = await indexOf(FRETE);
+
+    expect(resolveName(index, "main.py", "frete.calculo.calcular_frete")).toBe(
+      "file:frete/calculo.py/fn:calcular_frete",
+    );
+  });
+
+  it("follows a re-export in __init__.py", async () => {
+    const index = await indexOf(FRETE);
+
+    expect(resolveName(index, "main.py", "frete.calcular_frete")).toBe(
+      "file:frete/calculo.py/fn:calcular_frete",
+    );
+  });
+
+  it("returns null on a re-export cycle", async () => {
+    const index = await indexOf({
+      "a/__init__.py": "from b import f\n",
+      "b/__init__.py": "from a import f\n",
+    });
+
+    expect(resolveName(index, "main.py", "a.f")).toBeNull();
+  });
+
+  it("resolves relative names at level 1 and 2, and not above the root", async () => {
+    const index = await indexOf({
+      "a/b/c.py": "",
+      "a/b/d.py": "def f():\n    pass\n",
+      "a/e.py": "def g():\n    pass\n",
+    });
+
+    expect(resolveName(index, "a/b/c.py", ".d.f")).toBe("file:a/b/d.py/fn:f");
+    expect(resolveName(index, "a/b/c.py", "..e.g")).toBe("file:a/e.py/fn:g");
+    expect(resolveName(index, "a/b/c.py", "...e.g")).toBeNull();
+  });
+
+  it("falls back to the caller's folder", async () => {
+    const index = await indexOf({
+      "scripts/run.py": "import util\n",
+      "scripts/util.py": "def f():\n    pass\n",
+    });
+
+    expect(resolveName(index, "scripts/run.py", "util.f")).toBe(
+      "file:scripts/util.py/fn:f",
+    );
+  });
+
+  it("prefers the root over the caller's folder", async () => {
+    const index = await indexOf({
+      "scripts/run.py": "import util\n",
+      "scripts/util.py": "def f():\n    pass\n",
+      "util.py": "def f():\n    pass\n",
+    });
+
+    expect(resolveName(index, "scripts/run.py", "util.f")).toBe(
+      "file:util.py/fn:f",
+    );
+  });
+
+  it("leaves a method of a class unresolved", async () => {
+    const index = await indexOf({
+      "mod.py": "class Classe:\n    def metodo(self):\n        pass\n",
+    });
+
+    expect(resolveName(index, "main.py", "mod.Classe.metodo")).toBeNull();
+  });
+
+  it("leaves a module outside the index unresolved", async () => {
+    const index = await indexOf(FRETE);
+
+    expect(resolveName(index, "main.py", "os.path.join")).toBeNull();
+  });
+
+  it("creates no alias for a star import", async () => {
+    const index = await indexOf({
+      ...FRETE,
+      "m.py": "from frete.calculo import *\n",
+    });
+
+    expect(resolveName(index, "main.py", "m.calcular_frete")).toBeNull();
+  });
+});
 
 describe("moduleNameOf", () => {
   it("joins the path segments with dots", () => {
