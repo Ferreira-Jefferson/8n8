@@ -601,13 +601,15 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `[5]` → `"L5"`; `[5,6,7]` → `"L5–7"` (U+2013); `[5,6,7,9]` → `"L5–7, L9"`; `[9,5]` → `"L5, L9"`; `[6,8]` → `"L6, L8"`.
-- [ ] Gate passa.
+- [x] `[5]` → `"L5"`; `[5,6,7]` → `"L5–7"` (U+2013); `[5,6,7,9]` → `"L5–7, L9"`; `[9,5]` → `"L5, L9"`; `[6,8]` → `"L6, L8"`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): format evidence lines as compact ranges`
+
+**Status**: ✅ Complete
 
 ---
 
