@@ -197,15 +197,16 @@ T24 → T26
 
 **Done when**:
 
-- [ ] Teste novo: o texto contém a regra das crases e a regra de números e unidades.
-- [ ] Teste novo: a versão muda quando o texto muda (dois PTS diferentes, duas versões).
-- [ ] `prompt.test.ts` (feature 01): os testes atuais passam sem mudança.
-- [ ] Gate passa.
+- [x] Teste novo: o texto contém a regra das crases e a regra de números e unidades.
+- [x] Teste novo: a versão muda quando o texto muda (dois PTS diferentes, duas versões).
+- [x] `prompt.test.ts` (feature 01): os testes atuais passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): ask for backticked identifiers and forbid absent numbers and units`
+**Status**: ✅ Complete
 
 ---
 

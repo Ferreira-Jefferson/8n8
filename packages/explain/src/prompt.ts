@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 
 const ROLE = `Você explica código Python para quem lê o fluxo de um programa.
 Você recebe um nó (função ou classe), os nomes dos nós que ele chama, os nomes dos nós que o chamam e o código do nó com as linhas numeradas de 1 a n.
-Explique só o que o código mostra. Não invente comportamento.`;
+Explique só o que o código mostra. Não invente comportamento.
+Cite entre crases cada identificador do código (variável, parâmetro, função, classe ou módulo), como \`peso\` ou \`requests.get\`.
+Não escreva número nem unidade (como kg, %, R$ ou segundos) que não aparece no código.`;
 
 const FORMAT = `Responda só com JSON válido, sem texto fora do JSON e sem cercas de código.
 O JSON tem estes campos:

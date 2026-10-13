@@ -48,4 +48,20 @@ describe("buildSystemPrompt (CORE-16, CORE-18)", () => {
       buildSystemPrompt("regra B").version,
     );
   });
+
+  it("asks for backticked identifiers and forbids absent numbers and units (FID-02, FID-03, FID-04)", () => {
+    const { text } = buildSystemPrompt(ptsRules);
+    expect(text).toContain(
+      "Cite entre crases cada identificador do código (variável, parâmetro, função, classe ou módulo), como `peso` ou `requests.get`.",
+    );
+    expect(text).toContain(
+      "Não escreva número nem unidade (como kg, %, R$ ou segundos) que não aparece no código.",
+    );
+  });
+
+  it("gives a new version once the text gains the new rules", () => {
+    // Version of the feature-01 prompt text for the same rules "regra A".
+    const featureOneVersion = "05b31dfd312b";
+    expect(buildSystemPrompt("regra A").version).not.toBe(featureOneVersion);
+  });
 });
