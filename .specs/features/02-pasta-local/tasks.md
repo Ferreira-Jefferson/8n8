@@ -311,20 +311,21 @@ T31 → T32
 
 **Done when**:
 
-- [ ] PROJ-01: numa árvore em `os.tmpdir()`, `.venv/lib/x.py`, `pkg/node_modules/y.py`, `a/dist/z.py`, `__pycache__/c.py` e `build/b.py` ficam fora de `files` e de `ignored`; `pedidos/itens.py` entra com `path` POSIX.
-- [ ] Ordem por código: `B.py` vem antes de `_x.py`, que vem antes de `a.py`.
-- [ ] `notas.txt` fica fora de `files` e de `ignored`.
-- [ ] PROJ-05: `not-found` para um caminho ausente e para o caminho de um arquivo.
-- [ ] PROJ-06: um `.py` de 1 048 577 bytes e um com `0xE9` aparecem em `ignored` com `too-large` e `not-utf8`, ordenados por `path`.
-- [ ] Uma junção (`fs.symlink(alvo, link, "junction")`) para uma pasta com `.py` é pulada.
-- [ ] `name` é o nome da pasta; `folderName("C:\\")` = `C:\`; `folderName("/")` = `/`.
-- [ ] PROJ-07: caminhos, tamanhos, `mtimeMs` e sha256 de cada arquivo da árvore são iguais antes e depois da leitura.
-- [ ] Gate passa.
+- [x] PROJ-01: numa árvore em `os.tmpdir()`, `.venv/lib/x.py`, `pkg/node_modules/y.py`, `a/dist/z.py`, `__pycache__/c.py` e `build/b.py` ficam fora de `files` e de `ignored`; `pedidos/itens.py` entra com `path` POSIX.
+- [x] Ordem por código: `B.py` vem antes de `_x.py`, que vem antes de `a.py`.
+- [x] `notas.txt` fica fora de `files` e de `ignored`.
+- [x] PROJ-05: `not-found` para um caminho ausente e para o caminho de um arquivo.
+- [x] PROJ-06: um `.py` de 1 048 577 bytes e um com `0xE9` aparecem em `ignored` com `too-large` e `not-utf8`, ordenados por `path`.
+- [x] Uma junção (`fs.symlink(alvo, link, "junction")`) para uma pasta com `.py` é pulada.
+- [x] `name` é o nome da pasta; `folderName("C:\\")` = `C:\`; `folderName("/")` = `/`.
+- [x] PROJ-07: caminhos, tamanhos, `mtimeMs` e sha256 de cada arquivo da árvore são iguais antes e depois da leitura.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/input test`
 
 **Commit**: `feat(input): walk a source folder skipping ignored dirs and links`
+**Status**: ✅ Complete
 
 ---
 
