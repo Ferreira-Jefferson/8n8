@@ -583,17 +583,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `project-route.test.ts` (novo, `readProject` falso): 200 devolve `{ name, graph, files, ignored }` igual ao falso; `readProject` recebe exatamente o `path` digitado.
-- [ ] PROJ-05: `not-found` vira `404 { error: "not-found", path: "./nao/existe" }`.
-- [ ] `{}`, `{ path: "" }` e `{ path: 42 }` dão 400.
-- [ ] PROJ-08: `Host: evil.example:4317` em `/api/project` dá 403 e o falso não roda.
-- [ ] `graph-route.test.ts`, `host-guard.test.ts` e `explain-route.test.ts` só ganham o stub `readProject: async () => ({ kind: "not-found" })` no `createApp`; nenhuma asserção muda.
-- [ ] Gate passa.
+- [x] `project-route.test.ts` (novo, `readProject` falso): 200 devolve `{ name, graph, files, ignored }` igual ao falso; `readProject` recebe exatamente o `path` digitado.
+- [x] PROJ-05: `not-found` vira `404 { error: "not-found", path: "./nao/existe" }`.
+- [x] `{}`, `{ path: "" }` e `{ path: 42 }` dão 400.
+- [x] PROJ-08: `Host: evil.example:4317` em `/api/project` dá 403 e o falso não roda.
+- [x] `graph-route.test.ts`, `host-guard.test.ts` e `explain-route.test.ts` só ganham o stub `readProject: async () => ({ kind: "not-found" })` no `createApp`; nenhuma asserção muda.
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): add the project route behind the host guard`
+**Status**: ✅ Complete
 
 ---
 

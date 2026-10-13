@@ -22,6 +22,7 @@ function setup(reply: ExplainResponse) {
       received.push(req);
       return reply;
     },
+    readProject: async () => ({ kind: "not-found" }),
     port: 4317,
   });
   const post = (body: unknown) =>

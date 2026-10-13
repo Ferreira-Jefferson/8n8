@@ -2,17 +2,24 @@ import {
   type ExplainRequest,
   type ExplainResponse,
   type Extractor,
+  type ProjectResponse,
   sliceLines,
 } from "@code2n8n/model";
 import { Hono } from "hono";
 import { z } from "zod";
 
+export type ProjectRead =
+  | { kind: "ok"; root: string; response: ProjectResponse }
+  | { kind: "not-found" };
+
 export interface AppDeps {
   extractor: Extractor;
   explain: (req: ExplainRequest) => Promise<ExplainResponse>;
+  readProject: (path: string) => Promise<ProjectRead>;
   port: number;
 }
 
+const projectBody = z.object({ path: z.string().min(1) });
 const graphBody = z.object({ source: z.string() });
 // Extra fields from the client (code, calls...) are dropped: the server builds the request (CORE-17).
 const explainBody = z.object({ source: z.string(), nodeId: z.string() });
@@ -32,6 +39,16 @@ export function createApp(deps: AppDeps): Hono {
     const body = graphBody.safeParse(await c.req.json().catch(() => null));
     if (!body.success) return c.json({ error: "invalid body" }, 400);
     return c.json({ graph: deps.extractor.extract(body.data.source) });
+  });
+
+  app.post("/api/project", async (c) => {
+    const body = projectBody.safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json({ error: "invalid body" }, 400);
+    const read = await deps.readProject(body.data.path);
+    if (read.kind === "not-found") {
+      return c.json({ error: "not-found", path: body.data.path }, 404);
+    }
+    return c.json(read.response);
   });
 
   app.post("/api/explain", async (c) => {

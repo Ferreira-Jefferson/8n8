@@ -71,6 +71,8 @@ async function main(): Promise<void> {
       ptsRules,
       cacheDir: join(repoRoot, ".cache/explain"),
     }),
+    // Placeholder until T20 composes the real reader.
+    readProject: async () => ({ kind: "not-found" }),
     port,
   });
   if (process.argv[2] === "start") {
