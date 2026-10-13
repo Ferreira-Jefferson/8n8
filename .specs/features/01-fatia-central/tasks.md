@@ -650,19 +650,21 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: os passos de uma função saem na ordem do código, com IDs `fn:x/s0`, `fn:x/s1`... e fios `next` entre passos seguidos (CORE-08).
-- [ ] Teste: três atribuições seguidas sem chamada viram um só nó `code`, rótulo "Código", com o intervalo de linhas delas (CORE-13).
-- [ ] Teste: um `return` sem chamada entra no grupo `code` anterior.
-- [ ] Teste: `y = calcular_frete(p)` vira `call` com `target: fn:calcular_frete` e `openable: true` (CORE-11).
-- [ ] Teste: `resp = requests.get(url)` vira `external` com `category: HTTP` e `callee: requests.get` (CORE-12).
-- [ ] Teste: uma chamada entre atribuições quebra o grupo em `code`, `call`, `code`.
-- [ ] Teste: os passos do `module` saem das instruções soltas; `import` não vira passo nem cria o `module` sozinho.
-- [ ] Gate passa. Test count: ≥ 7 testes novos; os de T19 continuam passando.
+- [x] Teste: os passos de uma função saem na ordem do código, com IDs `fn:x/s0`, `fn:x/s1`... e fios `next` entre passos seguidos (CORE-08).
+- [x] Teste: três atribuições seguidas sem chamada viram um só nó `code`, rótulo "Código", com o intervalo de linhas delas (CORE-13).
+- [x] Teste: um `return` sem chamada entra no grupo `code` anterior.
+- [x] Teste: `y = calcular_frete(p)` vira `call` com `target: fn:calcular_frete` e `openable: true` (CORE-11).
+- [x] Teste: `resp = requests.get(url)` vira `external` com `category: HTTP` e `callee: requests.get` (CORE-12).
+- [x] Teste: uma chamada entre atribuições quebra o grupo em `code`, `call`, `code`.
+- [x] Teste: os passos do `module` saem das instruções soltas; `import` não vira passo nem cria o `module` sozinho.
+- [x] Gate passa. Test count: ≥ 7 testes novos; os de T19 continuam passando.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): build linear steps with code grouping`
+
+**Status**: ✅ Complete
 
 ---
 

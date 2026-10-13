@@ -1,29 +1,25 @@
 import {
   childId,
+  type FlowEdge,
   type FlowNode,
   type Graph,
-  type LineRange,
   type NodeId,
   topLevelId,
 } from "@code2n8n/model";
 import type { Node, Tree } from "web-tree-sitter";
+import type { CallContext } from "./calls";
+import { importAliases } from "./imports";
+import { buildSteps, IGNORED, lineRange } from "./steps";
 
-/** Statements that never become steps and never create the module node. */
-const IGNORED = new Set([
-  "comment",
-  "import_statement",
-  "import_from_statement",
-  "future_import_statement",
-]);
+/** A contiguous run of nodes in pre-order, with the wires created inside it. */
+interface Chunk {
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+}
 
-/** 1-based, inclusive lines of a tree-sitter node. */
-export function lineRange(node: Node): LineRange {
-  const end = node.endPosition;
-  const endsAtLineStart = end.column === 0 && end.row > node.startPosition.row;
-  return {
-    start: node.startPosition.row + 1,
-    end: endsAtLineStart ? end.row : end.row + 1,
-  };
+interface Scope {
+  call: CallContext;
+  names: Map<NodeId, string>;
 }
 
 /** The `def` or `class` behind an optional decorator, or null. */
@@ -57,6 +53,52 @@ function bodyOf(def: Node): Node[] {
   return def.childForFieldName("body")?.namedChildren ?? [];
 }
 
+/** `head` (if any) followed by the steps of `body` under `parentId`. */
+function withSteps(
+  head: FlowNode | null,
+  body: Node[],
+  parentId: NodeId,
+  scope: Scope,
+): Chunk {
+  const chunk: Chunk = { nodes: head ? [head] : [], edges: [] };
+  buildSteps(body, parentId, { ...scope, ...chunk });
+  return chunk;
+}
+
+/**
+ * Lays out definitions in code order. The loose statements form one chunk,
+ * placed where the first of them appears.
+ */
+function layout(
+  statements: Node[],
+  onDefinition: (def: Node, outer: Node, index: number) => Chunk,
+  onLoose: (loose: Node[]) => Chunk,
+): Chunk[] {
+  const chunks: Chunk[] = [];
+  const loose: Node[] = [];
+  let looseAt = -1;
+  let defIndex = 0;
+  for (const statement of statements) {
+    if (IGNORED.has(statement.type)) continue;
+    const def = definitionOf(statement);
+    if (def === null) {
+      if (loose.length === 0) looseAt = chunks.length;
+      loose.push(statement);
+    } else {
+      chunks.push(onDefinition(def, statement, defIndex++));
+    }
+  }
+  if (loose.length > 0) chunks.splice(looseAt, 0, onLoose(loose));
+  return chunks;
+}
+
+function merge(chunks: Chunk[]): Chunk {
+  return {
+    nodes: chunks.flatMap((c) => c.nodes),
+    edges: chunks.flatMap((c) => c.edges),
+  };
+}
+
 function definitionNode(
   def: Node,
   outer: Node,
@@ -73,58 +115,100 @@ function definitionNode(
   };
 }
 
-function buildClass(def: Node, outer: Node, id: NodeId): FlowNode[] {
-  const nodes = [definitionNode(def, outer, id, null)];
-  const methodId = idAllocator();
-  for (const statement of bodyOf(def)) {
-    const method = definitionOf(statement);
-    if (method?.type === "function_definition") {
-      const mid = childId(id, methodId("function", nameOf(method)));
-      nodes.push(definitionNode(method, statement, mid, id));
-    }
-  }
-  return nodes;
+function buildFunction(
+  def: Node,
+  outer: Node,
+  id: NodeId,
+  parentId: NodeId | null,
+  scope: Scope,
+): Chunk {
+  const head = definitionNode(def, outer, id, parentId);
+  return withSteps(head, bodyOf(def), id, scope);
 }
 
-/** Builds the graph of a parsed snippet: top-level nodes first (CORE-01, 03, 07). */
-export function buildGraph(tree: Tree): Graph {
-  const chunks: FlowNode[][] = [];
-  const loose: Node[] = [];
-  let moduleAt = -1;
-  const topId = idAllocator();
+function buildClass(def: Node, outer: Node, id: NodeId, scope: Scope): Chunk {
+  const body = bodyOf(def);
+  const methodId = idAllocator();
+  const ids: NodeId[] = [];
+  const methods = new Map<string, NodeId>();
+  const names = new Map(scope.names);
+  for (const statement of body) {
+    const method = definitionOf(statement);
+    if (method === null) continue;
+    const name = nameOf(method);
+    const isMethod = method.type === "function_definition";
+    const mid = childId(id, methodId(isMethod ? "function" : "class", name));
+    ids.push(mid);
+    if (isMethod) methods.set(name, mid);
+    names.set(mid, name);
+  }
+  const inner: Scope = { call: { ...scope.call, methods }, names };
 
-  for (const statement of tree.rootNode.namedChildren) {
+  const children = layout(
+    body,
+    (method, outer, index) =>
+      buildFunction(method, outer, ids[index] ?? "", id, inner),
+    (loose) => withSteps(null, loose, id, inner),
+  );
+  return merge([
+    { nodes: [definitionNode(def, outer, id, null)], edges: [] },
+    ...children,
+  ]);
+}
+
+/** Builds the graph of a parsed snippet (CORE-01, 03, 07, 08). */
+export function buildGraph(tree: Tree): Graph {
+  const statements = tree.rootNode.namedChildren;
+  const topId = idAllocator();
+  const ids: NodeId[] = [];
+  const topLevel = new Map<string, NodeId>();
+  const names = new Map<NodeId, string>();
+  for (const statement of statements) {
     if (IGNORED.has(statement.type)) continue;
     const def = definitionOf(statement);
-    if (def === null) {
-      if (loose.length === 0) moduleAt = chunks.length;
-      loose.push(statement);
-    } else if (def.type === "class_definition") {
-      chunks.push(buildClass(def, statement, topId("class", nameOf(def))));
-    } else {
-      const id = topId("function", nameOf(def));
-      chunks.push([definitionNode(def, statement, id, null)]);
-    }
+    if (def === null) continue;
+    const name = nameOf(def);
+    const kind = def.type === "class_definition" ? "class" : "function";
+    const id = topId(kind, name);
+    ids.push(id);
+    topLevel.set(name, id);
+    names.set(id, name);
   }
+  const scope: Scope = {
+    call: {
+      topLevel,
+      methods: new Map(),
+      aliases: importAliases(tree.rootNode),
+    },
+    names,
+  };
 
-  const first = loose[0];
-  const last = loose[loose.length - 1];
-  if (first && last) {
-    chunks.splice(moduleAt, 0, [
-      {
-        id: "mod",
-        kind: "module",
-        label: "Módulo",
-        parentId: null,
-        range: {
-          start: lineRange(first).start,
-          end: lineRange(last).end,
-        },
-        openable: true,
+  const { nodes, edges } = merge(
+    layout(
+      statements,
+      (def, outer, index) => {
+        const id = ids[index] ?? "";
+        return def.type === "class_definition"
+          ? buildClass(def, outer, id, scope)
+          : buildFunction(def, outer, id, null, scope);
       },
-    ]);
-  }
-
-  const nodes = chunks.flat();
-  return { language: "python", empty: nodes.length === 0, nodes, edges: [] };
+      (loose) => {
+        const first = loose[0];
+        const last = loose[loose.length - 1];
+        const head: FlowNode = {
+          id: "mod",
+          kind: "module",
+          label: "Módulo",
+          parentId: null,
+          range: {
+            start: first ? lineRange(first).start : 1,
+            end: last ? lineRange(last).end : 1,
+          },
+          openable: true,
+        };
+        return withSteps(head, loose, "mod", scope);
+      },
+    ),
+  );
+  return { language: "python", empty: nodes.length === 0, nodes, edges };
 }
