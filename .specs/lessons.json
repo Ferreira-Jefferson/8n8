@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 7,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "ac_gap::classify an external call by its final attribute even when the receiver is a call or subscript not only when the callee is a plain dotted name",
+      "text": "Classify an external call by its final attribute even when the receiver is a call or subscript, not only when the callee is a plain dotted name.",
+      "signal": "ac_gap",
+      "scope": "extract-python",
+      "status": "candidate",
+      "features": [
+        "01-fatia-central"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CORE-12 / packages/extract-python/src/calls.ts:19 (extract-python)"
+      ],
+      "created": "2026-10-13T17:30:04Z",
+      "last_seen": "2026-10-13T17:30:04Z"
+    },
+    {
+      "id": "L-002",
+      "key": "ac_gap::cover each cpython syntax error class with a fixture including empty indented blocks that tree sitter recovers without error or missing nodes",
+      "text": "Cover each CPython syntax-error class with a fixture, including empty indented blocks that tree-sitter recovers without ERROR or MISSING nodes.",
+      "signal": "ac_gap",
+      "scope": "extract-python",
+      "status": "candidate",
+      "features": [
+        "01-fatia-central"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CORE-06 / packages/extract-python/src/errors.ts:27 (extract-python)"
+      ],
+      "created": "2026-10-13T17:30:04Z",
+      "last_seen": "2026-10-13T17:30:04Z"
+    },
+    {
+      "id": "L-003",
+      "key": "spec_precision_gap::state how a classification table entry matches whole segment or substring and which receiver shapes when the spec lists text fragments like execute",
+      "text": "State how a classification table entry matches (whole segment or substring, and which receiver shapes) when the spec lists text fragments like .execute(.",
+      "signal": "spec_precision_gap",
+      "scope": "extract-python",
+      "status": "candidate",
+      "features": [
+        "01-fatia-central"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CORE-12 SP-2 (extract-python)"
+      ],
+      "created": "2026-10-13T17:30:04Z",
+      "last_seen": "2026-10-13T17:30:04Z"
+    },
+    {
+      "id": "L-004",
+      "key": "spec_precision_gap::put every input sent to the llm into the explanation cache key or state in the spec which inputs are deliberately left out",
+      "text": "Put every input sent to the LLM into the explanation cache key, or state in the spec which inputs are deliberately left out.",
+      "signal": "spec_precision_gap",
+      "scope": "explain",
+      "status": "candidate",
+      "features": [
+        "01-fatia-central"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CORE-17 x CORE-18 SP-3 / packages/explain/src/explain.ts:53 (explain)"
+      ],
+      "created": "2026-10-13T17:30:04Z",
+      "last_seen": "2026-10-13T17:30:04Z"
+    },
+    {
+      "id": "L-005",
+      "key": "spec_deviation::validate llm suggestion lines as plain integers and filter the range afterwards so one bad line drops a suggestion instead of the whole answer",
+      "text": "Validate LLM suggestion lines as plain integers and filter the range afterwards, so one bad line drops a suggestion instead of the whole answer.",
+      "signal": "spec_deviation",
+      "scope": "explain",
+      "status": "candidate",
+      "features": [
+        "01-fatia-central"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPEC_DEVIATION packages/explain/src/schema.ts:14 (explain)"
+      ],
+      "created": "2026-10-13T17:30:04Z",
+      "last_seen": "2026-10-13T17:30:04Z"
+    },
+    {
+      "id": "L-006",
+      "key": "spec_deviation::compare tree sitter error recovery against cpython for every syntax error class before relying on error and missing nodes alone",
+      "text": "Compare tree-sitter error recovery against CPython for every syntax-error class before relying on ERROR and MISSING nodes alone.",
+      "signal": "spec_deviation",
+      "scope": "extract-python",
+      "status": "candidate",
+      "features": [
+        "01-fatia-central"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SPEC_DEVIATION packages/extract-python/src/errors.ts:23 (extract-python)"
+      ],
+      "created": "2026-10-13T17:30:04Z",
+      "last_seen": "2026-10-13T17:30:04Z"
+    }
+  ]
+}
