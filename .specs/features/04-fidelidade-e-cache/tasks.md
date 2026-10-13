@@ -745,14 +745,16 @@ Roteiro, decidido pelo conteúdo do pedido:
 
 **Done when**:
 
-- [ ] `pnpm typecheck` passa (inclui `tsc -p e2e`).
-- [ ] Smoke manual: `tsx e2e/fake-llm.ts` sobe; um POST com o rascunho de `calcular_frete` devolve o JSON acima; `GET /__log` mostra 1 chamada `draft`; `POST /__reset` zera.
-- [ ] Nenhum pacote importa o arquivo (`pnpm check` passa).
+- [x] `pnpm typecheck` passa (inclui `tsc -p e2e`).
+- [x] Smoke manual: `tsx e2e/fake-llm.ts` sobe; um POST com o rascunho de `calcular_frete` devolve o JSON acima; `GET /__log` mostra 1 chamada `draft`; `POST /__reset` zera.
+- [x] Nenhum pacote importa o arquivo (`pnpm check` passa).
 
 **Tests**: none (infra de E2E; exercitada por T25 e T26)
 **Gate**: build · `pnpm typecheck && pnpm check`
 
 **Commit**: `test(e2e): add scripted fake openai-compatible llm server`
+
+**Status**: ✅ Complete
 
 ---
 
