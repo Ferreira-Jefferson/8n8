@@ -209,14 +209,16 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Usa `assist` no lugar de `organizeImports` e `files.includes` no lugar de `files.ignore`.
-- [ ] Ignora `.specs/`, `.cache/`, `dist/` e `node_modules/`.
-- [ ] `pnpm exec biome check .` termina com código 0.
+- [x] Usa `assist` no lugar de `organizeImports` e `files.includes` no lugar de `files.ignore`.
+- [x] Ignora `.specs/`, `.cache/`, `dist/` e `node_modules/`.
+- [x] `pnpm exec biome check .` termina com código 0.
 
 **Tests**: none (config)
 **Gate**: build · `pnpm exec biome check .`
 
 **Commit**: `chore(repo): add biome 2 config ported from roadmap`
+
+**Status**: ✅ Complete
 
 ---
 
