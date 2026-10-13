@@ -930,15 +930,17 @@ T31 → T32
 
 **Done when**:
 
-- [ ] No grafo `loja`, abrir `pedidos › pedidos.py › processar_pedido` e dar duplo clique no passo `calcular_frete` deixa o breadcrumb exatamente `loja › frete › calculo.py › calcular_frete`.
-- [ ] Um `call` para uma função do mesmo arquivo empilha (o caminho cresce em um).
-- [ ] Os testes de navegação do trecho em `App.test.tsx` passam sem mudança.
-- [ ] Build (web) passa (fim das fases 6 e 7).
+- [x] No grafo `loja`, abrir `pedidos › pedidos.py › processar_pedido` e dar duplo clique no passo `calcular_frete` deixa o breadcrumb exatamente `loja › frete › calculo.py › calcular_frete`.
+- [x] Um `call` para uma função do mesmo arquivo empilha (o caminho cresce em um).
+- [x] Os testes de navegação do trecho em `App.test.tsx` passam sem mudança.
+- [x] Build (web) passa (fim das fases 6 e 7).
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): jump across files when opening a project call`
+
+**Status**: ✅ Complete
 
 ---
 

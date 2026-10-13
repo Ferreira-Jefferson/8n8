@@ -325,3 +325,100 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     );
   });
 });
+
+function lojaNode(id: string): FlowNode {
+  const n = lojaGraph.nodes.find((x) => x.id === id);
+  if (!n) throw new Error(`no node ${id}`);
+  return n;
+}
+
+describe("App calls in a project (PROJ-04)", () => {
+  it("jumps to the called function's file when the call goes to another file", async () => {
+    projectMock.mockResolvedValue(loja);
+    render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    for (const id of [
+      "dir:pedidos",
+      "file:pedidos/pedidos.py",
+      "file:pedidos/pedidos.py/fn:processar_pedido",
+    ]) {
+      act(() => currentCanvas().onOpen(lojaNode(id)));
+    }
+    expect(breadcrumbItems()).toEqual([
+      "loja",
+      "pedidos",
+      "pedidos.py",
+      "processar_pedido",
+    ]);
+    act(() =>
+      currentCanvas().onOpen(
+        lojaNode("file:pedidos/pedidos.py/fn:processar_pedido/s1"),
+      ),
+    );
+    expect(breadcrumbItems()).toEqual([
+      "loja",
+      "frete",
+      "calculo.py",
+      "calcular_frete",
+    ]);
+    expect(currentCanvas().levelId).toBe(
+      "file:frete/calculo.py/fn:calcular_frete",
+    );
+  });
+
+  it("stacks a call to a function of the same file, like a snippet", async () => {
+    const node = (n: Partial<FlowNode> & Pick<FlowNode, "id" | "kind">) =>
+      ({
+        label: n.id,
+        parentId: null,
+        range: { start: 1, end: 1 },
+        openable: true,
+        ...n,
+      }) as FlowNode;
+    const sameFile: Graph = {
+      language: "python",
+      empty: false,
+      project: { name: "p" },
+      edges: [],
+      nodes: [
+        node({ id: "file:a.py", kind: "file", label: "a.py", path: "a.py" }),
+        node({
+          id: "file:a.py/fn:f",
+          kind: "function",
+          label: "f",
+          parentId: "file:a.py",
+        }),
+        node({
+          id: "file:a.py/fn:g",
+          kind: "function",
+          label: "g",
+          parentId: "file:a.py",
+        }),
+        node({
+          id: "file:a.py/fn:f/s0",
+          kind: "call",
+          label: "g",
+          parentId: "file:a.py/fn:f",
+          target: "file:a.py/fn:g",
+        }),
+      ],
+    };
+    projectMock.mockResolvedValue({
+      name: "p",
+      graph: sameFile,
+      files: [],
+      ignored: [],
+    });
+    render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    const byId = (id: string) =>
+      sameFile.nodes.find((n) => n.id === id) as FlowNode;
+    act(() => currentCanvas().onOpen(byId("file:a.py")));
+    act(() => currentCanvas().onOpen(byId("file:a.py/fn:f")));
+    expect(breadcrumbItems()).toEqual(["p", "a.py", "f"]);
+    act(() => currentCanvas().onOpen(byId("file:a.py/fn:f/s0")));
+    expect(breadcrumbItems()).toEqual(["p", "a.py", "f", "g"]);
+  });
+});

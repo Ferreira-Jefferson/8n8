@@ -10,7 +10,12 @@ import { useCallback, useMemo, useReducer, useState } from "react";
 import { type ExplainOrigin, fetchGraph, fetchProject } from "./api";
 import { FlowCanvas } from "./flow/FlowCanvas";
 import { Breadcrumb } from "./nav/Breadcrumb";
-import { initialNav, navReducer } from "./nav/navigation";
+import {
+  ancestry,
+  initialNav,
+  type NavAction,
+  navReducer,
+} from "./nav/navigation";
 import { DetailPanel } from "./panel/DetailPanel";
 import { externalEffects } from "./panel/effects";
 import { IgnoredFiles } from "./panel/IgnoredFiles";
@@ -41,6 +46,19 @@ function panelInput(mapped: Mapped, node: FlowNode): PanelInput {
     origin: { root: mapped.root },
     filePath,
   };
+}
+
+/** A call into another file of a project jumps to the target's ancestry; anything else stacks (PROJ-04). */
+function openAction(graph: Graph, node: FlowNode): NavAction {
+  const target = node.kind === "call" ? node.target : undefined;
+  if (
+    graph.project &&
+    target !== undefined &&
+    fileNodeOf(graph, target) !== fileNodeOf(graph, node.id)
+  ) {
+    return { type: "jump", path: ancestry(graph, target) };
+  }
+  return { type: "open", node };
 }
 
 /** Paste a snippet or open a local folder, see one level of its map, drill down and read a node's detail. */
@@ -154,7 +172,7 @@ export function App() {
                 levelId={levelId}
                 suggestionCounts={suggestionCounts}
                 onSelect={(id) => dispatch({ type: "select", id })}
-                onOpen={(node) => dispatch({ type: "open", node })}
+                onOpen={(node) => dispatch(openAction(graph, node))}
               />
             </div>
           </>
