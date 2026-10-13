@@ -336,13 +336,15 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Os tipos batem campo a campo com o design, inclusive `openable`, `target`, `callee`, `category`, `syntaxError` e `empty`.
-- [ ] Sem I/O e sem imports.
+- [x] Os tipos batem campo a campo com o design, inclusive `openable`, `target`, `callee`, `category`, `syntaxError` e `empty`.
+- [x] Sem I/O e sem imports.
 
 **Tests**: none (tipos)
 **Gate**: build · `pnpm --filter @code2n8n/model typecheck && pnpm check`
 
 **Commit**: `feat(model): add graph types and Extractor contract`
+
+**Status**: ✅ Complete
 
 ---
 
