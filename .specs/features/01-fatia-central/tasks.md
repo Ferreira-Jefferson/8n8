@@ -458,13 +458,15 @@ T48 → T49
 
 **Done when**:
 
-- [ ] O `index.ts` só reexporta. Nada novo é definido nele.
-- [ ] Build gate passa.
+- [x] O `index.ts` só reexporta. Nada novo é definido nele.
+- [x] Build gate passa.
 
 **Tests**: none (barrel)
 **Gate**: build · `pnpm typecheck && pnpm check && pnpm test`
 
 **Commit**: `feat(model): expose public api from index`
+
+**Status**: ✅ Complete
 
 ---
 
