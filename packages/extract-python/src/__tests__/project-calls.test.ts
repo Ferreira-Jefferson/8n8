@@ -78,6 +78,15 @@ describe("resolveCall: project names without an import (PROJ-09)", () => {
     });
   });
 
+  it("gives no call to a dotted project path whose module was never imported", async () => {
+    // `frete.calcular_frete` would resolve, but the file has no `import frete`.
+    const source = "x = frete.calcular_frete(x)\n";
+
+    expect(
+      await resolveAt(source, 1, { ...options, resolveImport: hit }),
+    ).toBeNull();
+  });
+
   it("still gives no step for a name outside the project", async () => {
     expect(await resolveAt("print(x)\n", 1, options)).toBeNull();
   });
