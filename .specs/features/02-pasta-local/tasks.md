@@ -259,14 +259,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `pnpm check` passa.
-- [ ] Prova manual (não comprometida): um `import "@code2n8n/extract-python"` em `packages/input/src/index.ts` faz `pnpm check` falhar citando `input-only-model`. O import é revertido.
-- [ ] Build não-web passa.
+- [x] `pnpm check` passa.
+- [x] Prova manual (não comprometida): um `import "@code2n8n/extract-python"` em `packages/input/src/index.ts` faz `pnpm check` falhar citando `input-only-model`. O import é revertido.
+- [x] Build não-web passa.
 
 **Tests**: none (config)
 **Gate**: build (não-web)
 
 **Commit**: `build(deps): restrict the input package to model imports`
+**Status**: ✅ Complete
 
 ---
 
