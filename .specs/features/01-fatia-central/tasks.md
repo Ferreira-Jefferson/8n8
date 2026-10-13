@@ -904,18 +904,20 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: JSON puro e JSON dentro de cercas ```` ```json ```` são lidos igual.
-- [ ] Teste: texto que não é JSON → lança erro.
-- [ ] Teste: JSON fora do schema (sem `summary`, `severity` inválida, `line` não inteira) → lança erro.
-- [ ] Teste (CORE-22): com `lineCount = 4`, sugestões com `line` 0 e 5 somem; `line` 1 e 4 ficam.
-- [ ] Teste: 7 sugestões válidas → ficam as 5 primeiras, na ordem.
-- [ ] Teste: 0 sugestões é aceito.
-- [ ] Gate passa. Test count: ≥ 6 testes.
+- [x] Teste: JSON puro e JSON dentro de cercas ```` ```json ```` são lidos igual.
+- [x] Teste: texto que não é JSON → lança erro.
+- [x] Teste: JSON fora do schema (sem `summary`, `severity` inválida, `line` não inteira) → lança erro.
+- [x] Teste (CORE-22): com `lineCount = 4`, sugestões com `line` 0 e 5 somem; `line` 1 e 4 ficam.
+- [x] Teste: 7 sugestões válidas → ficam as 5 primeiras, na ordem.
+- [x] Teste: 0 sugestões é aceito.
+- [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): parse llm json and drop out-of-range suggestions`
+
+**Status**: ✅ Complete
 
 ---
 
