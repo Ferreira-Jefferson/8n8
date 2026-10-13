@@ -448,17 +448,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Com `resolveImport` que acerta, `calcular_frete(x)` importado vira `call` com o `target` do resolvedor e `label` `calcular_frete`.
-- [ ] Com `resolveImport` que erra, o resultado é o `external` de hoje.
-- [ ] `calcular_frete()` sem import e com `projectNames = {"calcular_frete"}` vira `external` `EXTERNO` com `callee` `calcular_frete`; `print(x)` continua sem passo.
-- [ ] Na mesma instrução, `requests.get(u)` antes de uma chamada de projeto resolvida: a chamada de projeto vence (regra "chamada vence externo").
-- [ ] `calls.test.ts` e `steps.test.ts` (feature 01): os testes atuais passam sem mudança (sem as opções, a saída é a de hoje).
-- [ ] Gate passa.
+- [x] Com `resolveImport` que acerta, `calcular_frete(x)` importado vira `call` com o `target` do resolvedor e `label` `calcular_frete`.
+- [x] Com `resolveImport` que erra, o resultado é o `external` de hoje.
+- [x] `calcular_frete()` sem import e com `projectNames = {"calcular_frete"}` vira `external` `EXTERNO` com `callee` `calcular_frete`; `print(x)` continua sem passo.
+- [x] Na mesma instrução, `requests.get(u)` antes de uma chamada de projeto resolvida: a chamada de projeto vence (regra "chamada vence externo").
+- [x] `calls.test.ts` e `steps.test.ts` (feature 01): os testes atuais passam sem mudança (sem as opções, a saída é a de hoje).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): resolve project calls through imports and flag unimported project names`
+**Status**: ✅ Complete
 
 ---
 

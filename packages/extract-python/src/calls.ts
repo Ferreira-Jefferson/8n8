@@ -9,10 +9,14 @@ export interface CallContext {
   methods: Map<string, NodeId>;
   /** Local import names to full names (see `importAliases`). */
   aliases: Map<string, string>;
+  /** Project node behind an imported full name, or null (PROJ-04). */
+  resolveImport?: (fullName: string) => NodeId | null;
+  /** Top-level names defined anywhere in the project (PROJ-09). */
+  projectNames?: Set<string>;
 }
 
 export type CallResolution =
-  | { kind: "call"; target: NodeId }
+  | { kind: "call"; target: NodeId; label?: string }
   | { kind: "external"; callee: string; category: ExternalCategory };
 
 /** `a`, `a.b`, `a.b.c`...; null when the expression is not a plain dotted name. */
@@ -54,8 +58,18 @@ function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
 
   const imported = ctx.aliases.get(head);
   const callee = imported === undefined ? name : [imported, ...rest].join(".");
+  if (imported !== undefined) {
+    const target = ctx.resolveImport?.(callee) ?? null;
+    if (target !== null) return { kind: "call", target, label: name };
+  }
   const category = classify(callee);
-  if (imported === undefined && category === "EXTERNO") return null;
+  if (imported === undefined && category === "EXTERNO") {
+    // A project name used without an import is not resolved (PROJ-09).
+    if (rest.length === 0 && ctx.projectNames?.has(name)) {
+      return { kind: "external", callee, category };
+    }
+    return null;
+  }
   return { kind: "external", callee, category };
 }
 

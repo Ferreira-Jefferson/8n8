@@ -204,7 +204,8 @@ function sequence(
     if (resolved.kind === "call") {
       place({
         kind: "call",
-        label: ctx.names.get(resolved.target) ?? resolved.target,
+        label:
+          resolved.label ?? ctx.names.get(resolved.target) ?? resolved.target,
         range: lineRange(statement),
         openable: true,
         target: resolved.target,
