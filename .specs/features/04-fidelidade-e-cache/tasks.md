@@ -495,16 +495,17 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `main.test.ts` (feature 01) migra assim: o `req` ganha `nodeId`; o cliente falso responde rascunho ou veredictos conforme o prompt de sistema; "factory chamada uma vez com a chave", CORE-19 (`no-key` sem cliente), CORE-21 (o modelo chega ao pedido do rascunho) e "o prompt de sistema traz o PTS" continuam com as mesmas asserções, agora sobre o pedido do rascunho.
-- [ ] FID-15: com `CODE2N8N_REVIEW_MODEL=r/x`, o pedido do revisor usa `r/x` e o do rascunho usa o modelo do resumo; sem ela, os dois usam o mesmo modelo.
-- [ ] Com `OPENROUTER_BASE_URL=http://127.0.0.1:9/v1`, `createClient` recebe essa URL; sem ela ou vazia, recebe `undefined` (o cliente usa o padrão de T8).
-- [ ] Com `CODE2N8N_CACHE_DIR=<tmp>/x`, a entrada é gravada em `<tmp>/x/nodes/`; sem ela, em `deps.cacheDir`.
-- [ ] Gate passa.
+- [x] `main.test.ts` (feature 01) migra assim: o `req` ganha `nodeId`; o cliente falso responde rascunho ou veredictos conforme o prompt de sistema; "factory chamada uma vez com a chave", CORE-19 (`no-key` sem cliente), CORE-21 (o modelo chega ao pedido do rascunho) e "o prompt de sistema traz o PTS" continuam com as mesmas asserções, agora sobre o pedido do rascunho.
+- [x] FID-15: com `CODE2N8N_REVIEW_MODEL=r/x`, o pedido do revisor usa `r/x` e o do rascunho usa o modelo do resumo; sem ela, os dois usam o mesmo modelo.
+- [x] Com `OPENROUTER_BASE_URL=http://127.0.0.1:9/v1`, `createClient` recebe essa URL; sem ela ou vazia, recebe `undefined` (o cliente usa o padrão de T8).
+- [x] Com `CODE2N8N_CACHE_DIR=<tmp>/x`, a entrada é gravada em `<tmp>/x/nodes/`; sem ela, em `deps.cacheDir`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): wire reviewer model, base url and cache dir from env`
+**Status**: ✅ Complete
 
 ---
 

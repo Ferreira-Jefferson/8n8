@@ -2,12 +2,14 @@ import { readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
+  buildReviewerPrompt,
   buildSystemPrompt,
   createDiskCache,
   createOpenRouterClient,
   explainNode,
   type LlmClient,
   resolveModel,
+  resolveReviewModel,
 } from "@code2n8n/explain";
 import { createPythonExtractor } from "@code2n8n/extract-python";
 import type { ExplainRequest, ExplainResponse } from "@code2n8n/model";
@@ -19,22 +21,27 @@ const PORT = 4317;
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 export interface ComposeDeps {
-  createClient: (apiKey: string) => LlmClient;
+  /** `baseURL` is undefined when OPENROUTER_BASE_URL is unset or empty. */
+  createClient: (apiKey: string, baseURL: string | undefined) => LlmClient;
   ptsRules: string;
   cacheDir: string;
 }
 
-/** Wires explainNode: the client exists only when OPENROUTER_API_KEY is set (CORE-19, CORE-21). */
+/** Wires explainNode: the client exists only when OPENROUTER_API_KEY is set (CORE-19, CORE-21, FID-15); empty env values count as absent. */
 export function composeExplain(
   env: Record<string, string | undefined>,
   deps: ComposeDeps,
 ): (req: ExplainRequest) => Promise<ExplainResponse> {
   const apiKey = env.OPENROUTER_API_KEY;
   const explainDeps = {
-    llm: apiKey ? deps.createClient(apiKey) : undefined,
-    cache: createDiskCache(deps.cacheDir),
+    llm: apiKey
+      ? deps.createClient(apiKey, env.OPENROUTER_BASE_URL || undefined)
+      : undefined,
+    cache: createDiskCache(env.CODE2N8N_CACHE_DIR || deps.cacheDir),
     model: resolveModel(env),
+    reviewModel: resolveReviewModel(env),
     prompt: buildSystemPrompt(deps.ptsRules),
+    reviewer: buildReviewerPrompt(),
   };
   return (req) => explainNode(req, explainDeps);
 }
@@ -52,7 +59,7 @@ async function main(): Promise<void> {
   const app = createApp({
     extractor: await createPythonExtractor(),
     explain: composeExplain(process.env, {
-      createClient: (key) => createOpenRouterClient(key),
+      createClient: (key, baseURL) => createOpenRouterClient(key, { baseURL }),
       ptsRules,
       cacheDir: join(repoRoot, ".cache/explain"),
     }),
