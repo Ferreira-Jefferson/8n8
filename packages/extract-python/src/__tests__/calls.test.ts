@@ -102,6 +102,22 @@ describe("resolveCall: external calls", () => {
       category: "BANCO",
     });
   });
+
+  it("counts .execute on a chained receiver as BANCO", async () => {
+    expect(await resolveAt("conn.cursor().execute(q)\n", 1)).toEqual({
+      kind: "external",
+      callee: "conn.cursor().execute",
+      category: "BANCO",
+    });
+  });
+
+  it("counts .commit on an indexed receiver as BANCO", async () => {
+    expect(await resolveAt("c[0].commit()\n", 1)).toEqual({
+      kind: "external",
+      callee: "c[0].commit",
+      category: "BANCO",
+    });
+  });
 });
 
 describe("resolveCall: calls that do not count", () => {
@@ -115,6 +131,10 @@ describe("resolveCall: calls that do not count", () => {
 
   it("ignores a method on a local variable", async () => {
     expect(await resolveAt("lista.append(x)\n", 1)).toBeNull();
+  });
+
+  it("ignores a method outside the table on a chained receiver", async () => {
+    expect(await resolveAt("foo().append(x)\n", 1)).toBeNull();
   });
 });
 

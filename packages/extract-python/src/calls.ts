@@ -25,10 +25,24 @@ function dottedName(node: Node): string | null {
   return head !== null && attribute ? `${head}.${attribute.text}` : null;
 }
 
+/**
+ * A method on a receiver that is not a dotted name, such as
+ * `conn.cursor().execute` or `c[0].commit`. Only a method from the table
+ * counts; any other method stays a local method and does not count.
+ */
+function chainedMethod(fn: Node | null): CallResolution | null {
+  const attribute =
+    fn?.type === "attribute" && fn.childForFieldName("attribute");
+  if (!fn || !attribute) return null;
+  const category = classify(`.${attribute.text}`);
+  if (category === "EXTERNO") return null;
+  return { kind: "external", callee: fn.text, category };
+}
+
 function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
   const fn = call.childForFieldName("function");
   const name = fn ? dottedName(fn) : null;
-  if (name === null) return null;
+  if (name === null) return chainedMethod(fn);
 
   const local = ctx.topLevel.get(name);
   if (local !== undefined) return { kind: "call", target: local };

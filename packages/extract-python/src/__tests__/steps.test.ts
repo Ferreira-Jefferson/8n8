@@ -122,6 +122,23 @@ describe("buildSteps: linear steps", () => {
     ]);
   });
 
+  it("turns DB calls on chained and indexed receivers into BANCO steps (CORE-12)", async () => {
+    const graph = await graphOf(
+      lines(
+        "def x(conn, c, q):",
+        "    conn.cursor().execute(q)",
+        "    c[0].commit()",
+      ),
+    );
+
+    expect(
+      stepsOf(graph, "fn:x").map((n) => [n.id, n.kind, n.category]),
+    ).toEqual([
+      ["fn:x/s0", "external", "BANCO"],
+      ["fn:x/s1", "external", "BANCO"],
+    ]);
+  });
+
   it("splits a code group around a call into code, call, code", async () => {
     const graph = await graphOf(
       lines(
