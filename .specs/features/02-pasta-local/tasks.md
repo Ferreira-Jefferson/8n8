@@ -370,15 +370,16 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Cada caso de `moduleNameOf` e `packageOf` acima, mais `main.py` → `main` e pacote vazio para arquivo da raiz.
-- [ ] `relativeBase("a/b/c.py", 1)` = `a.b`; nível 2 = `a`; nível 3 = `null` (acima da raiz).
-- [ ] `relativeBase("a/b/__init__.py", 1)` = `a.b`.
-- [ ] Gate passa.
+- [x] Cada caso de `moduleNameOf` e `packageOf` acima, mais `main.py` → `main` e pacote vazio para arquivo da raiz.
+- [x] `relativeBase("a/b/c.py", 1)` = `a.b`; nível 2 = `a`; nível 3 = `null` (acima da raiz).
+- [x] `relativeBase("a/b/__init__.py", 1)` = `a.b`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): derive module names and relative import bases from paths`
+**Status**: ✅ Complete
 
 ---
 
