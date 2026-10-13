@@ -233,15 +233,17 @@ T48 → T49
 
 **Done when**:
 
-- [ ] `tsconfig.base.json`: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `moduleResolution: bundler`, como no roadmap.
-- [ ] `packages/model/package.json`: nome `@code2n8n/model`, `"type": "module"`, `exports: { ".": "./src/index.ts" }`, scripts `test: vitest run` e `typecheck: tsc --noEmit`, sem dependências.
-- [ ] `vitest.config.ts`: `environment: node`, testes em `src/__tests__/`.
-- [ ] `pnpm --filter @code2n8n/model typecheck` passa.
+- [x] `tsconfig.base.json`: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `moduleResolution: bundler`, como no roadmap.
+- [x] `packages/model/package.json`: nome `@code2n8n/model`, `"type": "module"`, `exports: { ".": "./src/index.ts" }`, scripts `test: vitest run` e `typecheck: tsc --noEmit`, sem dependências.
+- [x] `vitest.config.ts`: `environment: node`, testes em `src/__tests__/`.
+- [x] `pnpm --filter @code2n8n/model typecheck` passa.
 
 **Tests**: none (config)
 **Gate**: build · `pnpm --filter @code2n8n/model typecheck && pnpm --filter @code2n8n/model exec vitest run --passWithNoTests`
 
 **Commit**: `chore(model): add tsconfig base and vitest on model skeleton`
+
+**Status**: ✅ Complete
 
 ---
 
