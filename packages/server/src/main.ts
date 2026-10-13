@@ -17,7 +17,7 @@ import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { createApp } from "./app";
 
-const PORT = 4317;
+const DEFAULT_PORT = 4317;
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 export interface ComposeDeps {
@@ -46,12 +46,20 @@ export function composeExplain(
   return (req) => explainNode(req, explainDeps);
 }
 
+/** Port from CODE2N8N_PORT when it is a valid port number, else 4317. */
+export function resolvePort(env: Record<string, string | undefined>): number {
+  const raw = env.CODE2N8N_PORT ?? "";
+  const port = Number(raw);
+  return /^\d+$/.test(raw) && port >= 1 && port <= 65535 ? port : DEFAULT_PORT;
+}
+
 async function main(): Promise<void> {
   try {
     process.loadEnvFile(join(repoRoot, ".env"));
   } catch {
     // no .env: the explain panel answers no-key
   }
+  const port = resolvePort(process.env);
   const ptsRules = readFileSync(
     join(repoRoot, "docs/portugues-tecnico-simplificado.md"),
     "utf8",
@@ -63,22 +71,22 @@ async function main(): Promise<void> {
       ptsRules,
       cacheDir: join(repoRoot, ".cache/explain"),
     }),
-    port: PORT,
+    port,
   });
   if (process.argv[2] === "start") {
     const dist = join(repoRoot, "apps/web/dist");
     app.use("/*", serveStatic({ root: relative(process.cwd(), dist) }));
   }
-  const server = serve({ fetch: app.fetch, port: PORT, hostname: "127.0.0.1" });
+  const server = serve({ fetch: app.fetch, port, hostname: "127.0.0.1" });
   server.on("error", (err: NodeJS.ErrnoException) => {
     console.error(
       err.code === "EADDRINUSE"
-        ? `A porta ${PORT} já está em uso. Feche o outro processo e tente de novo.`
+        ? `A porta ${port} já está em uso. Feche o outro processo e tente de novo.`
         : `Erro ao subir o servidor: ${err.message}`,
     );
     process.exit(1);
   });
-  console.log(`code2n8n em http://127.0.0.1:${PORT}`);
+  console.log(`code2n8n em http://127.0.0.1:${port}`);
 }
 
 if (

@@ -521,14 +521,15 @@ T24 → T26
 
 **Done when**:
 
-- [ ] Sem a variável ou vazia → `4317`; `"4319"` → `4319`; `"abc"` → `4317`.
-- [ ] A guarda de `Host` usa a porta resolvida (o teste de `host-guard.test.ts` da feature 01 passa sem mudança).
-- [ ] Gate parcial da fase 4 passa.
+- [x] Sem a variável ou vazia → `4317`; `"4319"` → `4319`; `"abc"` → `4317`.
+- [x] A guarda de `Host` usa a porta resolvida (o teste de `host-guard.test.ts` da feature 01 passa sem mudança).
+- [x] Gate parcial da fase 4 passa.
 
 **Tests**: unit
 **Gate**: build (parcial) · `pnpm --filter @code2n8n/model --filter @code2n8n/extract-python --filter @code2n8n/explain --filter @code2n8n/server typecheck && pnpm check && pnpm --filter @code2n8n/model --filter @code2n8n/extract-python --filter @code2n8n/explain --filter @code2n8n/server test`
 
 **Commit**: `feat(server): read the listening port from CODE2N8N_PORT`
+**Status**: ✅ Complete
 
 ---
 

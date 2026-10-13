@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExplainRequest } from "@code2n8n/model";
 import { afterAll, describe, expect, it } from "vitest";
-import { composeExplain } from "../main";
+import { composeExplain, resolvePort } from "../main";
 
 const ptsRules = readFileSync(
   new URL(
@@ -211,5 +211,20 @@ describe("composeExplain", () => {
       })(req);
       expect(readdirSync(join(dir(name), "nodes"))).toHaveLength(1);
     }
+  });
+});
+
+describe("resolvePort", () => {
+  it("is 4317 without CODE2N8N_PORT or when it is empty", () => {
+    expect(resolvePort({})).toBe(4317);
+    expect(resolvePort({ CODE2N8N_PORT: "" })).toBe(4317);
+  });
+
+  it("reads a valid port from CODE2N8N_PORT", () => {
+    expect(resolvePort({ CODE2N8N_PORT: "4319" })).toBe(4319);
+  });
+
+  it("falls back to 4317 for a value that is not a port", () => {
+    expect(resolvePort({ CODE2N8N_PORT: "abc" })).toBe(4317);
   });
 });
