@@ -183,16 +183,18 @@ T48 → T49
 
 **Done when**:
 
-- [ ] `package.json`: `private`, `"type": "module"`, `packageManager: pnpm@12.6.0`, `engines.node >=22.12`.
-- [ ] devDependencies fixas: `typescript@6.0.3`, `@biomejs/biome@2.5.15`, `vitest@5.0.4`, `dependency-cruiser@18.6.0`, `tsx@4.23.15`.
-- [ ] Scripts `test` e `typecheck` como na seção Gate Check Commands. O script `check` entra em T6.
-- [ ] O workspace não aprova o script de build de `tree-sitter-python` (risco do design: só o `.wasm` é usado).
-- [ ] `pnpm install` termina sem erro e gera o `pnpm-lock.yaml`.
+- [x] `package.json`: `private`, `"type": "module"`, `packageManager: pnpm@12.6.0`, `engines.node >=22.12`.
+- [x] devDependencies fixas: `typescript@6.0.3`, `@biomejs/biome@2.5.15`, `vitest@5.0.4`, `dependency-cruiser@18.6.0`, `tsx@4.23.15`.
+- [x] Scripts `test` e `typecheck` como na seção Gate Check Commands. O script `check` entra em T6.
+- [x] O workspace não aprova o script de build de `tree-sitter-python` (risco do design: só o `.wasm` é usado).
+- [x] `pnpm install` termina sem erro e gera o `pnpm-lock.yaml`.
 
 **Tests**: none (config)
 **Gate**: build · `pnpm install && pnpm test`
 
 **Commit**: `chore(repo): add pnpm workspace with pinned toolchain`
+
+**Status**: ✅ Complete
 
 ---
 
