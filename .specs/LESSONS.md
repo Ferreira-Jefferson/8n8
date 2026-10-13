@@ -66,6 +66,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SP-2 / CACHE-07 / packages/explain/src/cache.ts:64 (explain)
 - last seen: 2026-10-13T21:41:19Z
 
+### L-010 - Test every entry of a spec-listed exclusion set, not a sample, so that dropping any one entry fails a test.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `input` · harmful: 0
+- features: 02-pasta-local
+- evidence: M1a/M1b/M1d / PROJ-01 / packages/input/src/read-folder.ts:7 (input)
+- last seen: 2026-10-13T23:06:55Z
+
+### L-011 - Test a content-type guard with every CORS-simple type, and check that a no-header test really sends none, since fetch adds text/plain to a string body.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `server` · harmful: 0
+- features: 02-pasta-local
+- evidence: M11 / AD-016 / packages/server/src/app.ts:52 (server)
+- last seen: 2026-10-13T23:06:55Z
+
+### L-012 - Pin a path-based cache identity with a typed path that differs from the canonical one in case, separators or trailing slash.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `server` · harmful: 0
+- features: 02-pasta-local
+- evidence: M13 / CACHE-06 / packages/server/src/app.ts:111 (server)
+- last seen: 2026-10-13T23:06:56Z
+
+### L-013 - State in the spec how a dotted call to a project module that was never imported is classified, not only a bare name.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `extract-python` · harmful: 0
+- features: 02-pasta-local
+- evidence: SP-3 / PROJ-09 / packages/extract-python/src/calls.ts:61 (extract-python)
+- last seen: 2026-10-13T23:06:56Z
+
+### L-014 - State size limits in the spec as an exact byte count, since 1 MB can mean 1 000 000 or 1 048 576.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `input` · harmful: 0
+- features: 02-pasta-local
+- evidence: SP-1 / PROJ-06 / packages/input/src/read-file.ts:4 (input)
+- last seen: 2026-10-13T23:06:56Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

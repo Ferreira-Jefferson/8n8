@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 10,
+  "next_id": 15,
   "lessons": [
     {
       "id": "L-001",
@@ -168,6 +168,96 @@
       ],
       "created": "2026-10-13T21:41:19Z",
       "last_seen": "2026-10-13T21:41:19Z"
+    },
+    {
+      "id": "L-010",
+      "key": "surviving_mutant::test every entry of a spec listed exclusion set not a sample so that dropping any one entry fails a test",
+      "text": "Test every entry of a spec-listed exclusion set, not a sample, so that dropping any one entry fails a test.",
+      "signal": "surviving_mutant",
+      "scope": "input",
+      "status": "candidate",
+      "features": [
+        "02-pasta-local"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M1a/M1b/M1d / PROJ-01 / packages/input/src/read-folder.ts:7 (input)"
+      ],
+      "created": "2026-10-13T23:06:55Z",
+      "last_seen": "2026-10-13T23:06:55Z"
+    },
+    {
+      "id": "L-011",
+      "key": "surviving_mutant::test a content type guard with every cors simple type and check that a no header test really sends none since fetch adds text plain to a string body",
+      "text": "Test a content-type guard with every CORS-simple type, and check that a no-header test really sends none, since fetch adds text/plain to a string body.",
+      "signal": "surviving_mutant",
+      "scope": "server",
+      "status": "candidate",
+      "features": [
+        "02-pasta-local"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M11 / AD-016 / packages/server/src/app.ts:52 (server)"
+      ],
+      "created": "2026-10-13T23:06:55Z",
+      "last_seen": "2026-10-13T23:06:55Z"
+    },
+    {
+      "id": "L-012",
+      "key": "surviving_mutant::pin a path based cache identity with a typed path that differs from the canonical one in case separators or trailing slash",
+      "text": "Pin a path-based cache identity with a typed path that differs from the canonical one in case, separators or trailing slash.",
+      "signal": "surviving_mutant",
+      "scope": "server",
+      "status": "candidate",
+      "features": [
+        "02-pasta-local"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M13 / CACHE-06 / packages/server/src/app.ts:111 (server)"
+      ],
+      "created": "2026-10-13T23:06:56Z",
+      "last_seen": "2026-10-13T23:06:56Z"
+    },
+    {
+      "id": "L-013",
+      "key": "spec_precision_gap::state in the spec how a dotted call to a project module that was never imported is classified not only a bare name",
+      "text": "State in the spec how a dotted call to a project module that was never imported is classified, not only a bare name.",
+      "signal": "spec_precision_gap",
+      "scope": "extract-python",
+      "status": "candidate",
+      "features": [
+        "02-pasta-local"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SP-3 / PROJ-09 / packages/extract-python/src/calls.ts:61 (extract-python)"
+      ],
+      "created": "2026-10-13T23:06:56Z",
+      "last_seen": "2026-10-13T23:06:56Z"
+    },
+    {
+      "id": "L-014",
+      "key": "spec_precision_gap::state size limits in the spec as an exact byte count since 1 mb can mean 1 000 000 or 1 048 576",
+      "text": "State size limits in the spec as an exact byte count, since 1 MB can mean 1 000 000 or 1 048 576.",
+      "signal": "spec_precision_gap",
+      "scope": "input",
+      "status": "candidate",
+      "features": [
+        "02-pasta-local"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SP-1 / PROJ-06 / packages/input/src/read-file.ts:4 (input)"
+      ],
+      "created": "2026-10-13T23:06:56Z",
+      "last_seen": "2026-10-13T23:06:56Z"
     }
   ]
 }
