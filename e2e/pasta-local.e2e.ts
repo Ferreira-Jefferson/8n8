@@ -29,22 +29,27 @@ const FIXTURE = fileURLToPath(
 let tmp = "";
 let LOJA = "";
 
-test.beforeAll(() => {
-  tmp = mkdtempSync(join(tmpdir(), "code2n8n-pasta-local-"));
-  LOJA = join(tmp, "loja");
-  cpSync(FIXTURE, LOJA, { recursive: true });
-  mkdirSync(join(LOJA, ".venv", "lib"), { recursive: true });
-  writeFileSync(join(LOJA, ".venv", "lib", "x.py"), "def x():\n    return 1\n");
-  mkdirSync(join(LOJA, "dist"), { recursive: true });
-  writeFileSync(join(LOJA, "dist", "y.py"), "def y():\n    return 2\n");
+/** Copies the fixture to `loja` and adds the files git does not keep. */
+function makeLoja(loja: string): void {
+  cpSync(FIXTURE, loja, { recursive: true });
+  mkdirSync(join(loja, ".venv", "lib"), { recursive: true });
+  writeFileSync(join(loja, ".venv", "lib", "x.py"), "def x():\n    return 1\n");
+  mkdirSync(join(loja, "dist"), { recursive: true });
+  writeFileSync(join(loja, "dist", "y.py"), "def y():\n    return 2\n");
   // 1.1 MB of valid UTF-8: over the 1 MB limit for size alone.
   const line = `# ${"a".repeat(98)}\n`;
   writeFileSync(
-    join(LOJA, "grande.py"),
+    join(loja, "grande.py"),
     line.repeat(Math.ceil((1.1 * 1024 * 1024) / line.length)),
   );
   // "# é" in latin-1: the 0xE9 byte alone is not valid UTF-8.
-  writeFileSync(join(LOJA, "latin1.py"), Buffer.from([0x23, 0x20, 0xe9, 0x0a]));
+  writeFileSync(join(loja, "latin1.py"), Buffer.from([0x23, 0x20, 0xe9, 0x0a]));
+}
+
+test.beforeAll(() => {
+  tmp = mkdtempSync(join(tmpdir(), "code2n8n-pasta-local-"));
+  LOJA = join(tmp, "loja");
+  makeLoja(LOJA);
 });
 
 test.afterAll(() => {
@@ -247,7 +252,11 @@ test.describe("Pasta local", () => {
   test("PROJ-07: mapping, drilling, jumping and opening a panel leave the folder untouched", async ({
     page,
   }) => {
-    const before = fingerprint(LOJA);
+    // A fresh copy that no test has read: "before" precedes the first read,
+    // so even a write that gives the same result every time is caught.
+    const loja = join(tmp, "fresca", "loja");
+    makeLoja(loja);
+    const before = fingerprint(loja);
     expect(before.map((f) => f.path)).toEqual([
       ".venv/lib/x.py",
       "dist/y.py",
@@ -263,7 +272,7 @@ test.describe("Pasta local", () => {
       "relatorio.py",
     ]);
 
-    await openFolder(page, LOJA);
+    await openFolder(page, loja);
     await nodeById(page, "dir:pedidos").dblclick();
     await nodeById(page, "file:pedidos/pedidos.py").dblclick();
     await nodeById(page, PEDIDO).dblclick();
@@ -280,7 +289,7 @@ test.describe("Pasta local", () => {
       panel(page).getByText("Configure OPENROUTER_API_KEY para ver resumos"),
     ).toHaveCount(1);
 
-    expect(fingerprint(LOJA)).toEqual(before);
+    expect(fingerprint(loja)).toEqual(before);
   });
 
   test("PROJ-08: the server refuses a connection on the machine's external IPv4", async () => {

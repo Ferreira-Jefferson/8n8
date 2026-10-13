@@ -15,15 +15,17 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { folderName, readSourceFolder } from "../read-folder";
 
 let dir: string;
+const made: string[] = [];
 
-async function put(rel: string, data: string | Buffer = "x = 1\n") {
-  const abs = join(dir, rel);
-  await mkdir(join(abs, ".."), { recursive: true });
-  await writeFile(abs, data);
-}
-
-beforeAll(async () => {
-  dir = await mkdtemp(join(tmpdir(), "input-folder-"));
+/** A new test folder; nothing has read it yet. */
+async function makeTree(): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), "input-folder-"));
+  made.push(root);
+  async function put(rel: string, data: string | Buffer = "x = 1\n") {
+    const abs = join(root, rel);
+    await mkdir(join(abs, ".."), { recursive: true });
+    await writeFile(abs, data);
+  }
   await put(".venv/lib/x.py");
   await put("pkg/node_modules/y.py");
   await put("a/dist/z.py");
@@ -40,12 +42,18 @@ beforeAll(async () => {
   await put("grande.py", Buffer.alloc(1_048_577, 0x61));
   await put("latin.py", Buffer.from([0x61, 0x3d, 0xe9]));
   const outside = await mkdtemp(join(tmpdir(), "input-outside-"));
+  made.push(outside);
   await writeFile(join(outside, "fora.py"), "x = 1\n");
-  await symlink(outside, join(dir, "atalho"), "junction");
+  await symlink(outside, join(root, "atalho"), "junction");
+  return root;
+}
+
+beforeAll(async () => {
+  dir = await makeTree();
 });
 
 afterAll(async () => {
-  await rm(dir, { recursive: true, force: true });
+  for (const d of made) await rm(d, { recursive: true, force: true });
 });
 
 async function snapshot(root: string): Promise<string[]> {
@@ -143,9 +151,12 @@ describe("readSourceFolder", () => {
   });
 
   it("leaves the tree untouched (PROJ-07)", async () => {
-    const before = await snapshot(dir);
-    await readSourceFolder(dir, ".py");
-    expect(await snapshot(dir)).toEqual(before);
+    // A fresh folder: the "before" snapshot precedes its first read, so even
+    // a write that gives the same result every time is caught.
+    const fresh = await makeTree();
+    const before = await snapshot(fresh);
+    await readSourceFolder(fresh, ".py");
+    expect(await snapshot(fresh)).toEqual(before);
   });
 });
 
