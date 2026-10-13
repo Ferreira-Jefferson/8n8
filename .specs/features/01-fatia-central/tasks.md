@@ -934,18 +934,20 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: `set` e depois `get` com a mesma chave devolvem a mesma entrada.
-- [ ] Teste: `get` de chave ausente → `undefined`.
-- [ ] Teste: arquivo corrompido → `get` devolve `undefined`, e um novo `set` sobrescreve o arquivo.
-- [ ] Teste: o diretório é criado se não existe.
-- [ ] Teste: depois do `set` não sobra arquivo temporário no diretório.
-- [ ] Teste: um segundo cache no mesmo diretório lê a entrada gravada pelo primeiro (persiste entre execuções).
-- [ ] Gate passa. Test count: ≥ 6 testes.
+- [x] Teste: `set` e depois `get` com a mesma chave devolvem a mesma entrada.
+- [x] Teste: `get` de chave ausente → `undefined`.
+- [x] Teste: arquivo corrompido → `get` devolve `undefined`, e um novo `set` sobrescreve o arquivo.
+- [x] Teste: o diretório é criado se não existe.
+- [x] Teste: depois do `set` não sobra arquivo temporário no diretório.
+- [x] Teste: um segundo cache no mesmo diretório lê a entrada gravada pelo primeiro (persiste entre execuções).
+- [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): add atomic disk cache for explanations`
+
+**Status**: ✅ Complete
 
 ---
 
