@@ -130,6 +130,11 @@ describe("checkUnits (FID-03)", () => {
     expect(checkUnits("O valor m vem do pedido.", code)).toBeNull();
   });
 
+  it("matches a letter unit as a code token, not as a substring (FID-03)", () => {
+    expect(checkUnits("Espera 30 s.", ctx("status = 30"))).not.toBeNull();
+    expect(checkUnits("Mede 2 m.", ctx("item = 2"))).not.toBeNull();
+  });
+
   it("ignores case", () => {
     expect(checkUnits("Pesa 5 KG.", ctx("peso_kg = 5"))).toBeNull();
     expect(checkUnits("Lê 5 mb.", ctx("limite = 5"))).not.toBeNull();
