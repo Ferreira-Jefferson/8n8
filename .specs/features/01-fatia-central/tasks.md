@@ -1110,20 +1110,22 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (CORE-17): para `fn:calcular_frete`, o espião recebe `code` igual às linhas da função no trecho, `range` certo, `calls: []` e `calledBy: ['processar_pedido']`.
-- [ ] Teste (CORE-17): campos extras enviados pela web (como `code` ou `calls`) são ignorados.
-- [ ] Teste: `ok` do espião → `200` com o mesmo corpo.
-- [ ] Teste (CORE-19): `no-key` do espião → `200 { status: 'no-key' }`.
-- [ ] Teste (CORE-20): `error` do espião → `502 { status: 'error' }`.
-- [ ] Teste: `nodeId` desconhecido → `404`.
-- [ ] Teste: `nodeId` de um passo (`external`, `code`) → `400`.
-- [ ] Teste: corpo inválido → `400`.
-- [ ] Gate passa. Test count: ≥ 8 testes novos; nenhum anterior sumiu.
+- [x] Teste (CORE-17): para `fn:calcular_frete`, o espião recebe `code` igual às linhas da função no trecho, `range` certo, `calls: []` e `calledBy: ['processar_pedido']`.
+- [x] Teste (CORE-17): campos extras enviados pela web (como `code` ou `calls`) são ignorados.
+- [x] Teste: `ok` do espião → `200` com o mesmo corpo.
+- [x] Teste (CORE-19): `no-key` do espião → `200 { status: 'no-key' }`.
+- [x] Teste (CORE-20): `error` do espião → `502 { status: 'error' }`.
+- [x] Teste: `nodeId` desconhecido → `404`.
+- [x] Teste: `nodeId` de um passo (`external`, `code`) → `400`.
+- [x] Teste: corpo inválido → `400`.
+- [x] Gate passa. Test count: ≥ 8 testes novos; nenhum anterior sumiu.
 
 **Tests**: integration
 **Gate**: full · `pnpm test`
 
 **Commit**: `feat(server): add explain route built from server graph`
+
+**Status**: ✅ Complete
 
 ---
 
