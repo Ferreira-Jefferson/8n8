@@ -382,20 +382,21 @@ T24 → T26
 
 **Done when** (`LlmClient` falso roteirizado que registra cada pedido):
 
-- [ ] Independent Test P1, corte: o rascunho "Devolve o peso da caixa. A caixa pesa 5 kg." para um código sem `5` nem `kg`, repetido nas 3 rodadas, dá `review: "cut"`, mantém só `s1` e faz 6 chamadas (3 rascunhos, 3 revisões); nenhum pedido ao revisor contém "pesa 5 kg".
-- [ ] FID-11: um rascunho fiel dá `review: "full"` com 2 chamadas.
-- [ ] Um rascunho reprovado na 1ª rodada e limpo na 2ª dá `"full"` com 4 chamadas.
-- [ ] FID-08: o 2º rascunho recebe `system`, `user`, `assistant` (o rascunho anterior) e um `user` que começa com "Problemas encontrados:" e tem a linha `- s2 «A caixa pesa 5 kg.»: …`; nunca há uma 4ª chamada de rascunho.
-- [ ] FID-10: se nenhuma frase do resumo sobrevive, devolve `unfaithful`; quando a camada 1 reprova tudo, o revisor não é chamado (3 chamadas no total).
-- [ ] FID-09: entradas, saídas e sugestões cortadas somem; o `summary` é o texto das frases mantidas juntado por um espaço; as lacunas de ID ficam (`s1, s3`).
-- [ ] O revisor recebe o modelo do revisor; o rascunho, o modelo do resumo; o modo JSON vale para os dois.
-- [ ] Rascunho ou veredicto inválido lança erro (vira `error` em T12).
-- [ ] Gate passa.
+- [x] Independent Test P1, corte: o rascunho "Devolve o peso da caixa. A caixa pesa 5 kg." para um código sem `5` nem `kg`, repetido nas 3 rodadas, dá `review: "cut"`, mantém só `s1` e faz 6 chamadas (3 rascunhos, 3 revisões); nenhum pedido ao revisor contém "pesa 5 kg".
+- [x] FID-11: um rascunho fiel dá `review: "full"` com 2 chamadas.
+- [x] Um rascunho reprovado na 1ª rodada e limpo na 2ª dá `"full"` com 4 chamadas.
+- [x] FID-08: o 2º rascunho recebe `system`, `user`, `assistant` (o rascunho anterior) e um `user` que começa com "Problemas encontrados:" e tem a linha `- s2 «A caixa pesa 5 kg.»: …`; nunca há uma 4ª chamada de rascunho.
+- [x] FID-10: se nenhuma frase do resumo sobrevive, devolve `unfaithful`; quando a camada 1 reprova tudo, o revisor não é chamado (3 chamadas no total).
+- [x] FID-09: entradas, saídas e sugestões cortadas somem; o `summary` é o texto das frases mantidas juntado por um espaço; as lacunas de ID ficam (`s1, s3`).
+- [x] O revisor recebe o modelo do revisor; o rascunho, o modelo do resumo; o modo JSON vale para os dois.
+- [x] Rascunho ou veredicto inválido lança erro (vira `error` em T12).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): add review pipeline with redrafts, cuts and unfaithful outcome`
+**Status**: ✅ Complete
 
 ---
 
