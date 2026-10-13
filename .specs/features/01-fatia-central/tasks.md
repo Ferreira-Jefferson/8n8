@@ -964,18 +964,20 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: `complete` faz exatamente um POST para `https://openrouter.ai/api/v1/chat/completions` com `Authorization: Bearer <chave>`.
-- [ ] Teste: o corpo leva o `model` e as `messages` recebidos.
-- [ ] Teste: `json: 'native'` → `response_format: { type: 'json_object' }`; `json: 'prompt'` → sem `response_format`.
-- [ ] Teste: modelo `~deepseek/...` → `reasoning.enabled` é `false`.
-- [ ] Teste: resposta 500 → `complete` rejeita depois de uma só requisição (`maxRetries: 0`).
-- [ ] Teste: devolve o `content` da primeira escolha.
-- [ ] Gate passa. Test count: ≥ 6 testes.
+- [x] Teste: `complete` faz exatamente um POST para `https://openrouter.ai/api/v1/chat/completions` com `Authorization: Bearer <chave>`.
+- [x] Teste: o corpo leva o `model` e as `messages` recebidos.
+- [x] Teste: `json: 'native'` → `response_format: { type: 'json_object' }`; `json: 'prompt'` → sem `response_format`.
+- [x] Teste: modelo `~deepseek/...` → `reasoning.enabled` é `false`.
+- [x] Teste: resposta 500 → `complete` rejeita depois de uma só requisição (`maxRetries: 0`).
+- [x] Teste: devolve o `content` da primeira escolha.
+- [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): add openrouter client with json mode`
+
+**Status**: ✅ Complete
 
 ---
 
