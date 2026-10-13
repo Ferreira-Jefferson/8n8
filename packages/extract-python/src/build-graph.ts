@@ -182,14 +182,21 @@ function callsEdges(nodes: FlowNode[]): FlowEdge[] {
   return [...edges.values()];
 }
 
-/** Builds the graph of a parsed snippet (CORE-01, 03, 07, 08). */
-export function buildGraph(tree: Tree): Graph {
-  const statements = tree.rootNode.namedChildren;
+export interface TopLevel {
+  /** Ids of the top-level definitions, in code order. */
+  ids: NodeId[];
+  /** Name to id; the last `def` with a name wins, as in Python. */
+  topLevel: Map<string, NodeId>;
+  names: Map<NodeId, string>;
+}
+
+/** Allocates `fn:x`, `fn:x#2`, `cls:X` for the top-level definitions of `root`. */
+export function allocateTopLevel(root: Node): TopLevel {
   const topId = idAllocator();
   const ids: NodeId[] = [];
   const topLevel = new Map<string, NodeId>();
   const names = new Map<NodeId, string>();
-  for (const statement of statements) {
+  for (const statement of root.namedChildren) {
     if (IGNORED.has(statement.type)) continue;
     const def = definitionOf(statement);
     if (def === null) continue;
@@ -200,6 +207,13 @@ export function buildGraph(tree: Tree): Graph {
     topLevel.set(name, id);
     names.set(id, name);
   }
+  return { ids, topLevel, names };
+}
+
+/** Builds the graph of a parsed snippet (CORE-01, 03, 07, 08). */
+export function buildGraph(tree: Tree): Graph {
+  const statements = tree.rootNode.namedChildren;
+  const { ids, topLevel, names } = allocateTopLevel(tree.rootNode);
   const scope: Scope = {
     call: {
       topLevel,

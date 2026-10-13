@@ -395,14 +395,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Dois `def f` dão `ids` `[fn:f, fn:f#2]` e `topLevel.get("f")` = `fn:f#2`.
-- [ ] `build-graph.test.ts` e o snapshot de `extractor.test.ts` (feature 01) passam sem mudança.
-- [ ] Gate passa.
+- [x] Dois `def f` dão `ids` `[fn:f, fn:f#2]` e `topLevel.get("f")` = `fn:f#2`.
+- [x] `build-graph.test.ts` e o snapshot de `extractor.test.ts` (feature 01) passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `refactor(extract-python): extract top-level id allocation from buildGraph`
+**Status**: ✅ Complete
 
 ---
 
