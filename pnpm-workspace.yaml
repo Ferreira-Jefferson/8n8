@@ -4,3 +4,5 @@ packages:
 allowBuilds:
   esbuild: true
   tree-sitter-python: false
+minimumReleaseAgeExclude:
+  - zod@4.6.7

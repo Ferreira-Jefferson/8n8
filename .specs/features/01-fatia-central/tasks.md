@@ -825,14 +825,16 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Dependências: `@code2n8n/model` (`workspace:*`), `openai@7.32.0`, `zod@4.6.7`.
-- [ ] `exports` só `"."`; scripts `test` e `typecheck`.
-- [ ] `pnpm install` e `pnpm check` passam.
+- [x] Dependências: `@code2n8n/model` (`workspace:*`), `openai@7.32.0`, `zod@4.6.7`.
+- [x] `exports` só `"."`; scripts `test` e `typecheck`.
+- [x] `pnpm install` e `pnpm check` passam.
 
 **Tests**: none (scaffold)
 **Gate**: build · `pnpm install && pnpm --filter @code2n8n/explain typecheck && pnpm check`
 
 **Commit**: `chore(explain): scaffold package with openai and zod`
+
+**Status**: ✅ Complete
 
 ---
 
