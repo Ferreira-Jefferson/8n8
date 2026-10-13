@@ -29,6 +29,9 @@ beforeAll(async () => {
   await put("a/dist/z.py");
   await put("__pycache__/c.py");
   await put("build/b.py");
+  await put(".git/hooks/h.py");
+  await put("pkg/venv/v.py");
+  await put("lib/site-packages/s.py");
   await put("pedidos/itens.py");
   await put("B.py");
   await put("_x.py");
@@ -73,12 +76,16 @@ describe("readSourceFolder", () => {
       ...r.files.map((f) => f.path),
       ...r.ignored.map((i) => i.path),
     ];
+    // The 8 folders named in the spec (PROJ-01).
     for (const bad of [
+      ".git",
       ".venv",
+      "venv",
       "node_modules",
-      "dist",
       "__pycache__",
+      "site-packages",
       "build",
+      "dist",
     ]) {
       expect(all.some((p) => p.includes(bad))).toBe(false);
     }
