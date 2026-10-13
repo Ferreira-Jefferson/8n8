@@ -589,16 +589,18 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Testes: nome de `def` do nível superior → `call` com o ID dele; nome de `class` → `call`; `self.validar()` dentro de `class Pedido` → `call` para `cls:Pedido/fn:validar`.
-- [ ] Testes: `r.get(...)` com `import requests as r` → `external`, `callee` `requests.get`, HTTP; `boto3.client()` com `import boto3` → EXTERNO.
-- [ ] Testes: `len(x)` e `print(x)` → nenhuma; `lista.append(x)` em variável local → nenhuma; `open(p)` → ARQUIVO; `cur.execute(q)` → BANCO; `conn.commit()` → BANCO.
-- [ ] Testes: instrução com chamada externa e chamada do trecho → a do trecho vence; duas externas → vale a primeira na ordem do código.
-- [ ] Gate passa. Test count: ≥ 12 testes.
+- [x] Testes: nome de `def` do nível superior → `call` com o ID dele; nome de `class` → `call`; `self.validar()` dentro de `class Pedido` → `call` para `cls:Pedido/fn:validar`.
+- [x] Testes: `r.get(...)` com `import requests as r` → `external`, `callee` `requests.get`, HTTP; `boto3.client()` com `import boto3` → EXTERNO.
+- [x] Testes: `len(x)` e `print(x)` → nenhuma; `lista.append(x)` em variável local → nenhuma; `open(p)` → ARQUIVO; `cur.execute(q)` → BANCO; `conn.commit()` → BANCO.
+- [x] Testes: instrução com chamada externa e chamada do trecho → a do trecho vence; duas externas → vale a primeira na ordem do código.
+- [x] Gate passa. Test count: ≥ 12 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): resolve local and external calls`
+
+**Status**: ✅ Complete
 
 ---
 
