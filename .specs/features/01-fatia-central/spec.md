@@ -70,10 +70,10 @@ Esta feature entrega a menor fatia demonstrável do code2n8n:
 
 1. WHEN o usuário cola um trecho Python e aciona "Gerar mapa" THEN o sistema SHALL mostrar um nó para cada função e classe de nível superior.  <!-- CORE-01 -->
 2. WHEN uma função A chama uma função B definida no trecho THEN o sistema SHALL desenhar um fio de A para B.  <!-- CORE-02 -->
-3. WHEN o trecho tem instruções fora de funções THEN o sistema SHALL agrupá-las num nó "Módulo".  <!-- CORE-03 -->
+3. WHEN o trecho tem instruções fora de funções e classes, sem contar `import` e `from … import`, THEN o sistema SHALL agrupá-las num nó "Módulo". Um trecho cujas instruções soltas são só imports não tem nó "Módulo".  <!-- CORE-03 -->
 4. The system SHALL produzir o mesmo grafo, com os mesmos IDs de nó, para o mesmo trecho.  <!-- CORE-04 -->
 5. The system SHALL montar o grafo sem chamar o LLM.  <!-- CORE-05 -->
-6. IF o trecho tem erro de sintaxe THEN o sistema SHALL montar o grafo com as partes válidas e marcar o nó afetado com "Erro de sintaxe na linha N".  <!-- CORE-06 -->
+6. IF o trecho tem erro de sintaxe THEN o sistema SHALL montar o grafo com as partes válidas e marcar o nó afetado com "Erro de sintaxe na linha N". N é a linha onde o erro começa dentro do nó afetado. Para um bloco que falta (`def`, `class`, `if`, `for`, `while`, `with` ou `try` sem corpo), N é a linha do cabeçalho do bloco. O Python reporta a linha seguinte, mas aqui vale o cabeçalho, porque é ele que identifica o nó afetado.  <!-- CORE-06 -->
 7. IF o trecho não tem função nem instrução THEN o sistema SHALL mostrar "Nenhuma função ou instrução encontrada."  <!-- CORE-07 -->
 
 *Drill-down*
@@ -82,7 +82,7 @@ Esta feature entrega a menor fatia demonstrável do code2n8n:
 9. WHEN um passo é um `if`/`elif`/`else` THEN o sistema SHALL mostrar um nó de condição com um fio rotulado por ramo ("sim", "não" ou a condição do `elif`).  <!-- CORE-09 -->
 10. WHEN um passo é um `for` ou `while` THEN o sistema SHALL mostrar um nó de laço que pode ser aberto para ver o corpo.  <!-- CORE-10 -->
 11. WHEN o usuário abre um passo que chama uma função do trecho THEN o sistema SHALL mostrar o fluxo interno da função chamada.  <!-- CORE-11 -->
-12. WHEN um passo chama uma biblioteca externa THEN o sistema SHALL classificar o nó como HTTP, BANCO, ARQUIVO, E-MAIL ou EXTERNO pela tabela de prefixos.  <!-- CORE-12 -->
+12. WHEN um passo chama uma biblioteca externa THEN o sistema SHALL classificar o nó como HTTP, BANCO, ARQUIVO, E-MAIL ou EXTERNO pela tabela de prefixos. A comparação é por segmento inteiro do nome, nunca por pedaço de texto: `requests.get` é HTTP, `requests_cache.get` é EXTERNO. As entradas de método (`.execute`, `.commit`) valem para qualquer receptor, inclusive uma chamada ou um índice (`conn.cursor().execute(q)`, `c[0].commit()`).  <!-- CORE-12 -->
 13. WHEN instruções seguidas não têm chamada nem controle de fluxo THEN o sistema SHALL agrupá-las num nó "Código" com o intervalo de linhas.  <!-- CORE-13 -->
 14. WHEN o usuário seleciona um nó THEN o sistema SHALL mostrar o intervalo de linhas e o código-fonte exato do nó.  <!-- CORE-14 -->
 15. WHILE o usuário está dentro de um nó the system SHALL mostrar o caminho de navegação e voltar a qualquer nível com um clique.  <!-- CORE-15 -->
@@ -91,7 +91,7 @@ Esta feature entrega a menor fatia demonstrável do code2n8n:
 
 16. WHEN o usuário abre o detalhe de um nó de função ou classe THEN o sistema SHALL pedir ao LLM, numa única chamada, o resumo, as entradas, as saídas e de 0 a 5 sugestões, com as regras de [docs/portugues-tecnico-simplificado.md](../../../docs/portugues-tecnico-simplificado.md) como instrução de sistema.  <!-- CORE-16 -->
 17. The system SHALL enviar ao LLM só o código do nó e os nomes dos vizinhos diretos.  <!-- CORE-17 -->
-18. WHEN um nó já explicado é aberto de novo, com o mesmo código, modelo e versão de prompt THEN o sistema SHALL usar o cache em disco e não SHALL chamar o LLM.  <!-- CORE-18 -->
+18. WHEN um nó já explicado é aberto de novo, com o mesmo código, modelo e versão de prompt THEN o sistema SHALL usar o cache em disco e não SHALL chamar o LLM. A feature 04-fidelidade-e-cache amplia esta regra: a mudança nos vizinhos também invalida o cache.  <!-- CORE-18 -->
 19. IF `OPENROUTER_API_KEY` não está definida THEN o sistema SHALL mostrar o mapa normalmente e "Configure OPENROUTER_API_KEY para ver resumos" no painel do nó.  <!-- CORE-19 -->
 20. IF a chamada ao LLM falha THEN o sistema SHALL mostrar "Resumo indisponível" com um botão "Tentar de novo", e o mapa SHALL continuar utilizável.  <!-- CORE-20 -->
 21. The system SHALL usar o modelo de `CODE2N8N_MODEL` ou, sem a variável, `~deepseek/deepseek-v4-flash-latest`.  <!-- CORE-21 -->
@@ -103,7 +103,7 @@ Esta feature entrega a menor fatia demonstrável do code2n8n:
 1. aparecem dois nós com um fio entre eles;
 2. ao abrir `calcular_frete`, aparecem HTTP → Código → condição "peso > 30" com dois ramos;
 3. ao selecionar o nó HTTP, aparecem as linhas do `requests.get`;
-4. ao abrir o detalhe, aparecem um resumo em PTS e uma sugestão que aponta para essa linha;
+4. ao abrir o detalhe, aparecem um resumo em PTS e uma sugestão que aponta para essa linha. Este passo depende do LLM real, então é verificado à mão. Os testes automáticos cobrem o mesmo fluxo com um LLM falso;
 5. ao reabrir o nó, a resposta sai do cache e não há nova chamada.
 
 ---
