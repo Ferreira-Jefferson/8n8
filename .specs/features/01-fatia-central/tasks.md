@@ -1227,18 +1227,20 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (CORE-08): `open` de uma `function` empilha o ID dela.
-- [ ] Teste (CORE-10): `open` de um `loop` ou `block` empilha o próprio nó.
-- [ ] Teste (CORE-11): `open` de um `call` empilha o `target`, não o passo.
-- [ ] Teste: `open` de `code`, `external` ou `condition` não muda o caminho.
-- [ ] Teste (CORE-15): `goTo(1)` num caminho de 3 níveis corta para 1 nível; `goTo(0)` volta ao nível superior; a seleção é limpa.
-- [ ] Teste: `select(id)` muda só `selected`.
-- [ ] Gate passa. Test count: ≥ 7 testes.
+- [x] Teste (CORE-08): `open` de uma `function` empilha o ID dela.
+- [x] Teste (CORE-10): `open` de um `loop` ou `block` empilha o próprio nó.
+- [x] Teste (CORE-11): `open` de um `call` empilha o `target`, não o passo.
+- [x] Teste: `open` de `code`, `external` ou `condition` não muda o caminho.
+- [x] Teste (CORE-15): `goTo(1)` num caminho de 3 níveis corta para 1 nível; `goTo(0)` volta ao nível superior; a seleção é limpa.
+- [x] Teste: `select(id)` muda só `selected`.
+- [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): add navigation reducer for drill-down`
+
+**Status**: ✅ Complete
 
 ---
 
