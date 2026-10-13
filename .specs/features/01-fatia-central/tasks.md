@@ -876,16 +876,18 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: o texto contém as regras do PTS sem alteração.
-- [ ] Teste: o texto contém a palavra "JSON" e pede resumo, entradas, saídas e de 0 a 5 sugestões com linha e severidade.
-- [ ] Teste: `version` tem 12 caracteres hex.
-- [ ] Teste: as mesmas regras dão a mesma versão; regras diferentes dão versão diferente.
-- [ ] Gate passa. Test count: ≥ 4 testes.
+- [x] Teste: o texto contém as regras do PTS sem alteração.
+- [x] Teste: o texto contém a palavra "JSON" e pede resumo, entradas, saídas e de 0 a 5 sugestões com linha e severidade.
+- [x] Teste: `version` tem 12 caracteres hex.
+- [x] Teste: as mesmas regras dão a mesma versão; regras diferentes dão versão diferente.
+- [x] Gate passa. Test count: ≥ 4 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): build versioned system prompt from PTS rules`
+
+**Status**: ✅ Complete
 
 ---
 
