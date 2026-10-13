@@ -12,3 +12,12 @@ export function topLevelId(
 export function childId(parentId: string, segment: string): string {
   return `${parentId}/${segment}`;
 }
+
+/** Folder node id; the root folder (`""`) is `dir:.`. */
+export function folderId(rel: string): string {
+  return `dir:${rel === "" ? "." : rel}`;
+}
+
+export function fileId(rel: string): string {
+  return `file:${rel}`;
+}

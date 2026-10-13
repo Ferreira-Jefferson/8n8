@@ -182,16 +182,17 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `folderId("")` = `dir:.`; `folderId("pedidos")` = `dir:pedidos`; `folderId("a/b")` = `dir:a/b`.
-- [ ] `fileId("pedidos/pedidos.py")` = `file:pedidos/pedidos.py`.
-- [ ] `childId(fileId("pedidos/pedidos.py"), "fn:processar_pedido/s2")` = `file:pedidos/pedidos.py/fn:processar_pedido/s2`.
-- [ ] `ids.test.ts` (feature 01): os testes atuais passam sem mudança.
-- [ ] Gate passa; nenhuma contagem de testes cai.
+- [x] `folderId("")` = `dir:.`; `folderId("pedidos")` = `dir:pedidos`; `folderId("a/b")` = `dir:a/b`.
+- [x] `fileId("pedidos/pedidos.py")` = `file:pedidos/pedidos.py`.
+- [x] `childId(fileId("pedidos/pedidos.py"), "fn:processar_pedido/s2")` = `file:pedidos/pedidos.py/fn:processar_pedido/s2`.
+- [x] `ids.test.ts` (feature 01): os testes atuais passam sem mudança.
+- [x] Gate passa; nenhuma contagem de testes cai.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/model test`
 
 **Commit**: `feat(model): add folder and file id helpers`
+**Status**: ✅ Complete
 
 ---
 

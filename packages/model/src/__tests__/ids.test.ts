@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { childId, topLevelId } from "../ids";
+import { childId, fileId, folderId, topLevelId } from "../ids";
 
 describe("topLevelId", () => {
   it("builds a function id from its name", () => {
@@ -40,5 +40,23 @@ describe("childId", () => {
     expect(childId(childId(childId("fn:a", "s2"), "b1"), "s0")).toBe(
       "fn:a/s2/b1/s0",
     );
+  });
+});
+
+describe("folderId and fileId", () => {
+  it("builds folder ids, with dir:. for the root", () => {
+    expect(folderId("")).toBe("dir:.");
+    expect(folderId("pedidos")).toBe("dir:pedidos");
+    expect(folderId("a/b")).toBe("dir:a/b");
+  });
+
+  it("builds a file id from its relative path", () => {
+    expect(fileId("pedidos/pedidos.py")).toBe("file:pedidos/pedidos.py");
+  });
+
+  it("nests internal nodes under the file id with childId", () => {
+    expect(
+      childId(fileId("pedidos/pedidos.py"), "fn:processar_pedido/s2"),
+    ).toBe("file:pedidos/pedidos.py/fn:processar_pedido/s2");
   });
 });
