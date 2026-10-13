@@ -283,18 +283,19 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Arquivo de exatamente 1 048 576 bytes entra; 1 048 577 dá `too-large`.
-- [ ] Um byte `0xE9` dá `not-utf8`.
-- [ ] Um arquivo com BOM volta sem o BOM.
-- [ ] `EACCES` (com `vi.mock` de `node:fs/promises`) dá `unreadable`.
-- [ ] `lstat` com `isSymbolicLink()` dá `symlink`, e um `readFile` falso que lança erro nunca roda (o resultado continua `symlink`).
-- [ ] `rel` volta em POSIX.
-- [ ] Gate passa; `read-only.test.ts` continua verde.
+- [x] Arquivo de exatamente 1 048 576 bytes entra; 1 048 577 dá `too-large`.
+- [x] Um byte `0xE9` dá `not-utf8`.
+- [x] Um arquivo com BOM volta sem o BOM.
+- [x] `EACCES` (com `vi.mock` de `node:fs/promises`) dá `unreadable`.
+- [x] `lstat` com `isSymbolicLink()` dá `symlink`, e um `readFile` falso que lança erro nunca roda (o resultado continua `symlink`).
+- [x] `rel` volta em POSIX.
+- [x] Gate passa; `read-only.test.ts` continua verde.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/input test`
 
 **Commit**: `feat(input): read one source file with size, encoding and link checks`
+**Status**: ✅ Complete
 
 ---
 
