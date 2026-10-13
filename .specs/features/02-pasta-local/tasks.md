@@ -719,16 +719,17 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Topo: exatamente `dir:.`, `dir:frete`, `dir:legado`, `dir:pedidos`, e exatamente dois fios, `imports:dir:.->dir:pedidos` e `imports:dir:pedidos->dir:frete`; nenhum fio `calls`.
-- [ ] `dir:pedidos`: três arquivos (`__init__.py`, `itens.py`, `pedidos.py`) e um fio, `pedidos.py → itens.py`; o fio para `frete` some.
-- [ ] `file:pedidos/pedidos.py`: a função `processar_pedido` e nenhum fio (os alvos estão em outros arquivos).
-- [ ] `project-level.test.ts` (feature 01): os 9 testes atuais passam sem mudança.
-- [ ] Gate passa.
+- [x] Topo: exatamente `dir:.`, `dir:frete`, `dir:legado`, `dir:pedidos`, e exatamente dois fios, `imports:dir:.->dir:pedidos` e `imports:dir:pedidos->dir:frete`; nenhum fio `calls`.
+- [x] `dir:pedidos`: três arquivos (`__init__.py`, `itens.py`, `pedidos.py`) e um fio, `pedidos.py → itens.py`; o fio para `frete` some.
+- [x] `file:pedidos/pedidos.py`: a função `processar_pedido` e nenhum fio (os alvos estão em outros arquivos).
+- [x] `project-level.test.ts` (feature 01): os 9 testes atuais passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): lift wires by kind on project levels`
+**Status**: ✅ Complete
 
 ---
 

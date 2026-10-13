@@ -7,6 +7,7 @@ import type {
 } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
 import { projectLevel } from "../project-level";
+import { lojaGraph } from "./loja-graph";
 
 function node(
   id: string,
@@ -150,5 +151,63 @@ describe("projectLevel inside a container", () => {
     const level = projectLevel(g, "f/s2");
     expect(level.nodes.map((n) => n.id)).toEqual(["f/s2/s0", "f/s2/s1"]);
     expect(level.edges.map((e) => e.id)).toEqual(["next:f/s2/s0->f/s2/s1"]);
+  });
+});
+
+describe("projectLevel on a project graph (PROJ-02, 03, 04)", () => {
+  it("top level shows the folders and the lifted imports wires only", () => {
+    const level = projectLevel(lojaGraph, null);
+    expect(level.nodes.map((n) => n.id)).toEqual([
+      "dir:.",
+      "dir:frete",
+      "dir:legado",
+      "dir:pedidos",
+    ]);
+    expect(level.edges.map((e) => e.id).sort()).toEqual([
+      "imports:dir:.->dir:pedidos",
+      "imports:dir:pedidos->dir:frete",
+    ]);
+    expect(level.edges.some((e) => e.kind === "calls")).toBe(false);
+  });
+
+  it("a folder level shows its files and drops a wire leaving the folder", () => {
+    const level = projectLevel(lojaGraph, "dir:pedidos");
+    expect(level.nodes.map((n) => n.id)).toEqual([
+      "file:pedidos/__init__.py",
+      "file:pedidos/itens.py",
+      "file:pedidos/pedidos.py",
+    ]);
+    expect(level.edges.map((e) => [e.kind, e.source, e.target])).toEqual([
+      ["imports", "file:pedidos/pedidos.py", "file:pedidos/itens.py"],
+    ]);
+  });
+
+  it("a file level shows its functions and drops calls to other files", () => {
+    const level = projectLevel(lojaGraph, "file:pedidos/pedidos.py");
+    expect(level.nodes.map((n) => n.id)).toEqual([
+      "file:pedidos/pedidos.py/fn:processar_pedido",
+    ]);
+    expect(level.edges).toEqual([]);
+  });
+
+  it("a file level keeps a lifted calls wire inside the file", () => {
+    const p: Graph = {
+      ...graph(
+        [
+          node("dir:.", "folder", null, { path: "" }),
+          node("file:a.py", "file", "dir:.", { path: "a.py" }),
+          node("file:a.py/fn:f", "function", "file:a.py"),
+          node("file:a.py/fn:f/s0", "call", "file:a.py/fn:f", {
+            target: "file:a.py/fn:g",
+          }),
+          node("file:a.py/fn:g", "function", "file:a.py"),
+        ],
+        [edge("calls", "file:a.py/fn:f", "file:a.py/fn:g")],
+      ),
+      project: { name: "p" },
+    };
+    expect(projectLevel(p, "file:a.py").edges.map((e) => e.id)).toEqual([
+      "calls:file:a.py/fn:f->file:a.py/fn:g",
+    ]);
   });
 });
