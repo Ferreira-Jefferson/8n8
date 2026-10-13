@@ -1,0 +1,180 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createPythonExtractor > gives the same graph from two new extractors, matching the snapshot (CORE-04) 1`] = `
+"{
+  "language": "python",
+  "empty": false,
+  "nodes": [
+    {
+      "id": "fn:calcular_frete",
+      "kind": "function",
+      "label": "calcular_frete",
+      "parentId": null,
+      "range": {
+        "start": 4,
+        "end": 11
+      },
+      "openable": true
+    },
+    {
+      "id": "fn:calcular_frete/s0",
+      "kind": "external",
+      "label": "requests.get",
+      "parentId": "fn:calcular_frete",
+      "range": {
+        "start": 5,
+        "end": 5
+      },
+      "openable": false,
+      "callee": "requests.get",
+      "category": "HTTP"
+    },
+    {
+      "id": "fn:calcular_frete/s1",
+      "kind": "code",
+      "label": "Código",
+      "parentId": "fn:calcular_frete",
+      "range": {
+        "start": 6,
+        "end": 7
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:calcular_frete/s2",
+      "kind": "condition",
+      "label": "peso > 30",
+      "parentId": "fn:calcular_frete",
+      "range": {
+        "start": 8,
+        "end": 11
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:calcular_frete/s2/b0/s0",
+      "kind": "code",
+      "label": "Código",
+      "parentId": "fn:calcular_frete",
+      "range": {
+        "start": 9,
+        "end": 9
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:calcular_frete/s2/b1/s0",
+      "kind": "code",
+      "label": "Código",
+      "parentId": "fn:calcular_frete",
+      "range": {
+        "start": 11,
+        "end": 11
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:processar_pedido",
+      "kind": "function",
+      "label": "processar_pedido",
+      "parentId": null,
+      "range": {
+        "start": 14,
+        "end": 18
+      },
+      "openable": true
+    },
+    {
+      "id": "fn:processar_pedido/s0",
+      "kind": "code",
+      "label": "Código",
+      "parentId": "fn:processar_pedido",
+      "range": {
+        "start": 15,
+        "end": 15
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:processar_pedido/s1",
+      "kind": "loop",
+      "label": "for item in itens",
+      "parentId": "fn:processar_pedido",
+      "range": {
+        "start": 16,
+        "end": 17
+      },
+      "openable": true
+    },
+    {
+      "id": "fn:processar_pedido/s1/s0",
+      "kind": "call",
+      "label": "calcular_frete",
+      "parentId": "fn:processar_pedido/s1",
+      "range": {
+        "start": 17,
+        "end": 17
+      },
+      "openable": true,
+      "target": "fn:calcular_frete"
+    },
+    {
+      "id": "fn:processar_pedido/s2",
+      "kind": "code",
+      "label": "Código",
+      "parentId": "fn:processar_pedido",
+      "range": {
+        "start": 18,
+        "end": 18
+      },
+      "openable": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "next:fn:calcular_frete/s0->fn:calcular_frete/s1",
+      "kind": "next",
+      "source": "fn:calcular_frete/s0",
+      "target": "fn:calcular_frete/s1"
+    },
+    {
+      "id": "next:fn:calcular_frete/s1->fn:calcular_frete/s2",
+      "kind": "next",
+      "source": "fn:calcular_frete/s1",
+      "target": "fn:calcular_frete/s2"
+    },
+    {
+      "id": "branch:fn:calcular_frete/s2->fn:calcular_frete/s2/b0/s0",
+      "kind": "branch",
+      "source": "fn:calcular_frete/s2",
+      "target": "fn:calcular_frete/s2/b0/s0",
+      "label": "sim"
+    },
+    {
+      "id": "branch:fn:calcular_frete/s2->fn:calcular_frete/s2/b1/s0",
+      "kind": "branch",
+      "source": "fn:calcular_frete/s2",
+      "target": "fn:calcular_frete/s2/b1/s0",
+      "label": "não"
+    },
+    {
+      "id": "next:fn:processar_pedido/s0->fn:processar_pedido/s1",
+      "kind": "next",
+      "source": "fn:processar_pedido/s0",
+      "target": "fn:processar_pedido/s1"
+    },
+    {
+      "id": "next:fn:processar_pedido/s1->fn:processar_pedido/s2",
+      "kind": "next",
+      "source": "fn:processar_pedido/s1",
+      "target": "fn:processar_pedido/s2"
+    },
+    {
+      "id": "calls:fn:processar_pedido->fn:calcular_frete",
+      "kind": "calls",
+      "source": "fn:processar_pedido",
+      "target": "fn:calcular_frete"
+    }
+  ]
+}"
+`;

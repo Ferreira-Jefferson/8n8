@@ -796,17 +796,19 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: `language` é `"python"`.
-- [ ] Teste (CORE-04): dois extratores novos extraem a fixture do vídeo, e os dois grafos são iguais com `toEqual`. O JSON confere com um snapshot.
-- [ ] Teste: extrair duas vezes com o mesmo extrator dá o mesmo grafo.
-- [ ] Teste (Independent Test 1-3 no nível do grafo): no nível superior, 2 funções e um fio entre elas; `calcular_frete` abre para HTTP → Código → condição `peso > 30` com dois ramos; o `range` do nó HTTP aponta para a linha do `requests.get` (a linha esperada é achada no texto da fixture, não fixada no teste).
-- [ ] `pnpm check` passa: o pacote não importa `explain` nem `openai` (CORE-05).
-- [ ] Gate passa. Test count: ≥ 4 testes.
+- [x] Teste: `language` é `"python"`.
+- [x] Teste (CORE-04): dois extratores novos extraem a fixture do vídeo, e os dois grafos são iguais com `toEqual`. O JSON confere com um snapshot.
+- [x] Teste: extrair duas vezes com o mesmo extrator dá o mesmo grafo.
+- [x] Teste (Independent Test 1-3 no nível do grafo): no nível superior, 2 funções e um fio entre elas; `calcular_frete` abre para HTTP → Código → condição `peso > 30` com dois ramos; o `range` do nó HTTP aponta para a linha do `requests.get` (a linha esperada é achada no texto da fixture, não fixada no teste).
+- [x] `pnpm check` passa: o pacote não importa `explain` nem `openai` (CORE-05).
+- [x] Gate passa. Test count: ≥ 4 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test && pnpm check`
 
 **Commit**: `feat(extract-python): expose deterministic python extractor`
+
+**Status**: ✅ Complete
 
 ---
 
