@@ -1142,17 +1142,19 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (CORE-19): sem `OPENROUTER_API_KEY`, a fábrica do cliente não é chamada e o `explain` devolve `no-key`.
-- [ ] Teste: com a chave, a fábrica é chamada uma vez com ela.
-- [ ] Teste (CORE-21): com `CODE2N8N_MODEL=x/y`, o cliente falso recebe `model: 'x/y'`; sem a variável, recebe o padrão.
-- [ ] Teste: o prompt de sistema enviado contém o texto do `docs/portugues-tecnico-simplificado.md` lido do disco.
-- [ ] Checagem manual: `pnpm --filter @code2n8n/server exec tsx src/main.ts` sobe em `127.0.0.1:4317`; com a porta ocupada, termina com uma mensagem clara.
-- [ ] Gate passa. Test count: ≥ 4 testes novos.
+- [x] Teste (CORE-19): sem `OPENROUTER_API_KEY`, a fábrica do cliente não é chamada e o `explain` devolve `no-key`.
+- [x] Teste: com a chave, a fábrica é chamada uma vez com ela.
+- [x] Teste (CORE-21): com `CODE2N8N_MODEL=x/y`, o cliente falso recebe `model: 'x/y'`; sem a variável, recebe o padrão.
+- [x] Teste: o prompt de sistema enviado contém o texto do `docs/portugues-tecnico-simplificado.md` lido do disco.
+- [x] Checagem manual: `pnpm --filter @code2n8n/server exec tsx src/main.ts` sobe em `127.0.0.1:4317`; com a porta ocupada, termina com uma mensagem clara.
+- [x] Gate passa. Test count: ≥ 4 testes novos.
 
 **Tests**: unit
 **Gate**: full · `pnpm test`
 
 **Commit**: `feat(server): compose extractor and explain in main`
+
+**Status**: ✅ Complete
 
 ---
 
