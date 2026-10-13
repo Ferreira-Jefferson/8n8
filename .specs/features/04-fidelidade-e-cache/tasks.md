@@ -173,14 +173,15 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `schema.test.ts` (feature 01) só troca o tipo importado de `Explanation` para `Draft`. Nenhuma asserção muda.
-- [ ] Teste novo: um rascunho com `inputs: ["peso"]` volta com `inputs` igual a `["peso"]` (o rascunho não ganha IDs).
-- [ ] Gate passa; nenhuma contagem de testes cai.
+- [x] `schema.test.ts` (feature 01) só troca o tipo importado de `Explanation` para `Draft`. Nenhuma asserção muda.
+- [x] Teste novo: um rascunho com `inputs: ["peso"]` volta com `inputs` igual a `["peso"]` (o rascunho não ganha IDs).
+- [x] Gate passa; nenhuma contagem de testes cai.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `refactor(explain): type the parsed llm output as Draft`
+**Status**: ✅ Complete
 
 ---
 

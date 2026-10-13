@@ -1,15 +1,17 @@
-import type { Explanation, Suggestion } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
-import { parseExplanation } from "../schema";
+import { type Draft, type DraftSuggestion, parseExplanation } from "../schema";
 
-const suggestion = (line: number, command = `cmd ${line}`): Suggestion => ({
+const suggestion = (
+  line: number,
+  command = `cmd ${line}`,
+): DraftSuggestion => ({
   command,
   reason: "motivo",
   line,
   severity: "media",
 });
 
-const explanation = (suggestions: Suggestion[]): Explanation => ({
+const explanation = (suggestions: DraftSuggestion[]): Draft => ({
   summary: "Calcula o frete.",
   inputs: ["peso"],
   outputs: ["valor"],
@@ -54,6 +56,11 @@ describe("parseExplanation (CORE-16, CORE-22)", () => {
     );
     const result = parseExplanation(JSON.stringify(explanation(seven)), 4);
     expect(result.suggestions).toEqual(seven.slice(0, 5));
+  });
+
+  it("returns inputs as plain strings, without claim ids (FID-01)", () => {
+    const raw = JSON.stringify({ ...explanation([]), inputs: ["peso"] });
+    expect(parseExplanation(raw, 4).inputs).toEqual(["peso"]);
   });
 
   it("accepts zero suggestions", () => {

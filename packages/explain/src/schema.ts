@@ -1,7 +1,23 @@
-import type { Explanation } from "@code2n8n/model";
+import type { Severity } from "@code2n8n/model";
 import { z } from "zod";
 
 const MAX_SUGGESTIONS = 5;
+
+/** A suggestion as the LLM writes it: no id, no evidence lines. */
+export interface DraftSuggestion {
+  command: string;
+  reason: string;
+  line: number;
+  severity: Severity;
+}
+
+/** The raw LLM answer: plain strings, no claim ids (FID-01). */
+export interface Draft {
+  summary: string;
+  inputs: string[];
+  outputs: string[];
+  suggestions: DraftSuggestion[];
+}
 
 const explanationSchema = z.object({
   summary: z.string(),
@@ -20,7 +36,7 @@ const explanationSchema = z.object({
 });
 
 /** Strips fences, parses and validates the LLM answer; keeps the first 5 suggestions with line in 1..lineCount (CORE-22). */
-export function parseExplanation(raw: string, lineCount: number): Explanation {
+export function parseExplanation(raw: string, lineCount: number): Draft {
   const cleaned = raw
     .trim()
     .replace(/^```(?:json)?\s*/i, "")
