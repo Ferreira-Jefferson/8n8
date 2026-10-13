@@ -8,7 +8,11 @@
 
 Corroborated across multiple features. Safe to apply as guidance.
 
-_none_
+### L-003 - State how a classification table entry matches (whole segment or substring, and which receiver shapes) when the spec lists text fragments like .execute(.
+- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `extract-python` · harmful: 0
+- features: 01-fatia-central, 04-fidelidade-e-cache
+- evidence: CORE-12 SP-2 (extract-python) (+1 more)
+- last seen: 2026-10-13T21:41:18Z
 
 ## Candidates (under observation - do NOT load as guidance yet)
 
@@ -24,12 +28,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - signal: `ac_gap` · recurrence: 1 feature(s) · scope: `extract-python` · harmful: 0
 - features: 01-fatia-central
 - evidence: CORE-06 / packages/extract-python/src/errors.ts:27 (extract-python)
-- last seen: 2026-10-13T17:30:04Z
-
-### L-003 - State how a classification table entry matches (whole segment or substring, and which receiver shapes) when the spec lists text fragments like .execute(.
-- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `extract-python` · harmful: 0
-- features: 01-fatia-central
-- evidence: CORE-12 SP-2 (extract-python)
 - last seen: 2026-10-13T17:30:04Z
 
 ### L-004 - Put every input sent to the LLM into the explanation cache key, or state in the spec which inputs are deliberately left out.
@@ -55,6 +53,18 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: 01-fatia-central
 - evidence: SP-5 / CORE-06 / packages/extract-python/src/errors.ts:40 (extract-python)
 - last seen: 2026-10-13T17:40:16Z
+
+### L-008 - Pin token matching with a case where the searched fragment appears in the code only inside a longer identifier, so a substring check fails the test.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `explain` · harmful: 0
+- features: 04-fidelidade-e-cache
+- evidence: M4b / FID-03 / packages/explain/src/checks.ts:89 (explain)
+- last seen: 2026-10-13T21:41:17Z
+
+### L-009 - When a cache changes its file layout, state in the spec what happens to entries written under the old layout, not only how an unreadable entry is treated.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `explain` · harmful: 0
+- features: 04-fidelidade-e-cache
+- evidence: SP-2 / CACHE-07 / packages/explain/src/cache.ts:64 (explain)
+- last seen: 2026-10-13T21:41:19Z
 
 ## Quarantined (failed when applied - ignore)
 

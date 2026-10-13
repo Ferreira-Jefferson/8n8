@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 8,
+  "next_id": 10,
   "lessons": [
     {
       "id": "L-001",
@@ -47,17 +47,19 @@
       "text": "State how a classification table entry matches (whole segment or substring, and which receiver shapes) when the spec lists text fragments like .execute(.",
       "signal": "spec_precision_gap",
       "scope": "extract-python",
-      "status": "candidate",
+      "status": "confirmed",
       "features": [
-        "01-fatia-central"
+        "01-fatia-central",
+        "04-fidelidade-e-cache"
       ],
-      "recurrence": 1,
+      "recurrence": 2,
       "harmful": 0,
       "evidence": [
-        "CORE-12 SP-2 (extract-python)"
+        "CORE-12 SP-2 (extract-python)",
+        "SP-1 / FID-03 / packages/explain/src/checks.ts:81 (explain)"
       ],
       "created": "2026-10-13T17:30:04Z",
-      "last_seen": "2026-10-13T17:30:04Z"
+      "last_seen": "2026-10-13T21:41:18Z"
     },
     {
       "id": "L-004",
@@ -130,6 +132,42 @@
       ],
       "created": "2026-10-13T17:40:16Z",
       "last_seen": "2026-10-13T17:40:16Z"
+    },
+    {
+      "id": "L-008",
+      "key": "surviving_mutant::pin token matching with a case where the searched fragment appears in the code only inside a longer identifier so a substring check fails the test",
+      "text": "Pin token matching with a case where the searched fragment appears in the code only inside a longer identifier, so a substring check fails the test.",
+      "signal": "surviving_mutant",
+      "scope": "explain",
+      "status": "candidate",
+      "features": [
+        "04-fidelidade-e-cache"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M4b / FID-03 / packages/explain/src/checks.ts:89 (explain)"
+      ],
+      "created": "2026-10-13T21:41:17Z",
+      "last_seen": "2026-10-13T21:41:17Z"
+    },
+    {
+      "id": "L-009",
+      "key": "spec_precision_gap::when a cache changes its file layout state in the spec what happens to entries written under the old layout not only how an unreadable entry is treated",
+      "text": "When a cache changes its file layout, state in the spec what happens to entries written under the old layout, not only how an unreadable entry is treated.",
+      "signal": "spec_precision_gap",
+      "scope": "explain",
+      "status": "candidate",
+      "features": [
+        "04-fidelidade-e-cache"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SP-2 / CACHE-07 / packages/explain/src/cache.ts:64 (explain)"
+      ],
+      "created": "2026-10-13T21:41:19Z",
+      "last_seen": "2026-10-13T21:41:19Z"
     }
   ]
 }
