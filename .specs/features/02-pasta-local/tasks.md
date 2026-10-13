@@ -799,15 +799,16 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Com o grafo `loja` e o caminho de `ancestry` de `calcular_frete`, o texto é exatamente `loja › frete › calculo.py › calcular_frete`.
-- [ ] Clicar em `loja` chama `onGoTo(0)`.
-- [ ] `Breadcrumb.test.tsx` (feature 01): os 3 testes atuais ("Trecho") passam sem mudança.
-- [ ] Gate passa.
+- [x] Com o grafo `loja` e o caminho de `ancestry` de `calcular_frete`, o texto é exatamente `loja › frete › calculo.py › calcular_frete`.
+- [x] Clicar em `loja` chama `onGoTo(0)`.
+- [x] `Breadcrumb.test.tsx` (feature 01): os 3 testes atuais ("Trecho") passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): start the breadcrumb with the project name`
+**Status**: ✅ Complete
 
 ---
 
