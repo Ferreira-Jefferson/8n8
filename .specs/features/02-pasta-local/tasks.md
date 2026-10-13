@@ -877,13 +877,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `FlowCanvas.test.ts` (novo): um fio `imports` sai com `className` `edge-imports`; fios `calls`, `next` e `branch` saem sem ela; IDs, origem, destino e rótulo se mantêm.
-- [ ] Gate passa.
+- [x] `FlowCanvas.test.ts` (novo): um fio `imports` sai com `className` `edge-imports`; fios `calls`, `next` e `branch` saem sem ela; IDs, origem, destino e rótulo se mantêm.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): draw import wires dashed`
+
+**Status**: ✅ Complete
 
 ---
 

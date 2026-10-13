@@ -109,3 +109,8 @@ body {
   min-width: 2ch;
   text-align: right;
 }
+
+/* Import wires between folders and files are dashed (PROJ-03). */
+.react-flow__edge.edge-imports .react-flow__edge-path {
+  stroke-dasharray: 6 4;
+}

@@ -1,4 +1,4 @@
-import type { FlowNode, Graph, NodeId } from "@code2n8n/model";
+import type { FlowEdge, FlowNode, Graph, NodeId } from "@code2n8n/model";
 import { type Edge, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useMemo } from "react";
@@ -15,6 +15,17 @@ export interface FlowCanvasProps {
 }
 
 const nodeTypes = { step: StepNode };
+
+/** React Flow wires; `imports` wires get the dashed `edge-imports` class (PROJ-03). */
+export function toFlowEdges(edges: FlowEdge[]): Edge[] {
+  return edges.map((e) => ({
+    id: e.id,
+    source: e.source,
+    target: e.target,
+    ...(e.label === undefined ? {} : { label: e.label }),
+    ...(e.kind === "imports" ? { className: "edge-imports" } : {}),
+  }));
+}
 
 /** Draws one level of the graph; click selects, double click opens. */
 export function FlowCanvas({
@@ -33,13 +44,7 @@ export function FlowCanvas({
       position: positions.get(n.id) ?? { x: 0, y: 0 },
       data: { node: n, suggestionCount: suggestionCounts.get(n.id) },
     }));
-    const edges: Edge[] = level.edges.map((e) => ({
-      id: e.id,
-      source: e.source,
-      target: e.target,
-      ...(e.label === undefined ? {} : { label: e.label }),
-    }));
-    return { nodes, edges };
+    return { nodes, edges: toFlowEdges(level.edges) };
   }, [graph, levelId, suggestionCounts]);
 
   return (
