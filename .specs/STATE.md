@@ -46,5 +46,10 @@
 ## Handoff
 
 - **Features (em sequência):** 01-fatia-central (24 ACs), 02-pasta-local (9 ACs), 03-modo-grafo (7 ACs). Substituem a spec única `mapa-de-codigo` (54 ACs), que foi dividida por excesso de escopo.
-- **Phase:** Specify. As 3 specs foram escritas e passaram no validador. Aguardam aprovação.
-- **Next:** O usuário aprova, depois vem o Design da 01-fatia-central.
+- **01-fatia-central:** concluída e verificada. Verifier PASS na iteração 2 (24/24 ACs, 209 testes, sensor 7/7 mortos). Relatório em `validation.md`.
+- **Pendências abertas (não bloqueiam):**
+  - fechar as lacunas SP-1..SP-5 na spec;
+  - incluir os vizinhos na chave do cache;
+  - fidelidade do resumo: "kg" foi inventado e `requests.get` ficou de fora;
+  - o pnpm 12.6.0 global está quebrado no Windows para chamadas aninhadas. Os workers usaram um shim no scratchpad.
+- **Next:** Design da 02-pasta-local (spec já aprovada).

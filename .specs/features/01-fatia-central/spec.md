@@ -112,11 +112,11 @@ Esta feature entrega a menor fatia demonstrável do code2n8n:
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| CORE-01..07 | P1: Mapa | - | Pending |
-| CORE-08..15 | P1: Drill-down | - | Pending |
-| CORE-16..24 | P1: Explicação | - | Pending |
+| CORE-01..07 | P1: Mapa | Execute | Verified |
+| CORE-08..15 | P1: Drill-down | Execute | Verified |
+| CORE-16..24 | P1: Explicação | Execute | Verified |
 
-**Coverage:** 24 total, 0 mapped to tasks.
+**Coverage:** 24 total, 24 mapped to tasks, 24 verified (validation.md, iteração 2).
 
 ---
 
