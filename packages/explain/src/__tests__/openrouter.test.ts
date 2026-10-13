@@ -130,4 +130,29 @@ describe("createOpenRouterClient (CORE-16, CORE-21)", () => {
     });
     expect(content).toBe('{"summary":"Calcula."}');
   });
+
+  it("posts to the configured baseURL", async () => {
+    const { fetch, calls } = fakeFetch();
+    await createOpenRouterClient("k", {
+      fetch,
+      baseURL: "http://127.0.0.1:9/v1",
+    }).complete({ model: "openai/gpt-x", messages, json: "native" });
+    expect(calls[0]?.url).toBe("http://127.0.0.1:9/v1/chat/completions");
+  });
+
+  it("sends an assistant message in the body in the given order (FID-08)", async () => {
+    const { fetch, calls } = fakeFetch();
+    const redraft: ChatMessage[] = [
+      { role: "system", content: "sistema JSON" },
+      { role: "user", content: "nó" },
+      { role: "assistant", content: '{"summary":"rascunho"}' },
+      { role: "user", content: "Problemas encontrados:" },
+    ];
+    await createOpenRouterClient("k", { fetch }).complete({
+      model: "openai/gpt-x",
+      messages: redraft,
+      json: "native",
+    });
+    expect(calls[0]?.body.messages).toEqual(redraft);
+  });
 });

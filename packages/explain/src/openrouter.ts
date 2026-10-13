@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
 export interface ChatMessage {
-  role: "system" | "user";
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
@@ -14,15 +14,19 @@ export interface LlmClient {
 }
 
 const TIMEOUT_MS = 60_000;
+const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 
-/** OpenRouter client over the openai SDK: one request, no retries (CORE-16, CORE-21). */
+/** OpenRouter client over the openai SDK: one request, no retries (CORE-16, CORE-21); baseURL serves an OpenAI-compatible fake in E2E. */
 export function createOpenRouterClient(
   apiKey: string,
-  options: { fetch?: typeof globalThis.fetch } = {},
+  options: {
+    fetch?: typeof globalThis.fetch;
+    baseURL?: string | undefined;
+  } = {},
 ): LlmClient {
   const client = new OpenAI({
     apiKey,
-    baseURL: "https://openrouter.ai/api/v1",
+    baseURL: options.baseURL ?? DEFAULT_BASE_URL,
     timeout: TIMEOUT_MS,
     maxRetries: 0,
     ...(options.fetch ? { fetch: options.fetch } : {}),

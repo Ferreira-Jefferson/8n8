@@ -327,15 +327,16 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `openrouter.test.ts` (feature 01): o teste da URL padrão (`https://openrouter.ai/api/v1/chat/completions`) continua igual e passa.
-- [ ] Teste novo: com `baseURL: "http://127.0.0.1:9/v1"`, o POST vai para `http://127.0.0.1:9/v1/chat/completions`.
-- [ ] Teste novo: uma mensagem `assistant` chega no corpo do POST na ordem enviada.
-- [ ] Gate passa.
+- [x] `openrouter.test.ts` (feature 01): o teste da URL padrão (`https://openrouter.ai/api/v1/chat/completions`) continua igual e passa.
+- [x] Teste novo: com `baseURL: "http://127.0.0.1:9/v1"`, o POST vai para `http://127.0.0.1:9/v1/chat/completions`.
+- [x] Teste novo: uma mensagem `assistant` chega no corpo do POST na ordem enviada.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): accept assistant messages and a configurable base url`
+**Status**: ✅ Complete
 
 ---
 
