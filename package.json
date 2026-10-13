@@ -10,7 +10,11 @@
   "scripts": {
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck",
-    "check": "biome check . && depcruise packages apps --config .dependency-cruiser.cjs"
+    "check": "biome check . && depcruise packages apps --config .dependency-cruiser.cjs",
+    "dev": "pnpm run \"/^dev:/\"",
+    "dev:server": "tsx watch packages/server/src/main.ts",
+    "dev:web": "pnpm --filter @code2n8n/web dev",
+    "start": "pnpm --filter @code2n8n/web build && tsx packages/server/src/main.ts start"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

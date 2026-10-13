@@ -1343,7 +1343,7 @@ T48 → T49
 **Done when**:
 
 - [x] Só monta: toda lógica vem de `projectLevel`, `layoutLR` e `StepNode`, já testados.
-- [ ] Checagem manual no Independent Test (T49): dois nós e um fio; duplo clique abre o nível.
+- [x] Checagem manual no Independent Test (T49): dois nós e um fio; duplo clique abre o nível.
 - [x] Build gate passa.
 
 **Tests**: none (o design tira o canvas do jsdom; checagem manual)
@@ -1481,16 +1481,18 @@ T48 → T49
 
 **Done when**:
 
-- [ ] `pnpm start` sobe em `http://127.0.0.1:4317`.
-- [ ] Sem `.env`: o mapa funciona e o painel mostra "Configure OPENROUTER_API_KEY para ver resumos".
-- [ ] Com o `.env` que o orquestrador criou fora do git: o Independent Test passa nos 5 pontos. O ponto 5 é conferido pelo arquivo novo em `.cache/explain/` e por `fromCache: true` na segunda resposta.
-- [ ] `git status` não mostra `.env` nem `.cache/`.
-- [ ] Build gate passa.
+- [x] `pnpm start` sobe em `http://127.0.0.1:4317`.
+- [x] Sem `.env`: o mapa funciona e o painel mostra "Configure OPENROUTER_API_KEY para ver resumos".
+- [x] Com o `.env` que o orquestrador criou fora do git: o Independent Test passa nos 5 pontos. O ponto 5 é conferido pelo arquivo novo em `.cache/explain/` e por `fromCache: true` na segunda resposta.
+- [x] `git status` não mostra `.env` nem `.cache/`.
+- [x] Build gate passa.
 
 **Tests**: none (scripts; checagem manual com o app)
 **Gate**: build · `pnpm typecheck && pnpm check && pnpm test`
 
 **Commit**: `chore(repo): add dev and start scripts`
+
+**Status**: ✅ Complete
 
 ---
 
