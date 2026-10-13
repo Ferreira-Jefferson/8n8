@@ -619,19 +619,21 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (fixture do vídeo): existem `fn:processar_pedido` e `fn:calcular_frete`, com `parentId: null`, `range` certo e `openable: true`. O `import requests` sozinho NÃO cria o nó `mod`: o nível superior tem exatamente 2 nós (decisão do orquestrador, ver design regra 1).
-- [ ] Teste: trecho só com funções não cria nó `module`.
-- [ ] Teste: `x = 1` solto cria `mod`, rótulo "Módulo" (CORE-03).
-- [ ] Teste: `class Pedido` com `def validar` → `cls:Pedido` e `cls:Pedido/fn:validar` com `parentId: cls:Pedido`.
-- [ ] Teste: duas `def f` → `fn:f` e `fn:f#2`, na ordem do código.
-- [ ] Testes: trecho vazio, trecho só com comentários → `empty: true` e `nodes` vazio (CORE-07).
-- [ ] Teste: os nós saem em pré-ordem, na ordem do código.
-- [ ] Gate passa. Test count: ≥ 8 testes.
+- [x] Teste (fixture do vídeo): existem `fn:processar_pedido` e `fn:calcular_frete`, com `parentId: null`, `range` certo e `openable: true`. O `import requests` sozinho NÃO cria o nó `mod`: o nível superior tem exatamente 2 nós (decisão do orquestrador, ver design regra 1).
+- [x] Teste: trecho só com funções não cria nó `module`.
+- [x] Teste: `x = 1` solto cria `mod`, rótulo "Módulo" (CORE-03).
+- [x] Teste: `class Pedido` com `def validar` → `cls:Pedido` e `cls:Pedido/fn:validar` com `parentId: cls:Pedido`.
+- [x] Teste: duas `def f` → `fn:f` e `fn:f#2`, na ordem do código.
+- [x] Testes: trecho vazio, trecho só com comentários → `empty: true` e `nodes` vazio (CORE-07).
+- [x] Teste: os nós saem em pré-ordem, na ordem do código.
+- [x] Gate passa. Test count: ≥ 8 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): build top-level graph nodes`
+
+**Status**: ✅ Complete
 
 ---
 
