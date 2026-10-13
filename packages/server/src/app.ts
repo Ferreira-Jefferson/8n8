@@ -51,6 +51,7 @@ export function createApp(deps: AppDeps): Hono {
       ids.map(label).filter((l): l is string => l !== undefined);
     const calls = graph.edges.filter((e) => e.kind === "calls");
     const request: ExplainRequest = {
+      nodeId: node.id,
       nodeName: node.label,
       nodeKind: node.kind,
       code: sliceLines(source, node.range),
@@ -64,6 +65,7 @@ export function createApp(deps: AppDeps): Hono {
     };
 
     const result = await deps.explain(request);
+    // unfaithful is an answer, not a failure: 200 like ok and no-key (FID-10).
     return c.json(result, result.status === "error" ? 502 : 200);
   });
 

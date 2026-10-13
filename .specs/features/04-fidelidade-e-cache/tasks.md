@@ -470,15 +470,16 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `explain-route.test.ts` (feature 01): o pedido esperado em CORE-17 ganha `nodeId: "fn:calcular_frete"`; os outros campos e asserções continuam iguais; o corpo `ok` de "returns 200 with the same body" ganha `review: "full"`.
-- [ ] Teste novo: `{ status: "unfaithful" }` responde `200` com o mesmo corpo.
-- [ ] Os casos 400, 403, 404 e 502 da feature 01 continuam passando sem mudança.
-- [ ] Gate passa.
+- [x] `explain-route.test.ts` (feature 01): o pedido esperado em CORE-17 ganha `nodeId: "fn:calcular_frete"`; os outros campos e asserções continuam iguais; o corpo `ok` de "returns 200 with the same body" ganha `review: "full"`.
+- [x] Teste novo: `{ status: "unfaithful" }` responde `200` com o mesmo corpo.
+- [x] Os casos 400, 403, 404 e 502 da feature 01 continuam passando sem mudança.
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): pass node id to explain and answer unfaithful with 200`
+**Status**: ✅ Complete
 
 ---
 

@@ -35,8 +35,15 @@ function setup(reply: ExplainResponse) {
 
 const okReply: ExplainResponse = {
   status: "ok",
-  explanation: { summary: "x", inputs: [], outputs: [], suggestions: [] },
+  explanation: {
+    summary: "x",
+    sentences: [],
+    inputs: [],
+    outputs: [],
+    suggestions: [],
+  },
   fromCache: false,
+  review: "full",
 };
 
 describe("POST /api/explain", () => {
@@ -45,6 +52,7 @@ describe("POST /api/explain", () => {
     await post({ source: videoFixture, nodeId: "fn:calcular_frete" });
     expect(received).toHaveLength(1);
     expect(received[0]).toEqual({
+      nodeId: "fn:calcular_frete",
       nodeName: "calcular_frete",
       nodeKind: "function",
       code: videoFixture.split("\n").slice(3, 11).join("\n"),
@@ -84,6 +92,16 @@ describe("POST /api/explain", () => {
     });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ status: "no-key" });
+  });
+
+  it("returns 200 with the same body for unfaithful (FID-10)", async () => {
+    const { post } = setup({ status: "unfaithful" });
+    const res = await post({
+      source: videoFixture,
+      nodeId: "fn:calcular_frete",
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ status: "unfaithful" });
   });
 
   it("returns 502 { status: 'error' } for error (CORE-20)", async () => {
