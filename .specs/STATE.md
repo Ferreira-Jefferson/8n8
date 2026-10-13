@@ -63,11 +63,20 @@
 
 ## Handoff
 
-- **Features (em sequência):** 01-fatia-central (24 ACs), 02-pasta-local (9 ACs), 03-modo-grafo (7 ACs). Substituem a spec única `mapa-de-codigo` (54 ACs), que foi dividida por excesso de escopo.
-- **01-fatia-central:** concluída e verificada. Verifier PASS na iteração 2 (24/24 ACs, 209 testes, sensor 7/7 mortos). Relatório em `validation.md`.
-- **Pendências abertas (não bloqueiam):**
-  - fechar as lacunas SP-1..SP-5 na spec;
-  - incluir os vizinhos na chave do cache;
-  - fidelidade do resumo: "kg" foi inventado e `requests.get` ficou de fora;
-  - o pnpm 12.6.0 global está quebrado no Windows para chamadas aninhadas. Os workers usaram um shim no scratchpad.
-- **Next:** Design da 02-pasta-local (spec já aprovada).
+*Pausado a pedido do usuário em 2026-10-13.*
+
+- **Ordem das features:** 01-fatia-central ✅ → 04-fidelidade-e-cache (em andamento) → 02-pasta-local → 03-modo-grafo.
+- **01-fatia-central:** concluída e verificada (Verifier PASS, 24/24). As lacunas SP-1..SP-5 foram fechadas na spec. Suíte Playwright: `e2e/fatia-central.e2e.ts`, 14 testes verdes (commit 50f0441).
+- **04-fidelidade-e-cache:** spec, design e tasks aprovados (commit 145e84b). Já feito: T1–T15 (fases 1–4), 1 commit por tarefa, último commit 23a57a1.
+  - **Testes:** model 14, extract-python 85, explain 128, server 29, todos verdes.
+  - **Typecheck da web e E2E:** ficam vermelhos até a T22. Isso é esperado, porque o contrato mudou na T1.
+- **Próximo passo:** fase 5 (T16–T22, web e regressão da feature 01) num worker, depois a fase 6 (T23–T26, E2E com o OpenRouter falso). Depois o Verifier da feature 04.
+- **Contrato que a fase 5 e a fase 6 consomem:**
+  - `/api/explain` responde `{status:"ok", explanation:{summary, sentences, inputs, outputs, suggestions}, fromCache, review:"full"|"cut", update?}`, ou `unfaithful`, `no-key` ou `error`. Os claims trazem `{id,text,lines}` e as sugestões trazem `lines`, com linhas absolutas.
+  - Variáveis de ambiente: `CODE2N8N_REVIEW_MODEL`, `OPENROUTER_BASE_URL`, `CODE2N8N_CACHE_DIR`, `CODE2N8N_PORT`.
+  - Formato da mensagem do revisor (o OpenRouter falso da T23 depende dele): o system prompt contém `"verdicts"`, e o user traz `Código:`, `Vizinhos:` e `Itens:` com `- <id>: <texto>`.
+- **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) entraram com testes vermelhos, que a tarefa seguinte corrigiu. O corpo de cada commit explica. O Verifier deve conferir.
+- **Ambiente:**
+  - O pnpm 12.6.0 global está quebrado em chamadas aninhadas. Os workers usam o shim em `<scratchpad>/shim`.
+  - O Playwright precisa de `C:\Windows\System32` no PATH para chamar o `taskkill`.
+- **Pendências não bloqueantes:** a decisão de remover os commits vermelhos do histórico (não fazer sem pedido).
