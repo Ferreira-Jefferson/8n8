@@ -851,13 +851,15 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Testes: com `CODE2N8N_MODEL=google/gemini-x` → `google/gemini-x`; sem a variável → o padrão; com a variável vazia (como no `.env.example`) → o padrão.
-- [ ] Gate passa. Test count: ≥ 3 testes.
+- [x] Testes: com `CODE2N8N_MODEL=google/gemini-x` → `google/gemini-x`; sem a variável → o padrão; com a variável vazia (como no `.env.example`) → o padrão.
+- [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): resolve model from env with default`
+
+**Status**: ✅ Complete
 
 ---
 
