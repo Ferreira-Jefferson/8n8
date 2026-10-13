@@ -89,6 +89,7 @@ export function App() {
       {mapped && selected && (
         <DetailPanel
           source={mapped.source}
+          origin={{ source: mapped.source }}
           node={selected}
           effects={externalEffects(mapped.graph, selected.id)}
           onExplained={onExplained}

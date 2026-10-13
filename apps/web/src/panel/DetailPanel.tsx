@@ -7,12 +7,21 @@ import type {
   UpdateReason,
 } from "@code2n8n/model";
 import { useEffect, useState } from "react";
-import { type ExplainResult, fetchExplanation } from "../api";
+import {
+  type ExplainOrigin,
+  type ExplainResult,
+  fetchExplanation,
+} from "../api";
 import { CodeView } from "./CodeView";
 import { formatLines } from "./format-lines";
 
 export interface DetailPanelProps {
+  /** Text the node's lines come from: the snippet, or the node's whole file in a project. */
   source: string;
+  /** Where the server reads the code to explain (AD-015). */
+  origin: ExplainOrigin;
+  /** The node's file, shown above the lines in a project. */
+  filePath?: string | undefined;
   node: FlowNode;
   /** External effects of the node, taken from the graph (FID-14). */
   effects: ExternalEffect[];
@@ -38,6 +47,8 @@ function nodeCode(source: string, node: FlowNode): string {
 /** Lines and code of the selected node; reviewed summary and effects for function and class (CORE-14, 16, 19, 20, 24; FID-09..14; CACHE-04). */
 export function DetailPanel({
   source,
+  origin,
+  filePath,
   node,
   effects,
   onExplained,
@@ -46,8 +57,10 @@ export function DetailPanel({
   const [result, setResult] = useState<Loaded | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [highlighted, setHighlighted] = useState<ReadonlySet<number>>();
+  // A new origin object on each render must not refetch; its content decides.
+  const originKey = JSON.stringify(origin);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: onExplained is a callback, not an input; attempt triggers the retry
+  // biome-ignore lint/correctness/useExhaustiveDependencies: onExplained is a callback, not an input; originKey stands for origin; attempt triggers the retry
   useEffect(() => {
     setHighlighted(undefined);
     if (!explains) {
@@ -56,7 +69,7 @@ export function DetailPanel({
     }
     let live = true;
     setResult({ status: "loading" });
-    fetchExplanation({ source }, node.id).then((r) => {
+    fetchExplanation(origin, node.id).then((r) => {
       if (!live) return;
       setResult(r);
       if (r.status === "ok") onExplained(node.id, r.explanation);
@@ -64,11 +77,21 @@ export function DetailPanel({
     return () => {
       live = false;
     };
-  }, [source, node.id, explains, attempt]);
+  }, [source, originKey, node.id, explains, attempt]);
+
+  if (node.kind === "folder") {
+    return (
+      <aside className="detail-panel" aria-label="Detalhe do nó">
+        <h2>{node.label}</h2>
+        <p>{`Pasta: ${node.path ?? ""}`}</p>
+      </aside>
+    );
+  }
 
   return (
     <aside className="detail-panel" aria-label="Detalhe do nó">
       <h2>{node.label}</h2>
+      {filePath !== undefined && <p className="file-path">{filePath}</p>}
       <p>{`Linhas ${node.range.start}–${node.range.end}`}</p>
       <CodeView
         code={nodeCode(source, node)}

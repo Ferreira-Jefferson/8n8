@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type ExplainResult, fetchExplanation } from "../../api";
+import { lojaGraph } from "../../flow/__tests__/loja-graph";
 import { DetailPanel } from "../DetailPanel";
 
 vi.mock("../../api", () => ({ fetchExplanation: vi.fn() }));
@@ -130,6 +131,7 @@ describe("DetailPanel", () => {
     const { container } = render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={httpNode}
         effects={[]}
         onExplained={() => {}}
@@ -147,6 +149,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={() => {}}
@@ -173,6 +176,7 @@ describe("DetailPanel", () => {
     const { container } = render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={() => {}}
@@ -194,6 +198,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={() => {}}
@@ -213,6 +218,7 @@ describe("DetailPanel", () => {
     const { container } = render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={() => {}}
@@ -231,6 +237,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={() => {}}
@@ -249,6 +256,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={onExplained}
@@ -272,6 +280,7 @@ describe("DetailPanel", () => {
       const { container } = render(
         <DetailPanel
           source={source}
+          origin={{ source }}
           node={fnNode}
           effects={[]}
           onExplained={() => {}}
@@ -287,6 +296,7 @@ describe("DetailPanel", () => {
     const { container } = render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={() => {}}
@@ -319,6 +329,7 @@ describe("DetailPanel", () => {
       render(
         <DetailPanel
           source={source}
+          origin={{ source }}
           node={fnNode}
           effects={[]}
           onExplained={() => {}}
@@ -333,6 +344,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={() => {}}
@@ -349,6 +361,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={() => {}}
@@ -370,6 +383,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[requestsGet]}
         onExplained={() => {}}
@@ -389,6 +403,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[requestsGet]}
         onExplained={() => {}}
@@ -407,6 +422,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[]}
         onExplained={() => {}}
@@ -434,6 +450,7 @@ describe("DetailPanel", () => {
       render(
         <DetailPanel
           source={source}
+          origin={{ source }}
           node={fnNode}
           effects={[requestsGet]}
           onExplained={() => {}}
@@ -458,6 +475,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={fnNode}
         effects={[requestsGet]}
         onExplained={() => {}}
@@ -477,6 +495,7 @@ describe("DetailPanel", () => {
     render(
       <DetailPanel
         source={source}
+        origin={{ source }}
         node={httpNode}
         effects={[requestsGet]}
         onExplained={() => {}}
@@ -484,5 +503,83 @@ describe("DetailPanel", () => {
     );
     expect(screen.queryByText("Efeitos externos")).toBeNull();
     expect(screen.queryByText("Nenhum efeito externo.")).toBeNull();
+  });
+});
+
+describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
+  const root = "C:\\tmp\\loja";
+  const calculo = [
+    "def calcular_frete(peso):",
+    "    if peso > 30:",
+    "        return 50",
+    "    return 20",
+  ].join("\n");
+  const node = (id: string) => {
+    const n = lojaGraph.nodes.find((x) => x.id === id);
+    if (!n) throw new Error(`no node ${id}`);
+    return n;
+  };
+
+  it("shows only Pasta: <path> for a folder node, with no code and no explain request", () => {
+    const { container } = render(
+      <DetailPanel
+        source=""
+        origin={{ root }}
+        node={node("dir:frete")}
+        effects={[]}
+        onExplained={() => {}}
+      />,
+    );
+    expect(screen.getByText("Pasta: frete")).toBeTruthy();
+    expect(codeLines(container)).toEqual([]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("shows every line of the file for a file node, with no explain request", () => {
+    const { container } = render(
+      <DetailPanel
+        source={calculo}
+        origin={{ root }}
+        filePath="frete/calculo.py"
+        node={node("file:frete/calculo.py")}
+        effects={[]}
+        onExplained={() => {}}
+      />,
+    );
+    expect(codeLines(container)).toEqual([
+      "def calcular_frete(peso):",
+      "    if peso > 30:",
+      "        return 50",
+      "    return 20",
+    ]);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("shows the file path above the lines of a project function and explains it by root", async () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
+    const { container } = render(
+      <DetailPanel
+        source={calculo}
+        origin={{ root }}
+        filePath="frete/calculo.py"
+        node={node("file:frete/calculo.py/fn:calcular_frete")}
+        effects={[]}
+        onExplained={() => {}}
+      />,
+    );
+    expect(
+      await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
+    ).toBeTruthy();
+    const path = screen.getByText("frete/calculo.py");
+    const lines = screen.getByText("Linhas 1–4");
+    expect(
+      path.compareDocumentPosition(lines) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(codeLines(container)[0]).toBe("def calcular_frete(peso):");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      { root },
+      "file:frete/calculo.py/fn:calcular_frete",
+    );
   });
 });

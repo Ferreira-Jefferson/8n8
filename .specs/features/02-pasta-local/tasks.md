@@ -850,16 +850,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Nó `dir:frete`: texto exato `Pasta: frete`, nenhum `fetch` a `/api/explain`.
-- [ ] Nó `file:frete/calculo.py`: todas as linhas do arquivo, nenhum `fetch` a `/api/explain`.
-- [ ] Nó `calcular_frete` de projeto: `frete/calculo.py` acima das linhas; o POST leva `{ root, nodeId }`.
-- [ ] `DetailPanel.test.tsx` (features 01 e 04): os testes atuais só ganham a prop `origin={{ source }}`; as asserções não mudam (CORE-14, 16, 19, 20, 24, `stale`, `onExplained`, FID-09..14, CACHE-04).
-- [ ] Gate passa.
+- [x] Nó `dir:frete`: texto exato `Pasta: frete`, nenhum `fetch` a `/api/explain`.
+- [x] Nó `file:frete/calculo.py`: todas as linhas do arquivo, nenhum `fetch` a `/api/explain`.
+- [x] Nó `calcular_frete` de projeto: `frete/calculo.py` acima das linhas; o POST leva `{ root, nodeId }`.
+- [x] `DetailPanel.test.tsx` (features 01 e 04): os testes atuais só ganham a prop `origin={{ source }}`; as asserções não mudam (CORE-14, 16, 19, 20, 24, `stale`, `onExplained`, FID-09..14, CACHE-04).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): show folder, file and project nodes in the detail panel`
+
+**Status**: ✅ Complete
 
 ---
 
