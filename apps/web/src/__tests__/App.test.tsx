@@ -1,4 +1,9 @@
-import type { Explanation, FlowNode, Graph } from "@code2n8n/model";
+import type {
+  Explanation,
+  FlowNode,
+  Graph,
+  ProjectResponse,
+} from "@code2n8n/model";
 import {
   act,
   cleanup,
@@ -10,11 +15,17 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App";
-import { fetchExplanation, fetchGraph } from "../api";
+import { fetchExplanation, fetchGraph, fetchProject } from "../api";
+import { lojaGraph } from "../flow/__tests__/loja-graph";
 import type { FlowCanvasProps } from "../flow/FlowCanvas";
+import { projectLevel } from "../flow/project-level";
 import { pedidoFreteGraph } from "../panel/__tests__/pedido-frete-graph";
 
-vi.mock("../api", () => ({ fetchGraph: vi.fn(), fetchExplanation: vi.fn() }));
+vi.mock("../api", () => ({
+  fetchGraph: vi.fn(),
+  fetchExplanation: vi.fn(),
+  fetchProject: vi.fn(),
+}));
 
 let canvas: FlowCanvasProps | null = null;
 vi.mock("../flow/FlowCanvas", () => ({
@@ -26,11 +37,13 @@ vi.mock("../flow/FlowCanvas", () => ({
 
 const graphMock = vi.mocked(fetchGraph);
 const explainMock = vi.mocked(fetchExplanation);
+const projectMock = vi.mocked(fetchProject);
 
 beforeEach(() => {
   canvas = null;
   graphMock.mockReset();
   explainMock.mockReset();
+  projectMock.mockReset();
 });
 afterEach(cleanup);
 
@@ -172,5 +185,143 @@ describe("App", () => {
         .getAllByRole("listitem")
         .map((li) => li.textContent),
     ).toEqual(["requests.get (HTTP, linha 5)"]);
+  });
+});
+
+const lojaRoot = "C:\\tmp\\loja";
+const calculoSource = [
+  "def calcular_frete(peso):",
+  "    if peso > 30:",
+  "        return 50",
+  "    return 20",
+].join("\n");
+const loja: ProjectResponse = {
+  name: "loja",
+  graph: lojaGraph,
+  files: [{ path: "frete/calculo.py", source: calculoSource }],
+  ignored: [],
+};
+
+function openFolder(path = lojaRoot) {
+  fireEvent.change(screen.getByLabelText("Caminho da pasta"), {
+    target: { value: path },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Abrir pasta" }));
+}
+
+function breadcrumbItems() {
+  return within(
+    screen.getByRole("navigation", { name: "Caminho de navegação" }),
+  )
+    .getAllByRole("button")
+    .map((b) => b.textContent);
+}
+
+describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
+  it("maps the folder: 4 nodes at the top and the breadcrumb starts with loja", async () => {
+    projectMock.mockResolvedValue(loja);
+    render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    expect(projectMock).toHaveBeenCalledWith(lojaRoot);
+    const { graph, levelId } = currentCanvas();
+    expect(projectLevel(graph, levelId).nodes.map((n) => n.id)).toEqual([
+      "dir:.",
+      "dir:frete",
+      "dir:legado",
+      "dir:pedidos",
+    ]);
+    expect(breadcrumbItems()).toEqual(["loja"]);
+  });
+
+  it("shows Pasta não encontrada: <path> for a missing folder (PROJ-05)", async () => {
+    projectMock.mockResolvedValue({
+      error: "not-found",
+      path: "C:\\nao\\existe",
+    });
+    render(<App />);
+    openFolder("C:\\nao\\existe");
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Pasta não encontrada: C:\\nao\\existe",
+    );
+    expect(screen.queryByTestId("canvas")).toBeNull();
+  });
+
+  it("shows the empty-folder message for a project with no .py file", async () => {
+    projectMock.mockResolvedValue({
+      name: "vazia",
+      graph: {
+        language: "python",
+        empty: true,
+        nodes: [],
+        edges: [],
+        project: { name: "vazia" },
+      },
+      files: [],
+      ignored: [],
+    });
+    render(<App />);
+    openFolder();
+    expect(
+      await screen.findByText("Nenhum arquivo .py encontrado na pasta."),
+    ).toBeTruthy();
+    expect(screen.queryByTestId("canvas")).toBeNull();
+  });
+
+  it("lists the ignored files with their reason (PROJ-06)", async () => {
+    projectMock.mockResolvedValue({
+      ...loja,
+      ignored: [{ path: "grande.py", reason: "too-large" }],
+    });
+    render(<App />);
+    openFolder();
+    const section = await screen.findByRole("region", {
+      name: "Arquivos ignorados",
+    });
+    expect(
+      within(section)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["grande.py — maior que 1 MB"]);
+  });
+
+  it("replaces the folder map with a snippet map: Trecho is back and Arquivos ignorados is gone", async () => {
+    projectMock.mockResolvedValue({
+      ...loja,
+      ignored: [{ path: "grande.py", reason: "too-large" }],
+    });
+    graphMock.mockResolvedValue(graph);
+    render(<App />);
+    openFolder();
+    await screen.findByRole("region", { name: "Arquivos ignorados" });
+    fireEvent.change(screen.getByLabelText("Trecho Python"), {
+      target: { value: source },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Gerar mapa" }));
+    await waitFor(() => expect(breadcrumbItems()).toEqual(["Trecho"]));
+    expect(
+      screen.queryByRole("region", { name: "Arquivos ignorados" }),
+    ).toBeNull();
+    expect(currentCanvas().graph).toEqual(graph);
+  });
+
+  it("gives the panel the file's code, its path and the root origin", async () => {
+    projectMock.mockResolvedValue(loja);
+    explainMock.mockResolvedValue({ status: "no-key" });
+    render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    act(() =>
+      currentCanvas().onSelect("file:frete/calculo.py/fn:calcular_frete"),
+    );
+    expect(
+      await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
+    ).toBeTruthy();
+    expect(screen.getByText("frete/calculo.py")).toBeTruthy();
+    expect(screen.getByText("def calcular_frete(peso):")).toBeTruthy();
+    expect(explainMock).toHaveBeenCalledWith(
+      { root: lojaRoot },
+      "file:frete/calculo.py/fn:calcular_frete",
+    );
   });
 });

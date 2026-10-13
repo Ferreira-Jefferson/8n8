@@ -901,18 +901,20 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Com `fetch` falso devolvendo o grafo `loja`: o canvas mostra 4 nós no topo e o breadcrumb mostra `loja`.
-- [ ] 404 mostra o alerta com o texto exato `Pasta não encontrada: C:\nao\existe`.
-- [ ] Projeto vazio mostra exatamente "Nenhum arquivo .py encontrado na pasta.".
-- [ ] `ignored` com `grande.py` mostra `grande.py — maior que 1 MB`.
-- [ ] Gerar um trecho depois de uma pasta volta o breadcrumb para `Trecho` e some com "Arquivos ignorados".
-- [ ] `App.test.tsx` (features 01 e 04): os testes atuais passam sem mudança.
-- [ ] Gate passa.
+- [x] Com `fetch` falso devolvendo o grafo `loja`: o canvas mostra 4 nós no topo e o breadcrumb mostra `loja`.
+- [x] 404 mostra o alerta com o texto exato `Pasta não encontrada: C:\nao\existe`.
+- [x] Projeto vazio mostra exatamente "Nenhum arquivo .py encontrado na pasta.".
+- [x] `ignored` com `grande.py` mostra `grande.py — maior que 1 MB`.
+- [x] Gerar um trecho depois de uma pasta volta o breadcrumb para `Trecho` e some com "Arquivos ignorados".
+- [x] `App.test.tsx` (features 01 e 04): os testes atuais passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): open a local folder as a project map`
+
+**Status**: ✅ Complete
 
 ---
 
