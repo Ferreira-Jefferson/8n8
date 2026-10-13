@@ -410,13 +410,15 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Testes: intervalo 1-based e inclusivo; indentação mantida; uma linha só (`start == end`); última linha sem `\n` final; trecho com `\r\n` devolve as linhas certas.
-- [ ] Gate passa. Test count: ≥ 5 testes.
+- [x] Testes: intervalo 1-based e inclusivo; indentação mantida; uma linha só (`start == end`); última linha sem `\n` final; trecho com `\r\n` devolve as linhas certas.
+- [x] Gate passa. Test count: ≥ 5 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/model test`
 
 **Commit**: `feat(model): add sliceLines for exact node source`
+
+**Status**: ✅ Complete
 
 ---
 
