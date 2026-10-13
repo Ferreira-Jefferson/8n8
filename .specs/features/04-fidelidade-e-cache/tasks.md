@@ -705,17 +705,19 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `FRETE_EXPLANATION` e `PEDIDO_EXPLANATION` passam a `sentences`, `Claim[]` e sugestões com `id` e `lines`; `ok()` envia `review: "full"`.
-- [ ] CORE-16/23/24: o resumo é conferido pelo item de `getByRole("list", { name: "Resumo" })`; entradas e saídas pelas listas que seguem os títulos "Entradas" e "Saídas" (não por índice fixo); o botão da sugestão é achado pelo nome `"Guardar a tabela de frete em cache (linha 5, media)"`; as asserções de uma chamada por abertura, contagem "2" no nó e exatamente uma linha marcada (5, depois 8) continuam.
-- [ ] CORE-18 e CORE-20: as mesmas sequências de chamadas e de `fromCache`, com o resumo conferido pelo item da lista "Resumo".
-- [ ] CORE-19 continua exigindo o corpo exato `{ status: "no-key" }`.
-- [ ] Nenhum teste é removido, pulado ou afrouxado; o total continua 14.
-- [ ] Build final passa: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`.
+- [x] `FRETE_EXPLANATION` e `PEDIDO_EXPLANATION` passam a `sentences`, `Claim[]` e sugestões com `id` e `lines`; `ok()` envia `review: "full"`.
+- [x] CORE-16/23/24: o resumo é conferido pelo item de `getByRole("list", { name: "Resumo" })`; entradas e saídas pelas listas que seguem os títulos "Entradas" e "Saídas" (não por índice fixo); o botão da sugestão é achado pelo nome `"Guardar a tabela de frete em cache (linha 5, media)"`; as asserções de uma chamada por abertura, contagem "2" no nó e exatamente uma linha marcada (5, depois 8) continuam.
+- [x] CORE-18 e CORE-20: as mesmas sequências de chamadas e de `fromCache`, com o resumo conferido pelo item da lista "Resumo".
+- [x] CORE-19 continua exigindo o corpo exato `{ status: "no-key" }`.
+- [x] Nenhum teste é removido, pulado ou afrouxado; o total continua 14.
+- [x] Build final passa: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`.
 
 **Tests**: e2e
 **Gate**: build (final) · `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
 
 **Commit**: `test(e2e): migrate the fatia-central suite to reviewed claims`
+
+**Status**: ✅ Complete
 
 ---
 

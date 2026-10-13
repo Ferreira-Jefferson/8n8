@@ -1,7 +1,13 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { ExplainResponse, Explanation } from "@code2n8n/model";
-import { expect, type Page, type Route, test } from "@playwright/test";
+import {
+  expect,
+  type Locator,
+  type Page,
+  type Route,
+  test,
+} from "@playwright/test";
 
 // Feature 01-fatia-central, end to end: real build, real server, real parser.
 // /api/explain is mocked only where a fake LLM answer is needed (no key, no network).
@@ -39,6 +45,22 @@ const breadcrumb = (page: Page) =>
 const panel = (page: Page) =>
   page.getByRole("complementary", { name: "Detalhe do nó" });
 
+/** Texts of the summary sentences, one per item of the "Resumo" list. */
+const summaryItems = (view: Locator) =>
+  view.getByRole("list", { name: "Resumo" }).locator(":scope > li > span");
+/** Texts of the items in the list that follows a section heading. */
+const itemsAfter = (view: Locator, heading: string) =>
+  view
+    .getByRole("heading", { name: heading, exact: true })
+    .locator("xpath=following-sibling::ul[1]")
+    .locator(":scope > li > span");
+/** Suggestion buttons: "<comando> (linha N, <severidade>)". */
+const suggestionButtons = (view: Locator) =>
+  view
+    .getByRole("heading", { name: "Sugestões", exact: true })
+    .locator("xpath=following-sibling::ul[1]")
+    .getByRole("button", { name: /\(linha \d+, / });
+
 async function generate(page: Page, source: string): Promise<void> {
   await page.goto("/");
   await page.getByLabel("Trecho Python").fill(source);
@@ -70,34 +92,46 @@ async function mockExplain(
 }
 
 // Lines are absolute: the server already moved them into the node (4..11).
+const FRETE_SUMMARY =
+  "Calcula o frete do pedido a partir do peso e da distância.";
 const FRETE_EXPLANATION: Explanation = {
-  summary: "Calcula o frete do pedido a partir do peso e da distância.",
-  inputs: ["peso", "distancia"],
-  outputs: ["valor do frete"],
+  summary: FRETE_SUMMARY,
+  sentences: [{ id: "s1", text: FRETE_SUMMARY, lines: [4, 5, 6, 7] }],
+  inputs: [
+    { id: "i1", text: "peso", lines: [4] },
+    { id: "i2", text: "distancia", lines: [4] },
+  ],
+  outputs: [{ id: "o1", text: "valor do frete", lines: [9, 11] }],
   suggestions: [
     {
+      id: "g1",
       command: "Guardar a tabela de frete em cache",
       reason: "A função busca a tabela na rede a cada chamada.",
       line: 5,
       severity: "media",
+      lines: [5],
     },
     {
+      id: "g2",
       command: "Dar nome ao limite de peso",
       reason: "O número 30 aparece sem explicação.",
       line: 8,
       severity: "baixa",
+      lines: [8],
     },
   ],
 };
+const PEDIDO_SUMMARY = "Soma o frete de cada item.";
 const PEDIDO_EXPLANATION: Explanation = {
-  summary: "Soma o frete de cada item.",
-  inputs: ["itens"],
-  outputs: ["total"],
+  summary: PEDIDO_SUMMARY,
+  sentences: [{ id: "s1", text: PEDIDO_SUMMARY, lines: [15, 16, 17, 18] }],
+  inputs: [{ id: "i1", text: "itens", lines: [14] }],
+  outputs: [{ id: "o1", text: "total", lines: [18] }],
   suggestions: [],
 };
 const ok = (explanation: Explanation, fromCache = false): Reply => ({
   status: 200,
-  body: { status: "ok", explanation, fromCache },
+  body: { status: "ok", explanation, fromCache, review: "full" },
 });
 const failure: Reply = {
   status: 502,
@@ -371,16 +405,13 @@ test.describe("Explicação", () => {
     await nodeById(page, FRETE).click();
 
     const view = panel(page);
-    await expect(
-      view.getByText(FRETE_EXPLANATION.summary, { exact: true }),
-    ).toHaveCount(1);
-    await expect(
-      view.getByRole("list").nth(0).getByRole("listitem"),
-    ).toHaveText(["peso", "distancia"]);
-    await expect(
-      view.getByRole("list").nth(1).getByRole("listitem"),
-    ).toHaveText(["valor do frete"]);
-    const suggestions = view.getByRole("list").nth(2).getByRole("button");
+    await expect(summaryItems(view)).toHaveText([FRETE_SUMMARY]);
+    await expect(itemsAfter(view, "Entradas")).toHaveText([
+      "peso",
+      "distancia",
+    ]);
+    await expect(itemsAfter(view, "Saídas")).toHaveText(["valor do frete"]);
+    const suggestions = suggestionButtons(view);
     await expect(suggestions).toHaveText([
       "Guardar a tabela de frete em cache (linha 5, media)",
       "Dar nome ao limite de peso (linha 8, baixa)",
@@ -391,7 +422,12 @@ test.describe("Explicação", () => {
     await expect(nodeById(page, PEDIDO).getByTitle("Sugestões")).toHaveCount(0);
 
     await expect(view.locator('[aria-current="true"]')).toHaveCount(0);
-    await suggestions.nth(0).click();
+    await view
+      .getByRole("button", {
+        name: "Guardar a tabela de frete em cache (linha 5, media)",
+        exact: true,
+      })
+      .click();
     await expect(view.locator('[aria-current="true"]')).toHaveCount(1);
     await expect(view.locator('[aria-current="true"]')).toHaveAttribute(
       "data-line",
@@ -399,7 +435,12 @@ test.describe("Explicação", () => {
     );
     await shot(page, "08-suggestion-line-5");
 
-    await suggestions.nth(1).click();
+    await view
+      .getByRole("button", {
+        name: "Dar nome ao limite de peso (linha 8, baixa)",
+        exact: true,
+      })
+      .click();
     await expect(view.locator('[aria-current="true"]')).toHaveCount(1);
     await expect(view.locator('[aria-current="true"]')).toHaveAttribute(
       "data-line",
@@ -424,21 +465,13 @@ test.describe("Explicação", () => {
     await generate(page, VIDEO);
 
     await nodeById(page, FRETE).click();
-    await expect(
-      panel(page).getByText(FRETE_EXPLANATION.summary, { exact: true }),
-    ).toHaveCount(1);
+    await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
     await nodeById(page, PEDIDO).click();
-    await expect(
-      panel(page).getByText(PEDIDO_EXPLANATION.summary, { exact: true }),
-    ).toHaveCount(1);
+    await expect(summaryItems(panel(page))).toHaveText([PEDIDO_SUMMARY]);
     await nodeById(page, FRETE).click();
 
-    await expect(
-      panel(page).getByText(FRETE_EXPLANATION.summary, { exact: true }),
-    ).toHaveCount(1);
-    await expect(
-      panel(page).getByRole("list").nth(2).getByRole("button"),
-    ).toHaveCount(2);
+    await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
+    await expect(suggestionButtons(panel(page))).toHaveCount(2);
     await expect(nodeById(page, FRETE).getByTitle("Sugestões")).toHaveText("2");
     expect(calls).toEqual([FRETE, PEDIDO, FRETE]);
     await expect.poll(() => fromCache).toEqual([false, false, true]);
@@ -473,9 +506,7 @@ test.describe("Explicação", () => {
     ).toHaveCount(1);
     await panel(page).getByRole("button", { name: "Tentar de novo" }).click();
 
-    await expect(
-      panel(page).getByText(FRETE_EXPLANATION.summary, { exact: true }),
-    ).toHaveCount(1);
+    await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
     await expect(panel(page).getByText("Resumo indisponível")).toHaveCount(0);
     expect(calls.filter((id) => id === FRETE)).toHaveLength(3);
   });
