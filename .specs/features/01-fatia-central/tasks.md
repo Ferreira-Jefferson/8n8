@@ -1342,14 +1342,16 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Só monta: toda lógica vem de `projectLevel`, `layoutLR` e `StepNode`, já testados.
+- [x] Só monta: toda lógica vem de `projectLevel`, `layoutLR` e `StepNode`, já testados.
 - [ ] Checagem manual no Independent Test (T49): dois nós e um fio; duplo clique abre o nível.
-- [ ] Build gate passa.
+- [x] Build gate passa.
 
 **Tests**: none (o design tira o canvas do jsdom; checagem manual)
 **Gate**: build · `pnpm typecheck && pnpm check && pnpm test`
 
 **Commit**: `feat(web): add react flow canvas for one level`
+
+**Status**: ✅ Complete
 
 ---
 
