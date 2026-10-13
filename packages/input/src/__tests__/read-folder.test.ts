@@ -39,6 +39,8 @@ async function makeTree(): Promise<string> {
   await put("_x.py");
   await put("a.py");
   await put("notas.txt", "oi");
+  await put("stub.pyi", "def f() -> int: ...\n");
+  await put("a.pyc", Buffer.from([0x61, 0xe9, 0xff]));
   await put("grande.py", Buffer.alloc(1_048_577, 0x61));
   await put("latin.py", Buffer.from([0x61, 0x3d, 0xe9]));
   const outside = await mkdtemp(join(tmpdir(), "input-outside-"));
@@ -114,8 +116,10 @@ describe("readSourceFolder", () => {
   it("leaves files without the extension out of files and ignored", async () => {
     const r = await readSourceFolder(dir, ".py");
     if (r.kind !== "ok") throw new Error("expected ok");
-    expect(r.files.some((f) => f.path === "notas.txt")).toBe(false);
-    expect(r.ignored.some((i) => i.path === "notas.txt")).toBe(false);
+    for (const name of ["notas.txt", "stub.pyi", "a.pyc"]) {
+      expect(r.files.some((f) => f.path === name)).toBe(false);
+      expect(r.ignored.some((i) => i.path === name)).toBe(false);
+    }
   });
 
   it("returns not-found for a missing path and for a file path (PROJ-05)", async () => {
