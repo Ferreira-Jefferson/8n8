@@ -7,3 +7,7 @@ export function sliceLines(source: string, range: LineRange): string {
     .slice(range.start - 1, range.end)
     .join("\n");
 }
+
+export function syntaxErrorLabel(line: number): string {
+  return `Erro de sintaxe na linha ${line}`;
+}

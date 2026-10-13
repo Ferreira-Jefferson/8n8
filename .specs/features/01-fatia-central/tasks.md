@@ -435,13 +435,15 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: `syntaxErrorLabel(7)` é exatamente `"Erro de sintaxe na linha 7"`.
-- [ ] Gate passa. Test count: ≥ 6 testes em `lines.test.ts` (nenhum de T11 sumiu).
+- [x] Teste: `syntaxErrorLabel(7)` é exatamente `"Erro de sintaxe na linha 7"`.
+- [x] Gate passa. Test count: ≥ 6 testes em `lines.test.ts` (nenhum de T11 sumiu).
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/model test`
 
 **Commit**: `feat(model): add syntax error label`
+
+**Status**: ✅ Complete
 
 ---
 

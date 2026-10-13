@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sliceLines } from "../lines";
+import { sliceLines, syntaxErrorLabel } from "../lines";
 
 describe("sliceLines", () => {
   const source = "a = 1\nb = 2\nc = 3\nd = 4";
@@ -26,5 +26,11 @@ describe("sliceLines", () => {
   it("returns the right lines when the source uses \r\n", () => {
     const crlf = "a = 1\r\nb = 2\r\nc = 3";
     expect(sliceLines(crlf, { start: 2, end: 3 })).toBe("b = 2\nc = 3");
+  });
+});
+
+describe("syntaxErrorLabel", () => {
+  it("formats the label with the line number", () => {
+    expect(syntaxErrorLabel(7)).toBe("Erro de sintaxe na linha 7");
   });
 });
