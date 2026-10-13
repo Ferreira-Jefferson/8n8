@@ -222,17 +222,18 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `splitSentences` corta depois de `.`, `!` e `?` seguidos de espaço.
-- [ ] Não corta em `5.5`, em `requests.get` nem dentro de `` `a. b` ``.
-- [ ] Partes vazias e espaços nas pontas somem.
-- [ ] `toClaims` gera `s1..sn`, `i1..`, `o1..` e `g1..` na ordem do rascunho; a sugestão vira um item só.
-- [ ] Um rascunho sem entradas não gera `i*`.
-- [ ] Gate passa.
+- [x] `splitSentences` corta depois de `.`, `!` e `?` seguidos de espaço.
+- [x] Não corta em `5.5`, em `requests.get` nem dentro de `` `a. b` ``.
+- [x] Partes vazias e espaços nas pontas somem.
+- [x] `toClaims` gera `s1..sn`, `i1..`, `o1..` e `g1..` na ordem do rascunho; a sugestão vira um item só.
+- [x] Um rascunho sem entradas não gera `i*`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): split drafts into claims with positional ids`
+**Status**: ✅ Complete
 
 ---
 
