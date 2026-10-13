@@ -664,18 +664,19 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `main.test.ts` (feature 04) ganha testes sobre uma cópia da fixture em `<mkdtemp>/loja`, acrescida de `grande.py` (1,1 MB) e `latin1.py` (byte `0xE9`): `name` = `loja`, `graph.project.name` = `loja`, 8 arquivos em `files`, `ignored` exatamente `[{ grande.py, too-large }, { latin1.py, not-utf8 }]`.
-- [ ] PROJ-05: caminho ausente e caminho de `main.py` dão `not-found`.
-- [ ] AD-015: com `createApp` e a composição real, `POST /api/project`, depois uma linha nova em `frete/calculo.py` no disco, depois `POST /api/explain { root, nodeId }`: o `explain` falso recebe o código novo.
-- [ ] PROJ-07: antes da edição do passo anterior, caminhos, tamanhos, `mtimeMs` e sha256 da cópia são iguais antes e depois de mapear e explicar.
-- [ ] PROJ-08: `listenOptions(4317)` = `{ port: 4317, hostname: "127.0.0.1" }`.
-- [ ] Os testes atuais de `main.test.ts` passam sem mudança.
-- [ ] Build não-web passa (fim das fases 1 a 5).
+- [x] `main.test.ts` (feature 04) ganha testes sobre uma cópia da fixture em `<mkdtemp>/loja`, acrescida de `grande.py` (1,1 MB) e `latin1.py` (byte `0xE9`): `name` = `loja`, `graph.project.name` = `loja`, 8 arquivos em `files`, `ignored` exatamente `[{ grande.py, too-large }, { latin1.py, not-utf8 }]`.
+- [x] PROJ-05: caminho ausente e caminho de `main.py` dão `not-found`.
+- [x] AD-015: com `createApp` e a composição real, `POST /api/project`, depois uma linha nova em `frete/calculo.py` no disco, depois `POST /api/explain { root, nodeId }`: o `explain` falso recebe o código novo.
+- [x] PROJ-07: antes da edição do passo anterior, caminhos, tamanhos, `mtimeMs` e sha256 da cópia são iguais antes e depois de mapear e explicar.
+- [x] PROJ-08: `listenOptions(4317)` = `{ port: 4317, hostname: "127.0.0.1" }`.
+- [x] Os testes atuais de `main.test.ts` passam sem mudança.
+- [x] Build não-web passa (fim das fases 1 a 5).
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): compose folder reading with project extraction`
+**Status**: ✅ Complete
 
 ---
 

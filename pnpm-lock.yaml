@@ -280,6 +280,9 @@ importers:
       '@code2n8n/extract-python':
         specifier: workspace:*
         version: link:../extract-python
+      '@code2n8n/input':
+        specifier: workspace:*
+        version: link:../input
       '@code2n8n/model':
         specifier: workspace:*
         version: link:../model

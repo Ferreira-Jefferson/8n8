@@ -12,10 +12,15 @@ import {
   resolveReviewModel,
 } from "@code2n8n/explain";
 import { createPythonExtractor } from "@code2n8n/extract-python";
-import type { ExplainRequest, ExplainResponse } from "@code2n8n/model";
+import { type FolderRead, readSourceFolder } from "@code2n8n/input";
+import type {
+  ExplainRequest,
+  ExplainResponse,
+  ProjectExtractor,
+} from "@code2n8n/model";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
-import { createApp } from "./app";
+import { createApp, type ProjectRead } from "./app";
 
 const DEFAULT_PORT = 4317;
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -53,6 +58,28 @@ export function resolvePort(env: Record<string, string | undefined>): number {
   return /^\d+$/.test(raw) && port >= 1 && port <= 65535 ? port : DEFAULT_PORT;
 }
 
+/** Reads the folder and maps it: the extractor sets `graph.project` (PROJ-01, PROJ-05, PROJ-06, PROJ-07). */
+export function composeReadProject(
+  read: (path: string, extension: string) => Promise<FolderRead>,
+  extractor: ProjectExtractor,
+): (path: string) => Promise<ProjectRead> {
+  return async (path) => {
+    const folder = await read(path, ".py");
+    if (folder.kind === "not-found") return folder;
+    const { name, root, files, ignored } = folder;
+    const graph = { ...extractor.extractProject(files), project: { name } };
+    return { kind: "ok", root, response: { name, graph, files, ignored } };
+  };
+}
+
+/** The server listens on loopback only (PROJ-08). */
+export function listenOptions(port: number): {
+  port: number;
+  hostname: string;
+} {
+  return { port, hostname: "127.0.0.1" };
+}
+
 async function main(): Promise<void> {
   try {
     process.loadEnvFile(join(repoRoot, ".env"));
@@ -64,22 +91,22 @@ async function main(): Promise<void> {
     join(repoRoot, "docs/portugues-tecnico-simplificado.md"),
     "utf8",
   );
+  const extractor = await createPythonExtractor();
   const app = createApp({
-    extractor: await createPythonExtractor(),
+    extractor,
     explain: composeExplain(process.env, {
       createClient: (key, baseURL) => createOpenRouterClient(key, { baseURL }),
       ptsRules,
       cacheDir: join(repoRoot, ".cache/explain"),
     }),
-    // Placeholder until T20 composes the real reader.
-    readProject: async () => ({ kind: "not-found" }),
+    readProject: composeReadProject(readSourceFolder, extractor),
     port,
   });
   if (process.argv[2] === "start") {
     const dist = join(repoRoot, "apps/web/dist");
     app.use("/*", serveStatic({ root: relative(process.cwd(), dist) }));
   }
-  const server = serve({ fetch: app.fetch, port, hostname: "127.0.0.1" });
+  const server = serve({ fetch: app.fetch, ...listenOptions(port) });
   server.on("error", (err: NodeJS.ErrnoException) => {
     console.error(
       err.code === "EADDRINUSE"
