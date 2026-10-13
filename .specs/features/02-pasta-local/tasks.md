@@ -502,19 +502,20 @@ T31 → T32
 
 **Done when**:
 
-- [ ] PROJ-02: os nós `folder` e `file` saem exatamente nesta ordem: `dir:.`, `file:main.py`, `file:relatorio.py`, `dir:frete`, `file:frete/__init__.py`, `file:frete/calculo.py`, `dir:legado`, `file:legado/frete_antigo.py`, `dir:pedidos`, `file:pedidos/__init__.py`, `file:pedidos/itens.py`, `file:pedidos/pedidos.py`. Rótulos `raiz`, `main.py`, ..., `pedidos.py`; `path` de cada um; `parentId` de topo `null` só nas pastas.
-- [ ] PROJ-04: `file:pedidos/pedidos.py/fn:processar_pedido` tem o passo `call` de rótulo `calcular_frete` com `target` `file:frete/calculo.py/fn:calcular_frete`, e o fio `calls` entre as duas funções existe. `main` chama `file:pedidos/pedidos.py/fn:processar_pedido`.
-- [ ] PROJ-09: `file:relatorio.py/fn:gerar` tem um passo `external` `EXTERNO` com `callee` `calcular_frete`; nenhum fio tem `target` `file:legado/frete_antigo.py/fn:calcular_frete`.
-- [ ] IDs iguais em duas execuções e com `files` em ordem invertida.
-- [ ] Um arquivo com erro de sintaxe marca só os nós dele.
-- [ ] `files` vazio dá `empty: true` e nenhum nó.
-- [ ] Os arquivos em memória `a.py` (com `def y`) e `a.py/fn:y` geram ID repetido e `extractProject` lança erro.
-- [ ] Gate passa.
+- [x] PROJ-02: os nós `folder` e `file` saem exatamente nesta ordem: `dir:.`, `file:main.py`, `file:relatorio.py`, `dir:frete`, `file:frete/__init__.py`, `file:frete/calculo.py`, `dir:legado`, `file:legado/frete_antigo.py`, `dir:pedidos`, `file:pedidos/__init__.py`, `file:pedidos/itens.py`, `file:pedidos/pedidos.py`. Rótulos `raiz`, `main.py`, ..., `pedidos.py`; `path` de cada um; `parentId` de topo `null` só nas pastas.
+- [x] PROJ-04: `file:pedidos/pedidos.py/fn:processar_pedido` tem o passo `call` de rótulo `calcular_frete` com `target` `file:frete/calculo.py/fn:calcular_frete`, e o fio `calls` entre as duas funções existe. `main` chama `file:pedidos/pedidos.py/fn:processar_pedido`.
+- [x] PROJ-09: `file:relatorio.py/fn:gerar` tem um passo `external` `EXTERNO` com `callee` `calcular_frete`; nenhum fio tem `target` `file:legado/frete_antigo.py/fn:calcular_frete`.
+- [x] IDs iguais em duas execuções e com `files` em ordem invertida.
+- [x] Um arquivo com erro de sintaxe marca só os nós dele.
+- [x] `files` vazio dá `empty: true` e nenhum nó.
+- [x] Os arquivos em memória `a.py` (com `def y`) e `a.py/fn:y` geram ID repetido e `extractProject` lança erro.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): extract a project graph with folder and file nodes`
+**Status**: ✅ Complete
 
 ---
 
