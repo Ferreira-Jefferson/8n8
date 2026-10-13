@@ -1422,19 +1422,21 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (CORE-14): nó `external` selecionado → mostra "Linhas N–M" e o código exato; não busca explicação.
-- [ ] Teste (CORE-16): nó `function` → busca uma vez e mostra resumo, entradas, saídas e sugestões.
-- [ ] Teste (CORE-19): `no-key` → "Configure OPENROUTER_API_KEY para ver resumos", e o código continua visível.
-- [ ] Teste (CORE-20): `error` → "Resumo indisponível" e o botão "Tentar de novo"; o clique busca de novo e mostra o resumo.
-- [ ] Teste (CORE-24): clicar numa sugestão marca a linha dela no `CodeView`.
-- [ ] Teste: `stale` → pede para gerar o mapa de novo.
-- [ ] Teste: `ok` chama `onExplained` com o ID e a explicação.
-- [ ] Gate passa. Test count: ≥ 7 testes.
+- [x] Teste (CORE-14): nó `external` selecionado → mostra "Linhas N–M" e o código exato; não busca explicação.
+- [x] Teste (CORE-16): nó `function` → busca uma vez e mostra resumo, entradas, saídas e sugestões.
+- [x] Teste (CORE-19): `no-key` → "Configure OPENROUTER_API_KEY para ver resumos", e o código continua visível.
+- [x] Teste (CORE-20): `error` → "Resumo indisponível" e o botão "Tentar de novo"; o clique busca de novo e mostra o resumo.
+- [x] Teste (CORE-24): clicar numa sugestão marca a linha dela no `CodeView`.
+- [x] Teste: `stale` → pede para gerar o mapa de novo.
+- [x] Teste: `ok` chama `onExplained` com o ID e a explicação.
+- [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): add detail panel with explanation states`
+
+**Status**: ✅ Complete
 
 ---
 
