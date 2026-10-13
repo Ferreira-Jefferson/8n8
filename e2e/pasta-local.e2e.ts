@@ -1,5 +1,16 @@
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { createHash } from "node:crypto";
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { connect } from "node:net";
+import { networkInterfaces, tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
@@ -51,6 +62,8 @@ const edge = (page: Page, from: string, to: string) =>
   canvas(page).getByRole("group", { name: `Edge from ${from} to ${to}` });
 const breadcrumb = (page: Page) =>
   page.getByRole("navigation", { name: "Caminho de navegação" });
+const panel = (page: Page) =>
+  page.getByRole("complementary", { name: "Detalhe do nó" });
 
 async function openFolder(page: Page, path: string): Promise<void> {
   await page.goto("/");
@@ -216,4 +229,140 @@ test.describe("Pasta local", () => {
       await expect(nodes(page)).toHaveCount(0);
     }
   });
+
+  test("PROJ-06: Arquivos ignorados lists grande.py and latin1.py with their reasons, not .venv or dist", async ({
+    page,
+  }) => {
+    await openFolder(page, LOJA);
+    await expect(nodes(page)).toHaveCount(4);
+
+    const section = page.getByRole("region", { name: "Arquivos ignorados" });
+    await expect(section.getByRole("listitem")).toHaveText([
+      "grande.py — maior que 1 MB",
+      "latin1.py — não está em UTF-8",
+    ]);
+    await expect(page.getByText(/\b[xy]\.py\b/)).toHaveCount(0);
+  });
+
+  test("PROJ-07: mapping, drilling, jumping and opening a panel leave the folder untouched", async ({
+    page,
+  }) => {
+    const before = fingerprint(LOJA);
+    expect(before.map((f) => f.path)).toEqual([
+      ".venv/lib/x.py",
+      "dist/y.py",
+      "frete/__init__.py",
+      "frete/calculo.py",
+      "grande.py",
+      "latin1.py",
+      "legado/frete_antigo.py",
+      "main.py",
+      "pedidos/__init__.py",
+      "pedidos/itens.py",
+      "pedidos/pedidos.py",
+      "relatorio.py",
+    ]);
+
+    await openFolder(page, LOJA);
+    await nodeById(page, "dir:pedidos").dblclick();
+    await nodeById(page, "file:pedidos/pedidos.py").dblclick();
+    await nodeById(page, PEDIDO).dblclick();
+    await nodeById(page, `${PEDIDO}/s1`).dblclick();
+    await expect(breadcrumb(page).getByRole("button")).toHaveText([
+      "loja",
+      "frete",
+      "calculo.py",
+      "calcular_frete",
+    ]);
+    await breadcrumb(page).getByRole("button", { name: "calculo.py" }).click();
+    await nodeById(page, FRETE).click();
+    await expect(
+      panel(page).getByText("Configure OPENROUTER_API_KEY para ver resumos"),
+    ).toHaveCount(1);
+
+    expect(fingerprint(LOJA)).toEqual(before);
+  });
+
+  test("PROJ-08: the server refuses a connection on the machine's external IPv4", async () => {
+    const ipv4 = Object.values(networkInterfaces())
+      .flat()
+      .find((a) => a !== undefined && a.family === "IPv4" && !a.internal);
+    test.skip(ipv4 === undefined, "sem IPv4 externo");
+    const outcome = await new Promise<string>((resolve) => {
+      const socket = connect({ host: ipv4?.address, port: 4317 });
+      socket.on("connect", () => {
+        socket.destroy();
+        resolve("connected");
+      });
+      socket.on("error", (err: NodeJS.ErrnoException) =>
+        resolve(err.code ?? err.message),
+      );
+    });
+    expect(outcome).toBe("ECONNREFUSED");
+  });
+
+  test("AD-015: a project node is explained by root and nodeId, and the panel shows its file and lines", async ({
+    page,
+  }) => {
+    const bodies: unknown[] = [];
+    page.on("request", (r) => {
+      if (r.url().includes("/api/explain")) bodies.push(r.postDataJSON());
+    });
+
+    await openFolder(page, LOJA);
+    await nodeById(page, "dir:frete").dblclick();
+    await nodeById(page, "file:frete/calculo.py").dblclick();
+    await nodeById(page, FRETE).click();
+
+    const view = panel(page);
+    await expect(
+      view.getByText("Configure OPENROUTER_API_KEY para ver resumos", {
+        exact: true,
+      }),
+    ).toHaveCount(1);
+    expect(bodies).toEqual([{ root: LOJA, nodeId: FRETE }]);
+    await expect(
+      view.getByText("frete/calculo.py", { exact: true }),
+    ).toHaveCount(1);
+    expect(
+      await view
+        .locator("[data-line]")
+        .evaluateAll((els) => els.map((el) => el.getAttribute("data-line"))),
+    ).toEqual(["1", "2", "3", "4"]);
+    await expect(view.locator("[data-line] code")).toHaveText([
+      "def calcular_frete(peso):",
+      "    if peso > 30:",
+      "        return 50",
+      "    return 20",
+    ]);
+  });
 });
+
+interface FileStamp {
+  path: string;
+  size: number;
+  mtimeMs: number;
+  sha256: string;
+}
+
+/** Relative path, size, mtime and sha256 of every file under `root`, in path order (PROJ-07). */
+function fingerprint(root: string): FileStamp[] {
+  const out: FileStamp[] = [];
+  const walk = (rel: string) => {
+    for (const entry of readdirSync(join(root, rel), { withFileTypes: true })) {
+      const path = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        walk(path);
+        continue;
+      }
+      const abs = join(root, path);
+      const { size, mtimeMs } = statSync(abs);
+      const sha256 = createHash("sha256")
+        .update(readFileSync(abs))
+        .digest("hex");
+      out.push({ path, size, mtimeMs, sha256 });
+    }
+  };
+  walk("");
+  return out.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+}

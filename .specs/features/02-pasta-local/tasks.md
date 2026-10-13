@@ -986,17 +986,19 @@ T31 → T32
 
 **Done when**:
 
-- [ ] PROJ-06: a seção "Arquivos ignorados" tem exatamente 2 itens, nesta ordem: `grande.py — maior que 1 MB` e `latin1.py — não está em UTF-8`. `x.py` e `y.py` não aparecem.
-- [ ] PROJ-07 (só leitura): a impressão da cópia (caminho relativo, tamanho, `mtimeMs` e sha256 de cada arquivo, inclusive em `.venv` e `dist`) é igual antes e depois de mapear, abrir `processar_pedido`, saltar para `calcular_frete` e abrir o painel dele.
-- [ ] PROJ-08: uma conexão TCP ao primeiro IPv4 não interno da máquina na porta 4317 é recusada (`ECONNREFUSED`). Sem IPv4 externo, o teste é pulado com o motivo "sem IPv4 externo" no relatório.
-- [ ] Explicação de projeto: o pedido observado para `/api/explain` tem `root` igual ao caminho digitado, `nodeId` `file:frete/calculo.py/fn:calcular_frete` e nenhum `source`. O painel mostra `frete/calculo.py`, as linhas da função e "Configure OPENROUTER_API_KEY para ver resumos".
-- [ ] Regressão: `e2e/fatia-central.e2e.ts` e os specs da feature 04 passam sem mudança.
-- [ ] Build final passa.
+- [x] PROJ-06: a seção "Arquivos ignorados" tem exatamente 2 itens, nesta ordem: `grande.py — maior que 1 MB` e `latin1.py — não está em UTF-8`. `x.py` e `y.py` não aparecem.
+- [x] PROJ-07 (só leitura): a impressão da cópia (caminho relativo, tamanho, `mtimeMs` e sha256 de cada arquivo, inclusive em `.venv` e `dist`) é igual antes e depois de mapear, abrir `processar_pedido`, saltar para `calcular_frete` e abrir o painel dele.
+- [x] PROJ-08: uma conexão TCP ao primeiro IPv4 não interno da máquina na porta 4317 é recusada (`ECONNREFUSED`). Sem IPv4 externo, o teste é pulado com o motivo "sem IPv4 externo" no relatório.
+- [x] Explicação de projeto: o pedido observado para `/api/explain` tem `root` igual ao caminho digitado, `nodeId` `file:frete/calculo.py/fn:calcular_frete` e nenhum `source`. O painel mostra `frete/calculo.py`, as linhas da função e "Configure OPENROUTER_API_KEY para ver resumos".
+- [x] Regressão: `e2e/fatia-central.e2e.ts` e os specs da feature 04 passam sem mudança.
+- [x] Build final passa.
 
 **Tests**: e2e
 **Gate**: build (final) · `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
 
 **Commit**: `test(e2e): cover ignored files, read-only folder, loopback and project explain`
+
+**Status**: ✅ Complete
 
 ---
 
