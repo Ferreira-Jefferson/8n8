@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 7,
+  "next_id": 8,
   "lessons": [
     {
       "id": "L-001",
@@ -112,6 +112,24 @@
       ],
       "created": "2026-10-13T17:30:04Z",
       "last_seen": "2026-10-13T17:30:04Z"
+    },
+    {
+      "id": "L-007",
+      "key": "spec_precision_gap::state in the spec whether a reported error line is the interpreter s line or a line inside the marked node since the two differ for errors reported after a header",
+      "text": "State in the spec whether a reported error line is the interpreter's line or a line inside the marked node, since the two differ for errors reported after a header.",
+      "signal": "spec_precision_gap",
+      "scope": "extract-python",
+      "status": "candidate",
+      "features": [
+        "01-fatia-central"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SP-5 / CORE-06 / packages/extract-python/src/errors.ts:40 (extract-python)"
+      ],
+      "created": "2026-10-13T17:40:16Z",
+      "last_seen": "2026-10-13T17:40:16Z"
     }
   ]
 }

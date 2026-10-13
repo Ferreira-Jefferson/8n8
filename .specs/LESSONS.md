@@ -50,6 +50,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SPEC_DEVIATION packages/extract-python/src/errors.ts:23 (extract-python)
 - last seen: 2026-10-13T17:30:04Z
 
+### L-007 - State in the spec whether a reported error line is the interpreter's line or a line inside the marked node, since the two differ for errors reported after a header.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `extract-python` · harmful: 0
+- features: 01-fatia-central
+- evidence: SP-5 / CORE-06 / packages/extract-python/src/errors.ts:40 (extract-python)
+- last seen: 2026-10-13T17:40:16Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
