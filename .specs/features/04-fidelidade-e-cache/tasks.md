@@ -641,7 +641,7 @@ T24 → T26
 ### T20: Painel com frases, evidência, selo, aviso, falha fiel e efeitos
 
 **What**: Atualizar `DetailPanel` conforme C11: resumo em `<ol aria-label="Resumo">`; cada item é `<li data-claim-id>` com o texto num `<span>` e um botão de evidência (`formatLines`) que marca as linhas; selo `review-badge` ("Revisado" ou "Revisado com cortes"); `<p role="status">Resumo atualizado: …</p>`; estado `unfaithful` com "Não foi possível gerar um resumo fiel." e "Tentar de novo"; seção "Efeitos externos" para `function` e `class` em qualquer estado, a partir da prop `effects`.
-**Where**: `apps/web/src/panel/DetailPanel.tsx`
+**Where**: `apps/web/src/panel/DetailPanel.tsx`; também as fixtures de `apps/web/src/__tests__/App.test.tsx` e `effects={[]}` provisório em `apps/web/src/App.tsx` (movido de T21 pelo orquestrador: sem isso o `App.test.tsx` quebra com o painel novo e o gate de T20 fica vermelho)
 **Depends on**: T18, T19
 **Reuses**: `CodeView` (T19), `formatLines` (T18), o fluxo `live`/`attempt` atual
 **Requirement**: FID-09, FID-10, FID-11, FID-12, FID-13, FID-14, CACHE-04
@@ -650,18 +650,21 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `DetailPanel.test.tsx` (feature 01) migra assim: fixtures em `Claim[]` com `review`; CORE-16 continua com um único fetch e confere o texto de cada frase em `Resumo`, das entradas e das saídas pelo `<span>` do item; o texto do botão de sugestão continua `"<comando> (linha N, <severidade>)"`; CORE-24 continua marcando exatamente a linha da sugestão; CORE-14, CORE-19, CORE-20, `stale` e `onExplained` mantêm as asserções.
-- [ ] FID-11/09: `review: "full"` mostra exatamente "Revisado"; `"cut"` mostra "Revisado com cortes".
-- [ ] FID-12/13: o botão de `s2` com `lines: [8,9]` tem o nome `L8–9`; o clique marca exatamente as linhas 8 e 9; um clique em outro item troca a marcação.
-- [ ] CACHE-04: `update: ["neighbours"]` mostra `Resumo atualizado: os vizinhos mudaram`; `["code","model-or-prompt"]` mostra `Resumo atualizado: o código mudou, o modelo ou o prompt mudou`; sem `update` não há `role="status"`.
-- [ ] FID-10: `unfaithful` mostra o texto exato e "Tentar de novo", que faz um novo fetch.
-- [ ] FID-14: `effects` com um item mostra a lista "Efeitos externos" com `requests.get (HTTP, linha 5)`; vazio mostra "Nenhum efeito externo."; a seção aparece em `no-key`, `error` e `loading`; não aparece para um nó `external`.
-- [ ] Gate passa.
+- [x] `DetailPanel.test.tsx` (feature 01) migra assim: fixtures em `Claim[]` com `review`; CORE-16 continua com um único fetch e confere o texto de cada frase em `Resumo`, das entradas e das saídas pelo `<span>` do item; o texto do botão de sugestão continua `"<comando> (linha N, <severidade>)"`; CORE-24 continua marcando exatamente a linha da sugestão; CORE-14, CORE-19, CORE-20, `stale` e `onExplained` mantêm as asserções.
+- [x] FID-11/09: `review: "full"` mostra exatamente "Revisado"; `"cut"` mostra "Revisado com cortes".
+- [x] FID-12/13: o botão de `s2` com `lines: [8,9]` tem o nome `L8–9`; o clique marca exatamente as linhas 8 e 9; um clique em outro item troca a marcação.
+- [x] CACHE-04: `update: ["neighbours"]` mostra `Resumo atualizado: os vizinhos mudaram`; `["code","model-or-prompt"]` mostra `Resumo atualizado: o código mudou, o modelo ou o prompt mudou`; sem `update` não há `role="status"`.
+- [x] FID-10: `unfaithful` mostra o texto exato e "Tentar de novo", que faz um novo fetch.
+- [x] FID-14: `effects` com um item mostra a lista "Efeitos externos" com `requests.get (HTTP, linha 5)`; vazio mostra "Nenhum efeito externo."; a seção aparece em `no-key`, `error` e `loading`; não aparece para um nó `external`.
+- [x] `App.test.tsx` (feature 01, movido de T21): as fixtures de explicação passam a `Claim[]` com `review`; o selo de contagem de sugestões (CORE-23) e as demais asserções continuam iguais. `App` passa `effects={[]}` até T21.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): show reviewed claims with evidence, badges, updates and effects`
+
+**Status**: ✅ Complete
 
 ---
 
@@ -677,7 +680,7 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `App.test.tsx` (feature 01): as fixtures de explicação passam a `Claim[]` com `review`; o selo de contagem de sugestões (CORE-23) e as demais asserções continuam iguais.
+- [ ] A migração das fixtures de `App.test.tsx` foi para T20 (decisão do orquestrador). Aqui o `effects={[]}` provisório vira `externalEffects(graph, selected.id)`.
 - [ ] Teste novo: ao selecionar `calcular_frete` com `fetch` de explain respondendo `no-key`, o painel mostra `requests.get (HTTP, linha 5)`.
 - [ ] Gate passa. `pnpm --filter @code2n8n/web typecheck` volta a verde; o typecheck da raiz só fecha em T22, por causa de `e2e/`.
 
@@ -865,7 +868,7 @@ Roteiro, decidido pelo conteúdo do pedido:
 | `apps/web/src/__tests__/api.test.ts` | T17 | Fixture `ok` no contrato novo | O corpo 200 volta igual |
 | `apps/web/src/panel/__tests__/CodeView.test.tsx` | T19 | `highlightedLine` → `highlightedLines` | Exatamente 1 linha marcada (CORE-24); nenhuma sem a prop |
 | `apps/web/src/panel/__tests__/DetailPanel.test.tsx` | T20 | `Claim[]`, resumo em `<ol>` | CORE-14, 16, 19, 20, 24, `stale`, `onExplained` |
-| `apps/web/src/__tests__/App.test.tsx` | T21 | Fixtures em `Claim[]` | CORE-23 e o resto |
+| `apps/web/src/__tests__/App.test.tsx` | T20 (movido de T21) | Fixtures em `Claim[]` | CORE-23 e o resto |
 | `e2e/fatia-central.e2e.ts` | T22 | Contrato e DOM novos | Os 14 testes, com as mesmas contagens de chamadas e linhas |
 | `playwright.config.ts` | T24 | Três servidores, cache isolado | O servidor sem chave da feature 01 continua igual na 4317 |
 

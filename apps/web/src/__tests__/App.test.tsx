@@ -51,11 +51,26 @@ const graph: Graph = {
 
 const explanation: Explanation = {
   summary: "Devolve o peso.",
-  inputs: ["peso"],
-  outputs: ["peso"],
+  sentences: [{ id: "s1", text: "Devolve o peso.", lines: [2] }],
+  inputs: [{ id: "i1", text: "peso", lines: [1] }],
+  outputs: [{ id: "o1", text: "peso", lines: [2] }],
   suggestions: [
-    { command: "Valide o peso", reason: "r1", line: 1, severity: "media" },
-    { command: "Use tipos", reason: "r2", line: 2, severity: "baixa" },
+    {
+      id: "g1",
+      command: "Valide o peso",
+      reason: "r1",
+      line: 1,
+      severity: "media",
+      lines: [1],
+    },
+    {
+      id: "g2",
+      command: "Use tipos",
+      reason: "r2",
+      line: 2,
+      severity: "baixa",
+      lines: [2],
+    },
   ],
 };
 
@@ -105,6 +120,7 @@ describe("App", () => {
       status: "ok",
       explanation,
       fromCache: false,
+      review: "full",
     });
     await generate();
     await screen.findByTestId("canvas");

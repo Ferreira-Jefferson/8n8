@@ -89,6 +89,7 @@ export function App() {
         <DetailPanel
           source={mapped.source}
           node={selected}
+          effects={[]}
           onExplained={onExplained}
         />
       )}
