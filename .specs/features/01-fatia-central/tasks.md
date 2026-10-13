@@ -1053,16 +1053,18 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: `Host: evil.example:4317` → `403`.
-- [ ] Teste: `Host: 127.0.0.1:4317` e `Host: localhost:4317` passam pela guarda (a resposta não é `403`).
-- [ ] Teste: `Host: localhost:9999` → `403`.
-- [ ] Teste: nenhuma resposta traz `Access-Control-Allow-Origin`.
-- [ ] Gate passa. Test count: ≥ 4 testes.
+- [x] Teste: `Host: evil.example:4317` → `403`.
+- [x] Teste: `Host: 127.0.0.1:4317` e `Host: localhost:4317` passam pela guarda (a resposta não é `403`).
+- [x] Teste: `Host: localhost:9999` → `403`.
+- [x] Teste: nenhuma resposta traz `Access-Control-Allow-Origin`.
+- [x] Gate passa. Test count: ≥ 4 testes.
 
 **Tests**: integration
 **Gate**: full · `pnpm test`
 
 **Commit**: `feat(server): add app factory with local host guard`
+
+**Status**: ✅ Complete
 
 ---
 
