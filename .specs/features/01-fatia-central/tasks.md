@@ -1316,16 +1316,18 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: mostra o rótulo do nó.
-- [ ] Teste (CORE-12): nó `external` com `category: 'HTTP'` mostra "HTTP".
-- [ ] Teste (CORE-06): nó com `syntaxError.line: 4` mostra "Erro de sintaxe na linha 4".
-- [ ] Teste (CORE-23): `suggestionCount: 2` mostra um selo com "2"; `0` ou ausente → sem selo.
-- [ ] Gate passa. Test count: ≥ 5 testes.
+- [x] Teste: mostra o rótulo do nó.
+- [x] Teste (CORE-12): nó `external` com `category: 'HTTP'` mostra "HTTP".
+- [x] Teste (CORE-06): nó com `syntaxError.line: 4` mostra "Erro de sintaxe na linha 4".
+- [x] Teste (CORE-23): `suggestionCount: 2` mostra um selo com "2"; `0` ou ausente → sem selo.
+- [x] Gate passa. Test count: ≥ 5 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): add step node with category and badges`
+
+**Status**: ✅ Complete
 
 ---
 
