@@ -510,15 +510,17 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: a fixture do vídeo vira uma árvore sem erro, com duas `function_definition` no nível superior.
-- [ ] Teste: `def a():\n  pass\ndef b(:\n  pass` mantém as duas funções na árvore (comportamento que a CORE-06 usa).
-- [ ] Teste: duas chamadas a `loadPythonParser()` devolvem parsers que funcionam, e a inicialização roda uma vez só.
-- [ ] Gate passa. Test count: ≥ 3 testes.
+- [x] Teste: a fixture do vídeo vira uma árvore sem erro, com duas `function_definition` no nível superior.
+- [x] Teste: `def a():\n  pass\ndef b(:\n  pass` mantém as duas funções na árvore (comportamento que a CORE-06 usa).
+- [x] Teste: duas chamadas a `loadPythonParser()` devolvem parsers que funcionam, e a inicialização roda uma vez só.
+- [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): load python grammar wasm once`
+
+**Status**: ✅ Complete
 
 ---
 
