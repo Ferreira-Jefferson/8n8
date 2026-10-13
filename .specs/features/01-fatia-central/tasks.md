@@ -537,14 +537,16 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Testes, um por prefixo: `requests.get`, `httpx.post`, `urllib.request.urlopen`, `aiohttp.ClientSession` → HTTP; `sqlite3.connect`, `psycopg.connect`, `sqlalchemy.create_engine`, `cur.execute`, `conn.commit` → BANCO; `open`, `pathlib.Path` → ARQUIVO; `smtplib.SMTP` → EMAIL; `boto3.client` → EXTERNO.
-- [ ] Teste de borda: o prefixo casa por segmento do nome, então `requests_cache.install` → EXTERNO.
-- [ ] Gate passa. Test count: ≥ 14 testes (ou um teste por linha numa tabela `it.each`).
+- [x] Testes, um por prefixo: `requests.get`, `httpx.post`, `urllib.request.urlopen`, `aiohttp.ClientSession` → HTTP; `sqlite3.connect`, `psycopg.connect`, `sqlalchemy.create_engine`, `cur.execute`, `conn.commit` → BANCO; `open`, `pathlib.Path` → ARQUIVO; `smtplib.SMTP` → EMAIL; `boto3.client` → EXTERNO.
+- [x] Teste de borda: o prefixo casa por segmento do nome, então `requests_cache.install` → EXTERNO.
+- [x] Gate passa. Test count: ≥ 14 testes (ou um teste por linha numa tabela `it.each`).
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): classify external calls by prefix table`
+
+**Status**: ✅ Complete
 
 ---
 
