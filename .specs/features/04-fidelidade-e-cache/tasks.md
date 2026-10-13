@@ -796,17 +796,19 @@ Roteiro, decidido pelo conteúdo do pedido:
 
 **Done when** (cada item é um teste; textos exatos):
 
-- [ ] FID-02/03/08/09, corte do "5 kg": trecho `def pesar_caixa(caixa):\n    return caixa.peso\n`; abrir `fn:pesar_caixa` mostra "Revisado com cortes"; a lista "Resumo" tem exatamente "Devolve o peso da caixa."; o painel não contém "5 kg"; `fakeLog()` tem 3 `draft` e 3 `review`; o 2º e o 3º `draft` têm uma mensagem `assistant` e um `user` que começa com "Problemas encontrados:" e cita `s2`; nenhum `review` contém "pesa 5 kg".
-- [ ] FID-11/12/13/15/06, rascunho fiel: trecho `pedido_frete.py`; abrir `fn:calcular_frete` mostra exatamente "Revisado"; `[data-claim-id="s1"]` tem o botão `L5` e `[data-claim-id="s2"]` o botão `L8–9`; o clique em `L8–9` deixa exatamente as linhas 8 e 9 com `aria-current="true"`; a saída `o1` mostra `L9, L11`; o botão da sugestão é "Guardar a tabela de frete em cache (linha 5, media)"; `fakeLog()` tem 1 `draft` com modelo `e2e/drafter` e 1 `review` com modelo `e2e/reviewer`; o pedido `review` contém `processar_pedido` e não contém `Nó:` nem a primeira linha de `docs/portugues-tecnico-simplificado.md`.
-- [ ] FID-14, efeitos: no mesmo teste fiel, a lista "Efeitos externos" tem exatamente `requests.get (HTTP, linha 5)`; `processar_pedido` mostra "Nenhum efeito externo.".
-- [ ] FID-14 sem LLM: no servidor 4317 (sem chave), abrir `calcular_frete` mostra "Configure OPENROUTER_API_KEY para ver resumos" e a lista com `requests.get (HTTP, linha 5)`; `fakeLog()` continua vazio.
-- [ ] FID-10/01: trecho `def esperar(fila):\n    return fila.pop()\n`; abrir `fn:esperar` mostra "Não foi possível gerar um resumo fiel." e "Tentar de novo", sem selo; `fakeLog()` tem 3 `draft` e 0 `review`; o clique em "Tentar de novo" leva a 6 `draft` (nada foi para o cache) e a pasta `.cache/e2e-real/nodes` não tem arquivo `.json`.
-- [ ] Gate passa: `pnpm e2e`.
+- [x] FID-02/03/08/09, corte do "5 kg": trecho `def pesar_caixa(caixa):\n    return caixa.peso\n`; abrir `fn:pesar_caixa` mostra "Revisado com cortes"; a lista "Resumo" tem exatamente "Devolve o peso da caixa."; o painel não contém "5 kg"; `fakeLog()` tem 3 `draft` e 3 `review`; o 2º e o 3º `draft` têm uma mensagem `assistant` e um `user` que começa com "Problemas encontrados:" e cita `s2`; nenhum `review` contém "pesa 5 kg".
+- [x] FID-11/12/13/15/06, rascunho fiel: trecho `pedido_frete.py`; abrir `fn:calcular_frete` mostra exatamente "Revisado"; `[data-claim-id="s1"]` tem o botão `L5` e `[data-claim-id="s2"]` o botão `L8–9`; o clique em `L8–9` deixa exatamente as linhas 8 e 9 com `aria-current="true"`; a saída `o1` mostra `L9, L11`; o botão da sugestão é "Guardar a tabela de frete em cache (linha 5, media)"; `fakeLog()` tem 1 `draft` com modelo `e2e/drafter` e 1 `review` com modelo `e2e/reviewer`; o pedido `review` contém `processar_pedido` e não contém `Nó:` nem a primeira linha de `docs/portugues-tecnico-simplificado.md`.
+- [x] FID-14, efeitos: no mesmo teste fiel, a lista "Efeitos externos" tem exatamente `requests.get (HTTP, linha 5)`; `processar_pedido` mostra "Nenhum efeito externo.".
+- [x] FID-14 sem LLM: no servidor 4317 (sem chave), abrir `calcular_frete` mostra "Configure OPENROUTER_API_KEY para ver resumos" e a lista com `requests.get (HTTP, linha 5)`; `fakeLog()` continua vazio.
+- [x] FID-10/01: trecho `def esperar(fila):\n    return fila.pop()\n`; abrir `fn:esperar` mostra "Não foi possível gerar um resumo fiel." e "Tentar de novo", sem selo; `fakeLog()` tem 3 `draft` e 0 `review`; o clique em "Tentar de novo" leva a 6 `draft` (nada foi para o cache) e a pasta `.cache/e2e-real/nodes` não tem arquivo `.json`.
+- [x] Gate passa: `pnpm e2e`.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm e2e`
 
 **Commit**: `test(e2e): cover faithful, cut and unfaithful explanations through the real pipeline`
+
+**Status**: ✅ Complete
 
 ---
 
