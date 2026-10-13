@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createPythonExtractor } from "../index";
+import { lojaFiles } from "./loja";
 
 const videoFixture = readFileSync(
   new URL("./fixtures/pedido_frete.py", import.meta.url),
@@ -27,6 +28,42 @@ describe("createPythonExtractor", () => {
 
     expect(extractor.extract(videoFixture)).toEqual(
       extractor.extract(videoFixture),
+    );
+  });
+
+  it("extracts the projeto-loja fixture as a project: 12 folder and file nodes, 4 imports wires", async () => {
+    const graph = (await createPythonExtractor()).extractProject(lojaFiles());
+
+    expect(
+      graph.nodes
+        .filter((n) => n.kind === "folder" || n.kind === "file")
+        .map((n) => n.id),
+    ).toEqual([
+      "dir:.",
+      "file:main.py",
+      "file:relatorio.py",
+      "dir:frete",
+      "file:frete/__init__.py",
+      "file:frete/calculo.py",
+      "dir:legado",
+      "file:legado/frete_antigo.py",
+      "dir:pedidos",
+      "file:pedidos/__init__.py",
+      "file:pedidos/itens.py",
+      "file:pedidos/pedidos.py",
+    ]);
+    expect(
+      graph.edges
+        .filter((e) => e.kind === "imports")
+        .map((e) => [e.source, e.target])
+        .sort(),
+    ).toEqual(
+      [
+        ["file:main.py", "file:pedidos/pedidos.py"],
+        ["file:pedidos/pedidos.py", "file:frete/__init__.py"],
+        ["file:pedidos/pedidos.py", "file:pedidos/itens.py"],
+        ["file:frete/__init__.py", "file:frete/calculo.py"],
+      ].sort(),
     );
   });
 

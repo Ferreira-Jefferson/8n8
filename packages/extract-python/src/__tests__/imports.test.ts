@@ -40,6 +40,27 @@ describe("importAliases", () => {
     );
   });
 
+  it("maps from . import x to .x, without doubling the dot", async () => {
+    expect(await aliasesOf("from . import x\n")).toEqual(
+      new Map([["x", ".x"]]),
+    );
+  });
+
+  it("maps from .. import y as z to ..y", async () => {
+    expect(await aliasesOf("from .. import y as z\n")).toEqual(
+      new Map([["z", "..y"]]),
+    );
+  });
+
+  it("joins a relative module and a name with one dot", async () => {
+    expect(await aliasesOf("from .a import b\nfrom ..a.b import c\n")).toEqual(
+      new Map([
+        ["b", ".a.b"],
+        ["c", "..a.b.c"],
+      ]),
+    );
+  });
+
   it("includes imports made inside a function", async () => {
     const source = [
       "import requests",

@@ -158,14 +158,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Os tipos batem com C1 campo a campo.
-- [ ] O stub de `host-guard.test.ts` (`{ language, extract }`) continua compilando sem mudança.
-- [ ] Build não-web passa. O typecheck de `apps/web` fica vermelho só em `StepNode.tsx` (`ICONS`), como previsto; T21 fecha.
+- [x] Os tipos batem com C1 campo a campo.
+- [x] O stub de `host-guard.test.ts` (`{ language, extract }`) continua compilando sem mudança.
+- [x] Build não-web passa. O typecheck de `apps/web` fica vermelho só em `StepNode.tsx` (`ICONS`), como previsto; T21 fecha.
 
 **Tests**: none (tipos)
 **Gate**: build (não-web)
 
 **Commit**: `feat(model): add folder, file and imports kinds to the graph contract`
+**Status**: ✅ Complete
 
 ---
 
@@ -181,16 +182,17 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `folderId("")` = `dir:.`; `folderId("pedidos")` = `dir:pedidos`; `folderId("a/b")` = `dir:a/b`.
-- [ ] `fileId("pedidos/pedidos.py")` = `file:pedidos/pedidos.py`.
-- [ ] `childId(fileId("pedidos/pedidos.py"), "fn:processar_pedido/s2")` = `file:pedidos/pedidos.py/fn:processar_pedido/s2`.
-- [ ] `ids.test.ts` (feature 01): os testes atuais passam sem mudança.
-- [ ] Gate passa; nenhuma contagem de testes cai.
+- [x] `folderId("")` = `dir:.`; `folderId("pedidos")` = `dir:pedidos`; `folderId("a/b")` = `dir:a/b`.
+- [x] `fileId("pedidos/pedidos.py")` = `file:pedidos/pedidos.py`.
+- [x] `childId(fileId("pedidos/pedidos.py"), "fn:processar_pedido/s2")` = `file:pedidos/pedidos.py/fn:processar_pedido/s2`.
+- [x] `ids.test.ts` (feature 01): os testes atuais passam sem mudança.
+- [x] Gate passa; nenhuma contagem de testes cai.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/model test`
 
 **Commit**: `feat(model): add folder and file id helpers`
+**Status**: ✅ Complete
 
 ---
 
@@ -206,14 +208,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Os tipos batem com o bloco `project.ts` de C1.
-- [ ] `fileNodeOf`: de um passo dentro de uma função devolve o nó `file`; do próprio nó `file` devolve ele; de um nó `folder` devolve `undefined`; de um ID ausente devolve `undefined`; num grafo de trecho (sem nó `file`) devolve `undefined`.
-- [ ] Gate passa.
+- [x] Os tipos batem com o bloco `project.ts` de C1.
+- [x] `fileNodeOf`: de um passo dentro de uma função devolve o nó `file`; do próprio nó `file` devolve ele; de um nó `folder` devolve `undefined`; de um ID ausente devolve `undefined`; num grafo de trecho (sem nó `file`) devolve `undefined`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/model test`
 
 **Commit**: `feat(model): add the project contract and fileNodeOf`
+**Status**: ✅ Complete
 
 ---
 
@@ -231,15 +234,16 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `forbiddenUses` acha `writeFile`, `appendFile`, `mkdir`, `rm`, `rename`, `unlink`, `copyFile`, `chmod`, `open(` e `child_process` num texto de amostra, e não acha nada em `readFile(p)`.
-- [ ] `read-only.test.ts` lê todo `.ts` de `packages/input/src` fora de `__tests__`: `forbiddenUses` volta vazio para cada um, e só `fs-read.ts` importa `node:fs`.
-- [ ] `pnpm --filter @code2n8n/input typecheck` passa.
-- [ ] Gate passa.
+- [x] `forbiddenUses` acha `writeFile`, `appendFile`, `mkdir`, `rm`, `rename`, `unlink`, `copyFile`, `chmod`, `open(` e `child_process` num texto de amostra, e não acha nada em `readFile(p)`.
+- [x] `read-only.test.ts` lê todo `.ts` de `packages/input/src` fora de `__tests__`: `forbiddenUses` volta vazio para cada um, e só `fs-read.ts` importa `node:fs`.
+- [x] `pnpm --filter @code2n8n/input typecheck` passa.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/input test`
 
 **Commit**: `feat(input): add read-only input package with disk access in one module`
+**Status**: ✅ Complete
 
 ---
 
@@ -255,14 +259,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `pnpm check` passa.
-- [ ] Prova manual (não comprometida): um `import "@code2n8n/extract-python"` em `packages/input/src/index.ts` faz `pnpm check` falhar citando `input-only-model`. O import é revertido.
-- [ ] Build não-web passa.
+- [x] `pnpm check` passa.
+- [x] Prova manual (não comprometida): um `import "@code2n8n/extract-python"` em `packages/input/src/index.ts` faz `pnpm check` falhar citando `input-only-model`. O import é revertido.
+- [x] Build não-web passa.
 
 **Tests**: none (config)
 **Gate**: build (não-web)
 
 **Commit**: `build(deps): restrict the input package to model imports`
+**Status**: ✅ Complete
 
 ---
 
@@ -278,18 +283,19 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Arquivo de exatamente 1 048 576 bytes entra; 1 048 577 dá `too-large`.
-- [ ] Um byte `0xE9` dá `not-utf8`.
-- [ ] Um arquivo com BOM volta sem o BOM.
-- [ ] `EACCES` (com `vi.mock` de `node:fs/promises`) dá `unreadable`.
-- [ ] `lstat` com `isSymbolicLink()` dá `symlink`, e um `readFile` falso que lança erro nunca roda (o resultado continua `symlink`).
-- [ ] `rel` volta em POSIX.
-- [ ] Gate passa; `read-only.test.ts` continua verde.
+- [x] Arquivo de exatamente 1 048 576 bytes entra; 1 048 577 dá `too-large`.
+- [x] Um byte `0xE9` dá `not-utf8`.
+- [x] Um arquivo com BOM volta sem o BOM.
+- [x] `EACCES` (com `vi.mock` de `node:fs/promises`) dá `unreadable`.
+- [x] `lstat` com `isSymbolicLink()` dá `symlink`, e um `readFile` falso que lança erro nunca roda (o resultado continua `symlink`).
+- [x] `rel` volta em POSIX.
+- [x] Gate passa; `read-only.test.ts` continua verde.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/input test`
 
 **Commit**: `feat(input): read one source file with size, encoding and link checks`
+**Status**: ✅ Complete
 
 ---
 
@@ -305,20 +311,21 @@ T31 → T32
 
 **Done when**:
 
-- [ ] PROJ-01: numa árvore em `os.tmpdir()`, `.venv/lib/x.py`, `pkg/node_modules/y.py`, `a/dist/z.py`, `__pycache__/c.py` e `build/b.py` ficam fora de `files` e de `ignored`; `pedidos/itens.py` entra com `path` POSIX.
-- [ ] Ordem por código: `B.py` vem antes de `_x.py`, que vem antes de `a.py`.
-- [ ] `notas.txt` fica fora de `files` e de `ignored`.
-- [ ] PROJ-05: `not-found` para um caminho ausente e para o caminho de um arquivo.
-- [ ] PROJ-06: um `.py` de 1 048 577 bytes e um com `0xE9` aparecem em `ignored` com `too-large` e `not-utf8`, ordenados por `path`.
-- [ ] Uma junção (`fs.symlink(alvo, link, "junction")`) para uma pasta com `.py` é pulada.
-- [ ] `name` é o nome da pasta; `folderName("C:\\")` = `C:\`; `folderName("/")` = `/`.
-- [ ] PROJ-07: caminhos, tamanhos, `mtimeMs` e sha256 de cada arquivo da árvore são iguais antes e depois da leitura.
-- [ ] Gate passa.
+- [x] PROJ-01: numa árvore em `os.tmpdir()`, `.venv/lib/x.py`, `pkg/node_modules/y.py`, `a/dist/z.py`, `__pycache__/c.py` e `build/b.py` ficam fora de `files` e de `ignored`; `pedidos/itens.py` entra com `path` POSIX.
+- [x] Ordem por código: `B.py` vem antes de `_x.py`, que vem antes de `a.py`.
+- [x] `notas.txt` fica fora de `files` e de `ignored`.
+- [x] PROJ-05: `not-found` para um caminho ausente e para o caminho de um arquivo.
+- [x] PROJ-06: um `.py` de 1 048 577 bytes e um com `0xE9` aparecem em `ignored` com `too-large` e `not-utf8`, ordenados por `path`.
+- [x] Uma junção (`fs.symlink(alvo, link, "junction")`) para uma pasta com `.py` é pulada.
+- [x] `name` é o nome da pasta; `folderName("C:\\")` = `C:\`; `folderName("/")` = `/`.
+- [x] PROJ-07: caminhos, tamanhos, `mtimeMs` e sha256 de cada arquivo da árvore são iguais antes e depois da leitura.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/input test`
 
 **Commit**: `feat(input): walk a source folder skipping ignored dirs and links`
+**Status**: ✅ Complete
 
 ---
 
@@ -336,17 +343,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Regressão: `from . import x` mapeia `x` para `.x`. O teste falha no código atual (`..x`) antes da correção.
-- [ ] `from .. import y as z` mapeia `z` para `..y`.
-- [ ] `from .a import b` continua `.a.b`; `from ..a.b import c` dá `..a.b.c`.
-- [ ] `imports.test.ts` (feature 01): os 6 testes atuais passam sem mudança.
-- [ ] O snapshot de `extractor.test.ts` não muda.
-- [ ] Gate passa.
+- [x] Regressão: `from . import x` mapeia `x` para `.x`. O teste falha no código atual (`..x`) antes da correção.
+- [x] `from .. import y as z` mapeia `z` para `..y`.
+- [x] `from .a import b` continua `.a.b`; `from ..a.b import c` dá `..a.b.c`.
+- [x] `imports.test.ts` (feature 01): os 6 testes atuais passam sem mudança.
+- [x] O snapshot de `extractor.test.ts` não muda.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `fix(extract-python): stop doubling the dot in relative from-import aliases`
+**Status**: ✅ Complete
 
 ---
 
@@ -362,15 +370,16 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Cada caso de `moduleNameOf` e `packageOf` acima, mais `main.py` → `main` e pacote vazio para arquivo da raiz.
-- [ ] `relativeBase("a/b/c.py", 1)` = `a.b`; nível 2 = `a`; nível 3 = `null` (acima da raiz).
-- [ ] `relativeBase("a/b/__init__.py", 1)` = `a.b`.
-- [ ] Gate passa.
+- [x] Cada caso de `moduleNameOf` e `packageOf` acima, mais `main.py` → `main` e pacote vazio para arquivo da raiz.
+- [x] `relativeBase("a/b/c.py", 1)` = `a.b`; nível 2 = `a`; nível 3 = `null` (acima da raiz).
+- [x] `relativeBase("a/b/__init__.py", 1)` = `a.b`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): derive module names and relative import bases from paths`
+**Status**: ✅ Complete
 
 ---
 
@@ -386,14 +395,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Dois `def f` dão `ids` `[fn:f, fn:f#2]` e `topLevel.get("f")` = `fn:f#2`.
-- [ ] `build-graph.test.ts` e o snapshot de `extractor.test.ts` (feature 01) passam sem mudança.
-- [ ] Gate passa.
+- [x] Dois `def f` dão `ids` `[fn:f, fn:f#2]` e `topLevel.get("f")` = `fn:f#2`.
+- [x] `build-graph.test.ts` e o snapshot de `extractor.test.ts` (feature 01) passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `refactor(extract-python): extract top-level id allocation from buildGraph`
+**Status**: ✅ Complete
 
 ---
 
@@ -409,19 +419,20 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `frete.calculo.calcular_frete` resolve para `file:frete/calculo.py/fn:calcular_frete`.
-- [ ] `frete.calcular_frete` resolve pelo alias de `frete/__init__.py` (`from .calculo import calcular_frete`) para o mesmo ID.
-- [ ] Dois `__init__.py` que se reexportam em ciclo devolvem `null`, sem laço infinito.
-- [ ] Relativo nível 1 e nível 2 resolvem; nível acima da raiz devolve `null`.
-- [ ] Fallback da pasta do script: `scripts/run.py` com `import util` resolve `util.f` para `file:scripts/util.py/fn:f`. Se `util.py` existir também na raiz, a raiz vence.
-- [ ] `mod.Classe.metodo` devolve `null`; módulo fora do índice (`os.path.join`) devolve `null`.
-- [ ] `from x import *` não cria alias: o nome não resolve.
-- [ ] Gate passa.
+- [x] `frete.calculo.calcular_frete` resolve para `file:frete/calculo.py/fn:calcular_frete`.
+- [x] `frete.calcular_frete` resolve pelo alias de `frete/__init__.py` (`from .calculo import calcular_frete`) para o mesmo ID.
+- [x] Dois `__init__.py` que se reexportam em ciclo devolvem `null`, sem laço infinito.
+- [x] Relativo nível 1 e nível 2 resolvem; nível acima da raiz devolve `null`.
+- [x] Fallback da pasta do script: `scripts/run.py` com `import util` resolve `util.f` para `file:scripts/util.py/fn:f`. Se `util.py` existir também na raiz, a raiz vence.
+- [x] `mod.Classe.metodo` devolve `null`; módulo fora do índice (`os.path.join`) devolve `null`.
+- [x] `from x import *` não cria alias: o nome não resolve.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): index project modules and resolve imported names`
+**Status**: ✅ Complete
 
 ---
 
@@ -437,17 +448,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Com `resolveImport` que acerta, `calcular_frete(x)` importado vira `call` com o `target` do resolvedor e `label` `calcular_frete`.
-- [ ] Com `resolveImport` que erra, o resultado é o `external` de hoje.
-- [ ] `calcular_frete()` sem import e com `projectNames = {"calcular_frete"}` vira `external` `EXTERNO` com `callee` `calcular_frete`; `print(x)` continua sem passo.
-- [ ] Na mesma instrução, `requests.get(u)` antes de uma chamada de projeto resolvida: a chamada de projeto vence (regra "chamada vence externo").
-- [ ] `calls.test.ts` e `steps.test.ts` (feature 01): os testes atuais passam sem mudança (sem as opções, a saída é a de hoje).
-- [ ] Gate passa.
+- [x] Com `resolveImport` que acerta, `calcular_frete(x)` importado vira `call` com o `target` do resolvedor e `label` `calcular_frete`.
+- [x] Com `resolveImport` que erra, o resultado é o `external` de hoje.
+- [x] `calcular_frete()` sem import e com `projectNames = {"calcular_frete"}` vira `external` `EXTERNO` com `callee` `calcular_frete`; `print(x)` continua sem passo.
+- [x] Na mesma instrução, `requests.get(u)` antes de uma chamada de projeto resolvida: a chamada de projeto vence (regra "chamada vence externo").
+- [x] `calls.test.ts` e `steps.test.ts` (feature 01): os testes atuais passam sem mudança (sem as opções, a saída é a de hoje).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): resolve project calls through imports and flag unimported project names`
+**Status**: ✅ Complete
 
 ---
 
@@ -465,15 +477,16 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Com `prefix: "file:a.py"`: IDs `file:a.py/fn:f`, `file:a.py/fn:f/s1`, `file:a.py/mod`; os nós de topo têm `parentId` `file:a.py`; os fios `calls` locais têm IDs prefixados.
-- [ ] Com um `resolveImport` falso que devolve `file:b.py/fn:g`, o passo vira `call` com esse `target` e o fio `calls:file:a.py/fn:f->file:b.py/fn:g` aparece.
-- [ ] `build-graph.test.ts` e o snapshot de `extractor.test.ts` (feature 01) passam sem mudança.
-- [ ] Gate passa.
+- [x] Com `prefix: "file:a.py"`: IDs `file:a.py/fn:f`, `file:a.py/fn:f/s1`, `file:a.py/mod`; os nós de topo têm `parentId` `file:a.py`; os fios `calls` locais têm IDs prefixados.
+- [x] Com um `resolveImport` falso que devolve `file:b.py/fn:g`, o passo vira `call` com esse `target` e o fio `calls:file:a.py/fn:f->file:b.py/fn:g` aparece.
+- [x] `build-graph.test.ts` e o snapshot de `extractor.test.ts` (feature 01) passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): build graphs under a file prefix with an import resolver`
+**Status**: ✅ Complete
 
 ---
 
@@ -489,19 +502,20 @@ T31 → T32
 
 **Done when**:
 
-- [ ] PROJ-02: os nós `folder` e `file` saem exatamente nesta ordem: `dir:.`, `file:main.py`, `file:relatorio.py`, `dir:frete`, `file:frete/__init__.py`, `file:frete/calculo.py`, `dir:legado`, `file:legado/frete_antigo.py`, `dir:pedidos`, `file:pedidos/__init__.py`, `file:pedidos/itens.py`, `file:pedidos/pedidos.py`. Rótulos `raiz`, `main.py`, ..., `pedidos.py`; `path` de cada um; `parentId` de topo `null` só nas pastas.
-- [ ] PROJ-04: `file:pedidos/pedidos.py/fn:processar_pedido` tem o passo `call` de rótulo `calcular_frete` com `target` `file:frete/calculo.py/fn:calcular_frete`, e o fio `calls` entre as duas funções existe. `main` chama `file:pedidos/pedidos.py/fn:processar_pedido`.
-- [ ] PROJ-09: `file:relatorio.py/fn:gerar` tem um passo `external` `EXTERNO` com `callee` `calcular_frete`; nenhum fio tem `target` `file:legado/frete_antigo.py/fn:calcular_frete`.
-- [ ] IDs iguais em duas execuções e com `files` em ordem invertida.
-- [ ] Um arquivo com erro de sintaxe marca só os nós dele.
-- [ ] `files` vazio dá `empty: true` e nenhum nó.
-- [ ] Os arquivos em memória `a.py` (com `def y`) e `a.py/fn:y` geram ID repetido e `extractProject` lança erro.
-- [ ] Gate passa.
+- [x] PROJ-02: os nós `folder` e `file` saem exatamente nesta ordem: `dir:.`, `file:main.py`, `file:relatorio.py`, `dir:frete`, `file:frete/__init__.py`, `file:frete/calculo.py`, `dir:legado`, `file:legado/frete_antigo.py`, `dir:pedidos`, `file:pedidos/__init__.py`, `file:pedidos/itens.py`, `file:pedidos/pedidos.py`. Rótulos `raiz`, `main.py`, ..., `pedidos.py`; `path` de cada um; `parentId` de topo `null` só nas pastas.
+- [x] PROJ-04: `file:pedidos/pedidos.py/fn:processar_pedido` tem o passo `call` de rótulo `calcular_frete` com `target` `file:frete/calculo.py/fn:calcular_frete`, e o fio `calls` entre as duas funções existe. `main` chama `file:pedidos/pedidos.py/fn:processar_pedido`.
+- [x] PROJ-09: `file:relatorio.py/fn:gerar` tem um passo `external` `EXTERNO` com `callee` `calcular_frete`; nenhum fio tem `target` `file:legado/frete_antigo.py/fn:calcular_frete`.
+- [x] IDs iguais em duas execuções e com `files` em ordem invertida.
+- [x] Um arquivo com erro de sintaxe marca só os nós dele.
+- [x] `files` vazio dá `empty: true` e nenhum nó.
+- [x] Os arquivos em memória `a.py` (com `def y`) e `a.py/fn:y` geram ID repetido e `extractProject` lança erro.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): extract a project graph with folder and file nodes`
+**Status**: ✅ Complete
 
 ---
 
@@ -517,16 +531,17 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Na fixture, os fios `imports` são exatamente quatro: `main.py → pedidos/pedidos.py`, `pedidos/pedidos.py → frete/__init__.py`, `pedidos/pedidos.py → pedidos/itens.py`, `frete/__init__.py → frete/calculo.py` (IDs com `file:`).
-- [ ] `from a import b` com `a/b.py` liga a `a/b.py`; sem submódulo, liga a `a/__init__.py`.
-- [ ] `import os` e um import do próprio módulo não geram fio.
-- [ ] Dois imports do mesmo destino geram um fio só.
-- [ ] Gate passa.
+- [x] Na fixture, os fios `imports` são exatamente quatro: `main.py → pedidos/pedidos.py`, `pedidos/pedidos.py → frete/__init__.py`, `pedidos/pedidos.py → pedidos/itens.py`, `frete/__init__.py → frete/calculo.py` (IDs com `file:`).
+- [x] `from a import b` com `a/b.py` liga a `a/b.py`; sem submódulo, liga a `a/__init__.py`.
+- [x] `import os` e um import do próprio módulo não geram fio.
+- [x] Dois imports do mesmo destino geram um fio só.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): wire imports between project files`
+**Status**: ✅ Complete
 
 ---
 
@@ -542,14 +557,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `extractor.test.ts` ganha um teste: `extractProject` da fixture devolve os 12 nós de pasta e arquivo de T14 e os 4 fios de T15.
-- [ ] O snapshot do trecho (`extractor.test.ts`, feature 01) não muda.
-- [ ] Build não-web passa.
+- [x] `extractor.test.ts` ganha um teste: `extractProject` da fixture devolve os 12 nós de pasta e arquivo de T14 e os 4 fios de T15.
+- [x] O snapshot do trecho (`extractor.test.ts`, feature 01) não muda.
+- [x] Build não-web passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): expose extractProject on the python extractor`
+**Status**: ✅ Complete
 
 ---
 
@@ -567,17 +583,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `project-route.test.ts` (novo, `readProject` falso): 200 devolve `{ name, graph, files, ignored }` igual ao falso; `readProject` recebe exatamente o `path` digitado.
-- [ ] PROJ-05: `not-found` vira `404 { error: "not-found", path: "./nao/existe" }`.
-- [ ] `{}`, `{ path: "" }` e `{ path: 42 }` dão 400.
-- [ ] PROJ-08: `Host: evil.example:4317` em `/api/project` dá 403 e o falso não roda.
-- [ ] `graph-route.test.ts`, `host-guard.test.ts` e `explain-route.test.ts` só ganham o stub `readProject: async () => ({ kind: "not-found" })` no `createApp`; nenhuma asserção muda.
-- [ ] Gate passa.
+- [x] `project-route.test.ts` (novo, `readProject` falso): 200 devolve `{ name, graph, files, ignored }` igual ao falso; `readProject` recebe exatamente o `path` digitado.
+- [x] PROJ-05: `not-found` vira `404 { error: "not-found", path: "./nao/existe" }`.
+- [x] `{}`, `{ path: "" }` e `{ path: 42 }` dão 400.
+- [x] PROJ-08: `Host: evil.example:4317` em `/api/project` dá 403 e o falso não roda.
+- [x] `graph-route.test.ts`, `host-guard.test.ts` e `explain-route.test.ts` só ganham o stub `readProject: async () => ({ kind: "not-found" })` no `createApp`; nenhuma asserção muda.
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): add the project route behind the host guard`
+**Status**: ✅ Complete
 
 ---
 
@@ -593,17 +610,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `json-only.test.ts` (novo): `text/plain` em `/api/graph`, `/api/explain` e `/api/project` dá 415, e `explain` e `readProject` falsos não rodam.
-- [ ] Sem `content-type` também dá 415.
-- [ ] `application/json; charset=utf-8` passa.
-- [ ] `GET /` com Host válido não dá 415.
-- [ ] Os testes atuais de rota passam sem mudança (já mandam `application/json`).
-- [ ] Gate passa.
+- [x] `json-only.test.ts` (novo): `text/plain` em `/api/graph`, `/api/explain` e `/api/project` dá 415, e `explain` e `readProject` falsos não rodam.
+- [x] Sem `content-type` também dá 415.
+- [x] `application/json; charset=utf-8` passa.
+- [x] `GET /` com Host válido não dá 415.
+- [x] Os testes atuais de rota passam sem mudança (já mandam `application/json`).
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): refuse non-json posts with 415`
+**Status**: ✅ Complete
 
 ---
 
@@ -619,17 +637,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `project-route.test.ts`, com `readProject` falso montado pelo extrator real sobre os arquivos da fixture em memória e `root` `C:\tmp\loja`: o pedido de `file:frete/calculo.py/fn:calcular_frete` tem `code` igual às linhas da função em `calculo.py`, `range` absoluto no arquivo, `nodeId` `C:/tmp/loja|file:frete/calculo.py/fn:calcular_frete` e `calledBy` `["pedidos/pedidos.py:processar_pedido"]`.
-- [ ] Vizinho do mesmo arquivo (projeto em memória com `a.py` em que `f` chama `g`) vai só com o rótulo `g`.
-- [ ] Campos extras do cliente (`code`, `source` junto de `root`) não mudam o pedido.
-- [ ] `readProject` com `not-found` dá 404; nó ausente dá 404; nó `folder` e nó `file` dão 400.
-- [ ] `explain-route.test.ts` (features 01 e 04): os testes do ramo de trecho passam sem mudança.
-- [ ] Gate passa.
+- [x] `project-route.test.ts`, com `readProject` falso montado pelo extrator real sobre os arquivos da fixture em memória e `root` `C:\tmp\loja`: o pedido de `file:frete/calculo.py/fn:calcular_frete` tem `code` igual às linhas da função em `calculo.py`, `range` absoluto no arquivo, `nodeId` `C:/tmp/loja|file:frete/calculo.py/fn:calcular_frete` e `calledBy` `["pedidos/pedidos.py:processar_pedido"]`.
+- [x] Vizinho do mesmo arquivo (projeto em memória com `a.py` em que `f` chama `g`) vai só com o rótulo `g`.
+- [x] Campos extras do cliente (`code`, `source` junto de `root`) não mudam o pedido.
+- [x] `readProject` com `not-found` dá 404; nó ausente dá 404; nó `folder` e nó `file` dão 400.
+- [x] `explain-route.test.ts` (features 01 e 04): os testes do ramo de trecho passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): explain project nodes by re-reading the folder`
+**Status**: ✅ Complete
 
 ---
 
@@ -645,18 +664,19 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `main.test.ts` (feature 04) ganha testes sobre uma cópia da fixture em `<mkdtemp>/loja`, acrescida de `grande.py` (1,1 MB) e `latin1.py` (byte `0xE9`): `name` = `loja`, `graph.project.name` = `loja`, 8 arquivos em `files`, `ignored` exatamente `[{ grande.py, too-large }, { latin1.py, not-utf8 }]`.
-- [ ] PROJ-05: caminho ausente e caminho de `main.py` dão `not-found`.
-- [ ] AD-015: com `createApp` e a composição real, `POST /api/project`, depois uma linha nova em `frete/calculo.py` no disco, depois `POST /api/explain { root, nodeId }`: o `explain` falso recebe o código novo.
-- [ ] PROJ-07: antes da edição do passo anterior, caminhos, tamanhos, `mtimeMs` e sha256 da cópia são iguais antes e depois de mapear e explicar.
-- [ ] PROJ-08: `listenOptions(4317)` = `{ port: 4317, hostname: "127.0.0.1" }`.
-- [ ] Os testes atuais de `main.test.ts` passam sem mudança.
-- [ ] Build não-web passa (fim das fases 1 a 5).
+- [x] `main.test.ts` (feature 04) ganha testes sobre uma cópia da fixture em `<mkdtemp>/loja`, acrescida de `grande.py` (1,1 MB) e `latin1.py` (byte `0xE9`): `name` = `loja`, `graph.project.name` = `loja`, 8 arquivos em `files`, `ignored` exatamente `[{ grande.py, too-large }, { latin1.py, not-utf8 }]`.
+- [x] PROJ-05: caminho ausente e caminho de `main.py` dão `not-found`.
+- [x] AD-015: com `createApp` e a composição real, `POST /api/project`, depois uma linha nova em `frete/calculo.py` no disco, depois `POST /api/explain { root, nodeId }`: o `explain` falso recebe o código novo.
+- [x] PROJ-07: antes da edição do passo anterior, caminhos, tamanhos, `mtimeMs` e sha256 da cópia são iguais antes e depois de mapear e explicar.
+- [x] PROJ-08: `listenOptions(4317)` = `{ port: 4317, hostname: "127.0.0.1" }`.
+- [x] Os testes atuais de `main.test.ts` passam sem mudança.
+- [x] Build não-web passa (fim das fases 1 a 5).
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): compose folder reading with project extraction`
+**Status**: ✅ Complete
 
 ---
 

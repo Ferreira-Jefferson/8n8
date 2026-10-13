@@ -1,15 +1,27 @@
+import { createHash } from "node:crypto";
 import {
+  cpSync,
   existsSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
+  statSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { ExplainRequest } from "@code2n8n/model";
+import { createPythonExtractor } from "@code2n8n/extract-python";
+import { readSourceFolder } from "@code2n8n/input";
+import type { ExplainRequest, ProjectResponse } from "@code2n8n/model";
 import { afterAll, describe, expect, it } from "vitest";
-import { composeExplain, resolvePort } from "../main";
+import { createApp } from "../app";
+import {
+  composeExplain,
+  composeReadProject,
+  listenOptions,
+  resolvePort,
+} from "../main";
 
 const ptsRules = readFileSync(
   new URL(
@@ -226,5 +238,119 @@ describe("resolvePort", () => {
 
   it("falls back to 4317 for a value that is not a port", () => {
     expect(resolvePort({ CODE2N8N_PORT: "abc" })).toBe(4317);
+  });
+});
+
+const fixtureSrc = new URL(
+  "../../../extract-python/src/__tests__/fixtures/projeto-loja",
+  import.meta.url,
+);
+
+/** Fixture copy in os.tmpdir() plus an oversized file and a latin-1 file. */
+function makeLoja(): string {
+  const base = mkdtempSync(join(tmpdir(), "code2n8n-loja-"));
+  const loja = join(base, "loja");
+  cpSync(fixtureSrc, loja, { recursive: true });
+  writeFileSync(join(loja, "grande.py"), "#".repeat(1_048_576 + 1));
+  writeFileSync(join(loja, "latin1.py"), Buffer.from([0x78, 0x3d, 0xe9]));
+  return loja;
+}
+
+/** path, size, mtimeMs and sha256 of every file under dir. */
+function snapshot(dir: string, rel = ""): string[] {
+  return readdirSync(join(dir, rel), { withFileTypes: true })
+    .sort((a, b) => (a.name < b.name ? -1 : 1))
+    .flatMap((e) => {
+      const r = rel ? `${rel}/${e.name}` : e.name;
+      if (e.isDirectory()) return snapshot(dir, r);
+      const st = statSync(join(dir, r));
+      const sha = createHash("sha256")
+        .update(readFileSync(join(dir, r)))
+        .digest("hex");
+      return [`${r}|${st.size}|${st.mtimeMs}|${sha}`];
+    });
+}
+
+const extractor = await createPythonExtractor();
+
+describe("composeReadProject", () => {
+  const readProject = composeReadProject(readSourceFolder, extractor);
+
+  it("maps the folder: name, project name, 8 files, ignored files (PROJ-01, PROJ-06)", async () => {
+    const loja = makeLoja();
+    const read = await readProject(loja);
+    rmSync(join(loja, ".."), { recursive: true, force: true });
+    if (read.kind !== "ok") throw new Error("expected ok");
+    const response: ProjectResponse = read.response;
+    expect(response.name).toBe("loja");
+    expect(response.graph.project).toEqual({ name: "loja" });
+    expect(response.files).toHaveLength(8);
+    expect(response.ignored).toEqual([
+      { path: "grande.py", reason: "too-large" },
+      { path: "latin1.py", reason: "not-utf8" },
+    ]);
+  });
+
+  it("gives not-found for a missing path and for a file path (PROJ-05)", async () => {
+    const loja = makeLoja();
+    const missing = await readProject(join(loja, "nao-existe"));
+    const file = await readProject(join(loja, "main.py"));
+    rmSync(join(loja, ".."), { recursive: true, force: true });
+    expect(missing).toEqual({ kind: "not-found" });
+    expect(file).toEqual({ kind: "not-found" });
+  });
+
+  it("explain re-reads the disk: a new line in calculo.py reaches the explain call (AD-015)", async () => {
+    const loja = makeLoja();
+    const received: ExplainRequest[] = [];
+    const app = createApp({
+      extractor,
+      explain: async (r) => {
+        received.push(r);
+        return { status: "no-key" };
+      },
+      readProject,
+      port: 4317,
+    });
+    const post = (path: string, body: unknown) =>
+      app.request(path, {
+        method: "POST",
+        headers: {
+          host: "127.0.0.1:4317",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+    const nodeId = "file:frete/calculo.py/fn:calcular_frete";
+
+    // PROJ-07: map and explain leave the folder untouched.
+    const before = snapshot(loja);
+    expect((await post("/api/project", { path: loja })).status).toBe(200);
+    expect((await post("/api/explain", { root: loja, nodeId })).status).toBe(
+      200,
+    );
+    expect(snapshot(loja)).toEqual(before);
+    expect(received[0]?.code).not.toContain("peso > 100");
+
+    const file = join(loja, "frete", "calculo.py");
+    writeFileSync(
+      file,
+      readFileSync(file, "utf8").replace(
+        "    return 20",
+        ["    if peso > 100:", "        return 99", "    return 20"].join("\n"),
+      ),
+    );
+    await post("/api/explain", { root: loja, nodeId });
+    rmSync(join(loja, ".."), { recursive: true, force: true });
+    expect(received[1]?.code).toContain("if peso > 100:");
+  });
+});
+
+describe("listenOptions", () => {
+  it("listens on loopback only (PROJ-08)", () => {
+    expect(listenOptions(4317)).toEqual({
+      port: 4317,
+      hostname: "127.0.0.1",
+    });
   });
 });

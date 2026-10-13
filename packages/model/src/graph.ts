@@ -9,7 +9,9 @@ export type NodeKind =
   | "external"
   | "condition"
   | "loop"
-  | "block";
+  | "block"
+  | "folder"
+  | "file";
 
 export type ExternalCategory =
   | "HTTP"
@@ -35,9 +37,11 @@ export interface FlowNode {
   callee?: string;
   category?: ExternalCategory;
   syntaxError?: { line: number };
+  /** POSIX path relative to the root; only on `folder` and `file` nodes (`""` for the root). */
+  path?: string;
 }
 
-export type EdgeKind = "calls" | "next" | "branch";
+export type EdgeKind = "calls" | "next" | "branch" | "imports";
 
 export interface FlowEdge {
   id: string;
@@ -52,6 +56,8 @@ export interface Graph {
   empty: boolean;
   nodes: FlowNode[];
   edges: FlowEdge[];
+  /** Present only on a project graph; `name` is the root folder name. */
+  project?: { name: string };
 }
 
 export interface Extractor {

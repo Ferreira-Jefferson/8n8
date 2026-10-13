@@ -126,7 +126,13 @@ function buildFunction(
   return withSteps(head, bodyOf(def), id, scope);
 }
 
-function buildClass(def: Node, outer: Node, id: NodeId, scope: Scope): Chunk {
+function buildClass(
+  def: Node,
+  outer: Node,
+  id: NodeId,
+  parentId: NodeId | null,
+  scope: Scope,
+): Chunk {
   const body = bodyOf(def);
   const methodId = idAllocator();
   const ids: NodeId[] = [];
@@ -151,7 +157,7 @@ function buildClass(def: Node, outer: Node, id: NodeId, scope: Scope): Chunk {
     (loose) => withSteps(null, loose, id, inner),
   );
   return merge([
-    { nodes: [definitionNode(def, outer, id, null)], edges: [] },
+    { nodes: [definitionNode(def, outer, id, parentId)], edges: [] },
     ...children,
   ]);
 }
@@ -182,14 +188,21 @@ function callsEdges(nodes: FlowNode[]): FlowEdge[] {
   return [...edges.values()];
 }
 
-/** Builds the graph of a parsed snippet (CORE-01, 03, 07, 08). */
-export function buildGraph(tree: Tree): Graph {
-  const statements = tree.rootNode.namedChildren;
+export interface TopLevel {
+  /** Ids of the top-level definitions, in code order. */
+  ids: NodeId[];
+  /** Name to id; the last `def` with a name wins, as in Python. */
+  topLevel: Map<string, NodeId>;
+  names: Map<NodeId, string>;
+}
+
+/** Allocates `fn:x`, `fn:x#2`, `cls:X` for the top-level definitions of `root`. */
+export function allocateTopLevel(root: Node): TopLevel {
   const topId = idAllocator();
   const ids: NodeId[] = [];
   const topLevel = new Map<string, NodeId>();
   const names = new Map<NodeId, string>();
-  for (const statement of statements) {
+  for (const statement of root.namedChildren) {
     if (IGNORED.has(statement.type)) continue;
     const def = definitionOf(statement);
     if (def === null) continue;
@@ -200,14 +213,36 @@ export function buildGraph(tree: Tree): Graph {
     topLevel.set(name, id);
     names.set(id, name);
   }
+  return { ids, topLevel, names };
+}
+
+export interface BuildOptions
+  extends Pick<CallContext, "resolveImport" | "projectNames"> {
+  /** Parent of the top-level nodes, also prefixed to their ids (AD-013). */
+  prefix?: NodeId;
+}
+
+/** Builds the graph of a parsed snippet (CORE-01, 03, 07, 08). */
+export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
+  const { prefix, ...resolvers } = options;
+  const scoped = (id: NodeId) =>
+    prefix === undefined ? id : childId(prefix, id);
+  const parentId = prefix ?? null;
+  const statements = tree.rootNode.namedChildren;
+  const top = allocateTopLevel(tree.rootNode);
+  const ids = top.ids.map(scoped);
   const scope: Scope = {
     call: {
-      topLevel,
+      topLevel: new Map(
+        [...top.topLevel].map(([name, id]) => [name, scoped(id)]),
+      ),
       methods: new Map(),
       aliases: importAliases(tree.rootNode),
+      ...resolvers,
     },
-    names,
+    names: new Map([...top.names].map(([id, name]) => [scoped(id), name])),
   };
+  const moduleId = scoped("mod");
 
   const { nodes, edges } = merge(
     layout(
@@ -215,24 +250,24 @@ export function buildGraph(tree: Tree): Graph {
       (def, outer, index) => {
         const id = ids[index] ?? "";
         return def.type === "class_definition"
-          ? buildClass(def, outer, id, scope)
-          : buildFunction(def, outer, id, null, scope);
+          ? buildClass(def, outer, id, parentId, scope)
+          : buildFunction(def, outer, id, parentId, scope);
       },
       (loose) => {
         const first = loose[0];
         const last = loose[loose.length - 1];
         const head: FlowNode = {
-          id: "mod",
+          id: moduleId,
           kind: "module",
           label: "Módulo",
-          parentId: null,
+          parentId,
           range: {
             start: first ? lineRange(first).start : 1,
             end: last ? lineRange(last).end : 1,
           },
           openable: true,
         };
-        return withSteps(head, loose, "mod", scope);
+        return withSteps(head, loose, moduleId, scope);
       },
     ),
   );
