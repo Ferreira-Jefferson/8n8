@@ -767,17 +767,19 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: parêntese aberto dentro de `def b` → o grafo mantém as outras funções e o nó de `b` (ou o passo mais interno dele) tem `syntaxError.line` igual à linha do erro.
-- [ ] Teste: `def b(:` → as duas funções existem, e `fn:b` está marcado.
-- [ ] Teste: erro de indentação → o nó mais interno da linha está marcado.
-- [ ] Teste: erro fora de funções num trecho sem `module` → o `mod` é criado e marcado.
-- [ ] Teste: trecho válido → nenhum nó tem `syntaxError`.
-- [ ] Gate passa. Test count: ≥ 5 testes.
+- [x] Teste: parêntese aberto dentro de `def b` → o grafo mantém as outras funções e o nó de `b` (ou o passo mais interno dele) tem `syntaxError.line` igual à linha do erro.
+- [x] Teste: `def b(:` → as duas funções existem, e `fn:b` está marcado.
+- [x] Teste: erro de indentação → o nó mais interno da linha está marcado.
+- [x] Teste: erro fora de funções num trecho sem `module` → o `mod` é criado e marcado.
+- [x] Teste: trecho válido → nenhum nó tem `syntaxError`.
+- [x] Gate passa. Test count: ≥ 5 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): mark syntax errors on innermost node`
+
+**Status**: ✅ Complete
 
 ---
 

@@ -9,12 +9,16 @@ import {
 import type { Node } from "web-tree-sitter";
 import { type CallContext, resolveCall } from "./calls";
 
-/** Statements that never become steps and never create the module node. */
+/**
+ * Statements that never become steps and never create the module node.
+ * ERROR nodes are left to `markSyntaxErrors`, which marks the nearest node.
+ */
 export const IGNORED = new Set([
   "comment",
   "import_statement",
   "import_from_statement",
   "future_import_statement",
+  "ERROR",
 ]);
 
 /** 1-based, inclusive lines of a tree-sitter node. */
