@@ -18,6 +18,8 @@ const ICONS: Record<NodeKind, string> = {
   condition: "◇",
   loop: "↻",
   block: "▢",
+  folder: "⊞",
+  file: "▭",
 };
 
 /** One node of the canvas: kind icon, label, external category and badges (CORE-06, 12, 23). */

@@ -694,15 +694,16 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `StepNode.test.tsx` (feature 01) ganha testes: um nó `folder` e um nó `file` mostram o glifo próprio e o rótulo; nenhum glifo casa com a faixa de emoji (`\p{Extended_Pictographic}`).
-- [ ] Os testes atuais passam sem mudança.
-- [ ] `pnpm typecheck` da raiz passa de novo.
-- [ ] Gate passa.
+- [x] `StepNode.test.tsx` (feature 01) ganha testes: um nó `folder` e um nó `file` mostram o glifo próprio e o rótulo; nenhum glifo casa com a faixa de emoji (`\p{Extended_Pictographic}`).
+- [x] Os testes atuais passam sem mudança.
+- [x] `pnpm typecheck` da raiz passa de novo.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test && pnpm typecheck`
 
 **Commit**: `feat(web): add folder and file glyphs to step nodes`
+**Status**: ✅ Complete
 
 ---
 

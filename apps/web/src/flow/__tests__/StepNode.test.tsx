@@ -1,4 +1,4 @@
-import type { FlowNode } from "@code2n8n/model";
+import type { FlowNode, NodeKind } from "@code2n8n/model";
 import { cleanup, render, screen } from "@testing-library/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { afterEach, describe, expect, it } from "vitest";
@@ -64,4 +64,60 @@ describe("StepNode", () => {
     renderStep(node());
     expect(screen.queryByTitle("Sugestões")).toBeNull();
   });
+});
+
+const ALL_KINDS: NodeKind[] = [
+  "module",
+  "function",
+  "class",
+  "code",
+  "call",
+  "external",
+  "condition",
+  "loop",
+  "block",
+  "folder",
+  "file",
+];
+
+function iconOf(kind: NodeKind): string {
+  const { container } = renderStep(
+    node({ id: `x:${kind}`, kind, label: kind }),
+  );
+  const text = container.querySelector(".step-icon")?.textContent ?? "";
+  cleanup();
+  return text;
+}
+
+describe("StepNode, folder and file nodes (PROJ-02)", () => {
+  it("shows the label of a folder node and of a file node", () => {
+    renderStep(
+      node({ id: "dir:frete", kind: "folder", label: "frete", path: "frete" }),
+    );
+    expect(screen.getByText("frete")).toBeTruthy();
+    cleanup();
+    renderStep(
+      node({
+        id: "file:frete/calculo.py",
+        kind: "file",
+        label: "calculo.py",
+        path: "frete/calculo.py",
+      }),
+    );
+    expect(screen.getByText("calculo.py")).toBeTruthy();
+  });
+
+  it.each(["folder", "file"] as const)(
+    "gives %s its own non-emoji glyph",
+    (kind) => {
+      const icons = new Map(ALL_KINDS.map((k) => [k, iconOf(k)]));
+      const own = icons.get(kind) ?? "";
+      expect(own).not.toBe("");
+      expect(/\p{Extended_Pictographic}/u.test(own)).toBe(false);
+      const others = ALL_KINDS.filter((k) => k !== kind).map((k) =>
+        icons.get(k),
+      );
+      expect(others).not.toContain(own);
+    },
+  );
 });
