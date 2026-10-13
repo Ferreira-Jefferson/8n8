@@ -1,43 +1,84 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { Explanation } from "@code2n8n/model";
+import type { Explanation, NodeId, ReviewStatus } from "@code2n8n/model";
+import { z } from "zod";
+import type { Fingerprint } from "./fingerprint";
 
-export interface CacheEntry {
-  schemaVersion: 1;
-  /** sha256 hex of [code, model, promptVersion]. */
-  key: string;
-  model: string;
-  promptVersion: string;
+export interface CacheEntryV2 {
+  schemaVersion: 2;
+  nodeId: NodeId;
+  fingerprint: Fingerprint;
+  review: ReviewStatus;
   /** ISO date; informative only. */
   createdAt: string;
-  /** Lines RELATIVE to the node, already filtered. */
+  /** Every line RELATIVE to the node (CACHE-05). */
   result: Explanation;
 }
 
 export interface ExplainCache {
-  get(key: string): Promise<CacheEntry | undefined>;
-  set(entry: CacheEntry): Promise<void>;
+  get(nodeId: NodeId): Promise<CacheEntryV2 | undefined>;
+  set(entry: CacheEntryV2): Promise<void>;
 }
 
-/** One JSON file per key in `dir`; atomic write (temp file + rename) (CORE-18). */
+const claim = z.object({
+  id: z.string(),
+  text: z.string(),
+  lines: z.array(z.number().int()),
+});
+
+const entrySchema = z.object({
+  schemaVersion: z.literal(2),
+  nodeId: z.string(),
+  fingerprint: z.object({
+    code: z.string(),
+    neighbours: z.string(),
+    model: z.string(),
+    reviewModel: z.string(),
+    promptVersion: z.string(),
+    reviewerVersion: z.string(),
+  }),
+  review: z.enum(["full", "cut"]),
+  createdAt: z.string(),
+  result: z.object({
+    summary: z.string(),
+    sentences: z.array(claim),
+    inputs: z.array(claim),
+    outputs: z.array(claim),
+    suggestions: z.array(
+      z.object({
+        id: z.string(),
+        command: z.string(),
+        reason: z.string(),
+        line: z.number().int(),
+        severity: z.enum(["alta", "media", "baixa"]),
+        lines: z.array(z.number().int()),
+      }),
+    ),
+  }),
+});
+
+/** One JSON file per node identity in `<dir>/nodes/<sha256(nodeId)>.json`; atomic write (temp file + rename) (C6). */
 export function createDiskCache(dir: string): ExplainCache {
-  const fileOf = (key: string) => join(dir, `${key}.json`);
+  const nodes = join(dir, "nodes");
+  const fileOf = (nodeId: NodeId) =>
+    join(nodes, `${createHash("sha256").update(nodeId).digest("hex")}.json`);
   return {
-    async get(key) {
+    async get(nodeId) {
       try {
-        const entry = JSON.parse(await readFile(fileOf(key), "utf8"));
-        return entry?.schemaVersion === 1 ? (entry as CacheEntry) : undefined;
+        const raw = JSON.parse(await readFile(fileOf(nodeId), "utf8"));
+        const parsed = entrySchema.safeParse(raw);
+        return parsed.success ? parsed.data : undefined;
       } catch {
-        // Missing or corrupted file: treated as absent.
+        // Missing or corrupted file: treated as absent (CACHE-07).
         return undefined;
       }
     },
     async set(entry) {
-      await mkdir(dir, { recursive: true });
-      const tmp = join(dir, `${entry.key}.${randomUUID()}.tmp`);
+      await mkdir(nodes, { recursive: true });
+      const tmp = join(nodes, `${randomUUID()}.tmp`);
       await writeFile(tmp, JSON.stringify(entry), "utf8");
-      await rename(tmp, fileOf(entry.key));
+      await rename(tmp, fileOf(entry.nodeId));
     },
   };
 }

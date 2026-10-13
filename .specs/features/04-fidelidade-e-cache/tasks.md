@@ -412,16 +412,17 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `cache.test.ts` (feature 01) migra para a API por `nodeId` mantendo as seis intenções: devolve a entrada guardada; `undefined` para nó ausente; arquivo corrompido conta como ausente e é sobrescrito no próximo `set`; cria a pasta; não deixa arquivo temporário; persiste entre instâncias.
-- [ ] CACHE-06: dois `set` do mesmo `nodeId` com impressões digitais diferentes deixam um único arquivo em `nodes/`, com a segunda entrada.
-- [ ] O nome do arquivo de `fn:calcular_frete` e de `cls:A/fn:b` não tem `:` nem `/`.
-- [ ] CACHE-07: uma entrada `schemaVersion: 1`, um JSON de outro formato e um arquivo da feature 01 na raiz da pasta dão `undefined`.
-- [ ] Gate passa.
+- [x] `cache.test.ts` (feature 01) migra para a API por `nodeId` mantendo as seis intenções: devolve a entrada guardada; `undefined` para nó ausente; arquivo corrompido conta como ausente e é sobrescrito no próximo `set`; cria a pasta; não deixa arquivo temporário; persiste entre instâncias.
+- [x] CACHE-06: dois `set` do mesmo `nodeId` com impressões digitais diferentes deixam um único arquivo em `nodes/`, com a segunda entrada.
+- [x] O nome do arquivo de `fn:calcular_frete` e de `cls:A/fn:b` não tem `:` nem `/`.
+- [x] CACHE-07: uma entrada `schemaVersion: 1`, um JSON de outro formato e um arquivo da feature 01 na raiz da pasta dão `undefined`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain)!: store one v2 cache entry per node identity`
+**Status**: ✅ Complete
 
 ---
 
