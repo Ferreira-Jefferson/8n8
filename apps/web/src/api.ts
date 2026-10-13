@@ -1,4 +1,4 @@
-import type { ExplainResponse, Graph } from "@code2n8n/model";
+import type { ExplainResponse, Graph, ProjectResponse } from "@code2n8n/model";
 
 export type ExplainResult = ExplainResponse | { status: "stale" };
 
@@ -19,12 +19,27 @@ export async function fetchGraph(source: string): Promise<Graph> {
   return body.graph;
 }
 
+export type ProjectResult =
+  | ProjectResponse
+  | { error: "not-found"; path: string };
+
+/** Opens a local folder; `not-found` carries the path as typed (PROJ-05). */
+export async function fetchProject(path: string): Promise<ProjectResult> {
+  const res = await post("/api/project", { path });
+  if (res.status === 404) return { error: "not-found", path };
+  if (!res.ok) throw new Error(`Falha ao abrir a pasta (HTTP ${res.status})`);
+  return (await res.json()) as ProjectResponse;
+}
+
+/** Where the server reads the code to explain: the snippet or the project root (AD-015). */
+export type ExplainOrigin = { source: string } | { root: string };
+
 export async function fetchExplanation(
-  source: string,
+  origin: ExplainOrigin,
   nodeId: string,
 ): Promise<ExplainResult> {
   try {
-    const res = await post("/api/explain", { source, nodeId });
+    const res = await post("/api/explain", { ...origin, nodeId });
     if (res.status === 404) return { status: "stale" };
     if (res.status === 200) return (await res.json()) as ExplainResponse;
     const body = (await res.json().catch(() => null)) as {

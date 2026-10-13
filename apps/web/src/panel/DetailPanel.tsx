@@ -56,7 +56,7 @@ export function DetailPanel({
     }
     let live = true;
     setResult({ status: "loading" });
-    fetchExplanation(source, node.id).then((r) => {
+    fetchExplanation({ source }, node.id).then((r) => {
       if (!live) return;
       setResult(r);
       if (r.status === "ok") onExplained(node.id, r.explanation);

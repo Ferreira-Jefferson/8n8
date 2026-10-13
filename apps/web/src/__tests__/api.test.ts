@@ -1,6 +1,6 @@
-import type { ExplainResponse, Graph } from "@code2n8n/model";
+import type { ExplainResponse, Graph, ProjectResponse } from "@code2n8n/model";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchExplanation, fetchGraph } from "../api";
+import { fetchExplanation, fetchGraph, fetchProject } from "../api";
 
 const graph: Graph = { language: "python", empty: false, nodes: [], edges: [] };
 
@@ -29,6 +29,43 @@ describe("fetchGraph", () => {
   });
 });
 
+describe("fetchProject (PROJ-05)", () => {
+  const project: ProjectResponse = {
+    name: "loja",
+    graph: { ...graph, project: { name: "loja" } },
+    files: [{ path: "main.py", source: "x = 1\n" }],
+    ignored: [{ path: "grande.py", reason: "too-large" }],
+  };
+
+  it("posts { path } as JSON to /api/project and returns the body on 200", async () => {
+    const fn = fakeFetch(200, project);
+    const result = await fetchProject("C:/loja");
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/project");
+    expect(init.method).toBe("POST");
+    expect(new Headers(init.headers).get("content-type")).toBe(
+      "application/json",
+    );
+    expect(JSON.parse(init.body as string)).toEqual({ path: "C:/loja" });
+    expect(result).toEqual(project);
+  });
+
+  it("returns not-found with the typed path on 404", async () => {
+    fakeFetch(404, { error: "not-found", path: "./nao/existe" });
+    expect(await fetchProject("./nao/existe")).toEqual({
+      error: "not-found",
+      path: "./nao/existe",
+    });
+  });
+
+  it.each([400, 500])("rejects with the HTTP code on %i", async (status) => {
+    fakeFetch(status, { error: "x" });
+    await expect(fetchProject("C:/loja")).rejects.toThrow(
+      `Falha ao abrir a pasta (HTTP ${status})`,
+    );
+  });
+});
+
 describe("fetchExplanation", () => {
   const ok: ExplainResponse = {
     status: "ok",
@@ -54,7 +91,7 @@ describe("fetchExplanation", () => {
 
   it("posts { source, nodeId } to /api/explain and returns ok as received", async () => {
     const fn = fakeFetch(200, ok);
-    const result = await fetchExplanation("src", "f");
+    const result = await fetchExplanation({ source: "src" }, "f");
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("/api/explain");
     expect(JSON.parse(init.body as string)).toEqual({
@@ -66,17 +103,21 @@ describe("fetchExplanation", () => {
 
   it("returns no-key as received", async () => {
     fakeFetch(200, { status: "no-key" });
-    expect(await fetchExplanation("s", "f")).toEqual({ status: "no-key" });
+    expect(await fetchExplanation({ source: "s" }, "f")).toEqual({
+      status: "no-key",
+    });
   });
 
   it("returns unfaithful as received (FID-10)", async () => {
     fakeFetch(200, { status: "unfaithful" });
-    expect(await fetchExplanation("s", "f")).toEqual({ status: "unfaithful" });
+    expect(await fetchExplanation({ source: "s" }, "f")).toEqual({
+      status: "unfaithful",
+    });
   });
 
   it("maps 502 to status error (CORE-20)", async () => {
     fakeFetch(502, { status: "error", message: "boom" });
-    expect(await fetchExplanation("s", "f")).toEqual({
+    expect(await fetchExplanation({ source: "s" }, "f")).toEqual({
       status: "error",
       message: "boom",
     });
@@ -89,12 +130,25 @@ describe("fetchExplanation", () => {
         throw new TypeError("network down");
       }),
     );
-    const result = await fetchExplanation("s", "f");
+    const result = await fetchExplanation({ source: "s" }, "f");
     expect(result.status).toBe("error");
+  });
+
+  it("posts { root, nodeId } without source for a project (AD-015)", async () => {
+    const fn = fakeFetch(200, ok);
+    await fetchExplanation({ root: "C:/loja" }, "file:a.py/fn:f");
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/explain");
+    expect(JSON.parse(init.body as string)).toEqual({
+      root: "C:/loja",
+      nodeId: "file:a.py/fn:f",
+    });
   });
 
   it("maps 404 to status stale", async () => {
     fakeFetch(404, { error: "not found" });
-    expect(await fetchExplanation("s", "gone")).toEqual({ status: "stale" });
+    expect(await fetchExplanation({ source: "s" }, "gone")).toEqual({
+      status: "stale",
+    });
   });
 });

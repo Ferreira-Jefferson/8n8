@@ -165,7 +165,7 @@ describe("DetailPanel", () => {
     ).toBeTruthy();
     expect(screen.getByText("A chamada pode travar.")).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith(source, "fn:calcular_frete");
+    expect(fetchMock).toHaveBeenCalledWith({ source }, "fn:calcular_frete");
   });
 
   it("shows the no-key message and keeps the code visible (CORE-19)", async () => {

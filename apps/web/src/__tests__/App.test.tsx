@@ -133,7 +133,7 @@ describe("App", () => {
     await waitFor(() =>
       expect(currentCanvas().suggestionCounts.get("fn:calcular_frete")).toBe(2),
     );
-    expect(explainMock).toHaveBeenCalledWith(source, "fn:calcular_frete");
+    expect(explainMock).toHaveBeenCalledWith({ source }, "fn:calcular_frete");
   });
 
   it("keeps the graph on the canvas when the explanation fails (CORE-20)", async () => {

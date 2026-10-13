@@ -772,15 +772,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `fetchProject`: 200 devolve o corpo; 404 devolve `{ error: "not-found", path }`; 400 e 500 rejeitam com `Falha ao abrir a pasta (HTTP <n>)`; o POST leva `content-type: application/json`.
-- [ ] `fetchExplanation({ root: "C:/loja" }, id)` posta `{ root, nodeId }` sem `source`.
-- [ ] `api.test.ts` (features 01 e 04): as chamadas passam de `fetchExplanation(source, id)` para `fetchExplanation({ source }, id)`. As asserções não mudam: o corpo continua `{ source, nodeId }`, e os 8 testes mantêm a intenção (ok, no-key, unfaithful, 502, rede, 404 → stale).
-- [ ] Gate passa.
+- [x] `fetchProject`: 200 devolve o corpo; 404 devolve `{ error: "not-found", path }`; 400 e 500 rejeitam com `Falha ao abrir a pasta (HTTP <n>)`; o POST leva `content-type: application/json`.
+- [x] `fetchExplanation({ root: "C:/loja" }, id)` posta `{ root, nodeId }` sem `source`.
+- [x] `api.test.ts` (features 01 e 04): as chamadas passam de `fetchExplanation(source, id)` para `fetchExplanation({ source }, id)`. As asserções não mudam: o corpo continua `{ source, nodeId }`, e os 8 testes mantêm a intenção (ok, no-key, unfaithful, 502, rede, 404 → stale).
+- [x] Gate passa.
+
+**Ajuste na execução**: a assinatura nova quebra o tipo da chamada em `DetailPanel.tsx`, que hoje é `fetchExplanation(source, node.id)`. Para o typecheck seguir verde, a chamada passa a `fetchExplanation({ source }, node.id)` já aqui; a prop `origin` continua em T27. Por isso duas asserções mudam nesta task, só no formato do primeiro argumento: `DetailPanel.test.tsx` ("fetches once for a function and shows summary, inputs, outputs and suggestions (CORE-16)") e `App.test.tsx` ("passes the suggestion count 2 to the canvas after the node is explained (CORE-23)") passam de `toHaveBeenCalledWith(source, "fn:calcular_frete")` para `toHaveBeenCalledWith({ source }, "fn:calcular_frete")`. A intenção é a mesma: a explicação do trecho é pedida com o código do trecho e o ID do nó.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): fetch projects and explain by source or root`
+**Status**: ✅ Complete
 
 ---
 
@@ -1011,6 +1014,8 @@ T31 → T32
 | `packages/server/src/__tests__/host-guard.test.ts` | 01 | T17 | `AppDeps` ganha `readProject` | AD-007: 403 para Host estranho, sem CORS; só o stub entra |
 | `packages/server/src/__tests__/explain-route.test.ts` | 01, 04 | T17 | `AppDeps` ganha `readProject` | CORE-17 e todos os códigos HTTP, `unfaithful` (FID-10); só o stub entra |
 | `apps/web/src/__tests__/api.test.ts` | 01, 04 | T24 | `fetchExplanation(origin, nodeId)` | Corpo `{ source, nodeId }` e os 8 casos (ok, no-key, unfaithful, 502, rede, stale) |
+| `apps/web/src/panel/__tests__/DetailPanel.test.tsx` | 01, 04 | T24 | `fetchExplanation({ source }, id)`: só o primeiro argumento do `toHaveBeenCalledWith` do teste CORE-16 | CORE-16: o trecho é explicado com o código e o ID do nó |
+| `apps/web/src/__tests__/App.test.tsx` | 01 | T24 | `fetchExplanation({ source }, id)`: só o primeiro argumento do `toHaveBeenCalledWith` do teste CORE-23 | CORE-23: a contagem de sugestões chega ao canvas depois da explicação |
 | `apps/web/src/panel/__tests__/DetailPanel.test.tsx` | 01, 04 | T27 | Prop nova `origin` | CORE-14, 16, 19, 20, 24, `stale`, `onExplained`, FID-09..14, CACHE-04 |
 
 Só ganham testes, sem mudar os atuais: `ids.test.ts` (T2), `imports.test.ts` (T8), `calls.test.ts` (T12), `build-graph.test.ts` (T13), `extractor.test.ts` e o snapshot (T16, snapshot intacto), `main.test.ts` da feature 04 (T20), `StepNode.test.tsx` (T21), `project-level.test.ts` (T22), `navigation.test.ts` (T23), `Breadcrumb.test.tsx` (T25), `App.test.tsx` (T29, T30). Sem mudança: `steps.test.ts`, `e2e/fatia-central.e2e.ts` e os specs E2E da feature 04.
