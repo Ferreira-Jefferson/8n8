@@ -1081,17 +1081,19 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (CORE-01): a fixture do vídeo → `200` com `fn:processar_pedido` e `fn:calcular_frete` no grafo.
-- [ ] Teste (CORE-05): o espião de `explain` não é chamado.
-- [ ] Teste (CORE-07): `source: ""` → `200` com `graph.empty: true`.
-- [ ] Teste (CORE-06): trecho com `def b(:` → `200` com o nó marcado com `syntaxError`.
-- [ ] Teste: corpo sem `source` ou com `source` não texto → `400`.
-- [ ] Gate passa. Test count: ≥ 5 testes novos; os de T34 continuam passando.
+- [x] Teste (CORE-01): a fixture do vídeo → `200` com `fn:processar_pedido` e `fn:calcular_frete` no grafo.
+- [x] Teste (CORE-05): o espião de `explain` não é chamado.
+- [x] Teste (CORE-07): `source: ""` → `200` com `graph.empty: true`.
+- [x] Teste (CORE-06): trecho com `def b(:` → `200` com o nó marcado com `syntaxError`.
+- [x] Teste: corpo sem `source` ou com `source` não texto → `400`.
+- [x] Gate passa. Test count: ≥ 5 testes novos; os de T34 continuam passando.
 
 **Tests**: integration
 **Gate**: full · `pnpm test`
 
 **Commit**: `feat(server): add graph route`
+
+**Status**: ✅ Complete
 
 ---
 
