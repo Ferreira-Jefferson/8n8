@@ -1286,16 +1286,18 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: todo nó recebe `x` e `y` numéricos.
-- [ ] Teste: para cada fio A → B, `x` de A é menor que `x` de B.
-- [ ] Teste: a mesma entrada dá as mesmas posições.
-- [ ] Teste: lista vazia → lista vazia.
-- [ ] Gate passa. Test count: ≥ 4 testes.
+- [x] Teste: todo nó recebe `x` e `y` numéricos.
+- [x] Teste: para cada fio A → B, `x` de A é menor que `x` de B.
+- [x] Teste: a mesma entrada dá as mesmas posições.
+- [x] Teste: lista vazia → lista vazia.
+- [x] Gate passa. Test count: ≥ 4 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): add left-to-right dagre layout`
+
+**Status**: ✅ Complete
 
 ---
 
