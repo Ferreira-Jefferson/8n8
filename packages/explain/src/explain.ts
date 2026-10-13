@@ -1,19 +1,22 @@
-import { createHash } from "node:crypto";
 import type {
   ExplainRequest,
   ExplainResponse,
   Explanation,
 } from "@code2n8n/model";
 import type { ExplainCache } from "./cache";
+import { diffReasons, fingerprintOf, normalizeCode } from "./fingerprint";
 import type { LlmClient } from "./openrouter";
-import { parseExplanation } from "./schema";
+import { type ReviewOutcome, reviewedDraft } from "./review";
 
 export interface ExplainDeps {
   /** Absent when OPENROUTER_API_KEY is not set (CORE-19). */
   llm?: LlmClient | undefined;
   cache: ExplainCache;
   model: string;
+  /** Model of the reviewer (FID-15). */
+  reviewModel: string;
   prompt: { text: string; version: string };
+  reviewer: { text: string; version: string };
 }
 
 const KIND_LABEL = { function: "função", class: "classe" } as const;
@@ -34,69 +37,85 @@ function userMessage(req: ExplainRequest): string {
   ].join("\n");
 }
 
+/** Relative lines in the cache → absolute lines in the response, for every claim and suggestion (CACHE-05). */
 function toAbsolute(result: Explanation, start: number): Explanation {
+  const shift = (lines: number[]) => lines.map((n) => n + start - 1);
+  const claims = (list: Explanation["inputs"]) =>
+    list.map((c) => ({ ...c, lines: shift(c.lines) }));
   return {
     ...result,
+    sentences: claims(result.sentences),
+    inputs: claims(result.inputs),
+    outputs: claims(result.outputs),
     suggestions: result.suggestions.map((s) => ({
       ...s,
       line: s.line + start - 1,
+      lines: shift(s.lines),
     })),
   };
 }
 
-/** One cached LLM call per node: key on [code, model, promptVersion]; relative lines in cache (CORE-16..22). */
+const sorted = (names: string[]) =>
+  [...names].sort((a, b) => a.localeCompare(b));
+
+/** Cache by node → review pipeline → cache; reports why a cached entry was replaced (C7). */
 export async function explainNode(
   req: ExplainRequest,
   deps: ExplainDeps,
 ): Promise<ExplainResponse> {
-  const { llm, cache, model, prompt } = deps;
-  const key = createHash("sha256")
-    .update(JSON.stringify([req.code, model, prompt.version]))
-    .digest("hex");
+  const { llm, cache } = deps;
+  // The prompt gets exactly what the fingerprint covers (L-004).
+  const code = normalizeCode(req.code);
+  const calls = sorted(req.calls);
+  const calledBy = sorted(req.calledBy);
+  const fp = fingerprintOf({ code, calls, calledBy }, deps);
 
-  const cached = await cache.get(key);
-  if (cached) {
+  const prev = await cache.get(req.nodeId);
+  if (prev && diffReasons(prev.fingerprint, fp).length === 0) {
     return {
       status: "ok",
-      explanation: toAbsolute(cached.result, req.range.start),
+      explanation: toAbsolute(prev.result, req.range.start),
       fromCache: true,
+      review: prev.review,
     };
   }
   if (!llm) return { status: "no-key" };
 
-  let result: Explanation;
+  let outcome: ReviewOutcome;
   try {
-    const raw = await llm.complete({
-      model,
-      messages: [
-        { role: "system", content: prompt.text },
-        { role: "user", content: userMessage(req) },
-      ],
-      json: model.startsWith("google/") ? "prompt" : "native",
-    });
-    result = parseExplanation(raw, req.code.split("\n").length);
+    outcome = await reviewedDraft(
+      {
+        user: userMessage({ ...req, code, calls, calledBy }),
+        code,
+        neighbours: [...calls, ...calledBy],
+      },
+      { ...deps, llm },
+    );
   } catch (err) {
     return {
       status: "error",
       message: err instanceof Error ? err.message : String(err),
     };
   }
+  if (outcome.kind === "unfaithful") return { status: "unfaithful" };
 
   try {
     await cache.set({
-      schemaVersion: 1,
-      key,
-      model,
-      promptVersion: prompt.version,
+      schemaVersion: 2,
+      nodeId: req.nodeId,
+      fingerprint: fp,
+      review: outcome.review,
       createdAt: new Date().toISOString(),
-      result,
+      result: outcome.result,
     });
   } catch (err) {
     console.error("explain: failed to write cache", err);
   }
   return {
     status: "ok",
-    explanation: toAbsolute(result, req.range.start),
+    explanation: toAbsolute(outcome.result, req.range.start),
     fromCache: false,
+    review: outcome.review,
+    ...(prev ? { update: diffReasons(prev.fingerprint, fp) } : {}),
   };
 }

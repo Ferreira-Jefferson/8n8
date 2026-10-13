@@ -438,20 +438,21 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `explain.test.ts` (feature 01) migra assim, sem afrouxar nada: o `req` ganha `nodeId`; o LLM falso responde rascunho e revisor; "uma chamada" (CORE-16) vira "um rascunho com o prompt PTS e uma revisão" (FID-01/05 substituem CORE-16); CORE-17 continua conferindo nome, tipo, vizinhos e código numerado no pedido do rascunho; CORE-18 passa a ser CACHE-02 (segunda abertura sem chamada) e "outro modelo ou outra versão do prompt" passa a exigir `update: ["model-or-prompt"]`; "mesmo código em outra posição" passa a conferir todas as linhas (`sentences`, `inputs`, `outputs`, `suggestions`); CORE-19, CORE-20, CORE-22, modo JSON `google/` e falha ao gravar continuam com as mesmas asserções.
-- [ ] FID-01: o cache só recebe resultado revisado; com `unfaithful` ou `error` nada é gravado.
-- [ ] CACHE-02: mesma impressão digital → `fromCache: true`, a `review` guardada e zero chamadas.
-- [ ] CACHE-03/04: renomear um vizinho → nova geração, `update: ["neighbours"]`, entrada substituída; mudar o código → `["code"]`; mudar o modelo do revisor → `["model-or-prompt"]`.
-- [ ] Independent Test P2: o mesmo código com 3 linhas em branco antes (`range.start` + 3) vem do cache, sem chamada, com todas as linhas +3 e sem `update`.
-- [ ] Código só com CRLF ou espaços no fim da linha diferentes → cache, sem chamada.
-- [ ] CACHE-07: entrada v1 ou corrompida → gera de novo, grava por cima e não manda `update`.
-- [ ] Sem cliente e sem cache → `no-key`.
-- [ ] Gate parcial da fase 3 passa (typecheck do `explain` volta a verde).
+- [x] `explain.test.ts` (feature 01) migra assim, sem afrouxar nada: o `req` ganha `nodeId`; o LLM falso responde rascunho e revisor; "uma chamada" (CORE-16) vira "um rascunho com o prompt PTS e uma revisão" (FID-01/05 substituem CORE-16); CORE-17 continua conferindo nome, tipo, vizinhos e código numerado no pedido do rascunho; CORE-18 passa a ser CACHE-02 (segunda abertura sem chamada) e "outro modelo ou outra versão do prompt" passa a exigir `update: ["model-or-prompt"]`; "mesmo código em outra posição" passa a conferir todas as linhas (`sentences`, `inputs`, `outputs`, `suggestions`); CORE-19, CORE-20, CORE-22, modo JSON `google/` e falha ao gravar continuam com as mesmas asserções.
+- [x] FID-01: o cache só recebe resultado revisado; com `unfaithful` ou `error` nada é gravado.
+- [x] CACHE-02: mesma impressão digital → `fromCache: true`, a `review` guardada e zero chamadas.
+- [x] CACHE-03/04: renomear um vizinho → nova geração, `update: ["neighbours"]`, entrada substituída; mudar o código → `["code"]`; mudar o modelo do revisor → `["model-or-prompt"]`.
+- [x] Independent Test P2: o mesmo código com 3 linhas em branco antes (`range.start` + 3) vem do cache, sem chamada, com todas as linhas +3 e sem `update`.
+- [x] Código só com CRLF ou espaços no fim da linha diferentes → cache, sem chamada.
+- [x] CACHE-07: entrada v1 ou corrompida → gera de novo, grava por cima e não manda `update`.
+- [x] Sem cliente e sem cache → `no-key`.
+- [x] Gate parcial da fase 3 passa (typecheck do `explain` volta a verde).
 
 **Tests**: unit
 **Gate**: build (parcial) · `pnpm --filter @code2n8n/model --filter @code2n8n/extract-python --filter @code2n8n/explain typecheck && pnpm check && pnpm --filter @code2n8n/model --filter @code2n8n/extract-python --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): orchestrate cache, review pipeline and update reasons`
+**Status**: ✅ Complete
 
 ---
 
