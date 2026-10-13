@@ -109,11 +109,11 @@ Depende de: 01-fatia-central.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| FID-01..11 | P1: Revisão | - | Pending |
-| FID-12..15 | P1: Evidência e cobertura | - | Pending |
-| CACHE-01..07 | P2: Cache | - | Pending |
+| FID-01..11 | P1: Revisão | Execute | Verified |
+| FID-12..15 | P1: Evidência e cobertura | Execute | Verified |
+| CACHE-01..07 | P2: Cache | Execute | Verified |
 
-**Coverage:** 22 total, 0 mapped to tasks.
+**Coverage:** 22 total, 22 mapped to tasks, 22 verified (validation.md, iteração 2).
 
 ---
 
