@@ -710,16 +710,18 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (fixture do vídeo): `processar_pedido` tem um `loop` com rótulo `for item in itens`, `openable: true`, e o corpo dele tem um `call` para `fn:calcular_frete`.
-- [ ] Teste: `while` vira `loop` com o corpo como filhos (`parentId` = o laço).
-- [ ] Testes: `try`, `with` e `match` viram `block` com `openable: true` e o corpo como filhos.
-- [ ] Teste: `with open(p) as f:` marca a chamada `open` como ARQUIVO.
-- [ ] Gate passa. Test count: ≥ 6 testes novos; nenhum anterior sumiu.
+- [x] Teste (fixture do vídeo): `processar_pedido` tem um `loop` com rótulo `for item in itens`, `openable: true`, e o corpo dele tem um `call` para `fn:calcular_frete`.
+- [x] Teste: `while` vira `loop` com o corpo como filhos (`parentId` = o laço).
+- [x] Testes: `try`, `with` e `match` viram `block` com `openable: true` e o corpo como filhos.
+- [x] Teste: `with open(p) as f:` marca a chamada `open` como ARQUIVO.
+- [x] Gate passa. Test count: ≥ 6 testes novos; nenhum anterior sumiu.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): add loop and block nodes`
+
+**Status**: ✅ Complete
 
 ---
 

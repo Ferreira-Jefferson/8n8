@@ -263,3 +263,128 @@ describe("buildSteps: condition and branches (CORE-09)", () => {
     ]);
   });
 });
+
+function node(graph: Graph, id: string): FlowNode | undefined {
+  return graph.nodes.find((n) => n.id === id);
+}
+
+describe("buildSteps: loops and blocks (CORE-10)", () => {
+  it("turns the video loop into an openable for item in itens with a call to calcular_frete inside", async () => {
+    const graph = await graphOf(videoFixture);
+
+    const loop = stepsOf(graph, "fn:processar_pedido").find(
+      (n) => n.kind === "loop",
+    );
+    expect(loop).toEqual({
+      id: "fn:processar_pedido/s1",
+      kind: "loop",
+      label: "for item in itens",
+      parentId: "fn:processar_pedido",
+      range: { start: 16, end: 17 },
+      openable: true,
+    });
+    expect(stepsOf(graph, "fn:processar_pedido/s1")).toEqual([
+      {
+        id: "fn:processar_pedido/s1/s0",
+        kind: "call",
+        label: "calcular_frete",
+        parentId: "fn:processar_pedido/s1",
+        range: { start: 17, end: 17 },
+        openable: true,
+        target: "fn:calcular_frete",
+      },
+    ]);
+  });
+
+  it("turns while into a loop whose body steps are its children", async () => {
+    const graph = await graphOf(
+      lines(
+        "def f(n):",
+        "    while n > 0:",
+        "        n = n - 1",
+        "    return n",
+      ),
+    );
+
+    expect(node(graph, "fn:f/s0")).toMatchObject({
+      kind: "loop",
+      label: "while n > 0",
+      openable: true,
+    });
+    expect(stepsOf(graph, "fn:f/s0").map((n) => [n.id, n.kind])).toEqual([
+      ["fn:f/s0/s0", "code"],
+    ]);
+  });
+
+  it("turns try into an openable block with its body as children", async () => {
+    const graph = await graphOf(
+      lines(
+        "def f():",
+        "    try:",
+        "        a = 1",
+        "    except ValueError:",
+        "        a = 2",
+      ),
+    );
+
+    expect(node(graph, "fn:f/s0")).toMatchObject({
+      kind: "block",
+      label: "try",
+      openable: true,
+    });
+    // The try body and the except body are both inside the block.
+    expect(
+      stepsOf(graph, "fn:f/s0").map((n) => [n.id, n.kind, n.range]),
+    ).toEqual([["fn:f/s0/s0", "code", { start: 3, end: 5 }]]);
+  });
+
+  it("turns with into an openable block with its body as children", async () => {
+    const graph = await graphOf(
+      lines("def f(lock):", "    with lock:", "        a = 1"),
+    );
+
+    expect(node(graph, "fn:f/s0")).toMatchObject({
+      kind: "block",
+      label: "with lock",
+      openable: true,
+    });
+    expect(stepsOf(graph, "fn:f/s0").map((n) => [n.kind, n.range])).toEqual([
+      ["code", { start: 3, end: 3 }],
+    ]);
+  });
+
+  it("turns match into an openable block with the case bodies as children", async () => {
+    const graph = await graphOf(
+      lines(
+        "def f(x):",
+        "    match x:",
+        "        case 1:",
+        "            a = 1",
+        "        case _:",
+        "            a = 2",
+      ),
+    );
+
+    expect(node(graph, "fn:f/s0")).toMatchObject({
+      kind: "block",
+      label: "match x",
+      openable: true,
+    });
+    expect(stepsOf(graph, "fn:f/s0").map((n) => [n.kind, n.range])).toEqual([
+      ["code", { start: 4, end: 6 }],
+    ]);
+  });
+
+  it("classifies the open call of with open(p) as f as ARQUIVO", async () => {
+    const graph = await graphOf(
+      lines("def f(p):", "    with open(p) as f:", "        dados = f.read()"),
+    );
+
+    expect(stepsOf(graph, "fn:f/s0")[0]).toMatchObject({
+      kind: "external",
+      callee: "open",
+      category: "ARQUIVO",
+      range: { start: 2, end: 2 },
+    });
+  });
+});

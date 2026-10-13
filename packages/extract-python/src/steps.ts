@@ -54,6 +54,34 @@ function wire(from: Pending, target: NodeId): FlowEdge {
   return edge;
 }
 
+const LOOPS = new Set(["for_statement", "while_statement"]);
+const BLOCKS = new Set(["try_statement", "with_statement", "match_statement"]);
+
+/** The tokens before the statement's own `:`, e.g. `for item in itens`. */
+function header(statement: Node): string {
+  const colon = statement.children.findIndex((c) => c.type === ":");
+  return statement.children
+    .slice(0, colon)
+    .map((c) => c.text)
+    .join(" ");
+}
+
+/** Statements of every block of a loop or block, clauses and cases included. */
+function innerStatements(node: Node): Node[] {
+  const out: Node[] = [];
+  for (const child of node.namedChildren) {
+    if (child.type === "block") {
+      for (const s of child.namedChildren) {
+        if (s.type === "case_clause") out.push(...innerStatements(s));
+        else out.push(s);
+      }
+    } else if (child.type.endsWith("_clause")) {
+      out.push(...innerStatements(child));
+    }
+  }
+  return out;
+}
+
 function blockOf(node: Node, field: string): Node[] {
   return node.childForFieldName(field)?.namedChildren ?? [];
 }
@@ -135,11 +163,32 @@ function sequence(
     pending = out;
   };
 
+  /** `for`/`while` → loop (CORE-10); `try`/`with`/`match` → block. */
+  const opener = (statement: Node) => {
+    const id = place({
+      kind: LOOPS.has(statement.type) ? "loop" : "block",
+      label: header(statement),
+      range: lineRange(statement),
+      openable: true,
+    });
+    const inner = innerStatements(statement);
+    const clause = statement.namedChildren.find(
+      (c) => c.type === "with_clause",
+    );
+    if (clause && resolveCall(clause, ctx.call) !== null) inner.unshift(clause);
+    sequence(inner, id, id, ctx);
+  };
+
   for (const statement of body) {
     if (IGNORED.has(statement.type)) continue;
     if (statement.type === "if_statement") {
       flush();
       condition(statement);
+      continue;
+    }
+    if (LOOPS.has(statement.type) || BLOCKS.has(statement.type)) {
+      flush();
+      opener(statement);
       continue;
     }
     const resolved = resolveCall(statement, ctx.call);
