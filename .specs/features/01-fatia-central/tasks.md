@@ -681,17 +681,19 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (fixture do vídeo): `calcular_frete` abre para `external` HTTP → `code` → `condition` com rótulo `peso > 30` e dois fios `branch`, `"sim"` e `"não"` (Independent Test 2).
-- [ ] Teste: `if/elif/else` → fios `"sim"`, o texto do `elif` e `"não"`.
-- [ ] Teste: `if` sem `else` e com passo seguinte → o fio `"não"` vai ao passo seguinte.
-- [ ] Teste: `if` sem `else` e sem passo seguinte → não existe fio `"não"`.
-- [ ] Teste: os passos de um ramo têm o mesmo `parentId` da condição e IDs `.../b0/s0`, `.../b1/s0`.
-- [ ] Gate passa. Test count: ≥ 5 testes novos; nenhum anterior sumiu.
+- [x] Teste (fixture do vídeo): `calcular_frete` abre para `external` HTTP → `code` → `condition` com rótulo `peso > 30` e dois fios `branch`, `"sim"` e `"não"` (Independent Test 2).
+- [x] Teste: `if/elif/else` → fios `"sim"`, o texto do `elif` e `"não"`.
+- [x] Teste: `if` sem `else` e com passo seguinte → o fio `"não"` vai ao passo seguinte.
+- [x] Teste: `if` sem `else` e sem passo seguinte → não existe fio `"não"`.
+- [x] Teste: os passos de um ramo têm o mesmo `parentId` da condição e IDs `.../b0/s0`, `.../b1/s0`.
+- [x] Gate passa. Test count: ≥ 5 testes novos; nenhum anterior sumiu.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): add condition nodes with labeled branches`
+
+**Status**: ✅ Complete
 
 ---
 

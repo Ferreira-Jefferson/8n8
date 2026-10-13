@@ -1,7 +1,13 @@
+import { readFileSync } from "node:fs";
 import type { FlowNode, Graph } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
 import { buildGraph } from "../build-graph";
 import { loadPythonParser } from "../parse";
+
+const videoFixture = readFileSync(
+  new URL("./fixtures/pedido_frete.py", import.meta.url),
+  "utf8",
+);
 
 async function graphOf(source: string): Promise<Graph> {
   const parser = await loadPythonParser();
@@ -146,5 +152,114 @@ describe("buildSteps: linear steps", () => {
     const onlyImport = await graphOf(lines("import requests", "import os"));
     expect(onlyImport.nodes).toEqual([]);
     expect(onlyImport.empty).toBe(true);
+  });
+});
+
+/** Branch wires leaving `conditionId`, as [target, label]. */
+function branchesOf(
+  graph: Graph,
+  conditionId: string,
+): [string, string | undefined][] {
+  return graph.edges
+    .filter((e) => e.kind === "branch" && e.source === conditionId)
+    .map((e) => [e.target, e.label]);
+}
+
+describe("buildSteps: condition and branches (CORE-09)", () => {
+  it("opens calcular_frete into HTTP, Código and the condition peso > 30 with sim and não", async () => {
+    const graph = await graphOf(videoFixture);
+
+    const top = stepsOf(graph, "fn:calcular_frete").filter(
+      (n) => !n.id.includes("/b"),
+    );
+    expect(top.map((n) => [n.kind, n.label])).toEqual([
+      ["external", "requests.get"],
+      ["code", "Código"],
+      ["condition", "peso > 30"],
+    ]);
+    expect(top[0]?.category).toBe("HTTP");
+    expect(top[2]).toEqual({
+      id: "fn:calcular_frete/s2",
+      kind: "condition",
+      label: "peso > 30",
+      parentId: "fn:calcular_frete",
+      range: { start: 8, end: 11 },
+      openable: false,
+    });
+    expect(
+      graph.edges.filter((e) => e.source === "fn:calcular_frete/s2"),
+    ).toEqual([
+      {
+        id: "branch:fn:calcular_frete/s2->fn:calcular_frete/s2/b0/s0",
+        kind: "branch",
+        source: "fn:calcular_frete/s2",
+        target: "fn:calcular_frete/s2/b0/s0",
+        label: "sim",
+      },
+      {
+        id: "branch:fn:calcular_frete/s2->fn:calcular_frete/s2/b1/s0",
+        kind: "branch",
+        source: "fn:calcular_frete/s2",
+        target: "fn:calcular_frete/s2/b1/s0",
+        label: "não",
+      },
+    ]);
+  });
+
+  it("labels if/elif/else wires sim, the elif text and não", async () => {
+    const graph = await graphOf(
+      lines(
+        "def f(x):",
+        "    if x > 10:",
+        "        a = 1",
+        "    elif x > 5:",
+        "        a = 2",
+        "    else:",
+        "        a = 3",
+      ),
+    );
+
+    expect(branchesOf(graph, "fn:f/s0")).toEqual([
+      ["fn:f/s0/b0/s0", "sim"],
+      ["fn:f/s0/b1/s0", "x > 5"],
+      ["fn:f/s0/b2/s0", "não"],
+    ]);
+  });
+
+  it("sends não to the next step when the if has no else", async () => {
+    const graph = await graphOf(
+      lines("def f(x):", "    if x:", "        a = 1", "    return 0"),
+    );
+
+    expect(branchesOf(graph, "fn:f/s0")).toEqual([
+      ["fn:f/s0/b0/s0", "sim"],
+      ["fn:f/s1", "não"],
+    ]);
+  });
+
+  it("creates no não wire when the if has no else and no next step", async () => {
+    const graph = await graphOf(
+      lines("def f(x):", "    if x:", "        a = 1"),
+    );
+
+    expect(branchesOf(graph, "fn:f/s0")).toEqual([["fn:f/s0/b0/s0", "sim"]]);
+  });
+
+  it("gives branch steps the parent of the condition and ids b<j>/s<i>", async () => {
+    const graph = await graphOf(
+      lines(
+        "def f(x):",
+        "    if x:",
+        "        a = 1",
+        "    else:",
+        "        b = 2",
+      ),
+    );
+
+    expect(stepsOf(graph, "fn:f").map((n) => n.id)).toEqual([
+      "fn:f/s0",
+      "fn:f/s0/b0/s0",
+      "fn:f/s0/b1/s0",
+    ]);
   });
 });

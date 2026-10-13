@@ -54,6 +54,10 @@ function wire(from: Pending, target: NodeId): FlowEdge {
   return edge;
 }
 
+function blockOf(node: Node, field: string): Node[] {
+  return node.childForFieldName(field)?.namedChildren ?? [];
+}
+
 /**
  * Turns a body into steps `<prefix>/s<i>` under `parentId`. Returns the
  * wires still waiting for a following step.
@@ -63,8 +67,9 @@ function sequence(
   prefix: NodeId,
   parentId: NodeId,
   ctx: StepContext,
+  incoming: Pending[] = [],
 ): Pending[] {
-  let pending: Pending[] = [];
+  let pending = incoming;
   let index = 0;
   let group: Node[] = [];
 
@@ -90,8 +95,53 @@ function sequence(
     });
   };
 
+  /** `if/elif/else`: one condition, its branches on the same level (CORE-09). */
+  const condition = (statement: Node) => {
+    const id = place({
+      kind: "condition",
+      label: statement.childForFieldName("condition")?.text ?? "",
+      range: lineRange(statement),
+      openable: false,
+    });
+    const branches: { label: string; body: Node[] }[] = [
+      { label: "sim", body: blockOf(statement, "consequence") },
+    ];
+    let hasElse = false;
+    for (const alt of statement.childrenForFieldName("alternative")) {
+      if (alt.type === "elif_clause") {
+        branches.push({
+          label: alt.childForFieldName("condition")?.text ?? "",
+          body: blockOf(alt, "consequence"),
+        });
+      } else {
+        hasElse = true;
+        branches.push({ label: "não", body: blockOf(alt, "body") });
+      }
+    }
+    const out: Pending[] = [];
+    branches.forEach((branch, j) => {
+      const incoming: Pending = {
+        source: id,
+        kind: "branch",
+        label: branch.label,
+      };
+      out.push(
+        ...sequence(branch.body, childId(id, `b${j}`), parentId, ctx, [
+          incoming,
+        ]),
+      );
+    });
+    if (!hasElse) out.push({ source: id, kind: "branch", label: "não" });
+    pending = out;
+  };
+
   for (const statement of body) {
     if (IGNORED.has(statement.type)) continue;
+    if (statement.type === "if_statement") {
+      flush();
+      condition(statement);
+      continue;
+    }
     const resolved = resolveCall(statement, ctx.call);
     if (resolved === null) {
       group.push(statement);
