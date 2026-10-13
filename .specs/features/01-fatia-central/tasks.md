@@ -1368,15 +1368,17 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: com o caminho `fn:calcular_frete` › laço, mostra "Trecho › calcular_frete › for item in itens".
-- [ ] Teste: clicar em "Trecho" chama `onGoTo(0)`; clicar em "calcular_frete" chama `onGoTo(1)`.
-- [ ] Teste: no nível superior, mostra só "Trecho".
-- [ ] Gate passa. Test count: ≥ 3 testes.
+- [x] Teste: com o caminho `fn:calcular_frete` › laço, mostra "Trecho › calcular_frete › for item in itens".
+- [x] Teste: clicar em "Trecho" chama `onGoTo(0)`; clicar em "calcular_frete" chama `onGoTo(1)`.
+- [x] Teste: no nível superior, mostra só "Trecho".
+- [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): add clickable breadcrumb`
+
+**Status**: ✅ Complete
 
 ---
 
