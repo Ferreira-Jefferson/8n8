@@ -1,4 +1,4 @@
-import type { FlowNode, NodeId } from "@code2n8n/model";
+import type { FlowNode, Graph, NodeId } from "@code2n8n/model";
 
 export interface NavState {
   path: NodeId[];
@@ -8,12 +8,27 @@ export interface NavState {
 export type NavAction =
   | { type: "open"; node: FlowNode }
   | { type: "goTo"; index: number }
-  | { type: "select"; id: NodeId };
+  | { type: "select"; id: NodeId }
+  | { type: "jump"; path: NodeId[] };
 
 export const initialNav: NavState = { path: [], selected: null };
 
+/** IDs from the top level down to `id`, inclusive; `[]` when `id` is absent (PROJ-04). */
+export function ancestry(graph: Graph, id: NodeId): NodeId[] {
+  const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+  const out: NodeId[] = [];
+  let node = byId.get(id);
+  while (node) {
+    out.unshift(node.id);
+    node = node.parentId === null ? undefined : byId.get(node.parentId);
+  }
+  return out;
+}
+
 function openTarget(node: FlowNode): NodeId | null {
   switch (node.kind) {
+    case "folder":
+    case "file":
     case "function":
     case "class":
     case "module":
@@ -38,5 +53,7 @@ export function navReducer(state: NavState, action: NavAction): NavState {
       return { path: state.path.slice(0, action.index), selected: null };
     case "select":
       return { ...state, selected: action.id };
+    case "jump":
+      return { path: action.path, selected: null };
   }
 }

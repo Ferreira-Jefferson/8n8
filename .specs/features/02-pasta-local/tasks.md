@@ -745,17 +745,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `ancestry(loja, "file:frete/calculo.py/fn:calcular_frete")` = `["dir:frete", "file:frete/calculo.py", "file:frete/calculo.py/fn:calcular_frete"]`.
-- [ ] `ancestry` de um ID ausente = `[]`.
-- [ ] `jump` troca `path` e põe `selected: null`.
-- [ ] `open` de um nó `folder` ou `file` empilha o ID.
-- [ ] `navigation.test.ts` (feature 01): os testes atuais passam sem mudança.
-- [ ] Gate passa.
+- [x] `ancestry(loja, "file:frete/calculo.py/fn:calcular_frete")` = `["dir:frete", "file:frete/calculo.py", "file:frete/calculo.py/fn:calcular_frete"]`.
+- [x] `ancestry` de um ID ausente = `[]`.
+- [x] `jump` troca `path` e põe `selected: null`.
+- [x] `open` de um nó `folder` ou `file` empilha o ID.
+- [x] `navigation.test.ts` (feature 01): os testes atuais passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): jump to a node's ancestry across files`
+**Status**: ✅ Complete
 
 ---
 

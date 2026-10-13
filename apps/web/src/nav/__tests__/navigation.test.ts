@@ -1,6 +1,7 @@
 import type { FlowNode, NodeKind } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
-import { type NavState, navReducer } from "../navigation";
+import { lojaGraph } from "../../flow/__tests__/loja-graph";
+import { ancestry, type NavState, navReducer } from "../navigation";
 
 function node(
   id: string,
@@ -86,5 +87,48 @@ describe("navReducer select", () => {
       path: ["a", "b"],
       selected: "b/s1",
     });
+  });
+});
+
+describe("ancestry (PROJ-04)", () => {
+  it("lists the ids from the top level down to the node, inclusive", () => {
+    expect(
+      ancestry(lojaGraph, "file:frete/calculo.py/fn:calcular_frete"),
+    ).toEqual([
+      "dir:frete",
+      "file:frete/calculo.py",
+      "file:frete/calculo.py/fn:calcular_frete",
+    ]);
+  });
+
+  it("is empty for an absent id", () => {
+    expect(ancestry(lojaGraph, "file:nao/existe.py")).toEqual([]);
+  });
+});
+
+describe("navReducer jump and project nodes (PROJ-04)", () => {
+  it("jump replaces the path and clears the selection", () => {
+    const state: NavState = {
+      path: ["dir:pedidos", "file:pedidos/pedidos.py"],
+      selected: "file:pedidos/pedidos.py/fn:processar_pedido",
+    };
+    const path = ["dir:frete", "file:frete/calculo.py"];
+    expect(navReducer(state, { type: "jump", path })).toEqual({
+      path: ["dir:frete", "file:frete/calculo.py"],
+      selected: null,
+    });
+  });
+
+  it("open pushes the id of a folder and of a file", () => {
+    const s1 = navReducer(empty, {
+      type: "open",
+      node: node("dir:frete", "folder", { path: "frete" }),
+    });
+    expect(s1.path).toEqual(["dir:frete"]);
+    const s2 = navReducer(s1, {
+      type: "open",
+      node: node("file:frete/calculo.py", "file", { parentId: "dir:frete" }),
+    });
+    expect(s2.path).toEqual(["dir:frete", "file:frete/calculo.py"]);
   });
 });
