@@ -680,14 +680,16 @@ T24 → T26
 
 **Done when**:
 
-- [ ] A migração das fixtures de `App.test.tsx` foi para T20 (decisão do orquestrador). Aqui o `effects={[]}` provisório vira `externalEffects(graph, selected.id)`.
-- [ ] Teste novo: ao selecionar `calcular_frete` com `fetch` de explain respondendo `no-key`, o painel mostra `requests.get (HTTP, linha 5)`.
-- [ ] Gate passa. `pnpm --filter @code2n8n/web typecheck` volta a verde; o typecheck da raiz só fecha em T22, por causa de `e2e/`.
+- [x] A migração das fixtures de `App.test.tsx` foi para T20 (decisão do orquestrador). Aqui o `effects={[]}` provisório vira `externalEffects(graph, selected.id)`.
+- [x] Teste novo: ao selecionar `calcular_frete` com `fetch` de explain respondendo `no-key`, o painel mostra `requests.get (HTTP, linha 5)`.
+- [x] Gate passa. `pnpm --filter @code2n8n/web typecheck` volta a verde; o typecheck da raiz só fecha em T22, por causa de `e2e/`.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): pass graph-derived external effects to the detail panel`
+
+**Status**: ✅ Complete
 
 ---
 

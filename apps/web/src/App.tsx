@@ -5,6 +5,7 @@ import { FlowCanvas } from "./flow/FlowCanvas";
 import { Breadcrumb } from "./nav/Breadcrumb";
 import { initialNav, navReducer } from "./nav/navigation";
 import { DetailPanel } from "./panel/DetailPanel";
+import { externalEffects } from "./panel/effects";
 
 interface Mapped {
   source: string;
@@ -89,7 +90,7 @@ export function App() {
         <DetailPanel
           source={mapped.source}
           node={selected}
-          effects={[]}
+          effects={externalEffects(mapped.graph, selected.id)}
           onExplained={onExplained}
         />
       )}

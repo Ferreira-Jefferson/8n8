@@ -6,11 +6,13 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App";
 import { fetchExplanation, fetchGraph } from "../api";
 import type { FlowCanvasProps } from "../flow/FlowCanvas";
+import { pedidoFreteGraph } from "../panel/__tests__/pedido-frete-graph";
 
 vi.mock("../api", () => ({ fetchGraph: vi.fn(), fetchExplanation: vi.fn() }));
 
@@ -153,5 +155,22 @@ describe("App", () => {
     expect(currentCanvas().levelId).toBe("fn:calcular_frete");
     fireEvent.click(screen.getByRole("button", { name: "Trecho" }));
     expect(currentCanvas().levelId).toBeNull();
+  });
+
+  it("shows the graph-derived external effects of calcular_frete without a summary (FID-14)", async () => {
+    graphMock.mockResolvedValue(pedidoFreteGraph);
+    explainMock.mockResolvedValue({ status: "no-key" });
+    await generate();
+    await screen.findByTestId("canvas");
+    act(() => currentCanvas().onSelect("fn:calcular_frete"));
+    expect(
+      await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
+    ).toBeTruthy();
+    const list = screen.getByRole("list", { name: "Efeitos externos" });
+    expect(
+      within(list)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["requests.get (HTTP, linha 5)"]);
   });
 });
