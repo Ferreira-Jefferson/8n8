@@ -359,13 +359,15 @@ T48 → T49
 
 **Done when**:
 
-- [ ] `ExplainResponse` tem os três status: `ok` com `fromCache`, `no-key` e `error` com `message`.
-- [ ] `ExplainRequest.nodeKind` aceita só `function` e `class`.
+- [x] `ExplainResponse` tem os três status: `ok` com `fromCache`, `no-key` e `error` com `message`.
+- [x] `ExplainRequest.nodeKind` aceita só `function` e `class`.
 
 **Tests**: none (tipos)
 **Gate**: build · `pnpm --filter @code2n8n/model typecheck && pnpm check`
 
 **Commit**: `feat(model): add explanation types`
+
+**Status**: ✅ Complete
 
 ---
 
