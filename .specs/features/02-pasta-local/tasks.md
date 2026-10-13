@@ -234,15 +234,16 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `forbiddenUses` acha `writeFile`, `appendFile`, `mkdir`, `rm`, `rename`, `unlink`, `copyFile`, `chmod`, `open(` e `child_process` num texto de amostra, e não acha nada em `readFile(p)`.
-- [ ] `read-only.test.ts` lê todo `.ts` de `packages/input/src` fora de `__tests__`: `forbiddenUses` volta vazio para cada um, e só `fs-read.ts` importa `node:fs`.
-- [ ] `pnpm --filter @code2n8n/input typecheck` passa.
-- [ ] Gate passa.
+- [x] `forbiddenUses` acha `writeFile`, `appendFile`, `mkdir`, `rm`, `rename`, `unlink`, `copyFile`, `chmod`, `open(` e `child_process` num texto de amostra, e não acha nada em `readFile(p)`.
+- [x] `read-only.test.ts` lê todo `.ts` de `packages/input/src` fora de `__tests__`: `forbiddenUses` volta vazio para cada um, e só `fs-read.ts` importa `node:fs`.
+- [x] `pnpm --filter @code2n8n/input typecheck` passa.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/input test`
 
 **Commit**: `feat(input): add read-only input package with disk access in one module`
+**Status**: ✅ Complete
 
 ---
 
