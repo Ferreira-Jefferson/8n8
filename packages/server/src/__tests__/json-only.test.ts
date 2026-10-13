@@ -46,10 +46,50 @@ describe("API accepts only JSON (AD-016)", () => {
     expect(calls).toEqual({ explain: 0, readProject: 0 });
   });
 
-  it("refuses a post without content-type with 415", async () => {
+  it("refuses a string body with no explicit content-type (fetch defaults it to text/plain) with 415", async () => {
     const { calls, post } = setup();
     for (const path of ["/api/graph", "/api/explain", "/api/project"]) {
       expect((await post(path, {})).status).toBe(415);
+    }
+    expect(calls).toEqual({ explain: 0, readProject: 0 });
+  });
+
+  it("refuses a post with no content-type header at all with 415", async () => {
+    const { app, calls } = setup();
+    for (const path of ["/api/graph", "/api/explain", "/api/project"]) {
+      // A byte body gets no default content-type, so the header is really absent.
+      const req = new Request(`http://127.0.0.1:4317${path}`, {
+        method: "POST",
+        headers: { host: "127.0.0.1:4317" },
+        body: new TextEncoder().encode('{"path":"."}'),
+      });
+      expect(req.headers.get("content-type")).toBeNull();
+      expect((await app.request(req)).status).toBe(415);
+    }
+    expect(calls).toEqual({ explain: 0, readProject: 0 });
+  });
+
+  it("refuses the other CORS-simple types (form-urlencoded, multipart) with 415 on every POST route", async () => {
+    const { app, calls } = setup();
+    const bodies = {
+      "application/x-www-form-urlencoded": () =>
+        new URLSearchParams({ path: "." }),
+      "multipart/form-data": () => {
+        const form = new FormData();
+        form.append("path", ".");
+        return form;
+      },
+    };
+    for (const path of ["/api/graph", "/api/explain", "/api/project"]) {
+      for (const [type, body] of Object.entries(bodies)) {
+        const req = new Request(`http://127.0.0.1:4317${path}`, {
+          method: "POST",
+          headers: { host: "127.0.0.1:4317" },
+          body: body(),
+        });
+        expect(req.headers.get("content-type")).toMatch(new RegExp(`^${type}`));
+        expect((await app.request(req)).status).toBe(415);
+      }
     }
     expect(calls).toEqual({ explain: 0, readProject: 0 });
   });
