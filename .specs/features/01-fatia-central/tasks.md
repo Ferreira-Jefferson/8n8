@@ -1028,13 +1028,15 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Dependências: `@code2n8n/model`, `@code2n8n/extract-python`, `@code2n8n/explain` (`workspace:*`), `hono@4.13.13`, `@hono/node-server@2.1.5`, `zod@4.6.7`.
-- [ ] `pnpm install` e `pnpm check` passam.
+- [x] Dependências: `@code2n8n/model`, `@code2n8n/extract-python`, `@code2n8n/explain` (`workspace:*`), `hono@4.13.13`, `@hono/node-server@2.1.5`, `zod@4.6.7`.
+- [x] `pnpm install` e `pnpm check` passam.
 
 **Tests**: none (scaffold)
 **Gate**: build · `pnpm install && pnpm --filter @code2n8n/server typecheck && pnpm check`
 
 **Commit**: `chore(server): scaffold package with hono`
+
+**Status**: ✅ Complete
 
 ---
 
