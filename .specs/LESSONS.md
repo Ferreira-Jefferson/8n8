@@ -96,6 +96,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SP-1 / PROJ-06 / packages/input/src/read-file.ts:4 (input)
 - last seen: 2026-10-13T23:06:56Z
 
+### L-015 - Pin a file-extension filter with near-miss names such as .pyc and .pyi, so a substring match fails a test.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `input` · harmful: 0
+- features: 02-pasta-local
+- evidence: N13 / PROJ-01 / packages/input/src/read-folder.ts:56 (input)
+- last seen: 2026-10-13T23:48:09Z
+
+### L-016 - Test each name-resolution fallback in every function that resolves names, not only in the first one that uses it.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `extract-python` · harmful: 0
+- features: 02-pasta-local
+- evidence: N10 / PROJ-03 / packages/extract-python/src/project.ts:162 (extract-python)
+- last seen: 2026-10-13T23:48:15Z
+
+### L-017 - When the design names a parsing risk, test its fix in every code path that parses that construct, not only one.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `extract-python` · harmful: 0
+- features: 02-pasta-local
+- evidence: N12 / PROJ-03 / packages/extract-python/src/project.ts:146 (extract-python)
+- last seen: 2026-10-13T23:48:15Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 15,
+  "next_id": 18,
   "lessons": [
     {
       "id": "L-001",
@@ -258,6 +258,60 @@
       ],
       "created": "2026-10-13T23:06:56Z",
       "last_seen": "2026-10-13T23:06:56Z"
+    },
+    {
+      "id": "L-015",
+      "key": "surviving_mutant::pin a file extension filter with near miss names such as pyc and pyi so a substring match fails a test",
+      "text": "Pin a file-extension filter with near-miss names such as .pyc and .pyi, so a substring match fails a test.",
+      "signal": "surviving_mutant",
+      "scope": "input",
+      "status": "candidate",
+      "features": [
+        "02-pasta-local"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N13 / PROJ-01 / packages/input/src/read-folder.ts:56 (input)"
+      ],
+      "created": "2026-10-13T23:48:09Z",
+      "last_seen": "2026-10-13T23:48:09Z"
+    },
+    {
+      "id": "L-016",
+      "key": "surviving_mutant::test each name resolution fallback in every function that resolves names not only in the first one that uses it",
+      "text": "Test each name-resolution fallback in every function that resolves names, not only in the first one that uses it.",
+      "signal": "surviving_mutant",
+      "scope": "extract-python",
+      "status": "candidate",
+      "features": [
+        "02-pasta-local"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N10 / PROJ-03 / packages/extract-python/src/project.ts:162 (extract-python)"
+      ],
+      "created": "2026-10-13T23:48:15Z",
+      "last_seen": "2026-10-13T23:48:15Z"
+    },
+    {
+      "id": "L-017",
+      "key": "surviving_mutant::when the design names a parsing risk test its fix in every code path that parses that construct not only one",
+      "text": "When the design names a parsing risk, test its fix in every code path that parses that construct, not only one.",
+      "signal": "surviving_mutant",
+      "scope": "extract-python",
+      "status": "candidate",
+      "features": [
+        "02-pasta-local"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N12 / PROJ-03 / packages/extract-python/src/project.ts:146 (extract-python)"
+      ],
+      "created": "2026-10-13T23:48:15Z",
+      "last_seen": "2026-10-13T23:48:15Z"
     }
   ]
 }
