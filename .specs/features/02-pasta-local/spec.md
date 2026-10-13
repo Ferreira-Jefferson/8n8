@@ -1,0 +1,79 @@
+# Pasta Local Specification
+
+## Problem Statement
+
+A fatia central só entende trechos colados. Para ter a visão de um projeto inteiro, o usuário precisa apontar uma pasta e ver pastas, arquivos e funções conectados por imports e chamadas.
+
+Depende de: 01-fatia-central.
+
+## Goals
+
+- [ ] Uma pasta Python real vira um mapa com pastas → arquivos → funções, usando o mesmo drill-down e a mesma explicação da fatia central.
+
+## Out of Scope
+
+| Feature | Reason |
+| ------- | ------ |
+| Repositórios remotos (URL do GitHub) | Entrada só por pasta local. |
+| Resolver imports dinâmicos (`importlib`, `__import__`) | Impossível de forma determinística. A chamada aparece como EXTERNO. |
+| Atualizar o mapa sozinho quando os arquivos mudam | O usuário gera o mapa de novo. |
+
+**Deferred** (a fatia funciona sem estes itens):
+
+- Limites de entrada: número máximo de arquivos e de MB por pasta. Adiado até medir o tempo real numa pasta grande.
+- Codificação: arquivos fora de UTF-8 tratados como latin-1. Adiado porque eles entram em "Arquivos ignorados" pelo PROJ-06.
+- Links simbólicos que saem da pasta. Adiado porque o sistema só lê arquivos (PROJ-07) e o servidor é local (PROJ-08).
+- Escala: agrupar níveis com mais de N nós. Adiado até ver um caso real.
+
+---
+
+## Assumptions & Open Questions
+
+| Assumption / decision | Chosen default | Rationale | Confirmed? |
+| --------------------- | -------------- | --------- | ---------- |
+| Pastas ignoradas | `.git`, `.venv`, `venv`, `node_modules`, `__pycache__`, `site-packages`, `build`, `dist` | Não são código do projeto. | n |
+| Arquivo grande | Arquivos acima de 1 MB entram em "Arquivos ignorados" | Costumam ser gerados, não escritos à mão. | n |
+| Nível superior | Uma pasta (pacote) por nó. Arquivos na raiz ficam num nó "raiz". | Espelha a estrutura do projeto. | n |
+
+**Open questions:** none. Todas foram resolvidas ou registradas acima.
+
+---
+
+## User Stories
+
+### P1: Mapa de um projeto a partir de uma pasta ⭐ MVP
+
+**User Story**: Como desenvolvedor, quero informar o caminho de uma pasta e ver pastas, arquivos e funções conectados, para entender o projeto inteiro.
+
+**Why P1**: Sem isso a ferramenta só serve para trechos isolados.
+
+**Acceptance Criteria** (each line is one EARS pattern):
+
+1. WHEN o usuário informa o caminho de uma pasta THEN o sistema SHALL ler todos os arquivos `.py` da pasta e das subpastas, exceto as pastas ignoradas.  <!-- PROJ-01 -->
+2. WHEN a leitura termina THEN o sistema SHALL mostrar um nó por pasta no nível superior e um nó por arquivo dentro de cada pasta.  <!-- PROJ-02 -->
+3. WHEN um arquivo importa outro arquivo da mesma raiz THEN o sistema SHALL desenhar um fio de importação entre eles.  <!-- PROJ-03 -->
+4. WHEN uma função chama uma função de outro arquivo da raiz por um import resolvido THEN o sistema SHALL desenhar o fio de chamada entre as duas funções.  <!-- PROJ-04 -->
+5. IF o caminho não existe ou não é uma pasta THEN o sistema SHALL mostrar "Pasta não encontrada: <caminho>".  <!-- PROJ-05 -->
+6. IF um arquivo não pode ser lido ou passa de 1 MB THEN o sistema SHALL ignorá-lo e listá-lo em "Arquivos ignorados" com o motivo.  <!-- PROJ-06 -->
+7. The system SHALL só ler arquivos e nunca SHALL escrever, mover ou executar arquivos da pasta analisada.  <!-- PROJ-07 -->
+8. The system SHALL aceitar conexões só em `127.0.0.1`.  <!-- PROJ-08 -->
+9. WHEN dois arquivos definem funções com o mesmo nome THEN o sistema SHALL resolver a chamada pelo import do arquivo chamador e, sem import, SHALL classificá-la como EXTERNO.  <!-- PROJ-09 -->
+
+**Independent Test**: Apontar uma pasta com `pedidos/` e `frete/` em que `pedidos` importa `frete`. Devem aparecer dois nós de pasta com um fio de importação entre eles. Abrindo `pedidos`, o fio de chamada deve chegar a `calcular_frete`.
+
+---
+
+## Requirement Traceability
+
+| Requirement ID | Story | Phase | Status |
+| -------------- | ----- | ----- | ------ |
+| PROJ-01..09 | P1: Pasta local | - | Pending |
+
+**Coverage:** 9 total, 0 mapped to tasks.
+
+---
+
+## Success Criteria
+
+- [ ] Uma pasta Python real do usuário vira um mapa navegável sem nenhuma mudança nos arquivos dela.
+- [ ] Drill-down, resumos e sugestões funcionam igual à fatia central.
