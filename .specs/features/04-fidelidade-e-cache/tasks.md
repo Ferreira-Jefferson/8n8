@@ -249,16 +249,17 @@ T24 → T26
 
 **Done when**:
 
-- [ ] FID-02: "pesa 5 kg" num código sem o token `5` gera problema; `30` passa com `peso > 30`; `5` NÃO passa só porque o código tem `0.5`; `0,5` no texto casa com `0.5` no código; um número dentro de um nome de vizinho passa; números entre crases ficam fora da regra.
-- [ ] FID-03: `kg` sem `kg` no código gera problema; `kg` dentro de um comentário ou de uma string do código passa; `dias` passa com `dias_uteis`; `R$`, `%` e `€` contam em qualquer posição; `5 g` e `5g` geram problema sem `g` no código; "a gente" e "m" soltos sem número antes não geram; a checagem ignora maiúsculas.
-- [ ] FID-04: `` `requests.get` `` passa com `requests.get(` no código; `` `calcular()` `` é checado sem `(...)`; `` `processar` `` passa por ser vizinho; `` `peso_total` `` gera problema com só `peso` no código (fronteira de identificador).
-- [ ] `layerOne` roda as três regras em cada item e devolve um problema por item reprovado, com o ID.
-- [ ] Gate passa.
+- [x] FID-02: "pesa 5 kg" num código sem o token `5` gera problema; `30` passa com `peso > 30`; `5` NÃO passa só porque o código tem `0.5`; `0,5` no texto casa com `0.5` no código; um número dentro de um nome de vizinho passa; números entre crases ficam fora da regra.
+- [x] FID-03: `kg` sem `kg` no código gera problema; `kg` dentro de um comentário ou de uma string do código passa; `dias` passa com `dias_uteis`; `R$`, `%` e `€` contam em qualquer posição; `5 g` e `5g` geram problema sem `g` no código; "a gente" e "m" soltos sem número antes não geram; a checagem ignora maiúsculas.
+- [x] FID-04: `` `requests.get` `` passa com `requests.get(` no código; `` `calcular()` `` é checado sem `(...)`; `` `processar` `` passa por ser vizinho; `` `peso_total` `` gera problema com só `peso` no código (fronteira de identificador).
+- [x] `layerOne` roda as três regras em cada item e devolve um problema por item reprovado, com o ID.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): add deterministic layer-one checks for numbers, units and identifiers`
+**Status**: ✅ Complete
 
 ---
 
