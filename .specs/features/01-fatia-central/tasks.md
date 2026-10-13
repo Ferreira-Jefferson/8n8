@@ -1171,15 +1171,17 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Dependências: `@code2n8n/model` (`workspace:*`, só tipos), `react@19.3.0`, `react-dom@19.3.0`, `@xyflow/react@12.12.0`, `@dagrejs/dagre@3.1.1`; dev: `vite@8.3.4`, `@vitejs/plugin-react@6.1.2`, `jsdom@30.1.2`, `@testing-library/react@16.3.3`.
-- [ ] O peer de `@testing-library/react` 16.3.3 com React 19.3 foi conferido (item incerto do design). Se falhar, registrar e escolher a versão que aceita.
-- [ ] Scripts `dev`, `build`, `test`, `typecheck`.
-- [ ] `pnpm check` passa: a web não importa `explain`, `extract-python`, `server` nem `node:*`.
+- [x] Dependências: `@code2n8n/model` (`workspace:*`, só tipos), `react@19.3.0`, `react-dom@19.3.0`, `@xyflow/react@12.12.0`, `@dagrejs/dagre@3.1.1`; dev: `vite@8.3.4`, `@vitejs/plugin-react@6.1.2`, `jsdom@30.1.2`, `@testing-library/react@16.3.3`.
+- [x] O peer de `@testing-library/react` 16.3.3 com React 19.3 foi conferido (item incerto do design). Se falhar, registrar e escolher a versão que aceita.
+- [x] Scripts `dev`, `build`, `test`, `typecheck`.
+- [x] `pnpm check` passa: a web não importa `explain`, `extract-python`, `server` nem `node:*`.
 
 **Tests**: none (scaffold)
 **Gate**: build · `pnpm install && pnpm --filter @code2n8n/web typecheck && pnpm --filter @code2n8n/web build && pnpm check`
 
 **Commit**: `chore(web): scaffold vite react app with api proxy`
+
+**Status**: ✅ Complete
 
 ---
 
