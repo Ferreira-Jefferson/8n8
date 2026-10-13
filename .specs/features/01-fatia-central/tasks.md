@@ -1257,17 +1257,19 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (CORE-01, 03): nível superior → só `function`, `class` e `module`.
-- [ ] Teste (CORE-02): fio `calls` entre funções aparece; fio de um método para uma função sobe para a classe; fio de uma classe para ela mesma some; dois fios iguais viram um.
-- [ ] Teste (CORE-08, 13): dentro de uma função → só os filhos diretos, na ordem, com os fios `next`.
-- [ ] Teste (CORE-09): dentro de uma função com condição → os passos dos ramos aparecem no mesmo nível, com os fios `branch` e seus rótulos.
-- [ ] Teste (CORE-10): dentro de um `loop` → só o corpo do laço.
-- [ ] Gate passa. Test count: ≥ 7 testes.
+- [x] Teste (CORE-01, 03): nível superior → só `function`, `class` e `module`.
+- [x] Teste (CORE-02): fio `calls` entre funções aparece; fio de um método para uma função sobe para a classe; fio de uma classe para ela mesma some; dois fios iguais viram um.
+- [x] Teste (CORE-08, 13): dentro de uma função → só os filhos diretos, na ordem, com os fios `next`.
+- [x] Teste (CORE-09): dentro de uma função com condição → os passos dos ramos aparecem no mesmo nível, com os fios `branch` e seus rótulos.
+- [x] Teste (CORE-10): dentro de um `loop` → só o corpo do laço.
+- [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): project one graph level with lifted calls edges`
+
+**Status**: ✅ Complete
 
 ---
 
