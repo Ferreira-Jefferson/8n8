@@ -277,4 +277,16 @@ describe("extractProject: imports wires (PROJ-03)", () => {
 
     expect(importIds(graph)).toEqual(["imports:file:m.py->file:a/b.py"]);
   });
+
+  it("wires from . import b to the sibling b.py of the package", async () => {
+    const graph = await projectOf([
+      { path: "pedidos/__init__.py", source: "" },
+      { path: "pedidos/a.py", source: "from . import b\n" },
+      { path: "pedidos/b.py", source: "def f():\n    pass\n" },
+    ]);
+
+    expect(importIds(graph)).toEqual([
+      "imports:file:pedidos/a.py->file:pedidos/b.py",
+    ]);
+  });
 });
