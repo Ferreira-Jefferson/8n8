@@ -7,10 +7,11 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { createPythonExtractor } from "@code2n8n/extract-python";
 import { readSourceFolder } from "@code2n8n/input";
 import type { ExplainRequest, ProjectResponse } from "@code2n8n/model";
@@ -343,6 +344,55 @@ describe("composeReadProject", () => {
     await post("/api/explain", { root: loja, nodeId });
     rmSync(join(loja, ".."), { recursive: true, force: true });
     expect(received[1]?.code).toContain("if peso > 100:");
+  });
+
+  it("the same folder typed three ways hits one cache entry: the identity uses the real path (CACHE-06, AD-015)", async () => {
+    const loja = makeLoja();
+    const alias = join(loja, "..", "atalho");
+    symlinkSync(loja, alias, "junction");
+    const f = fakeFactory();
+    const cache = dir("m");
+    const app = createApp({
+      extractor,
+      explain: composeExplain(
+        { OPENROUTER_API_KEY: "k" },
+        { createClient: f.createClient, ptsRules, cacheDir: cache },
+      ),
+      readProject,
+      port: 4317,
+    });
+    const explain = async (root: string) => {
+      const res = await app.request("/api/explain", {
+        method: "POST",
+        headers: {
+          host: "127.0.0.1:4317",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          root,
+          nodeId: "file:frete/calculo.py/fn:calcular_frete",
+        }),
+      });
+      return { status: res.status, body: (await res.json()) as unknown };
+    };
+
+    const first = await explain(loja);
+    // A `..` segment with a trailing separator, and a junction to the folder.
+    const dotted = await explain(`${join(loja, "..", "loja")}${sep}`);
+    const linked = await explain(alias);
+    const entries = readdirSync(join(cache, "nodes"));
+    rmSync(join(loja, ".."), { recursive: true, force: true });
+
+    expect(first.status).toBe(200);
+    expect(first.body).toMatchObject({ status: "ok", fromCache: false });
+    const cached = {
+      ...first,
+      body: { ...(first.body as object), fromCache: true },
+    };
+    expect(dotted).toEqual(cached);
+    expect(linked).toEqual(cached);
+    expect(f.drafts()).toHaveLength(1);
+    expect(entries).toHaveLength(1);
   });
 });
 
