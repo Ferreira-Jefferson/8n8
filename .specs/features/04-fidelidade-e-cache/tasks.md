@@ -354,18 +354,19 @@ T24 → T26
 
 **Done when**:
 
-- [ ] FID-05: o prompt pede um veredicto e as linhas de evidência por item, só em JSON com `verdicts`.
-- [ ] FID-06: `reviewerMessage` contém o código numerado de 1 a n, os nomes dos vizinhos e os itens `- s1: …`; não contém `Nó:`, o nome do nó fora do código, o texto do PTS nem o JSON bruto do rascunho.
-- [ ] `parseVerdicts` aceita JSON com cercas ```` ``` ````; JSON inválido ou fora do schema lança erro.
-- [ ] FID-07: o item fica não suportado sem veredicto, com `supported=false`, com `evidence` vazia ou com uma linha fora de `1..lineCount`; os outros itens da mesma resposta continuam.
-- [ ] As linhas mantidas ficam ordenadas e sem repetição (`[7,5,5]` → `[5,7]`).
-- [ ] Mudar `UNITS` muda a versão do revisor.
-- [ ] Gate passa.
+- [x] FID-05: o prompt pede um veredicto e as linhas de evidência por item, só em JSON com `verdicts`.
+- [x] FID-06: `reviewerMessage` contém o código numerado de 1 a n, os nomes dos vizinhos e os itens `- s1: …`; não contém `Nó:`, o nome do nó fora do código, o texto do PTS nem o JSON bruto do rascunho.
+- [x] `parseVerdicts` aceita JSON com cercas ```` ``` ````; JSON inválido ou fora do schema lança erro.
+- [x] FID-07: o item fica não suportado sem veredicto, com `supported=false`, com `evidence` vazia ou com uma linha fora de `1..lineCount`; os outros itens da mesma resposta continuam.
+- [x] As linhas mantidas ficam ordenadas e sem repetição (`[7,5,5]` → `[5,7]`).
+- [x] Mudar `UNITS` muda a versão do revisor.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): add llm reviewer with zod verdicts and evidence range check`
+**Status**: ✅ Complete
 
 ---
 
