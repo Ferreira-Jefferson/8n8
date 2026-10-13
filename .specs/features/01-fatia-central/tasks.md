@@ -281,17 +281,19 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Regras: sem ciclos; `model` não importa nenhum `@code2n8n/*`; `extract-python` e `explain` importam só `model`; `server` importa `model`, `extract-python` e `explain`; `apps/web` importa só `model`.
-- [ ] Bloqueia `node:*` em `packages/model` e em `apps/web`.
-- [ ] Bloqueia caminho relativo que sai da pasta do pacote (`../../packages/...`).
-- [ ] A sintaxe das regras foi conferida no dependency-cruiser 18 (item incerto do design).
-- [ ] Prova negativa: um arquivo temporário em `packages/model/src` com `import 'node:fs'` faz `pnpm check` falhar. O arquivo é apagado antes do commit.
-- [ ] Script `check` na raiz: `biome check . && depcruise packages apps --config .dependency-cruiser.cjs`.
+- [x] Regras: sem ciclos; `model` não importa nenhum `@code2n8n/*`; `extract-python` e `explain` importam só `model`; `server` importa `model`, `extract-python` e `explain`; `apps/web` importa só `model`.
+- [x] Bloqueia `node:*` em `packages/model` e em `apps/web`.
+- [x] Bloqueia caminho relativo que sai da pasta do pacote (`../../packages/...`).
+- [x] A sintaxe das regras foi conferida no dependency-cruiser 18 (item incerto do design).
+- [x] Prova negativa: um arquivo temporário em `packages/model/src` com `import 'node:fs'` faz `pnpm check` falhar. O arquivo é apagado antes do commit.
+- [x] Script `check` na raiz: `biome check . && depcruise packages apps --config .dependency-cruiser.cjs`.
 
 **Tests**: none (config)
 **Gate**: build · `pnpm check`
 
 **Commit**: `chore(repo): enforce package boundaries with dependency-cruiser`
+
+**Status**: ✅ Complete
 
 ---
 
