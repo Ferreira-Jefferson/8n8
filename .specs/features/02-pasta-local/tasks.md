@@ -958,17 +958,19 @@ T31 → T32
 
 **Done when**:
 
-- [ ] PROJ-01/02: o topo tem exatamente 4 nós, `dir:.`, `dir:frete`, `dir:legado`, `dir:pedidos`, com rótulos `raiz`, `frete`, `legado`, `pedidos`. Em cada nível aberto no arquivo inteiro, nenhum `data-id` contém `.venv`, `dist`, `grande.py` ou `latin1.py`. Abrir `pedidos` mostra exatamente 3 nós: `__init__.py`, `itens.py`, `pedidos.py`.
-- [ ] PROJ-03 (Independent Test): o topo tem exatamente 2 fios, `Edge from dir:pedidos to dir:frete` e `Edge from dir:. to dir:pedidos`, ambos com a classe `edge-imports`. Dentro de `pedidos`, exatamente 1 fio, de `file:pedidos/pedidos.py` para `file:pedidos/itens.py`.
-- [ ] PROJ-04 (Independent Test): em `pedidos › pedidos.py › processar_pedido` o breadcrumb é exatamente `loja › pedidos › pedidos.py › processar_pedido` e o passo `calcular_frete` aparece; o duplo clique leva o breadcrumb a exatamente `loja › frete › calculo.py › calcular_frete`.
-- [ ] PROJ-09: em `raiz › relatorio.py › gerar`, o passo `calcular_frete` mostra `EXTERNO`; em `legado › frete_antigo.py`, exatamente 0 fios.
-- [ ] PROJ-05: `<tmp>/nao-existe` e `<tmp>/loja/main.py` mostram, cada um, o alerta com o texto exato `Pasta não encontrada: <caminho digitado>`.
-- [ ] Gate passa.
+- [x] PROJ-01/02: o topo tem exatamente 4 nós, `dir:.`, `dir:frete`, `dir:legado`, `dir:pedidos`, com rótulos `raiz`, `frete`, `legado`, `pedidos`. Em cada nível aberto no arquivo inteiro, nenhum `data-id` contém `.venv`, `dist`, `grande.py` ou `latin1.py`. Abrir `pedidos` mostra exatamente 3 nós: `__init__.py`, `itens.py`, `pedidos.py`.
+- [x] PROJ-03 (Independent Test): o topo tem exatamente 2 fios, `Edge from dir:pedidos to dir:frete` e `Edge from dir:. to dir:pedidos`, ambos com a classe `edge-imports`. Dentro de `pedidos`, exatamente 1 fio, de `file:pedidos/pedidos.py` para `file:pedidos/itens.py`.
+- [x] PROJ-04 (Independent Test): em `pedidos › pedidos.py › processar_pedido` o breadcrumb é exatamente `loja › pedidos › pedidos.py › processar_pedido` e o passo `calcular_frete` aparece; o duplo clique leva o breadcrumb a exatamente `loja › frete › calculo.py › calcular_frete`.
+- [x] PROJ-09: em `raiz › relatorio.py › gerar`, o passo `calcular_frete` mostra `EXTERNO`; em `legado › frete_antigo.py`, exatamente 0 fios.
+- [x] PROJ-05: `<tmp>/nao-existe` e `<tmp>/loja/main.py` mostram, cada um, o alerta com o texto exato `Pasta não encontrada: <caminho digitado>`.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm e2e`
 
 **Commit**: `test(e2e): cover project structure, imports and cross-file drill-down`
+
+**Status**: ✅ Complete
 
 ---
 
