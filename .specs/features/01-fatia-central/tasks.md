@@ -1395,15 +1395,17 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (CORE-14): com `range.start = 12`, as linhas aparecem numeradas a partir de 12, com o texto exato e a indentação.
-- [ ] Teste (CORE-24): `highlightedLine = 13` marca só a linha 13 (`aria-current` ou atributo equivalente consultável).
-- [ ] Teste: sem `highlightedLine`, nenhuma linha está marcada.
-- [ ] Gate passa. Test count: ≥ 3 testes.
+- [x] Teste (CORE-14): com `range.start = 12`, as linhas aparecem numeradas a partir de 12, com o texto exato e a indentação.
+- [x] Teste (CORE-24): `highlightedLine = 13` marca só a linha 13 (`aria-current` ou atributo equivalente consultável).
+- [x] Teste: sem `highlightedLine`, nenhuma linha está marcada.
+- [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): add numbered code view with line highlight`
+
+**Status**: ✅ Complete
 
 ---
 
