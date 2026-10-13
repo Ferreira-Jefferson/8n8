@@ -35,6 +35,19 @@ export function createApp(deps: AppDeps): Hono {
     await next();
   });
 
+  // A "simple" cross-site POST skips the CORS preflight; only JSON is accepted (AD-016).
+  app.use("/api/*", async (c, next) => {
+    if (c.req.method === "POST") {
+      const type = (c.req.header("content-type") ?? "")
+        .split(";")[0]
+        ?.trim()
+        .toLowerCase();
+      if (type !== "application/json")
+        return c.text("Unsupported Media Type", 415);
+    }
+    await next();
+  });
+
   app.post("/api/graph", async (c) => {
     const body = graphBody.safeParse(await c.req.json().catch(() => null));
     if (!body.success) return c.json({ error: "invalid body" }, 400);

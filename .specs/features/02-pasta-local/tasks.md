@@ -610,17 +610,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `json-only.test.ts` (novo): `text/plain` em `/api/graph`, `/api/explain` e `/api/project` dá 415, e `explain` e `readProject` falsos não rodam.
-- [ ] Sem `content-type` também dá 415.
-- [ ] `application/json; charset=utf-8` passa.
-- [ ] `GET /` com Host válido não dá 415.
-- [ ] Os testes atuais de rota passam sem mudança (já mandam `application/json`).
-- [ ] Gate passa.
+- [x] `json-only.test.ts` (novo): `text/plain` em `/api/graph`, `/api/explain` e `/api/project` dá 415, e `explain` e `readProject` falsos não rodam.
+- [x] Sem `content-type` também dá 415.
+- [x] `application/json; charset=utf-8` passa.
+- [x] `GET /` com Host válido não dá 415.
+- [x] Os testes atuais de rota passam sem mudança (já mandam `application/json`).
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): refuse non-json posts with 415`
+**Status**: ✅ Complete
 
 ---
 
