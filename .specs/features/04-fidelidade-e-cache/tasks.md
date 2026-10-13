@@ -275,16 +275,17 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `normalizeCode`: CRLF e CR viram LF; espaços e tabs no fim da linha somem; o número de linhas não muda.
-- [ ] CACHE-01: `fingerprintOf` tem os seis componentes separados; o mesmo código com CRLF e com LF dá o mesmo `code`.
-- [ ] `neighbourKey`: ordem e repetição não mudam o hash; mover um nome de `calls` para `calledBy` muda o hash.
-- [ ] CACHE-04: `diffReasons` devolve `["code"]`, `["neighbours"]`, `["model-or-prompt"]` para cada um dos quatro componentes restantes, e `["code", "neighbours", "model-or-prompt"]` nessa ordem fixa quando tudo muda; `[]` quando nada muda.
-- [ ] Gate passa.
+- [x] `normalizeCode`: CRLF e CR viram LF; espaços e tabs no fim da linha somem; o número de linhas não muda.
+- [x] CACHE-01: `fingerprintOf` tem os seis componentes separados; o mesmo código com CRLF e com LF dá o mesmo `code`.
+- [x] `neighbourKey`: ordem e repetição não mudam o hash; mover um nome de `calls` para `calledBy` muda o hash.
+- [x] CACHE-04: `diffReasons` devolve `["code"]`, `["neighbours"]`, `["model-or-prompt"]` para cada um dos quatro componentes restantes, e `["code", "neighbours", "model-or-prompt"]` nessa ordem fixa quando tudo muda; `[]` quando nada muda.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
 
 **Commit**: `feat(explain): add component fingerprint with ordered update reasons`
+**Status**: ✅ Complete
 
 ---
 
