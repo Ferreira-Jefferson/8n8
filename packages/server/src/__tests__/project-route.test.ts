@@ -1,4 +1,12 @@
-import type { ProjectResponse } from "@code2n8n/model";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createPythonExtractor } from "@code2n8n/extract-python";
+import type {
+  ExplainRequest,
+  ProjectResponse,
+  SourceFile,
+} from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 
@@ -66,5 +74,129 @@ describe("POST /api/project", () => {
     const res = await post({ path: "." }, "evil.example:4317");
     expect(res.status).toBe(403);
     expect(paths).toEqual([]);
+  });
+});
+
+const extractor = await createPythonExtractor();
+const fixtureDir = fileURLToPath(
+  new URL(
+    "../../../extract-python/src/__tests__/fixtures/projeto-loja",
+    import.meta.url,
+  ),
+);
+
+function readFixture(dir = ""): SourceFile[] {
+  return readdirSync(join(fixtureDir, dir), { withFileTypes: true }).flatMap(
+    (e) => {
+      const rel = dir ? `${dir}/${e.name}` : e.name;
+      return e.isDirectory()
+        ? readFixture(rel)
+        : [{ path: rel, source: readFileSync(join(fixtureDir, rel), "utf8") }];
+    },
+  );
+}
+
+const WIN_ROOT = String.raw`C:\tmp\loja`;
+
+function explainSetup(files: SourceFile[], root = WIN_ROOT) {
+  const received: ExplainRequest[] = [];
+  const app = createApp({
+    extractor,
+    explain: async (req) => {
+      received.push(req);
+      return { status: "no-key" };
+    },
+    readProject: async (path) =>
+      path === root
+        ? {
+            kind: "ok",
+            root,
+            response: {
+              name: "loja",
+              graph: extractor.extractProject(files),
+              files,
+              ignored: [],
+            },
+          }
+        : { kind: "not-found" },
+    port: 4317,
+  });
+  const post = (body: unknown) =>
+    app.request("/api/explain", {
+      method: "POST",
+      headers: { host: "127.0.0.1:4317", "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  return { received, post, root };
+}
+
+const calcular = "file:frete/calculo.py/fn:calcular_frete";
+
+describe("POST /api/explain with { root, nodeId } (PROJ-07, PROJ-09, AD-015)", () => {
+  it("builds the request from the file in the folder, with a scoped nodeId and qualified neighbours", async () => {
+    const files = readFixture();
+    const { received, post, root } = explainSetup(files);
+    const res = await post({ root, nodeId: calcular });
+    expect(res.status).toBe(200);
+    const req = received[0];
+    const lines = files
+      .find((f) => f.path === "frete/calculo.py")
+      ?.source.split("\n");
+    expect(req?.nodeId).toBe(`C:/tmp/loja|${calcular}`);
+    expect(req?.nodeName).toBe("calcular_frete");
+    expect(req?.nodeKind).toBe("function");
+    expect(req?.code).toBe(
+      lines?.slice((req?.range.start ?? 1) - 1, req?.range.end).join("\n"),
+    );
+    expect(req?.code).toContain("def calcular_frete");
+    expect(req?.calledBy).toEqual(["pedidos/pedidos.py:processar_pedido"]);
+  });
+
+  it("names a neighbour from the same file by its label only", async () => {
+    const files: SourceFile[] = [
+      {
+        path: "a.py",
+        source: "def g():\n    return 1\n\ndef f():\n    return g()\n",
+      },
+    ];
+    const { received, post, root } = explainSetup(files);
+    await post({ root, nodeId: "file:a.py/fn:f" });
+    expect(received[0]?.calls).toEqual(["g"]);
+    expect(received[0]?.code).toBe("def f():\n    return g()");
+  });
+
+  it("ignores extra client fields (code, source) next to root", async () => {
+    const files = readFixture();
+    const plain = explainSetup(files);
+    await plain.post({ root: plain.root, nodeId: calcular });
+    const extra = explainSetup(files);
+    await extra.post({
+      root: extra.root,
+      nodeId: calcular,
+      source: "def calcular_frete():\n    pass\n",
+      code: "evil",
+    });
+    expect(plain.received).toHaveLength(1);
+    expect(extra.received).toEqual(plain.received);
+  });
+
+  it("answers 404 when readProject says not-found and when the node is missing", async () => {
+    const { received, post, root } = explainSetup(readFixture());
+    expect(
+      (await post({ root: String.raw`C:\outra`, nodeId: calcular })).status,
+    ).toBe(404);
+    expect((await post({ root, nodeId: "file:x.py/fn:nada" })).status).toBe(
+      404,
+    );
+    expect(received).toEqual([]);
+  });
+
+  it("answers 400 for a folder node and a file node", async () => {
+    const { received, post, root } = explainSetup(readFixture());
+    expect((await post({ root, nodeId: "dir:frete" })).status).toBe(400);
+    expect((await post({ root, nodeId: "file:frete/calculo.py" })).status).toBe(
+      400,
+    );
+    expect(received).toEqual([]);
   });
 });

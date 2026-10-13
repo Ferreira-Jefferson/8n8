@@ -637,17 +637,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `project-route.test.ts`, com `readProject` falso montado pelo extrator real sobre os arquivos da fixture em memória e `root` `C:\tmp\loja`: o pedido de `file:frete/calculo.py/fn:calcular_frete` tem `code` igual às linhas da função em `calculo.py`, `range` absoluto no arquivo, `nodeId` `C:/tmp/loja|file:frete/calculo.py/fn:calcular_frete` e `calledBy` `["pedidos/pedidos.py:processar_pedido"]`.
-- [ ] Vizinho do mesmo arquivo (projeto em memória com `a.py` em que `f` chama `g`) vai só com o rótulo `g`.
-- [ ] Campos extras do cliente (`code`, `source` junto de `root`) não mudam o pedido.
-- [ ] `readProject` com `not-found` dá 404; nó ausente dá 404; nó `folder` e nó `file` dão 400.
-- [ ] `explain-route.test.ts` (features 01 e 04): os testes do ramo de trecho passam sem mudança.
-- [ ] Gate passa.
+- [x] `project-route.test.ts`, com `readProject` falso montado pelo extrator real sobre os arquivos da fixture em memória e `root` `C:\tmp\loja`: o pedido de `file:frete/calculo.py/fn:calcular_frete` tem `code` igual às linhas da função em `calculo.py`, `range` absoluto no arquivo, `nodeId` `C:/tmp/loja|file:frete/calculo.py/fn:calcular_frete` e `calledBy` `["pedidos/pedidos.py:processar_pedido"]`.
+- [x] Vizinho do mesmo arquivo (projeto em memória com `a.py` em que `f` chama `g`) vai só com o rótulo `g`.
+- [x] Campos extras do cliente (`code`, `source` junto de `root`) não mudam o pedido.
+- [x] `readProject` com `not-found` dá 404; nó ausente dá 404; nó `folder` e nó `file` dão 400.
+- [x] `explain-route.test.ts` (features 01 e 04): os testes do ramo de trecho passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
 
 **Commit**: `feat(server): explain project nodes by re-reading the folder`
+**Status**: ✅ Complete
 
 ---
 
