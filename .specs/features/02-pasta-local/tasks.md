@@ -477,15 +477,16 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Com `prefix: "file:a.py"`: IDs `file:a.py/fn:f`, `file:a.py/fn:f/s1`, `file:a.py/mod`; os nós de topo têm `parentId` `file:a.py`; os fios `calls` locais têm IDs prefixados.
-- [ ] Com um `resolveImport` falso que devolve `file:b.py/fn:g`, o passo vira `call` com esse `target` e o fio `calls:file:a.py/fn:f->file:b.py/fn:g` aparece.
-- [ ] `build-graph.test.ts` e o snapshot de `extractor.test.ts` (feature 01) passam sem mudança.
-- [ ] Gate passa.
+- [x] Com `prefix: "file:a.py"`: IDs `file:a.py/fn:f`, `file:a.py/fn:f/s1`, `file:a.py/mod`; os nós de topo têm `parentId` `file:a.py`; os fios `calls` locais têm IDs prefixados.
+- [x] Com um `resolveImport` falso que devolve `file:b.py/fn:g`, o passo vira `call` com esse `target` e o fio `calls:file:a.py/fn:f->file:b.py/fn:g` aparece.
+- [x] `build-graph.test.ts` e o snapshot de `extractor.test.ts` (feature 01) passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): build graphs under a file prefix with an import resolver`
+**Status**: ✅ Complete
 
 ---
 
