@@ -824,16 +824,18 @@ Roteiro, decidido pelo conteúdo do pedido:
 
 **Done when** (cada item é um teste; textos exatos):
 
-- [ ] CACHE-02: abrir `calcular_frete`, abrir `processar_pedido` (só para trocar a seleção; o fake responde `500` e o painel mostra "Resumo indisponível") e reabrir `calcular_frete`: a resposta tem `fromCache: true`, "Revisado" aparece e as chamadas de `calcular_frete` no `fakeLog()` continuam 2.
-- [ ] CACHE-03/04/06, Independent Test P2: abrir `calcular_frete` (2 chamadas, sem `role="status"` no painel); trocar `def processar_pedido(` por `def processar(`, "Gerar mapa", abrir `calcular_frete`: o painel mostra `Resumo atualizado: os vizinhos mudaram`; `fakeLog()` tem 4 chamadas; o último `draft` contém a linha `Chamado por: processar`; `.cache/e2e-real/nodes` tem exatamente 1 arquivo `.json`.
-- [ ] CACHE-04, código: trocar `base = 10` por `base = 12` e reabrir mostra `Resumo atualizado: o código mudou`.
-- [ ] CACHE-05/02, Independent Test P2: abrir `calcular_frete` (`s1` com `L5`); inserir 3 linhas em branco antes de `def calcular_frete`, "Gerar mapa", abrir: a resposta tem `fromCache: true`; `fakeLog()` continua com 2 chamadas; `s1` mostra `L8`, `s2` mostra `L11–12`, `o1` mostra `L12, L14`; o clique em `L8` marca exatamente a linha 8; não há `Resumo atualizado`; o selo continua "Revisado".
-- [ ] Gate final passa: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`.
+- [x] CACHE-02: abrir `calcular_frete`, abrir `processar_pedido` (só para trocar a seleção; o fake responde `500` e o painel mostra "Resumo indisponível") e reabrir `calcular_frete`: a resposta tem `fromCache: true`, "Revisado" aparece e as chamadas de `calcular_frete` no `fakeLog()` continuam 2.
+- [x] CACHE-03/04/06, Independent Test P2: abrir `calcular_frete` (2 chamadas, sem `role="status"` no painel); trocar `def processar_pedido(` por `def processar(`, "Gerar mapa", abrir `calcular_frete`: o painel mostra `Resumo atualizado: os vizinhos mudaram`; `fakeLog()` tem 4 chamadas; o último `draft` contém a linha `Chamado por: processar`; `.cache/e2e-real/nodes` tem exatamente 1 arquivo `.json`.
+- [x] CACHE-04, código: trocar `base = 10` por `base = 12` e reabrir mostra `Resumo atualizado: o código mudou`.
+- [x] CACHE-05/02, Independent Test P2: abrir `calcular_frete` (`s1` com `L5`); inserir 3 linhas em branco antes de `def calcular_frete`, "Gerar mapa", abrir: a resposta tem `fromCache: true`; `fakeLog()` continua com 2 chamadas; `s1` mostra `L8`, `s2` mostra `L11–12`, `o1` mostra `L12, L14`; o clique em `L8` marca exatamente a linha 8; não há `Resumo atualizado`; o selo continua "Revisado".
+- [x] Gate final passa: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`.
 
 **Tests**: e2e
 **Gate**: build (final) · `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
 
 **Commit**: `test(e2e): cover neighbour, code and position changes against the real cache`
+
+**Status**: ✅ Complete
 
 ---
 
