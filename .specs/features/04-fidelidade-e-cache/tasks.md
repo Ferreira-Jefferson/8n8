@@ -770,15 +770,17 @@ Roteiro, decidido pelo conteúdo do pedido:
 
 **Done when**:
 
-- [ ] O comentário "The cache dir is fixed" é corrigido para a pasta isolada.
-- [ ] O servidor 3 serve `apps/web/dist` construído pelo servidor 2 (o `serveStatic` lê por pedido, então a ordem de subida não importa para os testes).
-- [ ] A suíte da feature 01 (`e2e/fatia-central.e2e.ts`) passa sem mudança, com os três servidores no ar.
-- [ ] `.cache/e2e-real` e `.cache/e2e-offline` ficam fora do git (`.cache/` já está no `.gitignore`).
+- [x] O comentário "The cache dir is fixed" é corrigido para a pasta isolada.
+- [x] O servidor 3 serve `apps/web/dist` construído pelo servidor 2 (o `serveStatic` lê por pedido, então a ordem de subida não importa para os testes).
+- [x] A suíte da feature 01 (`e2e/fatia-central.e2e.ts`) passa sem mudança, com os três servidores no ar.
+- [x] `.cache/e2e-real` e `.cache/e2e-offline` ficam fora do git (`.cache/` já está no `.gitignore`).
 
 **Tests**: e2e (regressão da suíte da feature 01)
 **Gate**: e2e · `pnpm e2e`
 
 **Commit**: `test(e2e): run a keyed server against the fake llm next to the offline one`
+
+**Status**: ✅ Complete
 
 ---
 

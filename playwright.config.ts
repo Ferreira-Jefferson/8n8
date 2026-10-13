@@ -1,6 +1,10 @@
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
 const URL = "http://127.0.0.1:4317";
+const repoRoot = dirname(fileURLToPath(import.meta.url));
+const cacheDir = (name: string) => join(repoRoot, ".cache", name);
 
 export default defineConfig({
   testDir: "e2e",
@@ -15,19 +19,48 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: {
-    // Builds apps/web and serves it with the real API (packages/server/src/main.ts).
-    command: "pnpm start",
-    url: URL,
-    // Never reuse a running server: it may hold the real key from .env.
-    reuseExistingServer: false,
-    timeout: 180_000,
-    env: {
-      // Set and empty: process.loadEnvFile does not override it, so .env never supplies the key.
-      OPENROUTER_API_KEY: "",
-      // The cache dir is fixed (<repo>/.cache/explain). A model name of its own keeps
-      // the cache keys apart from the user's entries; with no key the server never writes.
-      CODE2N8N_MODEL: "e2e/offline",
+  // Never reuse a running server: it may hold the real key from .env.
+  // Every variable below is set explicitly, so process.loadEnvFile never takes it from .env.
+  webServer: [
+    {
+      // OpenAI-compatible fake LLM (e2e/fake-llm.ts); the keyed server talks only to it.
+      command: "tsx e2e/fake-llm.ts",
+      url: "http://127.0.0.1:4318/__log",
+      reuseExistingServer: false,
+      timeout: 60_000,
     },
-  },
+    {
+      // Builds apps/web and serves it with the real API, with no key (feature 01).
+      command: "pnpm start",
+      url: URL,
+      reuseExistingServer: false,
+      timeout: 180_000,
+      env: {
+        // Set and empty: .env never supplies the key.
+        OPENROUTER_API_KEY: "",
+        // A cache dir of its own (<repo>/.cache/e2e-offline), apart from the user's entries;
+        // with no key the server never writes.
+        CODE2N8N_CACHE_DIR: cacheDir("e2e-offline"),
+        CODE2N8N_MODEL: "e2e/offline",
+      },
+    },
+    {
+      // The real review pipeline against the fake LLM. It serves the apps/web/dist built by
+      // the server above; serveStatic reads it per request, so start order does not matter.
+      command: "tsx packages/server/src/main.ts start",
+      url: "http://127.0.0.1:4319",
+      reuseExistingServer: false,
+      timeout: 180_000,
+      env: {
+        CODE2N8N_PORT: "4319",
+        // A fake key and a local base URL: no request ever reaches openrouter.ai.
+        OPENROUTER_API_KEY: "e2e-fake-key",
+        OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
+        CODE2N8N_MODEL: "e2e/drafter",
+        CODE2N8N_REVIEW_MODEL: "e2e/reviewer",
+        // Isolated cache, wiped by the specs before each test.
+        CODE2N8N_CACHE_DIR: cacheDir("e2e-real"),
+      },
+    },
+  ],
 });
