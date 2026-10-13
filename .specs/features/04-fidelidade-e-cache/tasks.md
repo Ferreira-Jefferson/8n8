@@ -575,15 +575,17 @@ T24 → T26
 
 **Done when**:
 
-- [ ] A fixture `ok` ganha `sentences`, `Claim[]`, `review: "full"`; a asserção continua "o corpo 200 volta igual".
-- [ ] Teste novo: `200 { status: "unfaithful" }` volta igual.
-- [ ] Os casos 404 → `stale`, 502 → `error` e falha de rede continuam sem mudança.
-- [ ] Gate passa.
+- [x] A fixture `ok` ganha `sentences`, `Claim[]`, `review: "full"`; a asserção continua "o corpo 200 volta igual".
+- [x] Teste novo: `200 { status: "unfaithful" }` volta igual.
+- [x] Os casos 404 → `stale`, 502 → `error` e falha de rede continuam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `test(web): cover the reviewed explain contract and unfaithful in api`
+
+**Status**: ✅ Complete
 
 ---
 

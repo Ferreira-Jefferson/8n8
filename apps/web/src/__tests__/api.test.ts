@@ -1,4 +1,4 @@
-import type { Graph } from "@code2n8n/model";
+import type { ExplainResponse, Graph } from "@code2n8n/model";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fetchExplanation, fetchGraph } from "../api";
 
@@ -30,10 +30,26 @@ describe("fetchGraph", () => {
 });
 
 describe("fetchExplanation", () => {
-  const ok = {
+  const ok: ExplainResponse = {
     status: "ok",
-    explanation: { summary: "s", inputs: [], outputs: [], suggestions: [] },
+    explanation: {
+      summary: "Calcula o frete.",
+      sentences: [{ id: "s1", text: "Calcula o frete.", lines: [4, 5] }],
+      inputs: [{ id: "i1", text: "peso", lines: [4] }],
+      outputs: [{ id: "o1", text: "valor do frete", lines: [9, 11] }],
+      suggestions: [
+        {
+          id: "g1",
+          command: "Defina um timeout",
+          reason: "A chamada pode travar.",
+          line: 5,
+          severity: "alta",
+          lines: [5],
+        },
+      ],
+    },
     fromCache: false,
+    review: "full",
   };
 
   it("posts { source, nodeId } to /api/explain and returns ok as received", async () => {
@@ -51,6 +67,11 @@ describe("fetchExplanation", () => {
   it("returns no-key as received", async () => {
     fakeFetch(200, { status: "no-key" });
     expect(await fetchExplanation("s", "f")).toEqual({ status: "no-key" });
+  });
+
+  it("returns unfaithful as received (FID-10)", async () => {
+    fakeFetch(200, { status: "unfaithful" });
+    expect(await fetchExplanation("s", "f")).toEqual({ status: "unfaithful" });
   });
 
   it("maps 502 to status error (CORE-20)", async () => {
