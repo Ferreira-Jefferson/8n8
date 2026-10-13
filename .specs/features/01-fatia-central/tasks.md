@@ -994,22 +994,24 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (CORE-16): uma chamada ao LLM; a mensagem de sistema é o `text` do prompt; a resposta `ok` traz resumo, entradas, saídas e sugestões; `fromCache: false`.
-- [ ] Teste (CORE-17): a mensagem do usuário tem o nome, o tipo, as listas `chama` e `chamado por` e o código numerado de 1 a n. Um marcador colocado só no código de fora do nó não aparece em nenhuma mensagem.
-- [ ] Teste (CORE-18): a segunda abertura com o mesmo código, modelo e versão → `fromCache: true` e o contador do LLM fica em 1.
-- [ ] Teste (CORE-18): outro modelo ou outra versão de prompt → nova chamada.
-- [ ] Teste: a mesma função em outra posição do trecho (mesmo código, outro `range`) acerta o cache e devolve linhas absolutas certas (`line + range.start - 1`).
-- [ ] Teste (CORE-19): sem `llm` e sem cache → `no-key`; sem `llm` com cache → `ok` do cache.
-- [ ] Teste (CORE-20): o LLM lança erro → `error`, e nada é gravado no cache; JSON inválido → `error`.
-- [ ] Teste (CORE-22): sugestão com linha fora do nó não aparece na resposta nem no cache.
-- [ ] Teste: modelo `google/*` → `json: 'prompt'`; outro modelo → `json: 'native'`.
-- [ ] Teste: falha ao gravar o cache → a resposta `ok` sai mesmo assim.
-- [ ] Gate passa. Test count: ≥ 11 testes.
+- [x] Teste (CORE-16): uma chamada ao LLM; a mensagem de sistema é o `text` do prompt; a resposta `ok` traz resumo, entradas, saídas e sugestões; `fromCache: false`.
+- [x] Teste (CORE-17): a mensagem do usuário tem o nome, o tipo, as listas `chama` e `chamado por` e o código numerado de 1 a n. Um marcador colocado só no código de fora do nó não aparece em nenhuma mensagem.
+- [x] Teste (CORE-18): a segunda abertura com o mesmo código, modelo e versão → `fromCache: true` e o contador do LLM fica em 1.
+- [x] Teste (CORE-18): outro modelo ou outra versão de prompt → nova chamada.
+- [x] Teste: a mesma função em outra posição do trecho (mesmo código, outro `range`) acerta o cache e devolve linhas absolutas certas (`line + range.start - 1`).
+- [x] Teste (CORE-19): sem `llm` e sem cache → `no-key`; sem `llm` com cache → `ok` do cache.
+- [x] Teste (CORE-20): o LLM lança erro → `error`, e nada é gravado no cache; JSON inválido → `error`.
+- [x] Teste (CORE-22): sugestão com linha fora do nó não aparece na resposta nem no cache.
+- [x] Teste: modelo `google/*` → `json: 'prompt'`; outro modelo → `json: 'native'`.
+- [x] Teste: falha ao gravar o cache → a resposta `ok` sai mesmo assim.
+- [x] Gate passa. Test count: ≥ 11 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test && pnpm check`
 
 **Commit**: `feat(explain): explain node with single cached llm call`
+
+**Status**: ✅ Complete
 
 ---
 
