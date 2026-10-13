@@ -89,6 +89,38 @@ describe("markSyntaxErrors (CORE-06)", () => {
     expect(marks(marked)).toEqual([["mod", line]]);
   });
 
+  it("marks fn:a on its header line when its body is not indented", async () => {
+    const source = "def a():\nx = 1\n\n\ndef b():\n    return 2\n";
+    const { marked } = await extract(source);
+
+    expect(node(marked, "fn:b")).toBeDefined();
+    expect(marks(marked)).toEqual([["fn:a", 1]]);
+  });
+
+  it("marks a def with no body before another def", async () => {
+    const source = "def a():\ndef b():\n    return 1\n";
+    const { marked } = await extract(source);
+
+    expect(node(marked, "fn:b")).toBeDefined();
+    expect(marks(marked)).toEqual([["fn:a", 1]]);
+  });
+
+  it("marks a def with no body at the end of the snippet", async () => {
+    const source = "def a():\n    return 1\n\n\ndef b():\n";
+    const { marked } = await extract(source);
+
+    expect(node(marked, "fn:a")).toBeDefined();
+    expect(marks(marked)).toEqual([["fn:b", 5]]);
+  });
+
+  it("marks the condition of an if with no body on the if line", async () => {
+    const source = "def f(x):\n    if x:\n    y = 1\n";
+    const { marked } = await extract(source);
+
+    expect(node(marked, "fn:f/s0")).toMatchObject({ kind: "condition" });
+    expect(marks(marked)).toEqual([["fn:f/s0", 2]]);
+  });
+
   it("marks no node in a valid snippet", async () => {
     const { marked } = await extract(fixture("pedido_frete.py"));
 

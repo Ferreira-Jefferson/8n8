@@ -20,9 +20,10 @@ function misindented(statements: Node[], column: number): number[] {
 /**
  * 1-based lines of every ERROR and MISSING node.
  *
- * SPEC_DEVIATION: also reports misindented statements.
- * Reason: tree-sitter-python accepts unexpected indents and unmatched
- * dedents without ERROR or MISSING nodes, so CORE-06 would miss them.
+ * SPEC_DEVIATION: also reports misindented statements and empty blocks.
+ * Reason: tree-sitter-python accepts unexpected indents, unmatched
+ * dedents and missing indented blocks without ERROR or MISSING nodes, so
+ * CORE-06 would miss them.
  */
 function errorLines(root: Node): number[] {
   const lines = misindented(root.namedChildren, 0);
@@ -32,6 +33,12 @@ function errorLines(root: Node): number[] {
     }
     if (node.type === "block") {
       const statements = node.namedChildren.filter((s) => s.type !== "comment");
+      const header = node.parent;
+      // Expected an indented block, reported on the header that lacks it.
+      // A header holding an ERROR already reports the swallowed body.
+      if (statements.length === 0 && header && !header.hasError) {
+        lines.push(header.startPosition.row + 1);
+      }
       const column = statements[0]?.startPosition.column ?? 0;
       lines.push(...misindented(statements, column));
     }
