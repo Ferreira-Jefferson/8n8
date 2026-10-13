@@ -738,17 +738,19 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (fixture do vídeo): existe exatamente um fio `calls:fn:processar_pedido->fn:calcular_frete`, mesmo com a chamada dentro do laço (Independent Test 1).
-- [ ] Teste: duas chamadas de A para B geram um só fio.
-- [ ] Teste: um método que chama uma função do nível superior gera o fio a partir do ID do método.
-- [ ] Teste: uma chamada solta no módulo gera o fio a partir de `mod`.
-- [ ] Teste: função sem chamadas do trecho não tem fio `calls` saindo.
-- [ ] Gate passa. Test count: ≥ 5 testes novos; nenhum anterior sumiu.
+- [x] Teste (fixture do vídeo): existe exatamente um fio `calls:fn:processar_pedido->fn:calcular_frete`, mesmo com a chamada dentro do laço (Independent Test 1).
+- [x] Teste: duas chamadas de A para B geram um só fio.
+- [x] Teste: um método que chama uma função do nível superior gera o fio a partir do ID do método.
+- [x] Teste: uma chamada solta no módulo gera o fio a partir de `mod`.
+- [x] Teste: função sem chamadas do trecho não tem fio `calls` saindo.
+- [x] Gate passa. Test count: ≥ 5 testes novos; nenhum anterior sumiu.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): add deduplicated calls edges`
+
+**Status**: ✅ Complete
 
 ---
 

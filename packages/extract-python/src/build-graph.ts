@@ -156,6 +156,32 @@ function buildClass(def: Node, outer: Node, id: NodeId, scope: Scope): Chunk {
   ]);
 }
 
+const OWNERS = new Set(["function", "class", "module"]);
+
+/** One `calls` wire per (caller, callee) pair, from the `call` steps (CORE-02). */
+function callsEdges(nodes: FlowNode[]): FlowEdge[] {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const edges = new Map<string, FlowEdge>();
+  for (const step of nodes) {
+    if (step.kind !== "call" || step.target === undefined) continue;
+    let owner = step.parentId === null ? undefined : byId.get(step.parentId);
+    while (owner && !OWNERS.has(owner.kind)) {
+      owner = owner.parentId === null ? undefined : byId.get(owner.parentId);
+    }
+    if (!owner) continue;
+    const id = `calls:${owner.id}->${step.target}`;
+    if (!edges.has(id)) {
+      edges.set(id, {
+        id,
+        kind: "calls",
+        source: owner.id,
+        target: step.target,
+      });
+    }
+  }
+  return [...edges.values()];
+}
+
 /** Builds the graph of a parsed snippet (CORE-01, 03, 07, 08). */
 export function buildGraph(tree: Tree): Graph {
   const statements = tree.rootNode.namedChildren;
@@ -210,5 +236,6 @@ export function buildGraph(tree: Tree): Graph {
       },
     ),
   );
+  edges.push(...callsEdges(nodes));
   return { language: "python", empty: nodes.length === 0, nodes, edges };
 }

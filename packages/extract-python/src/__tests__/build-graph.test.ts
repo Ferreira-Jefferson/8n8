@@ -158,3 +158,71 @@ describe("buildGraph: top level", () => {
     expect(isPreOrder(graph.nodes)).toBe(true);
   });
 });
+
+function callsIds(graph: Graph): string[] {
+  return graph.edges.filter((e) => e.kind === "calls").map((e) => e.id);
+}
+
+function lines(...rows: string[]): string {
+  return `${rows.join("\n")}\n`;
+}
+
+describe("buildGraph: calls wires (CORE-02)", () => {
+  it("wires processar_pedido to calcular_frete exactly once, even from inside the loop", async () => {
+    const graph = await graphOf(videoFixture);
+
+    expect(graph.edges.filter((e) => e.kind === "calls")).toEqual([
+      {
+        id: "calls:fn:processar_pedido->fn:calcular_frete",
+        kind: "calls",
+        source: "fn:processar_pedido",
+        target: "fn:calcular_frete",
+      },
+    ]);
+  });
+
+  it("creates one wire for two calls from A to B", async () => {
+    const graph = await graphOf(
+      lines(
+        "def b():",
+        "    return 1",
+        "def a():",
+        "    x = b()",
+        "    y = 2",
+        "    z = b()",
+      ),
+    );
+
+    expect(callsIds(graph)).toEqual(["calls:fn:a->fn:b"]);
+  });
+
+  it("wires a method that calls a top-level function from the method id", async () => {
+    const graph = await graphOf(
+      lines(
+        "def ajuda():",
+        "    return 1",
+        "class Pedido:",
+        "    def validar(self):",
+        "        return ajuda()",
+      ),
+    );
+
+    expect(callsIds(graph)).toEqual(["calls:cls:Pedido/fn:validar->fn:ajuda"]);
+  });
+
+  it("wires a loose call in the module from mod", async () => {
+    const graph = await graphOf(lines("def main():", "    return 1", "main()"));
+
+    expect(callsIds(graph)).toEqual(["calls:mod->fn:main"]);
+  });
+
+  it("gives a function that calls nothing in the snippet no outgoing calls wire", async () => {
+    const graph = await graphOf(videoFixture);
+
+    expect(
+      graph.edges.filter(
+        (e) => e.kind === "calls" && e.source === "fn:calcular_frete",
+      ),
+    ).toEqual([]);
+  });
+});
