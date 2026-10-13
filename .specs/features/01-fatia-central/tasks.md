@@ -483,15 +483,17 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Dependências: `@code2n8n/model` (`workspace:*`), `web-tree-sitter@0.27.1`, `tree-sitter-python@0.25.0`.
-- [ ] O script de build nativo de `tree-sitter-python` não roda no `pnpm install`.
-- [ ] `exports` só `"."` → `./src/index.ts` (o `index.ts` nasce em T25; até lá o typecheck cobre `src/`).
-- [ ] `pnpm install` e `pnpm check` passam.
+- [x] Dependências: `@code2n8n/model` (`workspace:*`), `web-tree-sitter@0.27.1`, `tree-sitter-python@0.25.0`.
+- [x] O script de build nativo de `tree-sitter-python` não roda no `pnpm install`.
+- [x] `exports` só `"."` → `./src/index.ts` (o `index.ts` nasce em T25; até lá o typecheck cobre `src/`).
+- [x] `pnpm install` e `pnpm check` passam.
 
 **Tests**: none (scaffold)
 **Gate**: build · `pnpm install && pnpm --filter @code2n8n/extract-python typecheck && pnpm check`
 
 **Commit**: `chore(extract-python): scaffold package with tree-sitter deps`
+
+**Status**: ✅ Complete
 
 ---
 
