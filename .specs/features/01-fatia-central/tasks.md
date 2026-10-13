@@ -1198,17 +1198,19 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste: `fetchGraph` faz POST em `/api/graph` com `{ source }` e devolve o `graph`.
-- [ ] Teste: `fetchExplanation` faz POST em `/api/explain` com `{ source, nodeId }` e devolve `ok` e `no-key` como vieram.
-- [ ] Teste (CORE-20): `502` → `{ status: 'error' }`; falha de rede → `{ status: 'error' }`.
-- [ ] Teste: `404` → `{ status: 'stale' }`.
-- [ ] Teste: `fetchGraph` com `400` rejeita com erro.
-- [ ] Gate passa. Test count: ≥ 6 testes.
+- [x] Teste: `fetchGraph` faz POST em `/api/graph` com `{ source }` e devolve o `graph`.
+- [x] Teste: `fetchExplanation` faz POST em `/api/explain` com `{ source, nodeId }` e devolve `ok` e `no-key` como vieram.
+- [x] Teste (CORE-20): `502` → `{ status: 'error' }`; falha de rede → `{ status: 'error' }`.
+- [x] Teste: `404` → `{ status: 'stale' }`.
+- [x] Teste: `fetchGraph` com `400` rejeita com erro.
+- [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): add api client for graph and explain`
+
+**Status**: ✅ Complete
 
 ---
 
