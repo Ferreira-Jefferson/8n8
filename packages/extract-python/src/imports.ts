@@ -13,7 +13,8 @@ export function importAliases(root: Node): Map<string, string> {
       const full = name.childForFieldName("name")?.text ?? name.text;
       const alias = name.childForFieldName("alias")?.text;
       if (module !== undefined) {
-        aliases.set(alias ?? full, `${module}.${full}`);
+        const joiner = module.endsWith(".") ? "" : ".";
+        aliases.set(alias ?? full, `${module}${joiner}${full}`);
       } else if (alias !== undefined) {
         aliases.set(alias, full);
       } else {

@@ -343,17 +343,18 @@ T31 → T32
 
 **Done when**:
 
-- [ ] Regressão: `from . import x` mapeia `x` para `.x`. O teste falha no código atual (`..x`) antes da correção.
-- [ ] `from .. import y as z` mapeia `z` para `..y`.
-- [ ] `from .a import b` continua `.a.b`; `from ..a.b import c` dá `..a.b.c`.
-- [ ] `imports.test.ts` (feature 01): os 6 testes atuais passam sem mudança.
-- [ ] O snapshot de `extractor.test.ts` não muda.
-- [ ] Gate passa.
+- [x] Regressão: `from . import x` mapeia `x` para `.x`. O teste falha no código atual (`..x`) antes da correção.
+- [x] `from .. import y as z` mapeia `z` para `..y`.
+- [x] `from .a import b` continua `.a.b`; `from ..a.b import c` dá `..a.b.c`.
+- [x] `imports.test.ts` (feature 01): os 6 testes atuais passam sem mudança.
+- [x] O snapshot de `extractor.test.ts` não muda.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `fix(extract-python): stop doubling the dot in relative from-import aliases`
+**Status**: ✅ Complete
 
 ---
 
