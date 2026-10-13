@@ -557,14 +557,15 @@ T31 → T32
 
 **Done when**:
 
-- [ ] `extractor.test.ts` ganha um teste: `extractProject` da fixture devolve os 12 nós de pasta e arquivo de T14 e os 4 fios de T15.
-- [ ] O snapshot do trecho (`extractor.test.ts`, feature 01) não muda.
-- [ ] Build não-web passa.
+- [x] `extractor.test.ts` ganha um teste: `extractProject` da fixture devolve os 12 nós de pasta e arquivo de T14 e os 4 fios de T15.
+- [x] O snapshot do trecho (`extractor.test.ts`, feature 01) não muda.
+- [x] Build não-web passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): expose extractProject on the python extractor`
+**Status**: ✅ Complete
 
 ---
 
