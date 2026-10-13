@@ -384,6 +384,24 @@ describe("DetailPanel", () => {
     ).toEqual(["requests.get (HTTP, linha 5)"]);
   });
 
+  it("places Efeitos externos below the Resumo list (FID-14)", async () => {
+    fetchMock.mockResolvedValue(ok);
+    render(
+      <DetailPanel
+        source={source}
+        node={fnNode}
+        effects={[requestsGet]}
+        onExplained={() => {}}
+      />,
+    );
+    const resumo = await screen.findByRole("list", { name: "Resumo" });
+    const efeitos = screen.getByRole("heading", { name: "Efeitos externos" });
+    expect(
+      resumo.compareDocumentPosition(efeitos) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("says Nenhum efeito externo. when there are no effects (FID-14)", async () => {
     fetchMock.mockResolvedValue(ok);
     render(
