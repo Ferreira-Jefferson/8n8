@@ -30,7 +30,7 @@ describe("CodeView", () => {
 
   it("marks only the highlighted line (CORE-24)", () => {
     const { container } = render(
-      <CodeView code={code} start={12} highlightedLine={13} />,
+      <CodeView code={code} start={12} highlightedLines={new Set([13])} />,
     );
     expect(lines(container).map((l) => l.current)).toEqual([
       null,
@@ -39,8 +39,27 @@ describe("CodeView", () => {
     ]);
   });
 
-  it("marks no line without highlightedLine", () => {
+  it("marks no line without highlightedLines", () => {
     const { container } = render(<CodeView code={code} start={12} />);
     expect(container.querySelectorAll("[aria-current]")).toHaveLength(0);
+  });
+
+  it("marks exactly every line in highlightedLines (FID-13)", () => {
+    const { container } = render(
+      <CodeView
+        code={["a", "b", "c", "d", "e", "f", "g", "h"].join("\n")}
+        start={4}
+        highlightedLines={new Set([5, 6, 7])}
+      />,
+    );
+    const marked = [...container.querySelectorAll("[aria-current]")].map(
+      (el) => [el.getAttribute("data-line"), el.getAttribute("aria-current")],
+    );
+    expect(marked).toEqual([
+      ["5", "true"],
+      ["6", "true"],
+      ["7", "true"],
+    ]);
+    expect(container.querySelectorAll(".code-line.current")).toHaveLength(3);
   });
 });

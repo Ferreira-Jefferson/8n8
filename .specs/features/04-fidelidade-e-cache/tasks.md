@@ -625,14 +625,16 @@ T24 → T26
 
 **Done when**:
 
-- [ ] `CodeView.test.tsx` (feature 01): "marks only the highlighted line (CORE-24)" passa a usar `new Set([n])` e mantém a asserção de exatamente 1 linha marcada; "marks no line without highlightedLine" passa a omitir `highlightedLines` e mantém 0 linhas marcadas; a numeração (CORE-14) não muda.
-- [ ] Teste novo: `new Set([5,6,7])` marca exatamente as linhas 5, 6 e 7.
-- [ ] Gate passa (o typecheck de `DetailPanel.tsx` fica vermelho até T20).
+- [x] `CodeView.test.tsx` (feature 01): "marks only the highlighted line (CORE-24)" passa a usar `new Set([n])` e mantém a asserção de exatamente 1 linha marcada; "marks no line without highlightedLine" passa a omitir `highlightedLines` e mantém 0 linhas marcadas; a numeração (CORE-14) não muda.
+- [x] Teste novo: `new Set([5,6,7])` marca exatamente as linhas 5, 6 e 7.
+- [x] Gate passa (o typecheck de `DetailPanel.tsx` fica vermelho até T20).
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): highlight a set of lines in the code view`
+
+**Status**: ✅ Complete
 
 ---
 

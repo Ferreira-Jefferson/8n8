@@ -51,7 +51,9 @@ export function DetailPanel({ source, node, onExplained }: DetailPanelProps) {
       <CodeView
         code={nodeCode(source, node)}
         start={node.range.start}
-        highlightedLine={highlighted}
+        highlightedLines={
+          highlighted === undefined ? undefined : new Set([highlighted])
+        }
       />
       {result && (
         <ExplanationView
