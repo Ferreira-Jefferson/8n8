@@ -1,0 +1,111 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #fafafa;
+  color: #222;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+
+.input {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.input textarea {
+  flex: 1;
+  height: 120px;
+  font-family: ui-monospace, monospace;
+}
+
+.map {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.canvas {
+  flex: 1;
+  min-height: 300px;
+}
+
+.breadcrumb {
+  padding: 8px;
+}
+
+.breadcrumb button {
+  border: none;
+  background: none;
+  color: #0b5cad;
+  cursor: pointer;
+  padding: 0;
+}
+
+.detail-panel {
+  border-left: 1px solid #ddd;
+  padding: 8px 12px;
+  overflow: auto;
+}
+
+.step-node {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 180px;
+  min-height: 56px;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid #888;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+}
+
+.step-category {
+  font-weight: 600;
+  color: #6a3fb5;
+}
+
+.step-error {
+  color: #b00020;
+}
+
+.step-badge {
+  margin-left: auto;
+  min-width: 18px;
+  border-radius: 9px;
+  background: #e8710a;
+  color: #fff;
+  text-align: center;
+}
+
+.code-view {
+  background: #f3f3f3;
+  padding: 6px 0;
+  overflow-x: auto;
+}
+
+.code-line {
+  display: flex;
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.code-line.current {
+  background: #fff3c4;
+}
+
+.line-no {
+  color: #999;
+  min-width: 2ch;
+  text-align: right;
+}

@@ -1453,18 +1453,20 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Teste (CORE-01): colar um trecho e clicar em "Gerar mapa" chama `fetchGraph` com o texto e passa o grafo ao canvas.
-- [ ] Teste (CORE-07): grafo com `empty: true` → "Nenhuma função ou instrução encontrada."
-- [ ] Teste: `fetchGraph` rejeita → aviso genérico de erro na área do mapa.
-- [ ] Teste (CORE-23): depois de `onExplained` com 2 sugestões, o canvas recebe a contagem 2 para aquele nó.
-- [ ] Teste (CORE-20): explicação com `error` não tira o grafo do canvas.
-- [ ] Teste (CORE-15): abrir um nó e clicar em "Trecho" volta o canvas ao nível superior.
-- [ ] Gate passa. Test count: ≥ 6 testes.
+- [x] Teste (CORE-01): colar um trecho e clicar em "Gerar mapa" chama `fetchGraph` com o texto e passa o grafo ao canvas.
+- [x] Teste (CORE-07): grafo com `empty: true` → "Nenhuma função ou instrução encontrada."
+- [x] Teste: `fetchGraph` rejeita → aviso genérico de erro na área do mapa.
+- [x] Teste (CORE-23): depois de `onExplained` com 2 sugestões, o canvas recebe a contagem 2 para aquele nó.
+- [x] Teste (CORE-20): explicação com `error` não tira o grafo do canvas.
+- [x] Teste (CORE-15): abrir um nó e clicar em "Trecho" volta o canvas ao nível superior.
+- [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
 
 **Commit**: `feat(web): wire app with paste, map, breadcrumb and panel`
+
+**Status**: ✅ Complete
 
 ---
 
