@@ -384,14 +384,16 @@ T48 → T49
 
 **Done when**:
 
-- [ ] Testes: função → `fn:calcular_frete`; classe → `cls:Pedido`; 2ª e 3ª ocorrência do mesmo nome → `#2` e `#3`; 1ª ocorrência sem sufixo; método → `cls:Pedido/fn:validar`; passo → `fn:a/s0`; passo em ramo → `fn:a/s2/b1/s0`.
-- [ ] Teste: a mesma entrada devolve o mesmo ID em chamadas repetidas (sem contador global).
-- [ ] Gate passa. Test count: ≥ 7 testes.
+- [x] Testes: função → `fn:calcular_frete`; classe → `cls:Pedido`; 2ª e 3ª ocorrência do mesmo nome → `#2` e `#3`; 1ª ocorrência sem sufixo; método → `cls:Pedido/fn:validar`; passo → `fn:a/s0`; passo em ramo → `fn:a/s2/b1/s0`.
+- [x] Teste: a mesma entrada devolve o mesmo ID em chamadas repetidas (sem contador global).
+- [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/model test`
 
 **Commit**: `feat(model): add structural node id rules`
+
+**Status**: ✅ Complete
 
 ---
 
