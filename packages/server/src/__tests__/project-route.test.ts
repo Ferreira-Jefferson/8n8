@@ -144,6 +144,7 @@ describe("POST /api/explain with { root, nodeId } (PROJ-07, PROJ-09, AD-015)", (
       ?.source.split("\n");
     expect(req?.nodeId).toBe(`C:/tmp/loja|${calcular}`);
     expect(req?.nodeName).toBe("calcular_frete");
+    expect(req?.language).toBe("python");
     expect(req?.nodeKind).toBe("function");
     expect(req?.code).toBe(
       lines?.slice((req?.range.start ?? 1) - 1, req?.range.end).join("\n"),
