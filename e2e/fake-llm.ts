@@ -37,6 +37,8 @@ interface Scenario {
     inputs: string[];
     outputs: string[];
     suggestions: Suggestion[];
+    /** Scripts the optional `docstring` field of the answer. */
+    docstring?: { reflects: boolean; reason: string };
   };
   /** Claim text (as the reviewer gets it) → relative evidence lines. */
   evidence: Record<string, number[]>;
@@ -74,7 +76,66 @@ const VIDEO_FRETE_SUGGESTION: Suggestion = {
 /** Key of a suggestion in `evidence`: command and reason, as the reviewer gets them. */
 const said = (s: Suggestion) => `${s.command} ${s.reason}`;
 
+/** The docstring verdict; the server turns it into a suggestion the reviewer gets as `command reason`. */
+const DOC_LIE = "A docstring fala de soma de preços, mas o código usa `len`.";
+const DOC_SUGGESTION = `Atualize a docstring: ${DOC_LIE.replace(/\.$/, "")} A docstring não reflete o que o código faz.`;
+
 const SCENARIOS: Scenario[] = [
+  // Docstring E2E (e2e/docstring.e2e.ts). The model sees the docstring masked.
+  {
+    marker: "def total_mentiroso",
+    draft: {
+      summary:
+        "A função conta os itens com `len`. A função imprime a contagem.",
+      inputs: ["`itens`"],
+      outputs: ["`n`"],
+      suggestions: [],
+      docstring: { reflects: false, reason: DOC_LIE },
+    },
+    evidence: {
+      "A função conta os itens com `len`.": [3],
+      "A função imprime a contagem.": [4],
+      "`itens`": [1],
+      "`n`": [5],
+      [DOC_SUGGESTION]: [3],
+    },
+  },
+  {
+    marker: "def total_fiel",
+    draft: {
+      summary:
+        "A função conta os itens com `len`. A função imprime a contagem.",
+      inputs: ["`itens`"],
+      outputs: ["`n`"],
+      suggestions: [],
+      docstring: { reflects: true, reason: "A docstring descreve a contagem." },
+    },
+    evidence: {
+      "A função conta os itens com `len`.": [3],
+      "A função imprime a contagem.": [4],
+      "`itens`": [1],
+      "`n`": [5],
+    },
+  },
+  {
+    // Answers the docstring field although the request has no docstring.
+    marker: "def total_sem_doc",
+    draft: {
+      summary:
+        "A função conta os itens com `len`. A função imprime a contagem.",
+      inputs: ["`itens`"],
+      outputs: ["`n`"],
+      suggestions: [],
+      docstring: { reflects: false, reason: DOC_LIE },
+    },
+    evidence: {
+      "A função conta os itens com `len`.": [2],
+      "A função imprime a contagem.": [3],
+      "`itens`": [1],
+      "`n`": [4],
+      [DOC_SUGGESTION]: [2],
+    },
+  },
   // Feature 05, the video code (pedido_video.py). They come first: the old marker
   // "def calcular_frete" also appears in the video code. Functions come before
   // steps, because a function's code holds its steps' markers.
