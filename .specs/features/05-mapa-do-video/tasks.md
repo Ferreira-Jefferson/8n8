@@ -445,10 +445,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Com `maxSentences: 2` e um rascunho de 3 frases, o resultado tem `s1` e `s2`, e a mensagem do revisor (capturada no `LlmClient` falso) não contém a 3ª frase.
-- [ ] Num novo rascunho (FID-08), o corte vale de novo.
-- [ ] Sem `maxSentences`, o comportamento é o de hoje (os testes atuais passam sem mudança).
-- [ ] Gate passa.
+- [x] Com `maxSentences: 2` e um rascunho de 3 frases, o resultado tem `s1` e `s2`, e a mensagem do revisor (capturada no `LlmClient` falso) não contém a 3ª frase.
+- [x] Num novo rascunho (FID-08), o corte vale de novo.
+- [x] Sem `maxSentences`, o comportamento é o de hoje (os testes atuais passam sem mudança).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
