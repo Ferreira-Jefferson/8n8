@@ -1453,15 +1453,16 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-31 (Independent Test P3): ao abrir o GATILHO, os cartões "Grave o pedido numa transação" e "Envie o e-mail por uma fila" aparecem com `data-anchor-id` `…/s5` e `…/s6`. Eles têm fundo `rgb(245, 242, 236)` e texto `rgb(18, 17, 16)`. Depois de "Voltar", os mesmos cartões ficam presos aos nós BANCO e E-MAIL do fluxo principal.
-- [ ] VID-32: os nós com cartão têm borda `rgb(212, 255, 63)`, e os outros têm `opacity` 0.55.
-- [ ] VID-33: clicar em "Envie o e-mail por uma fila" mostra o painel de `processar_pedido` com a linha 13 marcada (`aria-current="true"`).
-- [ ] Gate passa.
+- [x] VID-31 (Independent Test P3): ao abrir o GATILHO, os cartões "Grave o pedido numa transação" e "Envie o e-mail por uma fila" aparecem com `data-anchor-id` `…/s5` e `…/s6`. Eles têm fundo `rgb(245, 242, 236)` e texto `rgb(18, 17, 16)`. Depois de "Voltar", os mesmos cartões ficam presos aos nós BANCO e E-MAIL do fluxo principal.
+- [x] VID-32: os nós com cartão têm borda `rgb(212, 255, 63)`, e os outros têm `opacity` 0.55.
+- [x] VID-33: clicar em "Envie o e-mail por uma fila" mostra o painel de `processar_pedido` com a linha 13 marcada (`aria-current="true"`).
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/sugestoes.e2e.ts`
 
 **Commit**: `test(e2e): check suggestion cards on the canvas`
+**Status**: ✅ Complete
 
 ---
 
