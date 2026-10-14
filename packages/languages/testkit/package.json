@@ -1,0 +1,16 @@
+{
+  "name": "@code2n8n/lang-testkit",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@code2n8n/model": "workspace:*"
+  }
+}
