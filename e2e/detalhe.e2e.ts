@@ -1,0 +1,185 @@
+import { expect, type Locator, type Page, test } from "@playwright/test";
+import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
+import {
+  cardNames,
+  clickCard,
+  css,
+  expectLevel,
+  FRETE,
+  FRETE_LEVEL,
+  freshReal,
+  generate,
+  MAIN_FLOW,
+  PEDIDO,
+  panel,
+  REAL,
+  VIDEO,
+} from "./mapa";
+
+// Feature 05, story P2 (VID-28..30): a step inside a function gets its own
+// summary of at most 2 sentences, through the real review pipeline on the
+// keyed server (4319) against the fake LLM.
+
+const HTTP = `${FRETE}/s0`;
+const SUM = `${FRETE}/s1`;
+const PESADA = `${FRETE}/s2/b0/s0`;
+
+const drafts = (log: FakeCall[]) => log.filter((c) => c.role === "draft");
+const reviews = (log: FakeCall[]) => log.filter((c) => c.role === "review");
+const summary = (view: Locator) =>
+  view.getByRole("list", { name: "Resumo" }).locator(":scope > li > span");
+/** The "Entrada e saída" line as read, without the evidence buttons (VID-30). */
+const ioLine = (view: Locator) =>
+  view.getByLabel("Entrada e saída").evaluate((el) => {
+    const copy = el.cloneNode(true) as HTMLElement;
+    for (const b of copy.querySelectorAll("button")) b.remove();
+    return copy.textContent?.replace(/\s+/g, " ").trim();
+  });
+/** The panel's sections in DOM order: tag, class and text (VID-29). */
+const sections = (view: Locator) =>
+  view.evaluate((el) =>
+    [...el.children].map((c) => {
+      const tag = c.tagName.toLowerCase();
+      if (tag === "ol") return "ol:Resumo";
+      if (tag === "pre") return "pre:code";
+      if (tag === "section") return `section:${c.getAttribute("aria-label")}`;
+      if (tag === "span") return `span:${c.className}`;
+      return `${tag}:${c.textContent}`;
+    }),
+  );
+
+/** The video map with its titles, then the level inside calcular_frete. */
+async function openFrete(page: Page): Promise<void> {
+  await generate(page, REAL, VIDEO);
+  await expectLevel(page, MAIN_FLOW);
+  await expect.poll(() => cardNames(page)).toContain("Calcular frete");
+  await clickCard(page, `${PEDIDO}/s3`);
+  await expectLevel(page, FRETE_LEVEL);
+}
+
+/** Selects a step and waits for its summary. */
+async function showStep(page: Page, id: string, first: string) {
+  await clickCard(page, id);
+  await expect(summary(panel(page)).first()).toHaveText(first);
+}
+
+test.beforeEach(freshReal);
+
+test("VID-28, IT P2: the HTTP step shows a reviewed 2-sentence summary; reopening it drafts nothing", async ({
+  page,
+}) => {
+  await openFrete(page);
+  await showStep(page, HTTP, "A função consulta uma API externa com o CEP.");
+  const view = panel(page);
+  await expect(summary(view)).toHaveText([
+    "A função consulta uma API externa com o CEP.",
+    "A função retorna a UF.",
+  ]);
+  await expect(view.locator(".review-badge")).toHaveText("Revisado");
+  const steps = drafts(await fakeLog()).filter((c) =>
+    c.messages.some((m) => m.content.includes("viacep")),
+  );
+  expect(steps.length).toBeGreaterThan(0);
+
+  await showStep(page, SUM, "Soma o peso dos itens.");
+  await resetFake();
+  await showStep(page, HTTP, "A função consulta uma API externa com o CEP.");
+  const log = await fakeLog();
+  expect(drafts(log)).toHaveLength(0);
+  expect(reviews(log)).toHaveLength(0);
+});
+
+test("VID-28: a step summary keeps 2 sentences and the 3rd never reaches the reviewer", async ({
+  page,
+}) => {
+  await openFrete(page);
+  await showStep(page, SUM, "Soma o peso dos itens.");
+  await expect(summary(panel(page))).toHaveText([
+    "Soma o peso dos itens.",
+    "Guarda a soma em `peso`.",
+  ]);
+  const sumReviews = reviews(await fakeLog()).filter((c) =>
+    c.messages.some((m) => m.content.includes("sum(item")),
+  );
+  expect(sumReviews.length).toBeGreaterThan(0);
+  for (const r of sumReviews) {
+    expect(JSON.stringify(r.messages)).not.toContain("Usa a função");
+  }
+  await expect(panel(page).getByText("Usa a função")).toHaveCount(0);
+});
+
+test("VID-29: the step panel follows the video order; the rules line shows on steps, not on functions", async ({
+  page,
+}) => {
+  await openFrete(page);
+  await showStep(page, HTTP, "A função consulta uma API externa com o CEP.");
+  const view = panel(page);
+  await expect(view.getByLabel("Entrada e saída")).toBeVisible();
+  expect(await sections(view)).toEqual([
+    "h2:Buscar UF pelo CEP",
+    "p:O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO",
+    "span:review-badge",
+    "ol:Resumo",
+    "p:2 frases · voz ativa · um termo por conceito",
+    "h3:CÓDIGO · trecho.py, linha 18",
+    "pre:code",
+    "h3:ENTRADA E SAÍDA",
+    "section:Entrada e saída",
+    "section:null",
+  ]);
+  const code = view.locator("pre .code-line");
+  await expect(code).toHaveCount(1);
+  await expect(code.locator(".line-no")).toHaveText("18");
+  await expect(code.locator("code")).toHaveText(
+    '    uf = requests.get("https://viacep.com.br/ws/" + cep).json()["uf"]',
+  );
+
+  // The function calcular_frete (the card that opened the level): no rules line.
+  await page.getByRole("button", { name: "Voltar" }).click();
+  await expectLevel(page, MAIN_FLOW);
+  await expect(view.getByRole("heading", { level: 2 })).toHaveText(
+    "Calcular frete",
+  );
+  await expect(summary(view).first()).toHaveText(
+    "A função busca a UF com `requests.get`.",
+  );
+  await expect(
+    view.getByText("2 frases · voz ativa · um termo por conceito"),
+  ).toHaveCount(0);
+  await expect(
+    view.getByText("CÓDIGO · trecho.py, linhas 17 a 23", { exact: true }),
+  ).toHaveCount(1);
+  const order = await sections(view);
+  expect(order.slice(0, 5)).toEqual([
+    "h2:Calcular frete",
+    "p:O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO",
+    "span:review-badge",
+    "ol:Resumo",
+    "h3:CÓDIGO · trecho.py, linhas 17 a 23",
+  ]);
+  expect(order.indexOf("h3:ENTRADA E SAÍDA")).toBe(6);
+});
+
+test("VID-30: inputs → outputs in DM Mono; a RETORNO with neither omits the section", async ({
+  page,
+}) => {
+  await openFrete(page);
+  await showStep(page, HTTP, "A função consulta uma API externa com o CEP.");
+  const view = panel(page);
+  expect(await ioLine(view)).toBe("cep → uf");
+  expect(await css(view.getByLabel("Entrada e saída"), "font-family")).toMatch(
+    /^"DM Mono"/,
+  );
+  expect(await css(view.locator(".io .arrow"), "color")).toBe(
+    "rgb(212, 255, 63)",
+  );
+
+  await showStep(page, PESADA, "Retorna o valor da tabela pesada para a `uf`.");
+  await expect(
+    view.getByText("CÓDIGO · trecho.py, linha 21", { exact: true }),
+  ).toHaveCount(1);
+  await expect(view.getByText("ENTRADA E SAÍDA", { exact: true })).toHaveCount(
+    0,
+  );
+  await expect(view.getByLabel("Entrada e saída")).toHaveCount(0);
+});

@@ -1428,15 +1428,16 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-28 (Independent Test P2): o passo HTTP mostra "A função consulta uma API externa com o CEP." e "A função retorna a UF.". O passo `sum` mostra só 2 frases, e a 3ª não aparece no log do revisor. Reabrir o passo faz 0 chamadas `draft`.
-- [ ] VID-29: a ordem das seções é a do design, com os textos exatos. A linha das regras aparece no passo e não aparece na função `processar_pedido`. O cabeçalho é "CÓDIGO · trecho.py, linha 18", seguido da linha 18 numerada.
-- [ ] VID-30: a seção mostra "cep → uf" em DM Mono. No RETORNO da linha 21, a seção não aparece.
-- [ ] Gate passa.
+- [x] VID-28 (Independent Test P2): o passo HTTP mostra "A função consulta uma API externa com o CEP." e "A função retorna a UF.". O passo `sum` mostra só 2 frases, e a 3ª não aparece no log do revisor. Reabrir o passo faz 0 chamadas `draft`.
+- [x] VID-29: a ordem das seções é a do design, com os textos exatos. A linha das regras aparece no passo e não aparece na função `processar_pedido`. O cabeçalho é "CÓDIGO · trecho.py, linha 18", seguido da linha 18 numerada.
+- [x] VID-30: a seção mostra "cep → uf" em DM Mono. No RETORNO da linha 21, a seção não aparece.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/detalhe.e2e.ts`
 
 **Commit**: `test(e2e): check the step detail panel`
+**Status**: ✅ Complete
 
 ---
 
