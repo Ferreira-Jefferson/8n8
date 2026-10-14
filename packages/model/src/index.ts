@@ -1,4 +1,10 @@
 export type {
+  GraphResponse,
+  LanguageInfo,
+  LanguagesResponse,
+  SnippetLanguage,
+} from "./api";
+export type {
   Claim,
   ClaimId,
   ExplainKind,
