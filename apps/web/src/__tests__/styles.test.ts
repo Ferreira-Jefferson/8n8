@@ -32,34 +32,34 @@ describe("styles: editor (VID-08)", () => {
 });
 
 describe("styles: panel code (VID-29)", () => {
-  it("scales the mono size to the panel and scrolls long lines inside the block", () => {
+  it("sets a dense mono size and wraps long lines, so the code shows in full", () => {
     const r = rule(".detail-panel .code-view");
-    expect(r).toContain("font-size: clamp(16px, 1.23vw, 26px);");
-    expect(r).toContain("overflow-x: auto;");
-    expect(r).toContain("scrollbar-width: thin;");
+    expect(r).toContain("font-size: 14px;");
+    expect(r).toContain("white-space: pre-wrap;");
+    expect(r).not.toContain("overflow-x");
   });
 
   it("never lets the panel squeeze the block, which would hide lines", () => {
     expect(rule(".detail-panel .code-view")).toContain("flex-shrink: 0;");
-  });
-
-  it("glows at an edge while code is hidden past it", () => {
-    const r = rule(".detail-panel .code-view");
-    expect(r.match(/no-repeat local/g)).toHaveLength(2);
-    expect(r.match(/no-repeat scroll/g)).toHaveLength(2);
   });
 });
 
 describe("styles: panel beside the level (VID-23, VID-25)", () => {
   it("scales the video's 1060 px panel down to 400..520 px, so the canvas keeps the level legible", () => {
     expect(rule(".map.with-panel")).toContain(
-      "grid-template-columns: 1fr clamp(400px, 31vw, 520px);",
+      "grid-template-columns: 1fr auto clamp(400px, 31vw, 520px);",
     );
+  });
+
+  it("shows a drag cursor on the bar that resizes the panel", () => {
+    const r = rule(".panel-resizer");
+    expect(r).toContain("cursor: col-resize;");
+    expect(r).toContain("touch-action: none;");
   });
 
   it("gives the panel eyebrows a smaller size that wraps cleanly", () => {
     const r = rule(".detail-panel .eyebrow");
-    expect(r).toContain("font-size: 14px;");
+    expect(r).toContain("font-size: 11px;");
     expect(r).toContain("line-height: 1.5;");
   });
 });

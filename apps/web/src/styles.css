@@ -77,6 +77,7 @@ body {
 }
 
 .code .line-no {
+  flex-shrink: 0;
   min-width: 2ch;
   text-align: right;
   color: var(--dim);
@@ -178,7 +179,24 @@ body {
 /* The video's panel is 1060 of 1920 px beside one card. Beside a whole
    level it is scaled down, so the canvas keeps every card legible (VID-23). */
 .map.with-panel {
-  grid-template-columns: 1fr clamp(400px, 31vw, 520px);
+  grid-template-columns: 1fr auto clamp(400px, 31vw, 520px);
+}
+
+/* Drag it (or focus it and use the arrows) to widen or narrow the panel. */
+.panel-resizer {
+  width: 8px;
+  margin-right: -24px;
+  z-index: 5;
+  cursor: col-resize;
+  touch-action: none;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.panel-resizer:hover,
+.panel-resizer:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--main) 45%, transparent);
 }
 
 .map-area {
@@ -517,10 +535,10 @@ body {
 
 .detail-panel {
   margin: 24px;
-  padding: 28px 30px;
+  padding: 22px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   overflow: auto;
   min-height: 0;
 }
@@ -528,7 +546,7 @@ body {
 .detail-panel h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 30px;
+  font-size: 22px;
   font-weight: 400;
 }
 
@@ -536,7 +554,7 @@ body {
    SIMPLIFICADO"): smaller than the video's 22 px, they wrap cleanly. */
 .detail-panel .eyebrow {
   color: var(--accent);
-  font-size: 14px;
+  font-size: 11px;
   letter-spacing: 0.14em;
   line-height: 1.5;
 }
@@ -545,48 +563,34 @@ body {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 24px;
-  line-height: 1.35;
+  font-size: 16px;
+  line-height: 1.45;
 }
 
 .detail-panel .rules {
   margin: 0;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.06em;
   color: var(--main);
 }
 
-/* The video's 26 px code on a 1060 px panel, scaled to the panel's
-   min(1060px, 50vw). A longer line scrolls inside the block: the panel never
-   squeezes the block, and an edge glows while code is hidden past it. */
+/* The panel's text is denser than the video's, so the panel fits beside a
+   whole level; the viewer widens it by dragging. The node's code shows in
+   full: a long line wraps inside the block, it never hides past an edge. */
 .detail-panel .code-view {
   margin: 0;
-  padding: 22px 26px;
+  padding: 14px 16px;
   border-radius: 6px;
   flex-shrink: 0;
-  font-size: clamp(16px, 1.23vw, 26px);
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) transparent;
-  background:
-    linear-gradient(to right, var(--ground) 40%, transparent) left / 40px 100%
-    no-repeat local,
-    linear-gradient(to left, var(--ground) 40%, transparent) right / 40px 100%
-    no-repeat local,
-    linear-gradient(
-      to right,
-      color-mix(in srgb, var(--main) 30%, transparent),
-      transparent
-    )
-    left / 16px 100% no-repeat scroll,
-    linear-gradient(
-      to left,
-      color-mix(in srgb, var(--main) 30%, transparent),
-      transparent
-    )
-    right / 16px 100% no-repeat scroll,
-    var(--ground);
+  font-size: 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--ground);
+}
+
+.code-line code {
+  min-width: 0;
 }
 
 .code-line {
@@ -601,7 +605,8 @@ body {
 .detail-panel .io {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 20px;
+  font-size: 14px;
+  line-height: 1.8;
   color: var(--second);
 }
 
@@ -612,25 +617,26 @@ body {
 
 .detail-panel h3 {
   margin: 0;
+  font-size: 15px;
 }
 
 .detail-panel ul {
   margin: 0;
-  padding-left: 24px;
-  font-size: 17px;
+  padding-left: 20px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
 .detail-panel li button,
 .detail-panel .io button,
 .detail-panel .explanation-state button {
-  margin-left: 10px;
-  padding: 2px 8px;
+  margin-left: 8px;
+  padding: 1px 6px;
   border-radius: 4px;
   border: 1px solid var(--panel-border);
   background: transparent;
   color: var(--accent);
-  font: 400 16px var(--font-mono);
+  font: 400 12px var(--font-mono);
   cursor: pointer;
 }
 
@@ -640,7 +646,7 @@ body {
   border-radius: 4px;
   background: color-mix(in srgb, var(--main) 16%, transparent);
   color: var(--main);
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.06em;
 }

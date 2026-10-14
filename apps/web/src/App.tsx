@@ -36,6 +36,7 @@ import {
 import { DetailPanel } from "./panel/DetailPanel";
 import { externalEffects } from "./panel/effects";
 import { IgnoredFiles } from "./panel/IgnoredFiles";
+import { clampPanel, PanelResizer } from "./panel/PanelResizer";
 
 type Mapped =
   | { kind: "snippet"; source: string; graph: Graph }
@@ -96,6 +97,17 @@ function isEditable(target: EventTarget | null): boolean {
 }
 
 const SNIPPET_FILE = "trecho.py";
+const PANEL_WIDTH_KEY = "code2n8n.panelWidth";
+
+/** The width the viewer last dragged the panel to; storage may be blocked. */
+function savedPanelWidth(): number | undefined {
+  try {
+    const saved = Number(localStorage.getItem(PANEL_WIDTH_KEY));
+    return saved > 0 ? clampPanel(saved) : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 /** The editor, then the map: one level at a time, one click opens, "Voltar" and Esc go back, the panel shows the node (VID-08, 09, 14, 19, 23, 27, 33). */
 export function App() {
@@ -112,6 +124,7 @@ export function App() {
   );
   const [mark, setMark] = useState<{ line: number; nonce: number }>();
   const [focusId, setFocusId] = useState<NodeId | null>(null);
+  const [panelWidth, setPanelWidth] = useState(savedPanelWidth);
   // Explanations already fetched in this map: re-opening a node asks no more.
   const explainCache = useRef(new Map<NodeId, ExplainResult>());
 
@@ -264,7 +277,14 @@ export function App() {
   }
 
   return (
-    <main className={panelNode ? "map with-panel" : "map"}>
+    <main
+      className={panelNode ? "map with-panel" : "map"}
+      style={
+        panelNode && panelWidth !== undefined
+          ? { gridTemplateColumns: `1fr auto ${panelWidth}px` }
+          : undefined
+      }
+    >
       <div className="map-area">
         <button
           type="button"
@@ -323,6 +343,17 @@ export function App() {
           }}
         />
       </div>
+      {panelNode && (
+        <PanelResizer
+          width={panelWidth}
+          onResize={(width) => {
+            setPanelWidth(width);
+            try {
+              localStorage.setItem(PANEL_WIDTH_KEY, String(width));
+            } catch {}
+          }}
+        />
+      )}
       {panelNode && (
         <DetailPanel
           {...panelInput(mapped, panelNode)}
