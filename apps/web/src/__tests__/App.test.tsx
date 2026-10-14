@@ -482,6 +482,11 @@ async function mapVideo() {
 }
 
 describe("App, editor and map (VID-08, VID-09)", () => {
+  it("shows how many nodes the level has", async () => {
+    await mapVideo();
+    expect(screen.getByText("8 nós")).toBeTruthy();
+  });
+
   it("shows the editor without a map: trecho.py, the code area, Gerar mapa, the folder field and Abrir pasta", () => {
     render(<App />);
     const editor = screen.getByRole("region", { name: "Editor" });

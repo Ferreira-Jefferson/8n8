@@ -289,6 +289,9 @@ export function App() {
         {mapped.kind === "project" && (
           <IgnoredFiles ignored={mapped.response.ignored} />
         )}
+        <span className="node-count">
+          {levelNodes.length === 1 ? "1 nó" : `${levelNodes.length} nós`}
+        </span>
         <FlowCanvas
           graph={graph}
           levelId={levelId}

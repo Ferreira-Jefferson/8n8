@@ -245,6 +245,15 @@ body {
   color: var(--second);
 }
 
+.map-area > .node-count {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 10;
+  font: 400 20px var(--font-mono);
+  color: var(--accent);
+}
+
 .ignored-files {
   position: absolute;
   left: 160px;
