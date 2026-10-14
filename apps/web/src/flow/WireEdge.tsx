@@ -9,6 +9,8 @@ export interface WireData extends Record<string, unknown> {
   reduced: boolean;
   /** The wire goes to a later band of a wrapped level and turns at this y (VID-10, 23). */
   turnY?: number | undefined;
+  /** The wire shares its gap with others and runs down or up at this x. */
+  lane?: number | undefined;
 }
 
 export type WireFlowEdge = Edge<WireData, "wire">;
@@ -73,6 +75,32 @@ export function turnPath(
   ].join(" ");
 }
 
+/**
+ * The path of a wire on its own lane: out to the right, down or up at
+ * `lane`, and on to the target, with round corners.
+ */
+export function lanePath(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  lane: number,
+) {
+  const dir = y2 > y1 ? 1 : -1;
+  const r = Math.max(
+    0,
+    Math.min(TURN_R, Math.abs(y2 - y1) / 2, lane - x1, x2 - lane),
+  );
+  return [
+    `M ${x1} ${y1}`,
+    `H ${lane - r}`,
+    `Q ${lane} ${y1}, ${lane} ${y1 + dir * r}`,
+    `V ${y2 - dir * r}`,
+    `Q ${lane} ${y2}, ${lane + r} ${y2}`,
+    `H ${x2}`,
+  ].join(" ");
+}
+
 /** A lime curve that draws itself, carries one pulse and a "sim"/"não" label (VID-05, 06, 07, 21). */
 export function WireEdge({
   sourceX,
@@ -98,7 +126,9 @@ export function WireEdge({
   const d =
     data?.turnY !== undefined
       ? turnPath(sourceX, sourceY, targetX, targetY, data.turnY)
-      : `M ${w[0]} ${w[1]} C ${w[2]} ${w[3]}, ${w[4]} ${w[5]}, ${w[6]} ${w[7]}`;
+      : data?.lane !== undefined && sourceY !== targetY
+        ? lanePath(sourceX, sourceY, targetX, targetY, data.lane)
+        : `M ${w[0]} ${w[1]} C ${w[2]} ${w[3]}, ${w[4]} ${w[5]}, ${w[6]} ${w[7]}`;
   const drawAt = data?.drawAt ?? 0;
   const pulseAt = data?.pulseAt ?? 0;
   const spot = branchLabelAt(sourceX, sourceY, targetY);

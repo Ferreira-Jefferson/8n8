@@ -320,6 +320,14 @@ body {
   animation: node-in 500ms ease-out backwards;
 }
 
+.react-flow__node.draggable .node {
+  cursor: grab;
+}
+
+.react-flow__node.dragging .node {
+  cursor: grabbing;
+}
+
 .node .tag {
   font-size: 16px;
   font-weight: 500;

@@ -7,6 +7,8 @@ export const NODE_GAP = 60;
 export const ROW_GAP = 80;
 /** Odd cards of a main-flow row sit this much higher, like the video's 470/380 (VID-10). */
 export const ZIGZAG = 90;
+/** Space between the vertical runs of two wires that share a gap. */
+export const LANE_GAP = 20;
 
 export interface Position {
   x: number;
@@ -31,7 +33,43 @@ export function layoutLR(
     const p = g.node(n.id);
     out.set(n.id, { x: p.x - NODE_WIDTH / 2, y: p.y - NODE_HEIGHT / 2 });
   }
-  return orderBranches(out, nodes, containerId);
+  return widenGaps(orderBranches(out, nodes, containerId), edges);
+}
+
+/**
+ * Widens each gap between two columns so every wire that changes height in
+ * it gets a lane `LANE_GAP` apart. A gap keeps `NODE_GAP` when that is
+ * enough.
+ */
+export function widenGaps(
+  positions: Map<NodeId, Position>,
+  edges: FlowEdge[],
+): Map<NodeId, Position> {
+  const xs = [...new Set([...positions.values()].map((p) => p.x))].sort(
+    (a, b) => a - b,
+  );
+  const column = new Map(xs.map((x, i) => [x, i]));
+  const crossing = xs.map(() => 0);
+  for (const e of edges) {
+    const s = positions.get(e.source);
+    const t = positions.get(e.target);
+    if (!s || !t || s.y === t.y) continue;
+    const from = column.get(s.x) ?? 0;
+    const to = column.get(t.x) ?? 0;
+    for (let g = from; g < to; g++) crossing[g] = (crossing[g] ?? 0) + 1;
+  }
+  const shift = new Map<number, number>();
+  let total = 0;
+  xs.forEach((x, i) => {
+    shift.set(x, total);
+    const wires = crossing[i] ?? 0;
+    total += Math.max(0, (wires + 1) * LANE_GAP - NODE_GAP);
+  });
+  const out = new Map<NodeId, Position>();
+  for (const [id, p] of positions) {
+    out.set(id, { x: p.x + (shift.get(p.x) ?? 0), y: p.y });
+  }
+  return out;
 }
 
 /**

@@ -25,6 +25,7 @@ import {
 } from "react";
 import { panelNodeOf } from "../nav/navigation";
 import { isOpenable } from "./card";
+import { wireLanes } from "./lanes";
 import {
   type Bands,
   layoutLR,
@@ -213,6 +214,7 @@ export function toFlowEdges(
   times: Schedule,
   reduced: boolean,
   turnY: ReadonlyMap<string, number> = new Map(),
+  lanes: ReadonlyMap<string, number> = new Map(),
 ): WireFlowEdge[] {
   return edges.map((e) => ({
     id: e.id,
@@ -224,6 +226,7 @@ export function toFlowEdges(
       pulseAt: times.pulseAt.get(e.id) ?? 0,
       reduced,
       ...(turnY.has(e.id) ? { turnY: turnY.get(e.id) } : {}),
+      ...(lanes.has(e.id) ? { lane: lanes.get(e.id) } : {}),
     },
     ...(e.label === undefined ? {} : { label: e.label }),
     ...(e.kind === "imports" ? { className: "edge-imports" } : {}),
@@ -267,6 +270,15 @@ export function FlowCanvas({
     [],
   );
   const size = measured.level === levelKey ? measured.size : NO_SIZE;
+  // Cards the viewer dragged, by level, for as long as this graph stays open.
+  const [moved, setMoved] = useState<{
+    graph: Graph;
+    levels: Map<string, Map<NodeId, Position>>;
+  }>({ graph, levels: new Map() });
+  const levelMoved = useMemo(
+    () => (moved.graph === graph ? moved.levels.get(levelKey) : undefined),
+    [moved, graph, levelKey],
+  );
   const expanding = frame !== null;
   // The card sizes React Flow measured on this level. Each rebuilt node
   // carries its size back: without it React Flow forgets the size, hides the
@@ -275,13 +287,28 @@ export function FlowCanvas({
   const onNodesChange = useCallback(
     (changes: NodeChange<StepFlowNode>[]) => {
       if (cardSizes.current.level !== levelKey) return;
+      const drags = changes.filter(
+        (c) => c.type === "position" && c.position !== undefined,
+      );
+      if (drags.length > 0) {
+        setMoved((prev) => {
+          const levels = new Map(prev.graph === graph ? prev.levels : []);
+          const level = new Map(levels.get(levelKey));
+          for (const c of drags) {
+            if (c.type === "position" && c.position)
+              level.set(c.id, c.position);
+          }
+          levels.set(levelKey, level);
+          return { graph, levels };
+        });
+      }
       for (const c of changes) {
         if (c.type === "dimensions" && c.dimensions) {
           cardSizes.current.sizes.set(c.id, c.dimensions);
         }
       }
     },
-    [levelKey],
+    [levelKey, graph],
   );
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -321,15 +348,19 @@ export function FlowCanvas({
       );
       bands = wrapColumns(lr, n ?? columns);
     }
-    const positions = bands.positions;
+    const positions = new Map(bands.positions);
+    for (const [id, p] of levelMoved ?? []) {
+      if (positions.has(id)) positions.set(id, p);
+    }
     const times = schedule(level.nodes, level.edges, order, reduced);
     const turnY = new Map<string, number>();
     for (const e of level.edges) {
       const from = bands.band.get(e.source) ?? 0;
       const to = bands.band.get(e.target) ?? 0;
       const y = bands.gapAbove[to];
-      if (to > from && y !== undefined) turnY.set(e.id, y);
+      if (to > from && y !== undefined && !levelMoved) turnY.set(e.id, y);
     }
+    const lanes = wireLanes(level.edges, positions, new Set(turnY.keys()));
     const cards = suggestionCards(level, explanations, levelId, panelNodeOf);
     const lit = highlighted(cards);
     const sources = new Set(level.edges.map((e) => e.source));
@@ -357,7 +388,7 @@ export function FlowCanvas({
     });
     return {
       nodes,
-      edges: toFlowEdges(level.edges, times, reduced, turnY),
+      edges: toFlowEdges(level.edges, times, reduced, turnY, lanes),
       cards,
       positions,
       padX: bands.gapAbove.length > 1 ? WRAP_PAD : FIT_PAD,
@@ -372,6 +403,7 @@ export function FlowCanvas({
     explanations,
     suggestionCounts,
     size,
+    levelMoved,
   ]);
 
   function open(node: FlowNode, card: Element) {
@@ -444,7 +476,7 @@ export function FlowCanvas({
         edgeTypes={edgeTypes}
         onNodesChange={onNodesChange}
         onNodeClick={click}
-        nodesDraggable={false}
+        nodesDraggable
         nodesConnectable={false}
         zoomOnDoubleClick={false}
         minZoom={0.2}
