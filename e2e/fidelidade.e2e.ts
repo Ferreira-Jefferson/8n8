@@ -126,6 +126,30 @@ test.describe("Fidelidade", () => {
     await expect(view).not.toContainText("Ignora as partes vazias.");
   });
 
+  test("CORE-22: a suggestion on a line outside the node is dropped, the valid one stays", async ({
+    page,
+  }) => {
+    await generate(
+      page,
+      REAL,
+      "def media_notas(notas):\n    total = sum(notas)\n    return total / len(notas)\n",
+    );
+    await nodeById(page, "fn:media_notas").click();
+
+    const view = panel(page);
+    await expect(badge(view)).toHaveText("Revisado");
+    await expect(
+      view
+        .getByRole("heading", { name: "Sugestões", exact: true })
+        .locator("xpath=following-sibling::ul[1]")
+        .getByRole("button", { name: /\(linha \d+, / }),
+    ).toHaveText(["Tratar a lista vazia (linha 3, alta)"]);
+    await expect(view).not.toContainText("Remover o laço repetido");
+    await expect(
+      nodeById(page, "fn:media_notas").getByTitle("Sugestões"),
+    ).toHaveText("1");
+  });
+
   test("FID-11/12/13/15/06/14: a faithful draft is fully reviewed, with evidence lines and effects", async ({
     page,
   }) => {

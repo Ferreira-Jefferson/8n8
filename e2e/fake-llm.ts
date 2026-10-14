@@ -128,6 +128,37 @@ const SCENARIOS: Scenario[] = [
       "total de partes": [3],
     },
   },
+  {
+    // CORE-22: the reviewer would accept both suggestions; only the line range
+    // check drops the one on line 40 of a 3-line node.
+    marker: "def media_notas",
+    draft: {
+      summary: "Divide a soma das notas pela quantidade.",
+      inputs: ["`notas`"],
+      outputs: ["média das notas"],
+      suggestions: [
+        {
+          command: "Tratar a lista vazia",
+          reason: "A divisão falha quando `notas` está vazia.",
+          line: 3,
+          severity: "alta",
+        },
+        {
+          command: "Remover o laço repetido",
+          reason: "O laço refaz a soma.",
+          line: 40,
+          severity: "baixa",
+        },
+      ],
+    },
+    evidence: {
+      "Divide a soma das notas pela quantidade.": [2, 3],
+      "`notas`": [1],
+      "média das notas": [3],
+      "Tratar a lista vazia A divisão falha quando `notas` está vazia.": [3],
+      "Remover o laço repetido O laço refaz a soma.": [2],
+    },
+  },
 ];
 
 /** Verdicts for each `- <id>: <text>` line of the reviewer request. */
