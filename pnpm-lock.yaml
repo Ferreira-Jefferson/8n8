@@ -242,9 +242,6 @@ importers:
       '@code2n8n/model':
         specifier: workspace:*
         version: link:../model
-      openai:
-        specifier: 7.32.0
-        version: 7.32.0(undici@8.11.2)(zod@4.6.7)
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -274,6 +271,19 @@ importers:
       web-tree-sitter:
         specifier: 0.27.1
         version: 0.27.1
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.5
+        version: 22.20.5
+
+  packages/llm:
+    dependencies:
+      '@code2n8n/model':
+        specifier: workspace:*
+        version: link:../model
+      openai:
+        specifier: 7.32.0
+        version: 7.32.0(undici@8.11.2)(zod@4.6.7)
     devDependencies:
       '@types/node':
         specifier: 22.20.5
