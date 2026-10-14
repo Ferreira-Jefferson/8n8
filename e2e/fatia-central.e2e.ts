@@ -356,16 +356,24 @@ test.describe("Drill-down", () => {
       "não",
     ]);
 
-    // Code order reads left to right.
-    const x = async (id: string) =>
-      (await nodeById(page, id).boundingBox())?.x ?? Number.NaN;
-    const xs = [
-      await x(`${FRETE}/s0`),
-      await x(`${FRETE}/s1`),
-      await x(`${FRETE}/s2`),
+    // Code order reads like text: left to right, and a level too wide for the
+    // canvas wraps into a lower row that starts again at the left (design C7).
+    const at = async (id: string) => {
+      const b = await nodeById(page, id).boundingBox();
+      return b ?? { x: Number.NaN, y: Number.NaN, height: Number.NaN };
+    };
+    const steps = [
+      await at(`${FRETE}/s0`),
+      await at(`${FRETE}/s1`),
+      await at(`${FRETE}/s2`),
     ];
-    expect(xs[0]).toBeLessThan(xs[1] ?? Number.NaN);
-    expect(xs[1]).toBeLessThan(xs[2] ?? Number.NaN);
+    for (let i = 1; i < steps.length; i++) {
+      const a = steps[i - 1] as { x: number; y: number; height: number };
+      const b = steps[i] as { x: number; y: number; height: number };
+      const sameRow = Math.abs(a.y - b.y) < a.height;
+      if (sameRow) expect(b.x).toBeGreaterThan(a.x);
+      else expect(b.y).toBeGreaterThanOrEqual(a.y + a.height);
+    }
     await shot(page, "04-calcular-frete");
   });
 
