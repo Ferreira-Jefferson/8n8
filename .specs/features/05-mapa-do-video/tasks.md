@@ -767,10 +767,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O topo do grafo do vídeo tem 8 nós, 7 fios `next` com IDs `main:…` e `triggers = {fn:processar_pedido}`.
-- [ ] Nenhum nó do topo tem `kind === "module"` com o rótulo "Módulo" sem ser GATILHO (VID-12). O `mod` aparece só em `triggers`.
-- [ ] Os níveis internos e de projeto não mudam (os testes de PROJ e de nível interno passam sem mudança) e têm `triggers` vazio.
-- [ ] Gate passa.
+- [x] O topo do grafo do vídeo tem 8 nós, 7 fios `next` com IDs `main:…` e `triggers = {fn:processar_pedido}`.
+- [x] Nenhum nó do topo tem `kind === "module"` com o rótulo "Módulo" sem ser GATILHO (VID-12). O `mod` aparece só em `triggers`.
+- [x] Os níveis internos e de projeto não mudam (os testes de PROJ e de nível interno passam sem mudança) e têm `triggers` vazio.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
