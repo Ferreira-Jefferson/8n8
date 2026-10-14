@@ -109,6 +109,27 @@ describe("createOpenRouterClient (CORE-16, CORE-21)", () => {
     expect(gemini.calls[0]?.body).not.toHaveProperty("reasoning");
   });
 
+  it("asks fast providers first for DeepSeek models only, with fallback", async () => {
+    const deepseek = fakeFetch();
+    await createOpenRouterClient("k", { fetch: deepseek.fetch }).complete({
+      model: "~deepseek/deepseek-v4-flash-latest",
+      messages,
+      json: "native",
+    });
+    expect(deepseek.calls[0]?.body.provider).toEqual({
+      order: ["baidu/fp8", "wafer/fast", "atlas-cloud/fp4"],
+      allow_fallbacks: true,
+    });
+
+    const gemini = fakeFetch();
+    await createOpenRouterClient("k", { fetch: gemini.fetch }).complete({
+      model: "google/gemini-x",
+      messages,
+      json: "prompt",
+    });
+    expect(gemini.calls[0]?.body).not.toHaveProperty("provider");
+  });
+
   it("rejects after a single request on HTTP 500", async () => {
     const { fetch, calls } = fakeFetch(500);
     await expect(

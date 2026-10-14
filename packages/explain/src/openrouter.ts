@@ -39,9 +39,16 @@ export function createOpenRouterClient(
         ...(json === "native"
           ? { response_format: { type: "json_object" as const } }
           : {}),
-        // OpenRouter extension, not in the SDK types. DeepSeek reasons by default; off cuts latency.
+        // OpenRouter extensions, not in the SDK types. DeepSeek reasons by default; off cuts latency.
+        // Default routing favours price and lands on providers that take 11–20 s; these answered in ~2 s with the least spread (2026-10-14).
         ...(/^~?deepseek\//.test(model)
-          ? { reasoning: { enabled: false } }
+          ? {
+              reasoning: { enabled: false },
+              provider: {
+                order: ["baidu/fp8", "wafer/fast", "atlas-cloud/fp4"],
+                allow_fallbacks: true,
+              },
+            }
           : {}),
       };
       const response = await client.chat.completions.create(body);
