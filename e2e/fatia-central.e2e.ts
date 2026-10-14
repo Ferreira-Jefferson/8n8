@@ -572,6 +572,14 @@ test.describe("Explicação", () => {
     await expect(suggestionButtons(panel(page))).toHaveCount(2);
     await back(page).click();
     await expect(nodeById(page, FRETE).getByTitle("Sugestões")).toHaveText("2");
+    // Within a map the app keeps the answer in memory: no new request.
+    expect(calls).toEqual([FRETE, PEDIDO]);
+
+    // A new map asks the server again, and its disk cache answers.
+    await generate(page, TWO_ENTRIES);
+    await clickCard(page, FRETE);
+    await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
+    await expect(suggestionButtons(panel(page))).toHaveCount(2);
     expect(calls).toEqual([FRETE, PEDIDO, FRETE]);
     await expect.poll(() => fromCache).toEqual([false, false, true]);
   });

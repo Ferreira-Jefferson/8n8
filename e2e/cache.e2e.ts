@@ -128,11 +128,23 @@ const entryFile = (id: string) => join(CACHE, "nodes", `${sha256(id)}.json`);
 const fingerprint = (): Record<string, string> =>
   JSON.parse(readFileSync(entryFile(FRETE), "utf8")).fingerprint;
 
+/**
+ * Maps `source` again and opens FRETE: the app keeps a map's explanations in
+ * memory, so only a new map asks the server, and its disk cache, again.
+ */
+async function reopenInNewMap(
+  page: Page,
+  source: string,
+): Promise<{ fromCache?: boolean }> {
+  await generate(page, source);
+  return open(page, FRETE);
+}
+
 /** The rewritten entry is read back: reopening FRETE comes from the cache, with no LLM call. */
 async function expectValidEntry(page: Page) {
   expect(cachedFiles()).toEqual([`${sha256(FRETE)}.json`]);
   await open(page, PEDIDO);
-  expect((await open(page, FRETE)).fromCache).toBe(true);
+  expect((await reopenInNewMap(page, VIDEO)).fromCache).toBe(true);
   await expect(badge(panel(page))).toHaveText("Revisado");
   expect(freteCalls(await fakeLog())).toHaveLength(2);
 }
@@ -156,7 +168,7 @@ test.describe("Cache por nó", () => {
       panel(page).getByText("Resumo indisponível", { exact: true }),
     ).toHaveCount(1);
 
-    expect((await open(page, FRETE)).fromCache).toBe(true);
+    expect((await reopenInNewMap(page, VIDEO)).fromCache).toBe(true);
     await expect(badge(panel(page))).toHaveText("Revisado");
     expect(freteCalls(await fakeLog())).toHaveLength(2);
   });
@@ -276,7 +288,7 @@ test.describe("Cache por nó", () => {
     await resetFake();
 
     await open(page, PEDIDO);
-    expect((await open(page, FRETE)).fromCache).toBe(false);
+    expect((await reopenInNewMap(page, VIDEO)).fromCache).toBe(false);
     await expect(badge(panel(page))).toHaveText("Revisado");
     await expect(panel(page)).not.toContainText("Resumo antigo.");
     await expect(panel(page).getByRole("status")).toHaveCount(0);
