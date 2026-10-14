@@ -285,15 +285,16 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um teste por forma de ligação: parâmetro simples, com padrão, com tipo, `*args`, `**kw` e de `lambda`; `=` simples e em tupla/lista; `+=`; anotação; `for`; `for` de compreensão; `with ... as`; `except ... as`; `import ... as`; `:=`; `def`; `class`; `global`; `nonlocal`.
-- [ ] Um nome só usado (`print(x)` sem ligar `x`) não entra no conjunto.
-- [ ] Um nome ligado numa função conta no arquivo todo (risco documentado no design).
-- [ ] Gate passa; a contagem do pacote não cai.
+- [x] Um teste por forma de ligação: parâmetro simples, com padrão, com tipo, `*args`, `**kw` e de `lambda`; `=` simples e em tupla/lista; `+=`; anotação; `for`; `for` de compreensão; `with ... as`; `except ... as`; `import ... as`; `:=`; `def`; `class`; `global`; `nonlocal`.
+- [x] Um nome só usado (`print(x)` sem ligar `x`) não entra no conjunto.
+- [x] Um nome ligado numa função conta no arquivo todo (risco documentado no design).
+- [x] Gate passa; a contagem do pacote não cai.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): collect the names bound in a file`
+**Status**: ✅ Complete (162 unit = 139 + 23)
 
 ---
 
@@ -310,17 +311,18 @@ T49 → T50
 
 **Done when**:
 
-- [ ] (a) `db.salvar`, `cursor.x`, `conn.x`, `connection.x` e `session.x` → `BANCO`. `dbx.salvar`, `DB.salvar` e `meu.db.salvar` não caem em (a).
-- [ ] (b) `enviar_email`, `sendEmail`, `notificar.EMAIL_cliente` e `email` → `EMAIL`. `emailer.enviar` não cai em (b), porque `email` está no primeiro segmento e não no último.
-- [ ] (a) vence (b): `db.enviar_email` → `BANCO`.
-- [ ] (c) `requests.get` → `HTTP` e `open` → `ARQUIVO`. (d) `validar_pedido` e `sum` → `EXTERNO`.
-- [ ] Os testes atuais de `classify` passam sem mudança.
-- [ ] Gate passa.
+- [x] (a) `db.salvar`, `cursor.x`, `conn.x`, `connection.x` e `session.x` → `BANCO`. `dbx.salvar`, `DB.salvar` e `meu.db.salvar` não caem em (a).
+- [x] (b) `enviar_email`, `sendEmail`, `notificar.EMAIL_cliente` e `email` → `EMAIL`. `emailer.enviar` não cai em (b), porque `email` está no primeiro segmento e não no último.
+- [x] (a) vence (b): `db.enviar_email` → `BANCO`.
+- [x] (c) `requests.get` → `HTTP` e `open` → `ARQUIVO`. (d) `validar_pedido` e `sum` → `EXTERNO`.
+- [x] Os testes atuais de `classify` passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): classify calls to names the snippet does not define`
+**Status**: ✅ Complete (180 unit = 162 + 18)
 
 ---
 
@@ -337,17 +339,18 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `validar_pedido(p)` → external `EXTERNO`; `db.salvar(p)` → `BANCO`; `enviar_email(x)` → `EMAIL`; `print(x)` e `len(x)` → `EXTERNO`. Nenhum desses nós gera fio `calls`.
-- [ ] `r = f()` seguido de `r.json()` → `null` (receptor ligado). `self.x()` sem método `x` → `null`.
-- [ ] Nome definido no trecho continua `call` (CORE-02). Nome importado continua com a tabela (CORE-12). PROJ-09 continua: o nome de projeto sem import vira `EXTERNO`, sem fio.
-- [ ] `foo().append(x)` continua `null` (receptor encadeado fora da tabela).
-- [ ] `project-calls.test.ts` passa sem mudança.
-- [ ] Gate passa.
+- [x] `validar_pedido(p)` → external `EXTERNO`; `db.salvar(p)` → `BANCO`; `enviar_email(x)` → `EMAIL`; `print(x)` e `len(x)` → `EXTERNO`. Nenhum desses nós gera fio `calls`.
+- [x] `r = f()` seguido de `r.json()` → `null` (receptor ligado). `self.x()` sem método `x` → `null`.
+- [x] Nome definido no trecho continua `call` (CORE-02). Nome importado continua com a tabela (CORE-12). PROJ-09 continua: o nome de projeto sem import vira `EXTERNO`, sem fio.
+- [x] `foo().append(x)` continua `null` (receptor encadeado fora da tabela).
+- [x] `project-calls.test.ts` passa sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): turn calls to undefined names into categorized steps`
+**Status**: ✅ Complete (191 unit = 180 + 11)
 
 ---
 
@@ -364,19 +367,20 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `def x(): a = 1; return a` → `s0` code (linha 2) e `s1` return (linha 3) com `label` `a`, `openable: false` e um fio `next:s0->s1`.
-- [ ] Nenhum fio sai do RETORNO: num `return` seguido de outro comando, o comando seguinte não recebe fio do RETORNO.
-- [ ] `if/else` com `return` nos dois ramos: os ramos têm um RETORNO cada, e a condição não deixa fio pendente para depois do `if`.
-- [ ] `if` sem `else` com `return` no ramo "sim": o "não" continua indo ao passo seguinte.
-- [ ] `return` dentro de laço: RETORNO filho do laço.
-- [ ] `return calcular(x)` (função do trecho) → RETORNO com `target`, e o grafo mantém `calls:<dono>->fn:calcular`. `return requests.get(u)` → RETORNO com `callee` e `category: "HTTP"`. `return` sozinho → `label` `""`.
-- [ ] Em `pedido_frete.py`, `fn:calcular_frete/s2/b0/s0` e `b1/s0` são `return` com os mesmos IDs de antes.
-- [ ] Gate passa.
+- [x] `def x(): a = 1; return a` → `s0` code (linha 2) e `s1` return (linha 3) com `label` `a`, `openable: false` e um fio `next:s0->s1`.
+- [x] Nenhum fio sai do RETORNO: num `return` seguido de outro comando, o comando seguinte não recebe fio do RETORNO.
+- [x] `if/else` com `return` nos dois ramos: os ramos têm um RETORNO cada, e a condição não deixa fio pendente para depois do `if`.
+- [x] `if` sem `else` com `return` no ramo "sim": o "não" continua indo ao passo seguinte.
+- [x] `return` dentro de laço: RETORNO filho do laço.
+- [x] `return calcular(x)` (função do trecho) → RETORNO com `target`, e o grafo mantém `calls:<dono>->fn:calcular`. `return requests.get(u)` → RETORNO com `callee` e `category: "HTTP"`. `return` sozinho → `label` `""`.
+- [x] Em `pedido_frete.py`, `fn:calcular_frete/s2/b0/s0` e `b1/s0` são `return` com os mesmos IDs de antes.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): add a return step with no outgoing wire`
+**Status**: ✅ Complete (200 unit = 191 + 9; errors.test e project.test também mudam pela VID-20)
 
 ---
 
@@ -392,16 +396,17 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O teste confere a lista de nós em pré-ordem com `id`, `kind`, `range`, `category`, `callee` e `target` de cada linha da tabela.
-- [ ] O teste confere `openable` de cada nó contra a regra da VID-24.
-- [ ] O teste confere os fios: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); os fios de `calcular_frete` (2 `next`, "sim" e "não"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhum fio sai de um nó `return`.
-- [ ] O teste confere que extrair duas vezes dá o mesmo grafo (CORE-04).
-- [ ] O gate Build A passa (fecha a fase).
+- [x] O teste confere a lista de nós em pré-ordem com `id`, `kind`, `range`, `category`, `callee` e `target` de cada linha da tabela.
+- [x] O teste confere `openable` de cada nó contra a regra da VID-24.
+- [x] O teste confere os fios: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); os fios de `calcular_frete` (2 `next`, "sim" e "não"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhum fio sai de um nó `return`.
+- [x] O teste confere que extrair duas vezes dá o mesmo grafo (CORE-04).
+- [x] O gate Build A passa (fecha a fase).
 
 **Tests**: unit
 **Gate**: build · Build A
 
 **Commit**: `test(extract-python): check the graph of the video snippet`
+**Status**: ✅ Complete (206 unit = 200 + 6; Build A verde: model 34, extract-python 206)
 
 ---
 
@@ -420,10 +425,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O texto diz "passo de dentro de uma função", pede "uma ou duas frases" no `summary` e traz as regras de crases e de números.
-- [ ] A versão tem 12 hex e difere de `buildSystemPrompt(pts).version` para as mesmas regras PTS.
-- [ ] Os testes atuais de `prompt.test.ts` passam sem mudança.
-- [ ] Gate passa.
+- [x] O texto diz "passo de dentro de uma função", pede "uma ou duas frases" no `summary` e traz as regras de crases e de números.
+- [x] A versão tem 12 hex e difere de `buildSystemPrompt(pts).version` para as mesmas regras PTS.
+- [x] Os testes atuais de `prompt.test.ts` passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
@@ -445,10 +450,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Com `maxSentences: 2` e um rascunho de 3 frases, o resultado tem `s1` e `s2`, e a mensagem do revisor (capturada no `LlmClient` falso) não contém a 3ª frase.
-- [ ] Num novo rascunho (FID-08), o corte vale de novo.
-- [ ] Sem `maxSentences`, o comportamento é o de hoje (os testes atuais passam sem mudança).
-- [ ] Gate passa.
+- [x] Com `maxSentences: 2` e um rascunho de 3 frases, o resultado tem `s1` e `s2`, e a mensagem do revisor (capturada no `LlmClient` falso) não contém a 3ª frase.
+- [x] Num novo rascunho (FID-08), o corte vale de novo.
+- [x] Sem `maxSentences`, o comportamento é o de hoje (os testes atuais passam sem mudança).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
@@ -470,11 +475,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um pedido `external` usa o texto de `stepPrompt` como `system` e `Tipo: chamada externa` na mensagem. Um pedido `function` usa o prompt de hoje.
-- [ ] Um passo com rascunho de 3 frases retorna no máximo 2.
-- [ ] O cache grava o passo com `promptVersion = stepPrompt.version`. Reabrir sem mudança vem do cache com 0 chamadas. Trocar o `stepPrompt` gera `update: ["model-or-prompt"]`.
-- [ ] As fixtures de `ExplainDeps` nos testes atuais ganham `stepPrompt`. Nenhuma asserção muda.
-- [ ] Gate passa.
+- [x] Um pedido `external` usa o texto de `stepPrompt` como `system` e `Tipo: chamada externa` na mensagem. Um pedido `function` usa o prompt de hoje.
+- [x] Um passo com rascunho de 3 frases retorna no máximo 2.
+- [x] O cache grava o passo com `promptVersion = stepPrompt.version`. Reabrir sem mudança vem do cache com 0 chamadas. Trocar o `stepPrompt` gera `update: ["model-or-prompt"]`.
+- [x] As fixtures de `ExplainDeps` nos testes atuais ganham `stepPrompt`. Nenhuma asserção muda.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
@@ -496,10 +501,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] A primeira linha do prompt é exatamente `Você escreve títulos de nós de um fluxo de código Python.`. O texto pede no máximo 6 palavras, PTS e JSON `{"titles":[…]}`.
-- [ ] `titleMessage` numera `n1..nk` na ordem dos itens e mostra o tipo, o nome, "Chama", "Chamado por" e o código numerado de cada item, no formato do design.
-- [ ] `parseTitles` aceita uma resposta com cercas, apara espaços e descarta título vazio. Um JSON inválido ou fora do schema lança erro.
-- [ ] Gate passa.
+- [x] A primeira linha do prompt é exatamente `Você escreve títulos de nós de um fluxo de código Python.`. O texto pede no máximo 6 palavras, PTS e JSON `{"titles":[…]}`.
+- [x] `titleMessage` numera `n1..nk` na ordem dos itens e mostra o tipo, o nome, "Chama", "Chamado por" e o código numerado de cada item, no formato do design.
+- [x] `parseTitles` aceita uma resposta com cercas, apara espaços e descarta título vazio. Um JSON inválido ou fora do schema lança erro.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
@@ -521,11 +526,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] A primeira linha do prompt é exatamente `Você revisa títulos de nós de um fluxo de código Python.`. A versão muda quando o texto muda.
-- [ ] `titleLayerOne`: 6 palavras passam e 7 caem. "Peso acima de 30 kg?" cai num código sem `kg`. "Peso acima de 40?" cai num código com `30` e sem `40`. Um identificador inventado entre crases cai.
-- [ ] `titleReviewerMessage` traz um bloco `Nó nX:` por título, com o código numerado do próprio nó, os vizinhos e a linha `- nX: <título>`.
-- [ ] O veredicto `supported: false`, sem evidência ou com linha fora do nó derruba o título (VID-16).
-- [ ] Gate passa.
+- [x] A primeira linha do prompt é exatamente `Você revisa títulos de nós de um fluxo de código Python.`. A versão muda quando o texto muda.
+- [x] `titleLayerOne`: 6 palavras passam e 7 caem. "Peso acima de 30 kg?" cai num código sem `kg`. "Peso acima de 40?" cai num código com `30` e sem `40`. Um identificador inventado entre crases cai.
+- [x] `titleReviewerMessage` traz um bloco `Nó nX:` por título, com o código numerado do próprio nó, os vizinhos e a linha `- nX: <título>`.
+- [x] O veredicto `supported: false`, sem evidência ou com linha fora do nó derruba o título (VID-16).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
@@ -547,10 +552,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `set` grava `<dir>/titles/<sha256(cacheKey)>.json` com `schemaVersion: 1`. `get` lê o arquivo de volta igual.
-- [ ] Um JSON inválido, `schemaVersion: 2` ou um campo faltando resultam em `undefined`, e o próximo `set` grava por cima.
-- [ ] Duas chaves (`fn:a` e `C:/x|fn:a`) dão dois arquivos.
-- [ ] Gate passa.
+- [x] `set` grava `<dir>/titles/<sha256(cacheKey)>.json` com `schemaVersion: 1`. `get` lê o arquivo de volta igual.
+- [x] Um JSON inválido, `schemaVersion: 2` ou um campo faltando resultam em `undefined`, e o próximo `set` grava por cima.
+- [x] Duas chaves (`fn:a` e `C:/x|fn:a`) dão dois arquivos.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
@@ -572,15 +577,15 @@ T49 → T50
 
 **Done when**:
 
-- [ ] 3 itens sem cache: exatamente 2 chamadas (títulos e revisor). Retorna `ok` com 3 `NodeTitle` na ordem dos itens, linhas absolutas e `fromCache: false`.
-- [ ] Na segunda vez, 0 chamadas e `fromCache: true` (VID-17).
-- [ ] Mudar o código, um vizinho, o modelo, o modelo revisor ou a versão de um prompt de **um** item gera um pedido só com esse item (VID-17).
-- [ ] Um título reprovado pelo revisor fica fora da resposta e do cache (VID-16).
-- [ ] Um título de 7 palavras fica fora e não vai ao revisor. Se nenhum título passa na camada 1, só há 1 chamada.
-- [ ] Um ID `n9` não pedido é ignorado (VID-14, borda).
-- [ ] Sem `llm`: `no-key` com os acertos de cache. Uma exceção no LLM: `error` com os acertos e nada gravado.
-- [ ] `index.ts` exporta `titleNodes`, `createTitleCache`, `buildTitlePrompt`, `buildTitleReviewerPrompt` e `buildStepPrompt`.
-- [ ] O gate Build B passa para o `explain` (fecha a fase): `pnpm --filter @code2n8n/explain typecheck && pnpm check && pnpm --filter @code2n8n/explain test`.
+- [x] 3 itens sem cache: exatamente 2 chamadas (títulos e revisor). Retorna `ok` com 3 `NodeTitle` na ordem dos itens, linhas absolutas e `fromCache: false`.
+- [x] Na segunda vez, 0 chamadas e `fromCache: true` (VID-17).
+- [x] Mudar o código, um vizinho, o modelo, o modelo revisor ou a versão de um prompt de **um** item gera um pedido só com esse item (VID-17).
+- [x] Um título reprovado pelo revisor fica fora da resposta e do cache (VID-16).
+- [x] Um título de 7 palavras fica fora e não vai ao revisor. Se nenhum título passa na camada 1, só há 1 chamada.
+- [x] Um ID `n9` não pedido é ignorado (VID-14, borda).
+- [x] Sem `llm`: `no-key` com os acertos de cache. Uma exceção no LLM: `error` com os acertos e nada gravado.
+- [x] `index.ts` exporta `titleNodes`, `createTitleCache`, `buildTitlePrompt`, `buildTitleReviewerPrompt` e `buildStepPrompt`.
+- [x] O gate Build B passa para o `explain` (fecha a fase): `pnpm --filter @code2n8n/explain typecheck && pnpm check && pnpm --filter @code2n8n/explain test`.
 
 **Tests**: unit
 **Gate**: build · Build B (só `explain`)
@@ -604,12 +609,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `fn:calcular_frete/s0` de `pedido_frete.py` → 200, com o pedido `{ nodeKind: "external", nodeName: "requests.get", code: <linha 5>, range: {5,5}, calls: [], calledBy: [] }`.
-- [ ] `fn:calcular_frete/s1` → `nodeKind: "code"`. Um `call` com `target` recebe o nome do alvo em `calls`.
-- [ ] O pedido de `fn:calcular_frete` é igual ao de hoje (CORE-17).
-- [ ] Num projeto, `dir:…` e `file:…` → 400 `node has no explanation`.
-- [ ] O teste "returns 400 for a step node" vira "returns 200 for a step node" (VID-28), e um teste novo cobre o 400 de pasta e de arquivo.
-- [ ] Gate passa.
+- [x] `fn:calcular_frete/s0` de `pedido_frete.py` → 200, com o pedido `{ nodeKind: "external", nodeName: "requests.get", code: <linha 5>, range: {5,5}, calls: [], calledBy: [] }`.
+- [x] `fn:calcular_frete/s1` → `nodeKind: "code"`. Um `call` com `target` recebe o nome do alvo em `calls`.
+- [x] O pedido de `fn:calcular_frete` é igual ao de hoje (CORE-17).
+- [x] Num projeto, `dir:…` e `file:…` → 400 `node has no explanation`.
+- [x] O teste "returns 400 for a step node" vira "returns 200 for a step node" (VID-28), e um teste novo cobre o 400 de pasta e de arquivo.
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
@@ -631,12 +636,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Trecho: `{ source, nodeIds: ["fn:calcular_frete", "fn:calcular_frete/s0"] }` → `deps.titles` recebe 2 itens com `cacheKey === nodeId`, `kind`, `name`, `code`, `range` e vizinhos. A rota responde 200 com o retorno de `deps.titles`.
-- [ ] Projeto: `cacheKey` é `<raiz real POSIX>|<nodeId>`, e IDs `dir:`/`file:` ficam de fora.
-- [ ] Um ID desconhecido ou repetido é descartado. Sem item, a resposta é `{ status: "ok", titles: [] }` e `deps.titles` não é chamado.
-- [ ] `no-key` e `error` respondem 200. Corpo inválido e mais de 200 IDs respondem 400. Pasta ausente responde 404. Um `content-type` diferente de JSON responde 415. Um Host de fora responde 403.
-- [ ] Os `setup` dos testes atuais ganham `titles` (falso). Nenhuma asserção muda.
-- [ ] Gate passa.
+- [x] Trecho: `{ source, nodeIds: ["fn:calcular_frete", "fn:calcular_frete/s0"] }` → `deps.titles` recebe 2 itens com `cacheKey === nodeId`, `kind`, `name`, `code`, `range` e vizinhos. A rota responde 200 com o retorno de `deps.titles`.
+- [x] Projeto: `cacheKey` é `<raiz real POSIX>|<nodeId>`, e IDs `dir:`/`file:` ficam de fora.
+- [x] Um ID desconhecido ou repetido é descartado. Sem item, a resposta é `{ status: "ok", titles: [] }` e `deps.titles` não é chamado.
+- [x] `no-key` e `error` respondem 200. Corpo inválido e mais de 200 IDs respondem 400. Pasta ausente responde 404. Um `content-type` diferente de JSON responde 415. Um Host de fora responde 403.
+- [x] Os `setup` dos testes atuais ganham `titles` (falso). Nenhuma asserção muda.
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`
@@ -658,11 +663,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Sem `OPENROUTER_API_KEY`: `composeTitles` retorna `no-key` sem criar cliente.
-- [ ] Com chave: o cliente usa `OPENROUTER_BASE_URL` e os modelos de `CODE2N8N_MODEL` e `CODE2N8N_REVIEW_MODEL`. Uma string vazia conta como ausente.
-- [ ] O cache de títulos fica em `<CODE2N8N_CACHE_DIR>/titles`, e o padrão é `.cache/explain/titles`.
-- [ ] `composeExplain` usa `buildStepPrompt` num pedido de passo.
-- [ ] O gate Build B passa (fecha a trilha B).
+- [x] Sem `OPENROUTER_API_KEY`: `composeTitles` retorna `no-key` sem criar cliente.
+- [x] Com chave: o cliente usa `OPENROUTER_BASE_URL` e os modelos de `CODE2N8N_MODEL` e `CODE2N8N_REVIEW_MODEL`. Uma string vazia conta como ausente.
+- [x] O cache de títulos fica em `<CODE2N8N_CACHE_DIR>/titles`, e o padrão é `.cache/explain/titles`.
+- [x] `composeExplain` usa `buildStepPrompt` num pedido de passo.
+- [x] O gate Build B passa (fecha a trilha B).
 
 **Tests**: unit
 **Gate**: build · Build B

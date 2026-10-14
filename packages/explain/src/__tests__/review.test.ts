@@ -293,3 +293,56 @@ describe("reviewedDraft", () => {
     await expect(reviewedDraft(input, deps(fake.llm))).rejects.toThrow();
   });
 });
+
+describe("reviewedDraft with maxSentences (VID-28)", () => {
+  it("cuts a 3-sentence summary to 2 before the reviewer sees it", async () => {
+    const fake = scripted([
+      draft({
+        summary:
+          "Devolve o peso da caixa. Recebe `caixa`. Lê `caixa.peso` uma vez.",
+      }),
+    ]);
+    const out = await reviewedDraft(input, deps(fake.llm, { maxSentences: 2 }));
+    expect(out).toEqual({
+      kind: "ok",
+      review: "full",
+      result: {
+        summary: "Devolve o peso da caixa. Recebe `caixa`.",
+        sentences: [
+          { id: "s1", text: "Devolve o peso da caixa.", lines: [2] },
+          { id: "s2", text: "Recebe `caixa`.", lines: [2] },
+        ],
+        inputs: [],
+        outputs: [],
+        suggestions: [],
+      },
+    });
+    const user = fake.reviews()[0]?.messages[1]?.content ?? "";
+    expect(user).not.toContain("uma vez");
+    expect(user).not.toContain("s3");
+  });
+
+  it("cuts every new draft too (FID-08)", async () => {
+    const fake = scripted([
+      draft({
+        summary: "A caixa pesa 5 kg. Devolve o peso da caixa. Primeira sobra.",
+      }),
+      draft({
+        summary: "Devolve o peso da caixa. Recebe `caixa`. Segunda sobra.",
+      }),
+    ]);
+    const out = await reviewedDraft(input, deps(fake.llm, { maxSentences: 2 }));
+    expect(out).toMatchObject({
+      kind: "ok",
+      review: "full",
+      result: { summary: "Devolve o peso da caixa. Recebe `caixa`." },
+    });
+    expect(fake.drafts()).toHaveLength(2);
+    expect(fake.reviews()).toHaveLength(2);
+    for (const r of fake.reviews()) {
+      for (const m of r.messages) expect(m.content).not.toContain("sobra");
+    }
+    const redraft = fake.drafts()[1]?.messages[3]?.content ?? "";
+    expect(redraft).not.toContain("sobra");
+  });
+});

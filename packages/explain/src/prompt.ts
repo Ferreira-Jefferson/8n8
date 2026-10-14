@@ -24,3 +24,24 @@ export function buildSystemPrompt(ptsRules: string): {
   const version = createHash("sha256").update(text).digest("hex").slice(0, 12);
   return { text, version };
 }
+
+const STEP_ROLE = `Você explica um passo de dentro de uma função Python para quem lê o fluxo de um programa.
+Você recebe o passo, os nomes dos nós que ele chama e o código do passo com as linhas numeradas de 1 a n.
+Explique só o que o código mostra. Não invente comportamento.
+Cite entre crases cada identificador do código (variável, parâmetro, função, classe ou módulo), como \`peso\` ou \`requests.get\`.
+Não escreva número nem unidade (como kg, %, R$ ou segundos) que não aparece no código.`;
+
+const STEP_FORMAT = FORMAT.replace(
+  '"summary": resumo do que o nó faz, em uma a três frases.',
+  '"summary": resumo do que o passo faz, em uma ou duas frases.',
+);
+
+/** Step prompt: same JSON, summary in one or two sentences; version = first 12 hex of sha256(text) (VID-28). */
+export function buildStepPrompt(ptsRules: string): {
+  text: string;
+  version: string;
+} {
+  const text = `${STEP_ROLE}\n\n${STEP_FORMAT}\n\nEscreva os textos do JSON com as regras abaixo.\n\n${ptsRules}`;
+  const version = createHash("sha256").update(text).digest("hex").slice(0, 12);
+  return { text, version };
+}

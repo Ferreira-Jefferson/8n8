@@ -22,6 +22,7 @@ function setup(reply: ExplainResponse) {
       received.push(req);
       return reply;
     },
+    titles: async () => ({ status: "ok", titles: [] }),
     readProject: async () => ({ kind: "not-found" }),
     port: 4317,
   });
@@ -122,7 +123,7 @@ describe("POST /api/explain", () => {
     expect(received).toEqual([]);
   });
 
-  it("returns 400 for a step node (external, code)", async () => {
+  it("returns 200 for a step node (external, code) (VID-28)", async () => {
     const { received, post } = setup(okReply);
     const graph = extractor.extract(videoFixture);
     const steps = graph.nodes.filter(
@@ -131,7 +132,93 @@ describe("POST /api/explain", () => {
     expect(steps.length).toBeGreaterThan(0);
     for (const step of steps) {
       const res = await post({ source: videoFixture, nodeId: step.id });
+      expect(res.status).toBe(200);
+    }
+    expect(received.map((r) => r.nodeId)).toEqual(steps.map((s) => s.id));
+  });
+
+  it("builds the request of an external step from the server graph (VID-28)", async () => {
+    const { received, post } = setup(okReply);
+    const res = await post({
+      source: videoFixture,
+      nodeId: "fn:calcular_frete/s0",
+    });
+    expect(res.status).toBe(200);
+    expect(received).toEqual([
+      {
+        nodeId: "fn:calcular_frete/s0",
+        nodeName: "requests.get",
+        nodeKind: "external",
+        code: videoFixture.split("\n")[4],
+        range: { start: 5, end: 5 },
+        calls: [],
+        calledBy: [],
+      },
+    ]);
+  });
+
+  it("sends a code step with kind code (VID-28)", async () => {
+    const { received, post } = setup(okReply);
+    await post({ source: videoFixture, nodeId: "fn:calcular_frete/s1" });
+    expect(received[0]?.nodeKind).toBe("code");
+    expect(received[0]?.code).toBe(
+      videoFixture.split("\n").slice(5, 7).join("\n"),
+    );
+  });
+
+  it("puts the target name of a call step in calls (VID-28)", async () => {
+    const { received, post } = setup(okReply);
+    const source = "def g():\n    return 1\n\ndef f():\n    g()\n";
+    const graph = extractor.extract(source);
+    const call = graph.nodes.find((n) => n.kind === "call");
+    expect(call?.target).toBe("fn:g");
+    await post({ source, nodeId: call?.id });
+    expect(received[0]).toMatchObject({
+      nodeKind: "call",
+      nodeName: "g",
+      calls: ["g"],
+      calledBy: [],
+    });
+  });
+
+  it("returns 400 node has no explanation for a folder and a file node (VID-28)", async () => {
+    const files = [{ path: "pkg/a.py", source: "def f():\n    pass\n" }];
+    const received: ExplainRequest[] = [];
+    const app = createApp({
+      extractor,
+      explain: async (req) => {
+        received.push(req);
+        return okReply;
+      },
+      titles: async () => ({ status: "ok", titles: [] }),
+      readProject: async (path) => ({
+        kind: "ok",
+        root: path,
+        response: {
+          name: "p",
+          graph: extractor.extractProject(files),
+          files,
+          ignored: [],
+        },
+      }),
+      port: 4317,
+    });
+    const graph = extractor.extractProject(files);
+    const ids = graph.nodes
+      .filter((n) => n.kind === "folder" || n.kind === "file")
+      .map((n) => n.id);
+    expect(ids).toEqual(expect.arrayContaining(["dir:pkg", "file:pkg/a.py"]));
+    for (const nodeId of ids) {
+      const res = await app.request("/api/explain", {
+        method: "POST",
+        headers: {
+          host: "127.0.0.1:4317",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ root: "/tmp/p", nodeId }),
+      });
       expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ error: "node has no explanation" });
     }
     expect(received).toEqual([]);
   });

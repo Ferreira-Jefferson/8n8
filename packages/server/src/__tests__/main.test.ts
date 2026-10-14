@@ -12,14 +12,25 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, sep } from "node:path";
+import {
+  buildStepPrompt,
+  buildSystemPrompt,
+  buildTitlePrompt,
+  buildTitleReviewerPrompt,
+} from "@code2n8n/explain";
 import { createPythonExtractor } from "@code2n8n/extract-python";
 import { readSourceFolder } from "@code2n8n/input";
-import type { ExplainRequest, ProjectResponse } from "@code2n8n/model";
+import type {
+  ExplainRequest,
+  ProjectResponse,
+  TitleRequest,
+} from "@code2n8n/model";
 import { afterAll, describe, expect, it } from "vitest";
 import { createApp } from "../app";
 import {
   composeExplain,
   composeReadProject,
+  composeTitles,
   listenOptions,
   resolvePort,
 } from "../main";
@@ -51,7 +62,7 @@ const draftReply = JSON.stringify({
   suggestions: [],
 });
 
-/** Fake client: answers verdicts to the reviewer (its system prompt asks for "verdicts"), the draft otherwise. */
+/** Fake client: answers verdicts to a reviewer (its system prompt asks for "verdicts"), titles to the title prompt, the draft otherwise. */
 function fakeFactory() {
   const keys: string[] = [];
   const baseURLs: (string | undefined)[] = [];
@@ -69,6 +80,7 @@ function fakeFactory() {
           r.messages.find((m) => m.role === "system")?.content ?? "";
         const role = system.includes('"verdicts"') ? "review" : "draft";
         seen.push({ role, model: r.model, system });
+        if (system.startsWith("Você escreve títulos")) return titleReply;
         if (role === "draft") return draftReply;
         const user = r.messages.find((m) => m.role === "user")?.content ?? "";
         const verdicts = [...user.matchAll(/^- (\w+): /gm)].map(([, id]) => ({
@@ -84,6 +96,25 @@ function fakeFactory() {
   const reviews = () => seen.filter((s) => s.role === "review");
   return { keys, baseURLs, seen, drafts, reviews, createClient };
 }
+
+const titleReply = JSON.stringify({
+  titles: [{ id: "n1", title: "Devolver um" }],
+});
+
+const titleReq: TitleRequest = {
+  items: [
+    {
+      nodeId: "fn:f",
+      cacheKey: "fn:f",
+      kind: "function",
+      name: "f",
+      code: "def f():\n    return 1",
+      range: { start: 1, end: 2 },
+      calls: [],
+      calledBy: [],
+    },
+  ],
+};
 
 const dir = (name: string) => join(cacheDir, name);
 
@@ -227,6 +258,119 @@ describe("composeExplain", () => {
   });
 });
 
+describe("composeExplain for a step (VID-28)", () => {
+  it("uses the step prompt for a step request and the full prompt for a function", async () => {
+    const f = fakeFactory();
+    const explain = composeExplain(
+      { OPENROUTER_API_KEY: "k" },
+      { createClient: f.createClient, ptsRules, cacheDir: dir("step") },
+    );
+    await explain({
+      ...req,
+      nodeId: "fn:f/s0",
+      nodeName: "Código",
+      nodeKind: "code",
+    });
+    await explain(req);
+    const [step, full] = f.drafts();
+    expect(step?.system).toBe(buildStepPrompt(ptsRules).text);
+    expect(full?.system).toBe(buildSystemPrompt(ptsRules).text);
+  });
+});
+
+describe("composeTitles (VID-14, VID-17)", () => {
+  it("without OPENROUTER_API_KEY (or empty): no client is built and titles answer no-key", async () => {
+    for (const env of [{}, { OPENROUTER_API_KEY: "" }]) {
+      const f = fakeFactory();
+      const titles = composeTitles(env, {
+        createClient: f.createClient,
+        ptsRules,
+        cacheDir: dir("t-a"),
+      });
+      expect(await titles(titleReq)).toEqual({ status: "no-key", titles: [] });
+      expect(f.keys).toEqual([]);
+    }
+  });
+
+  it("with the key: one client with OPENROUTER_BASE_URL, the title model and the review model", async () => {
+    const f = fakeFactory();
+    const titles = composeTitles(
+      {
+        OPENROUTER_API_KEY: "k-1",
+        OPENROUTER_BASE_URL: "http://127.0.0.1:9/v1",
+        CODE2N8N_MODEL: "x/y",
+        CODE2N8N_REVIEW_MODEL: "r/x",
+      },
+      { createClient: f.createClient, ptsRules, cacheDir: dir("t-b") },
+    );
+    expect(await titles(titleReq)).toEqual({
+      status: "ok",
+      titles: [
+        { nodeId: "fn:f", text: "Devolver um", lines: [1], fromCache: false },
+      ],
+    });
+    expect(f.keys).toEqual(["k-1"]);
+    expect(f.baseURLs).toEqual(["http://127.0.0.1:9/v1"]);
+    expect(f.drafts().map((s) => [s.model, s.system])).toEqual([
+      ["x/y", buildTitlePrompt(ptsRules).text],
+    ]);
+    expect(f.reviews().map((s) => [s.model, s.system])).toEqual([
+      ["r/x", buildTitleReviewerPrompt().text],
+    ]);
+  });
+
+  it("empty env values count as absent: no base URL, the default model for both", async () => {
+    const f = fakeFactory();
+    await composeTitles(
+      {
+        OPENROUTER_API_KEY: "k",
+        OPENROUTER_BASE_URL: "",
+        CODE2N8N_MODEL: "",
+        CODE2N8N_REVIEW_MODEL: "",
+      },
+      { createClient: f.createClient, ptsRules, cacheDir: dir("t-c") },
+    )(titleReq);
+    expect(f.baseURLs).toEqual([undefined]);
+    expect(f.seen.map((s) => s.model)).toEqual([
+      "~deepseek/deepseek-v4-flash-latest",
+      "~deepseek/deepseek-v4-flash-latest",
+    ]);
+  });
+
+  it("keeps titles in <CODE2N8N_CACHE_DIR>/titles, or <deps.cacheDir>/titles when unset or empty", async () => {
+    const custom = join(cacheDir, "t-x");
+    await composeTitles(
+      { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: custom },
+      {
+        createClient: fakeFactory().createClient,
+        ptsRules,
+        cacheDir: dir("t-d"),
+      },
+    )(titleReq);
+    expect(readdirSync(join(custom, "titles"))).toHaveLength(1);
+    expect(existsSync(dir("t-d"))).toBe(false);
+
+    for (const [name, env] of [
+      ["t-e", { OPENROUTER_API_KEY: "k" }],
+      ["t-f", { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: "" }],
+    ] as const) {
+      const f = fakeFactory();
+      const titles = composeTitles(env, {
+        createClient: f.createClient,
+        ptsRules,
+        cacheDir: dir(name),
+      });
+      await titles(titleReq);
+      expect(readdirSync(join(dir(name), "titles"))).toHaveLength(1);
+      expect(await titles(titleReq)).toMatchObject({
+        status: "ok",
+        titles: [{ fromCache: true }],
+      });
+      expect(f.seen).toHaveLength(2);
+    }
+  });
+});
+
 describe("resolvePort", () => {
   it("is 4317 without CODE2N8N_PORT or when it is empty", () => {
     expect(resolvePort({})).toBe(4317);
@@ -310,6 +454,7 @@ describe("composeReadProject", () => {
         received.push(r);
         return { status: "no-key" };
       },
+      titles: async () => ({ status: "ok", titles: [] }),
       readProject,
       port: 4317,
     });
@@ -358,6 +503,7 @@ describe("composeReadProject", () => {
         { OPENROUTER_API_KEY: "k" },
         { createClient: f.createClient, ptsRules, cacheDir: cache },
       ),
+      titles: async () => ({ status: "ok", titles: [] }),
       readProject,
       port: 4317,
     });

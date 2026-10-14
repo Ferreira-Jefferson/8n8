@@ -149,7 +149,7 @@ describe("extractProject: same name without an import (PROJ-09)", () => {
       graph.nodes
         .filter((n) => n.parentId === "file:relatorio.py/fn:gerar")
         .map((n) => [n.kind, n.callee, n.category]),
-    ).toEqual([["external", "calcular_frete", "EXTERNO"]]);
+    ).toEqual([["return", "calcular_frete", "EXTERNO"]]);
   });
 
   it("never wires the legacy calcular_frete", async () => {

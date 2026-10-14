@@ -1,8 +1,10 @@
-import type {
-  ExplainKind,
-  ExplainRequest,
-  ExplainResponse,
-  Explanation,
+import {
+  type ExplainKind,
+  type ExplainRequest,
+  type ExplainResponse,
+  type Explanation,
+  explainStyle,
+  STEP_SENTENCE_LIMIT,
 } from "@code2n8n/model";
 import type { ExplainCache } from "./cache";
 import { diffReasons, fingerprintOf, normalizeCode } from "./fingerprint";
@@ -17,10 +19,12 @@ export interface ExplainDeps {
   /** Model of the reviewer (FID-15). */
   reviewModel: string;
   prompt: { text: string; version: string };
+  /** Prompt for steps inside a function (VID-28). */
+  stepPrompt: { text: string; version: string };
   reviewer: { text: string; version: string };
 }
 
-const KIND_LABEL: Record<ExplainKind, string> = {
+export const KIND_LABEL: Record<ExplainKind, string> = {
   function: "função",
   class: "classe",
   module: "código solto",
@@ -76,11 +80,15 @@ export async function explainNode(
   deps: ExplainDeps,
 ): Promise<ExplainResponse> {
   const { llm, cache } = deps;
+  // A step gets its own prompt and at most 2 sentences (VID-28).
+  const isStep = explainStyle(req.nodeKind) === "step";
+  const prompt = isStep ? deps.stepPrompt : deps.prompt;
+  const maxSentences = isStep ? STEP_SENTENCE_LIMIT : undefined;
   // The prompt gets exactly what the fingerprint covers (L-004).
   const code = normalizeCode(req.code);
   const calls = sorted(req.calls);
   const calledBy = sorted(req.calledBy);
-  const fp = fingerprintOf({ code, calls, calledBy }, deps);
+  const fp = fingerprintOf({ code, calls, calledBy }, { ...deps, prompt });
 
   const prev = await cache.get(req.nodeId);
   if (prev && diffReasons(prev.fingerprint, fp).length === 0) {
@@ -101,7 +109,12 @@ export async function explainNode(
         code,
         neighbours: [...calls, ...calledBy],
       },
-      { ...deps, llm },
+      {
+        ...deps,
+        llm,
+        prompt,
+        ...(maxSentences === undefined ? {} : { maxSentences }),
+      },
     );
   } catch (err) {
     return {

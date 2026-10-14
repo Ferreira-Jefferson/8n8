@@ -20,10 +20,12 @@ import {
   explainNode,
   type LlmClient,
 } from "../index";
+import { buildStepPrompt } from "../prompt";
 
 type LlmRequest = Parameters<LlmClient["complete"]>[0];
 
 const prompt = buildSystemPrompt("REGRAS PTS");
+const stepPrompt = buildStepPrompt("REGRAS PTS");
 const reviewer = buildReviewerPrompt();
 const MODEL = "~deepseek/deepseek-v4-flash-latest";
 
@@ -131,6 +133,7 @@ const deps = (
   model: MODEL,
   reviewModel: MODEL,
   prompt,
+  stepPrompt,
   reviewer,
   ...extra,
 });
@@ -456,5 +459,89 @@ describe("explainNode", () => {
       explanation: explained(2),
     });
     spy.mockRestore();
+  });
+});
+
+describe("explainNode for a step (VID-28)", () => {
+  const step = (overrides: Partial<ExplainRequest> = {}) =>
+    request({
+      nodeId: "fn:calcular_frete/s0",
+      nodeName: "requests.get",
+      nodeKind: "external",
+      calls: [],
+      calledBy: [],
+      ...overrides,
+    });
+
+  it("uses the step prompt and the kind label for a step, and the full prompt for a function", async () => {
+    const { llm, requests } = fakeLlm(ANSWER);
+    await explainNode(step(), deps(llm));
+    expect(requests[0]?.messages[0]).toEqual({
+      role: "system",
+      content: stepPrompt.text,
+    });
+    expect(requests[0]?.messages[1]?.content).toContain(
+      "Tipo: chamada externa",
+    );
+    await explainNode(request(), deps(llm));
+    expect(requests[2]?.messages[0]).toEqual({
+      role: "system",
+      content: prompt.text,
+    });
+    expect(requests[2]?.messages[1]?.content).toContain("Tipo: função");
+  });
+
+  it("keeps at most 2 sentences of a 3-sentence step draft", async () => {
+    const raw = JSON.stringify({
+      ...draft,
+      summary: `${SUMMARY} Lê \`peso\`. Devolve um valor.`,
+    });
+    const { llm } = fakeLlm(raw);
+    const res = await explainNode(step(), deps(llm));
+    expect(res).toMatchObject({
+      status: "ok",
+      review: "full",
+      explanation: {
+        summary: `${SUMMARY} Lê \`peso\`.`,
+        sentences: [
+          { id: "s1", text: SUMMARY, lines: [2] },
+          { id: "s2", text: "Lê `peso`.", lines: [2] },
+        ],
+      },
+    });
+  });
+
+  it("keeps all 3 sentences of a function draft", async () => {
+    const raw = JSON.stringify({
+      ...draft,
+      summary: `${SUMMARY} Lê \`peso\`. Devolve um valor.`,
+    });
+    const { llm } = fakeLlm(raw);
+    const res = await explainNode(request(), deps(llm));
+    expect(res.status === "ok" && res.explanation.sentences).toHaveLength(3);
+  });
+
+  it("caches a step with the step prompt version, reopens with 0 calls and updates on a new step prompt", async () => {
+    const { llm, requests } = fakeLlm(ANSWER);
+    await explainNode(step(), deps(llm));
+    const stored = JSON.parse(
+      await readFile(nodeFile("fn:calcular_frete/s0"), "utf8"),
+    );
+    expect(stored.fingerprint.promptVersion).toBe(stepPrompt.version);
+    expect(stepPrompt.version).not.toBe(prompt.version);
+
+    const again = await explainNode(step(), deps(llm));
+    expect(requests).toHaveLength(2);
+    expect(again).toMatchObject({ status: "ok", fromCache: true });
+
+    const res = await explainNode(
+      step(),
+      deps(llm, { stepPrompt: buildStepPrompt("OUTRAS REGRAS") }),
+    );
+    expect(requests).toHaveLength(4);
+    expect(res).toMatchObject({
+      fromCache: false,
+      update: ["model-or-prompt"],
+    });
   });
 });

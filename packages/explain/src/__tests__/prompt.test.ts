@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { buildSystemPrompt } from "../prompt";
+import { buildStepPrompt, buildSystemPrompt } from "../prompt";
 
 const ptsRules = readFileSync(
   new URL(
@@ -63,5 +63,39 @@ describe("buildSystemPrompt (CORE-16, CORE-18)", () => {
     // Version of the feature-01 prompt text for the same rules "regra A".
     const featureOneVersion = "05b31dfd312b";
     expect(buildSystemPrompt("regra A").version).not.toBe(featureOneVersion);
+  });
+});
+
+describe("buildStepPrompt (VID-28)", () => {
+  it("explains a step inside a function in one or two sentences", () => {
+    const { text } = buildStepPrompt(ptsRules);
+    expect(text).toContain("passo de dentro de uma função");
+    expect(text).toContain(
+      '"summary": resumo do que o passo faz, em uma ou duas frases.',
+    );
+    expect(text).not.toContain("uma a três frases");
+  });
+
+  it("keeps the backtick and number rules and the PTS rules", () => {
+    const { text } = buildStepPrompt(ptsRules);
+    expect(text).toContain(
+      "Cite entre crases cada identificador do código (variável, parâmetro, função, classe ou módulo), como `peso` ou `requests.get`.",
+    );
+    expect(text).toContain(
+      "Não escreva número nem unidade (como kg, %, R$ ou segundos) que não aparece no código.",
+    );
+    expect(text).toContain(ptsRules);
+  });
+
+  it("versions the text with 12 hex chars, apart from the full prompt", () => {
+    const { text, version } = buildStepPrompt(ptsRules);
+    expect(version).toMatch(/^[0-9a-f]{12}$/);
+    expect(version).toBe(
+      createHash("sha256").update(text).digest("hex").slice(0, 12),
+    );
+    expect(version).not.toBe(buildSystemPrompt(ptsRules).version);
+    expect(buildStepPrompt("regra A").version).not.toBe(
+      buildStepPrompt("regra B").version,
+    );
   });
 });

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import type { FlowNode, Graph } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
-import { buildGraph } from "../build-graph";
+import { type BuildOptions, buildGraph } from "../build-graph";
 import { loadPythonParser } from "../parse";
 
 const videoFixture = readFileSync(
@@ -9,11 +9,14 @@ const videoFixture = readFileSync(
   "utf8",
 );
 
-async function graphOf(source: string): Promise<Graph> {
+async function graphOf(
+  source: string,
+  options: BuildOptions = {},
+): Promise<Graph> {
   const parser = await loadPythonParser();
   const tree = parser.parse(source);
   if (!tree) throw new Error("parse failed");
-  return buildGraph(tree);
+  return buildGraph(tree, options);
 }
 
 const STRUCTURAL = new Set(["module", "function", "class"]);
@@ -224,5 +227,74 @@ describe("buildGraph: calls wires (CORE-02)", () => {
         (e) => e.kind === "calls" && e.source === "fn:calcular_frete",
       ),
     ).toEqual([]);
+  });
+});
+
+describe("buildGraph: calls to names the snippet does not define (VID-13)", () => {
+  const source = lines(
+    "def processar(p, x):",
+    "    validar_pedido(p)",
+    "    db.salvar(p)",
+    "    enviar_email(x)",
+    "    print(x)",
+    "    n = len(x)",
+  );
+
+  it("turns each call into an external step with its category", async () => {
+    const graph = await graphOf(source);
+
+    expect(
+      graph.nodes
+        .filter((n) => n.parentId === "fn:processar")
+        .map((n) => [n.id, n.kind, n.callee, n.category]),
+    ).toEqual([
+      ["fn:processar/s0", "external", "validar_pedido", "EXTERNO"],
+      ["fn:processar/s1", "external", "db.salvar", "BANCO"],
+      ["fn:processar/s2", "external", "enviar_email", "EMAIL"],
+      ["fn:processar/s3", "external", "print", "EXTERNO"],
+      ["fn:processar/s4", "external", "len", "EXTERNO"],
+    ]);
+  });
+
+  it("creates no calls wire for them", async () => {
+    const graph = await graphOf(source);
+
+    expect(callsIds(graph)).toEqual([]);
+  });
+
+  it("keeps a name defined in the snippet a call (CORE-02)", async () => {
+    const graph = await graphOf(
+      lines(
+        "def validar_pedido(p):",
+        "    pass",
+        "def f(p):",
+        "    validar_pedido(p)",
+      ),
+    );
+
+    expect(byId(graph, "fn:f/s0")).toMatchObject({
+      kind: "call",
+      target: "fn:validar_pedido",
+    });
+    expect(callsIds(graph)).toEqual(["calls:fn:f->fn:validar_pedido"]);
+  });
+
+  it("keeps a project name without an import an EXTERNO step with no wire (PROJ-09)", async () => {
+    const graph = await graphOf(lines("def f(p):", "    calcular_frete(p)"), {
+      projectNames: new Set(["calcular_frete"]),
+    });
+
+    expect(byId(graph, "fn:f/s0")).toMatchObject({
+      kind: "external",
+      callee: "calcular_frete",
+      category: "EXTERNO",
+    });
+    expect(callsIds(graph)).toEqual([]);
+  });
+
+  it("keeps a call on a chained receiver outside the table in the code step", async () => {
+    const graph = await graphOf(lines("def f(x):", "    foo().append(x)"));
+
+    expect(byId(graph, "fn:f/s0")).toMatchObject({ kind: "code" });
   });
 });
