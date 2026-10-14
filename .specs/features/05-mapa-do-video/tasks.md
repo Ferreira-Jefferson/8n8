@@ -547,10 +547,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `set` grava `<dir>/titles/<sha256(cacheKey)>.json` com `schemaVersion: 1`. `get` lê o arquivo de volta igual.
-- [ ] Um JSON inválido, `schemaVersion: 2` ou um campo faltando resultam em `undefined`, e o próximo `set` grava por cima.
-- [ ] Duas chaves (`fn:a` e `C:/x|fn:a`) dão dois arquivos.
-- [ ] Gate passa.
+- [x] `set` grava `<dir>/titles/<sha256(cacheKey)>.json` com `schemaVersion: 1`. `get` lê o arquivo de volta igual.
+- [x] Um JSON inválido, `schemaVersion: 2` ou um campo faltando resultam em `undefined`, e o próximo `set` grava por cima.
+- [x] Duas chaves (`fn:a` e `C:/x|fn:a`) dão dois arquivos.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
