@@ -12,6 +12,7 @@ const emptyGraph: Graph = {
 const app = createApp({
   extractor: { language: "python", extract: () => emptyGraph },
   explain: async () => ({ status: "no-key" }),
+  titles: async () => ({ status: "ok", titles: [] }),
   readProject: async () => ({ kind: "not-found" }),
   port: 4317,
 });

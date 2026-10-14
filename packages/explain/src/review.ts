@@ -9,7 +9,7 @@ import {
   reviewerMessage,
 } from "./reviewer";
 import { type Draft, parseExplanation } from "./schema";
-import { toClaims } from "./sentences";
+import { splitSentences, toClaims } from "./sentences";
 
 /** An explanation with every line RELATIVE to the node, as stored in the cache. */
 export type StoredExplanation = Explanation;
@@ -33,12 +33,14 @@ export interface ReviewDeps {
   reviewModel: string;
   prompt: { text: string };
   reviewer: { text: string };
+  /** When set, the summary keeps only its first sentences, before review (VID-28). */
+  maxSentences?: number;
 }
 
 /** The draft plus at most 2 new drafts (FID-08). */
 const ROUNDS = 3;
 
-const jsonMode = (model: string) =>
+export const jsonMode = (model: string) =>
   model.startsWith("google/") ? "prompt" : "native";
 
 /** Builds the stored explanation from the kept claims; ids keep their gaps (FID-09). */
@@ -69,7 +71,7 @@ export async function reviewedDraft(
   input: ReviewInput,
   deps: ReviewDeps,
 ): Promise<ReviewOutcome> {
-  const { llm, model, reviewModel, prompt, reviewer } = deps;
+  const { llm, model, reviewModel, prompt, reviewer, maxSentences } = deps;
   const lineCount = input.code.split("\n").length;
   const ctx = { code: input.code, neighbours: input.neighbours };
   const base: ChatMessage[] = [
@@ -80,7 +82,16 @@ export async function reviewedDraft(
 
   for (let round = 1; ; round++) {
     const raw = await llm.complete({ model, messages, json: jsonMode(model) });
-    const draft = parseExplanation(raw, lineCount);
+    const parsed = parseExplanation(raw, lineCount);
+    const draft =
+      maxSentences === undefined
+        ? parsed
+        : {
+            ...parsed,
+            summary: splitSentences(parsed.summary)
+              .slice(0, maxSentences)
+              .join(" "),
+          };
     const claims = toClaims(draft);
 
     const rejected = layerOne(claims, ctx);

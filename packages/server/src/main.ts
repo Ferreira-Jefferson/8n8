@@ -3,13 +3,18 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   buildReviewerPrompt,
+  buildStepPrompt,
   buildSystemPrompt,
+  buildTitlePrompt,
+  buildTitleReviewerPrompt,
   createDiskCache,
   createOpenRouterClient,
+  createTitleCache,
   explainNode,
   type LlmClient,
   resolveModel,
   resolveReviewModel,
+  titleNodes,
 } from "@code2n8n/explain";
 import { createPythonExtractor } from "@code2n8n/extract-python";
 import { type FolderRead, readSourceFolder } from "@code2n8n/input";
@@ -17,6 +22,8 @@ import type {
   ExplainRequest,
   ExplainResponse,
   ProjectExtractor,
+  TitleRequest,
+  TitlesResponse,
 } from "@code2n8n/model";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
@@ -46,9 +53,29 @@ export function composeExplain(
     model: resolveModel(env),
     reviewModel: resolveReviewModel(env),
     prompt: buildSystemPrompt(deps.ptsRules),
+    stepPrompt: buildStepPrompt(deps.ptsRules),
     reviewer: buildReviewerPrompt(),
   };
   return (req) => explainNode(req, explainDeps);
+}
+
+/** Wires titleNodes with the same key, base URL, model and cache folder rules as composeExplain; titles live in `<cache>/titles` (VID-14, VID-17). */
+export function composeTitles(
+  env: Record<string, string | undefined>,
+  deps: ComposeDeps,
+): (req: TitleRequest) => Promise<TitlesResponse> {
+  const apiKey = env.OPENROUTER_API_KEY;
+  const titleDeps = {
+    llm: apiKey
+      ? deps.createClient(apiKey, env.OPENROUTER_BASE_URL || undefined)
+      : undefined,
+    cache: createTitleCache(env.CODE2N8N_CACHE_DIR || deps.cacheDir),
+    model: resolveModel(env),
+    reviewModel: resolveReviewModel(env),
+    prompt: buildTitlePrompt(deps.ptsRules),
+    reviewer: buildTitleReviewerPrompt(),
+  };
+  return (req) => titleNodes(req, titleDeps);
 }
 
 /** Port from CODE2N8N_PORT when it is a valid port number, else 4317. */
@@ -92,13 +119,16 @@ async function main(): Promise<void> {
     "utf8",
   );
   const extractor = await createPythonExtractor();
+  const compose = {
+    createClient: (key: string, baseURL: string | undefined) =>
+      createOpenRouterClient(key, { baseURL }),
+    ptsRules,
+    cacheDir: join(repoRoot, ".cache/explain"),
+  };
   const app = createApp({
     extractor,
-    explain: composeExplain(process.env, {
-      createClient: (key, baseURL) => createOpenRouterClient(key, { baseURL }),
-      ptsRules,
-      cacheDir: join(repoRoot, ".cache/explain"),
-    }),
+    explain: composeExplain(process.env, compose),
+    titles: composeTitles(process.env, compose),
     readProject: composeReadProject(readSourceFolder, extractor),
     port,
   });

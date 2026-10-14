@@ -25,6 +25,7 @@ function setup(read: ProjectRead) {
       extract: () => response.graph,
     },
     explain: async () => ({ status: "no-key" }),
+    titles: async () => ({ status: "ok", titles: [] }),
     readProject: async (path) => {
       paths.push(path);
       return read;
@@ -106,6 +107,7 @@ function explainSetup(files: SourceFile[], root = WIN_ROOT) {
       received.push(req);
       return { status: "no-key" };
     },
+    titles: async () => ({ status: "ok", titles: [] }),
     readProject: async (path) =>
       path === root
         ? {
