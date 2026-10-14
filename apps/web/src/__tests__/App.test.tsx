@@ -319,7 +319,11 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     expect(
       await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
     ).toBeTruthy();
-    expect(screen.getByText("frete/calculo.py")).toBeTruthy();
+    expect(
+      screen.getByRole("heading", {
+        name: "CÓDIGO · frete/calculo.py, linhas 1 a 4",
+      }),
+    ).toBeTruthy();
     expect(screen.getByText("def calcular_frete(peso):")).toBeTruthy();
     expect(explainMock).toHaveBeenCalledWith(
       { root: lojaRoot },

@@ -1060,13 +1060,13 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um passo `external` pede `/api/explain`. Pasta e arquivo não pedem.
-- [ ] A ordem no DOM é: `h2`, "O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO", selo, resumo, "2 frases · voz ativa · um termo por conceito" (só passo), "CÓDIGO · trecho.py, linha 18" (ou "linhas X a Y") com o código numerado, "ENTRADA E SAÍDA".
-- [ ] A IO de `cep`/`uf` mostra "cep → uf", sem crases, e cada item mantém o botão de evidência. Sem entradas nem saídas, a seção não aparece (borda da VID-30).
-- [ ] Uma função não mostra a linha das regras. Ela mostra "Efeitos externos" com DISCO/E-MAIL e a lista "Sugestões".
-- [ ] `mark` com outro `nonce` marca a linha de novo (VID-33).
-- [ ] Os testes atuais de FID-09..14, CACHE-04 e CORE-14/19/20/24 continuam com a mesma intenção. Os títulos "Entradas" e "Saídas" viram a seção "ENTRADA E SAÍDA".
-- [ ] Gate passa.
+- [x] Um passo `external` pede `/api/explain`. Pasta e arquivo não pedem.
+- [x] A ordem no DOM é: `h2`, "O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO", selo, resumo, "2 frases · voz ativa · um termo por conceito" (só passo), "CÓDIGO · trecho.py, linha 18" (ou "linhas X a Y") com o código numerado, "ENTRADA E SAÍDA".
+- [x] A IO de `cep`/`uf` mostra "cep → uf", sem crases, e cada item mantém o botão de evidência. Sem entradas nem saídas, a seção não aparece (borda da VID-30).
+- [x] Uma função não mostra a linha das regras. Ela mostra "Efeitos externos" com DISCO/E-MAIL e a lista "Sugestões".
+- [x] `mark` com outro `nonce` marca a linha de novo (VID-33).
+- [x] Os testes atuais de FID-09..14, CACHE-04 e CORE-14/19/20/24 continuam com a mesma intenção. Os títulos "Entradas" e "Saídas" viram a seção "ENTRADA E SAÍDA".
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`

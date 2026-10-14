@@ -98,14 +98,28 @@ function itemTexts(list: HTMLElement) {
     .map((li) => li.querySelector("span")?.textContent);
 }
 
-/** The list right after a section heading ("Entradas", "Saídas"). */
-function listAfter(heading: string): HTMLElement {
-  const list = screen.getByRole("heading", {
-    name: heading,
-  }).nextElementSibling;
-  if (!(list instanceof HTMLElement))
-    throw new Error(`no list after ${heading}`);
-  return list;
+/** The text of the IO claims of one side, without their evidence buttons (VID-30). */
+function ioTexts(container: HTMLElement, side: "inputs" | "outputs") {
+  const io = container.querySelector(".io");
+  if (!io) throw new Error("no .io");
+  const arrow = io.querySelector(".arrow");
+  return [...io.querySelectorAll("[data-claim-id]")]
+    .filter((el) => {
+      const after =
+        arrow !== null &&
+        (arrow.compareDocumentPosition(el) &
+          Node.DOCUMENT_POSITION_FOLLOWING) !==
+          0;
+      return side === "outputs" ? after : !after;
+    })
+    .map((el) => el.firstChild?.textContent);
+}
+
+/** The IO line as read, without the evidence buttons (VID-30). */
+function ioLine(container: HTMLElement): string {
+  const io = container.querySelector(".io")?.cloneNode(true) as HTMLElement;
+  for (const b of io.querySelectorAll("button")) b.remove();
+  return io.textContent ?? "";
 }
 
 function marked(container: HTMLElement) {
@@ -127,7 +141,8 @@ function codeLines(container: HTMLElement) {
 }
 
 describe("DetailPanel", () => {
-  it("shows the line range and exact code of an external node without fetching (CORE-14)", () => {
+  it("shows the code heading and exact code of an external node and asks for its summary (CORE-14, VID-28)", async () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
     const { container } = render(
       <DetailPanel
         source={source}
@@ -137,16 +152,22 @@ describe("DetailPanel", () => {
         onExplained={() => {}}
       />,
     );
-    expect(screen.getByText("Linhas 5–5")).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "CÓDIGO · trecho.py, linha 5" }),
+    ).toBeTruthy();
     expect(codeLines(container)).toEqual([
       '    requests.get("https://api.exemplo.com/tabela-frete")',
     ]);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(
+      await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
+    ).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith({ source }, "fn:calcular_frete/s0");
   });
 
   it("fetches once for a function and shows summary, inputs, outputs and suggestions (CORE-16)", async () => {
     fetchMock.mockResolvedValue(ok);
-    render(
+    const { container } = render(
       <DetailPanel
         source={source}
         origin={{ source }}
@@ -161,8 +182,8 @@ describe("DetailPanel", () => {
       "Calcula o frete pelo peso e pela distância.",
       "Dobra a taxa acima de 30.",
     ]);
-    expect(itemTexts(listAfter("Entradas"))).toEqual(["peso", "distancia"]);
-    expect(itemTexts(listAfter("Saídas"))).toEqual(["valor do frete"]);
+    expect(ioTexts(container, "inputs")).toEqual(["peso", "distancia"]);
+    expect(ioTexts(container, "outputs")).toEqual(["valor do frete"]);
     expect(
       screen.getByText("Defina um timeout na chamada HTTP (linha 5, alta)"),
     ).toBeTruthy();
@@ -492,6 +513,7 @@ describe("DetailPanel", () => {
   });
 
   it("shows no effects section for an external node (FID-14)", () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
     render(
       <DetailPanel
         source={source}
@@ -503,6 +525,162 @@ describe("DetailPanel", () => {
     );
     expect(screen.queryByText("Efeitos externos")).toBeNull();
     expect(screen.queryByText("Nenhum efeito externo.")).toBeNull();
+  });
+});
+
+describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
+  const stepExplanation: Explanation = {
+    summary:
+      "A função consulta uma API externa com o CEP. A função retorna a UF.",
+    sentences: [
+      {
+        id: "s1",
+        text: "A função consulta uma API externa com o CEP.",
+        lines: [5],
+      },
+      { id: "s2", text: "A função retorna a UF.", lines: [5] },
+    ],
+    inputs: [{ id: "i1", text: "`cep`", lines: [5] }],
+    outputs: [{ id: "o1", text: "`uf`", lines: [5] }],
+    suggestions: [],
+  };
+  const stepOk: ExplainResult = {
+    status: "ok",
+    explanation: stepExplanation,
+    fromCache: false,
+    review: "full",
+  };
+
+  function renderStep(result: ExplainResult, node: FlowNode = httpNode) {
+    fetchMock.mockResolvedValue(result);
+    return render(
+      <DetailPanel
+        source={source}
+        origin={{ source }}
+        node={node}
+        title="Buscar UF pelo CEP"
+        effects={[]}
+        onExplained={() => {}}
+      />,
+    );
+  }
+
+  it("orders a step's panel: title, eyebrow, badge, summary, rules, code, input and output", async () => {
+    const { container } = renderStep(stepOk);
+    await screen.findByRole("list", { name: "Resumo" });
+    const aside = screen.getByRole("complementary", { name: "Detalhe do nó" });
+    const parts = [
+      screen.getByRole("heading", { level: 2, name: "Buscar UF pelo CEP" }),
+      screen.getByText("O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO"),
+      screen.getByText("Revisado"),
+      screen.getByRole("list", { name: "Resumo" }),
+      screen.getByText("2 frases · voz ativa · um termo por conceito"),
+      screen.getByRole("heading", { name: "CÓDIGO · trecho.py, linha 5" }),
+      container.querySelector("pre"),
+      screen.getByRole("heading", { name: "ENTRADA E SAÍDA" }),
+      screen.getByLabelText("Entrada e saída"),
+    ];
+    const order = [...aside.querySelectorAll("*")];
+    const positions = parts.map((el) => order.indexOf(el as Element));
+    expect(positions.every((p) => p >= 0)).toBe(true);
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+    expect(
+      screen.getByText("O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO").className,
+    ).toBe("eyebrow");
+    expect(
+      screen.getByText("2 frases · voz ativa · um termo por conceito")
+        .className,
+    ).toBe("rules");
+  });
+
+  it("shows cep → uf without backticks and keeps each item's evidence button", async () => {
+    const { container } = renderStep(stepOk);
+    await screen.findByLabelText("Entrada e saída");
+    expect(ioLine(container)).toBe("cep → uf");
+    expect(container.querySelector(".io .arrow")?.textContent).toBe("→");
+    fireEvent.click(
+      within(claimItem(container, "o1")).getByRole("button", { name: "L5" }),
+    );
+    expect(marked(container)).toEqual(["5"]);
+  });
+
+  it("leaves out ENTRADA E SAÍDA when there are no inputs nor outputs", async () => {
+    renderStep({
+      ...stepOk,
+      explanation: { ...stepExplanation, inputs: [], outputs: [] },
+    } as ExplainResult);
+    await screen.findByRole("list", { name: "Resumo" });
+    expect(screen.queryByText("ENTRADA E SAÍDA")).toBeNull();
+    expect(screen.queryByLabelText("Entrada e saída")).toBeNull();
+  });
+
+  it("shows a function without the rules line, with DISCO and E-MAIL effects and the suggestions", async () => {
+    fetchMock.mockResolvedValue(ok);
+    render(
+      <DetailPanel
+        source={source}
+        origin={{ source }}
+        node={fnNode}
+        effects={[
+          { callee: "open", category: "ARQUIVO", line: 6 },
+          { callee: "enviar_email", category: "EMAIL", line: 7 },
+        ]}
+        onExplained={() => {}}
+      />,
+    );
+    await screen.findByRole("list", { name: "Resumo" });
+    expect(
+      screen.queryByText("2 frases · voz ativa · um termo por conceito"),
+    ).toBeNull();
+    expect(
+      screen.getByRole("heading", {
+        name: "CÓDIGO · trecho.py, linhas 4 a 11",
+      }),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByRole("list", { name: "Efeitos externos" }))
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual(["open (DISCO, linha 6)", "enviar_email (E-MAIL, linha 7)"]);
+    expect(screen.getByRole("heading", { name: "Sugestões" })).toBeTruthy();
+  });
+
+  it("shows the provisional name without a title (VID-15)", () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
+    render(
+      <DetailPanel
+        source={source}
+        origin={{ source }}
+        node={fnNode}
+        effects={[]}
+        onExplained={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Calcular frete" }),
+    ).toBeTruthy();
+  });
+
+  it("marks the line of mark, and marks it again with a new nonce", async () => {
+    fetchMock.mockResolvedValue(ok);
+    const props = {
+      source,
+      origin: { source },
+      node: fnNode,
+      effects: [],
+      onExplained: () => {},
+    };
+    const { container, rerender } = render(
+      <DetailPanel {...props} mark={{ line: 5, nonce: 1 }} />,
+    );
+    await screen.findByRole("list", { name: "Resumo" });
+    expect(marked(container)).toEqual(["5"]);
+    fireEvent.click(
+      within(claimItem(container, "s1")).getByRole("button", { name: "L4" }),
+    );
+    expect(marked(container)).toEqual(["4"]);
+    rerender(<DetailPanel {...props} mark={{ line: 5, nonce: 2 }} />);
+    expect(marked(container)).toEqual(["5"]);
   });
 });
 
@@ -555,7 +733,7 @@ describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("shows the file path above the lines of a project function and explains it by root", async () => {
+  it("names the file and the lines of a project function above its code and explains it by root", async () => {
     fetchMock.mockResolvedValue({ status: "no-key" });
     const { container } = render(
       <DetailPanel
@@ -570,10 +748,10 @@ describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
     expect(
       await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
     ).toBeTruthy();
-    const path = screen.getByText("frete/calculo.py");
-    const lines = screen.getByText("Linhas 1–4");
     expect(
-      path.compareDocumentPosition(lines) & Node.DOCUMENT_POSITION_FOLLOWING,
+      screen.getByRole("heading", {
+        name: "CÓDIGO · frete/calculo.py, linhas 1 a 4",
+      }),
     ).toBeTruthy();
     expect(codeLines(container)[0]).toBe("def calcular_frete(peso):");
     expect(fetchMock).toHaveBeenCalledTimes(1);
