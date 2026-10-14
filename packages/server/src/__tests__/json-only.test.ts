@@ -17,6 +17,7 @@ function setup() {
       calls.explain++;
       return { status: "no-key" };
     },
+    titles: async () => ({ status: "ok", titles: [] }),
     readProject: async () => {
       calls.readProject++;
       return { kind: "not-found" };

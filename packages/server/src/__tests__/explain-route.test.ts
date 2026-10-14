@@ -22,6 +22,7 @@ function setup(reply: ExplainResponse) {
       received.push(req);
       return reply;
     },
+    titles: async () => ({ status: "ok", titles: [] }),
     readProject: async () => ({ kind: "not-found" }),
     port: 4317,
   });
@@ -189,6 +190,7 @@ describe("POST /api/explain", () => {
         received.push(req);
         return okReply;
       },
+      titles: async () => ({ status: "ok", titles: [] }),
       readProject: async (path) => ({
         kind: "ok",
         root: path,

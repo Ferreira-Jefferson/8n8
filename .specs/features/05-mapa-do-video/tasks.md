@@ -631,12 +631,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Trecho: `{ source, nodeIds: ["fn:calcular_frete", "fn:calcular_frete/s0"] }` → `deps.titles` recebe 2 itens com `cacheKey === nodeId`, `kind`, `name`, `code`, `range` e vizinhos. A rota responde 200 com o retorno de `deps.titles`.
-- [ ] Projeto: `cacheKey` é `<raiz real POSIX>|<nodeId>`, e IDs `dir:`/`file:` ficam de fora.
-- [ ] Um ID desconhecido ou repetido é descartado. Sem item, a resposta é `{ status: "ok", titles: [] }` e `deps.titles` não é chamado.
-- [ ] `no-key` e `error` respondem 200. Corpo inválido e mais de 200 IDs respondem 400. Pasta ausente responde 404. Um `content-type` diferente de JSON responde 415. Um Host de fora responde 403.
-- [ ] Os `setup` dos testes atuais ganham `titles` (falso). Nenhuma asserção muda.
-- [ ] Gate passa.
+- [x] Trecho: `{ source, nodeIds: ["fn:calcular_frete", "fn:calcular_frete/s0"] }` → `deps.titles` recebe 2 itens com `cacheKey === nodeId`, `kind`, `name`, `code`, `range` e vizinhos. A rota responde 200 com o retorno de `deps.titles`.
+- [x] Projeto: `cacheKey` é `<raiz real POSIX>|<nodeId>`, e IDs `dir:`/`file:` ficam de fora.
+- [x] Um ID desconhecido ou repetido é descartado. Sem item, a resposta é `{ status: "ok", titles: [] }` e `deps.titles` não é chamado.
+- [x] `no-key` e `error` respondem 200. Corpo inválido e mais de 200 IDs respondem 400. Pasta ausente responde 404. Um `content-type` diferente de JSON responde 415. Um Host de fora responde 403.
+- [x] Os `setup` dos testes atuais ganham `titles` (falso). Nenhuma asserção muda.
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`

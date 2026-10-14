@@ -310,6 +310,7 @@ describe("composeReadProject", () => {
         received.push(r);
         return { status: "no-key" };
       },
+      titles: async () => ({ status: "ok", titles: [] }),
       readProject,
       port: 4317,
     });
@@ -358,6 +359,7 @@ describe("composeReadProject", () => {
         { OPENROUTER_API_KEY: "k" },
         { createClient: f.createClient, ptsRules, cacheDir: cache },
       ),
+      titles: async () => ({ status: "ok", titles: [] }),
       readProject,
       port: 4317,
     });

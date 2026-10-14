@@ -7,6 +7,9 @@ import {
   type Graph,
   type ProjectResponse,
   sliceLines,
+  type TitleItem,
+  type TitleRequest,
+  type TitlesResponse,
 } from "@code2n8n/model";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -18,6 +21,7 @@ export type ProjectRead =
 export interface AppDeps {
   extractor: Extractor;
   explain: (req: ExplainRequest) => Promise<ExplainResponse>;
+  titles: (req: TitleRequest) => Promise<TitlesResponse>;
   readProject: (path: string) => Promise<ProjectRead>;
   port: number;
 }
@@ -30,6 +34,9 @@ const projectExplainBody = z.object({
   nodeId: z.string(),
 });
 const explainBody = z.object({ source: z.string(), nodeId: z.string() });
+const nodeIds = z.array(z.string()).max(200);
+const projectTitlesBody = z.object({ root: z.string().min(1), nodeIds });
+const titlesBody = z.object({ source: z.string(), nodeIds });
 
 /** The graph a request talks about, re-extracted on the server (AD-015). */
 interface Origin {
@@ -173,6 +180,47 @@ export function createApp(deps: AppDeps): Hono {
     const result = await deps.explain(request);
     // unfaithful is an answer, not a failure: 200 like ok and no-key (FID-10).
     return c.json(result, result.status === "error" ? 502 : 200);
+  });
+
+  app.post("/api/titles", async (c) => {
+    const raw = await c.req.json().catch(() => null);
+    const project = projectTitlesBody.safeParse(raw);
+    const snippet = titlesBody.safeParse(raw);
+    const body = project.success
+      ? project.data
+      : snippet.success
+        ? snippet.data
+        : null;
+    if (!body) return c.json({ error: "invalid body" }, 400);
+
+    const origin = await loadOrigin(body, deps);
+    if ("notFound" in origin) {
+      return c.json({ error: "not-found", path: origin.notFound }, 404);
+    }
+    const { graph, codeOf, nameOf, idPrefix } = origin;
+    const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+    // Each id once, in the order received; unknown, folder and file ids are dropped.
+    const items: TitleItem[] = [...new Set(body.nodeIds)].flatMap((id) => {
+      const node = byId.get(id);
+      if (!node || node.kind === "folder" || node.kind === "file") return [];
+      return [
+        {
+          nodeId: node.id,
+          cacheKey: `${idPrefix}${node.id}`,
+          kind: node.kind,
+          name: node.label,
+          code: codeOf(node),
+          range: node.range,
+          ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+        },
+      ];
+    });
+    if (items.length === 0) {
+      const empty: TitlesResponse = { status: "ok", titles: [] };
+      return c.json(empty);
+    }
+    // A title is best effort: the web always has the provisional name, so every status is 200.
+    return c.json(await deps.titles({ items }));
   });
 
   return app;

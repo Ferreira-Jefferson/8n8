@@ -20,6 +20,7 @@ const app = createApp({
     explainCalls.push(req);
     return { status: "no-key" };
   },
+  titles: async () => ({ status: "ok", titles: [] }),
   readProject: async () => ({ kind: "not-found" }),
   port: 4317,
 });
