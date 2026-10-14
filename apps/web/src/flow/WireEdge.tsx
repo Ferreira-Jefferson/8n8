@@ -8,6 +8,8 @@ export interface WireData extends Record<string, unknown> {
   pulseAt: number;
   /** Less motion: no pulse (VID-07). */
   reduced: boolean;
+  /** The wire goes to a later band of a wrapped level and turns at this y (VID-10, 23). */
+  turnY?: number | undefined;
 }
 
 export type WireFlowEdge = Edge<WireData, "wire">;
@@ -34,6 +36,40 @@ export function branchLabelAt(
   return { x: targetX, y: above ? targetY - half : targetY + half, above };
 }
 
+/** How far a turning wire runs out of a port before it bends. */
+const TURN_OUT = 24;
+const TURN_R = 20;
+
+/**
+ * The path of a wire into a later band of a wrapped level: out to the right,
+ * down to `mid` in the gap between the bands, across to just before the
+ * target, and down into its port (VID-10, 23).
+ */
+export function turnPath(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  mid: number,
+) {
+  const r = TURN_R;
+  const right = x1 + TURN_OUT;
+  const left = x2 - TURN_OUT;
+  const dir = left < right ? -1 : 1;
+  return [
+    `M ${x1} ${y1}`,
+    `H ${right - r}`,
+    `Q ${right} ${y1}, ${right} ${y1 + r}`,
+    `V ${mid - r}`,
+    `Q ${right} ${mid}, ${right + dir * r} ${mid}`,
+    `H ${left - dir * r}`,
+    `Q ${left} ${mid}, ${left} ${mid + r}`,
+    `V ${y2 - r}`,
+    `Q ${left} ${y2}, ${left + r} ${y2}`,
+    `H ${x2}`,
+  ].join(" ");
+}
+
 /** A lime curve that draws itself, carries one pulse and a "sim"/"não" label (VID-05, 06, 07, 21). */
 export function WireEdge({
   sourceX,
@@ -56,7 +92,10 @@ export function WireEdge({
     targetX,
     targetY,
   ];
-  const d = `M ${w[0]} ${w[1]} C ${w[2]} ${w[3]}, ${w[4]} ${w[5]}, ${w[6]} ${w[7]}`;
+  const d =
+    data?.turnY !== undefined
+      ? turnPath(sourceX, sourceY, targetX, targetY, data.turnY)
+      : `M ${w[0]} ${w[1]} C ${w[2]} ${w[3]}, ${w[4]} ${w[5]}, ${w[6]} ${w[7]}`;
   const drawAt = data?.drawAt ?? 0;
   const pulseAt = data?.pulseAt ?? 0;
   const spot = branchLabelAt(sourceY, targetX, targetY);

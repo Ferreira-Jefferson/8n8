@@ -92,6 +92,20 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
     ]);
   });
 
+  it("gives a wire into a later band of a wrapped level its turnY (VID-10)", () => {
+    const edges: FlowEdge[] = [
+      { id: "ab", kind: "next", source: "a", target: "b" },
+      { id: "bc", kind: "next", source: "b", target: "c" },
+    ];
+    const times: Schedule = {
+      enterAt: new Map(),
+      drawAt: new Map(),
+      pulseAt: new Map(),
+    };
+    const out = toFlowEdges(edges, times, false, new Map([["bc", 180]]));
+    expect(out.map((e) => e.data?.turnY)).toEqual([undefined, 180]);
+  });
+
   it("passes reduced to every wire (VID-07)", () => {
     const edges: FlowEdge[] = [
       { id: "n", kind: "next", source: "a", target: "b" },

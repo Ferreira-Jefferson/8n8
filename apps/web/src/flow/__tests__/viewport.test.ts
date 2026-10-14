@@ -1,12 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { layoutRows } from "../layout";
 import {
+  layoutLR,
+  layoutRows,
+  NODE_WIDTH,
+  wrapColumns,
+  wrapRows,
+} from "../layout";
+import { projectLevel } from "../project-level";
+import {
+  chooseWrap,
+  FIT_PAD,
+  fitViewport,
+  fitZoom,
+  LEGIBLE_ZOOM,
+  levelViewport,
   MIN_START_ZOOM,
   revealViewport,
   SIDE_PAD,
   startViewport,
   TOP_PAD,
 } from "../viewport";
+import { videoGraph } from "./video-graph";
 
 const row = (n: number) =>
   layoutRows([Array.from({ length: n }, (_, i) => `n${i}`)]);
@@ -79,5 +93,144 @@ describe("revealViewport (VID-22, VID-25)", () => {
   it("brings back a card hidden above or below the canvas", () => {
     const next = revealViewport(v, { x: 0, y: 1000 }, 1600, 900);
     expect(next).toEqual({ x: 40, y: (900 - 112) / 2 - 800, zoom: 0.8 });
+  });
+});
+
+const eight = [Array.from({ length: 8 }, (_, i) => `n${i}`)];
+
+/** Every card of `positions` inside the canvas, below the header, seen through `v`. */
+function allInside(
+  positions: ReturnType<typeof layoutRows>,
+  v: { x: number; y: number; zoom: number },
+  width: number,
+  height: number,
+) {
+  return [...positions.values()].every(
+    (p) =>
+      p.x * v.zoom + v.x >= 0 &&
+      (p.x + NODE_WIDTH) * v.zoom + v.x <= width &&
+      p.y * v.zoom + v.y >= TOP_PAD - 1e-9 &&
+      (p.y + 140) * v.zoom + v.y <= height,
+  );
+}
+
+describe("chooseWrap (VID-03, VID-10, VID-23)", () => {
+  const main = (k: number) => layoutRows(wrapRows(eight, k));
+
+  it("wraps the 8-card main flow into rows of 5 and 3 at 1600x900, like the video's 5 cards", () => {
+    expect(chooseWrap(8, main, 1600, 900)).toBe(5);
+    expect(fitZoom(main(5), 1600, 900)).toBeGreaterThanOrEqual(MIN_START_ZOOM);
+  });
+
+  it("wraps into rows of 4 at 1366x768, above 0.8", () => {
+    expect(chooseWrap(8, main, 1366, 768)).toBe(4);
+    expect(fitZoom(main(4), 1366, 768)).toBeGreaterThan(MIN_START_ZOOM);
+  });
+
+  it("takes the largest zoom when no row length reaches 0.8: rows of 3 beside the panel at 1366x768", () => {
+    // The canvas beside the panel is about 940 px wide.
+    expect(chooseWrap(8, main, 940, 768)).toBe(3);
+    const z = fitZoom(main(3), 940, 768);
+    expect(z).toBeLessThan(MIN_START_ZOOM);
+    expect(z).toBeGreaterThanOrEqual(LEGIBLE_ZOOM);
+  });
+
+  it("keeps a level that fits whole at a legible zoom: calcular_frete beside the panel", () => {
+    const C = "fn:calcular_frete";
+    const level = projectLevel(videoGraph, C);
+    const lr = layoutLR(level.nodes, level.edges, C);
+    const cols = (k: number) => wrapColumns(lr, k).positions;
+    expect(chooseWrap(4, cols, 940, 768)).toBeNull();
+    expect(chooseWrap(4, cols, 1100, 900)).toBeNull();
+  });
+
+  it("wraps the 8 steps inside processar_pedido into bands of 3 beside the panel", () => {
+    const P = "fn:processar_pedido";
+    const level = projectLevel(videoGraph, P);
+    const lr = layoutLR(level.nodes, level.edges, P);
+    const cols = (k: number) => wrapColumns(lr, k).positions;
+    expect(chooseWrap(8, cols, 1100, 900)).toBe(3);
+    expect(chooseWrap(8, cols, 940, 768)).toBe(3);
+    expect(fitZoom(cols(3), 940, 768)).toBeGreaterThanOrEqual(MIN_START_ZOOM);
+  });
+
+  it("returns null when nothing is legible, before the canvas has a size, or for one column", () => {
+    expect(chooseWrap(8, main, 100, 100)).toBeNull();
+    expect(chooseWrap(8, main, 0, 0)).toBeNull();
+    expect(chooseWrap(1, main, 1600, 900)).toBeNull();
+  });
+});
+
+describe("fitViewport (VID-03, VID-23, VID-25, VID-27)", () => {
+  it("shows every card of the wrapped main flow, centered in the free area", () => {
+    const pos = layoutRows(wrapRows(eight, 4));
+    const v = fitViewport(pos, 1600, 900);
+    expect(v).not.toBeNull();
+    if (!v) return;
+    expect(v.zoom).toBe(1);
+    // 1460 wide, 540 tall (rows from -90 to 450).
+    expect(v.x).toBe(FIT_PAD + (1600 - 2 * FIT_PAD - 1460) / 2);
+    expect(v.y).toBe(TOP_PAD + (900 - TOP_PAD - FIT_PAD - 540) / 2 + 90);
+    expect(allInside(pos, v, 1600, 900)).toBe(true);
+  });
+
+  it("shows all of calcular_frete beside the panel at 1366x768 and 1600x900", () => {
+    const C = "fn:calcular_frete";
+    const level = projectLevel(videoGraph, C);
+    const pos = layoutLR(level.nodes, level.edges, C);
+    for (const [w, h] of [
+      [940, 768],
+      [1100, 900],
+    ] as const) {
+      const v = fitViewport(pos, w, h);
+      expect(v?.zoom).toBeGreaterThanOrEqual(LEGIBLE_ZOOM);
+      expect(v && allInside(pos, v, w, h)).toBe(true);
+    }
+  });
+
+  it("returns null when the whole level would be below the legible zoom", () => {
+    expect(fitViewport(layoutRows(eight), 1600, 900)).toBeNull();
+    expect(fitViewport(new Map(), 1600, 900)).toBeNull();
+  });
+
+  it("moves the focus card toward the middle as far as every card stays in view", () => {
+    const pos = layoutRows([["a", "b"]]);
+    const plain = fitViewport(pos, 1600, 900);
+    const focused = fitViewport(pos, 1600, 900, pos.get("b"));
+    // The center of b goes to the middle: 800 - (380 + 160) = 260.
+    expect(focused?.x).toBe(260);
+    expect(focused?.x).not.toBe(plain?.x);
+    expect(focused && allInside(pos, focused, 1600, 900)).toBe(true);
+  });
+
+  it("stops at the edge: a focus card at the end of a full row keeps the row in view", () => {
+    const pos = layoutRows(wrapRows(eight, 4));
+    const v = fitViewport(pos, 1600, 900, pos.get("n3"));
+    // n3 wants the level 600 px to the left, but its first card stops at FIT_PAD.
+    expect(v?.x).toBe(FIT_PAD);
+    expect(v && allInside(pos, v, 1600, 900)).toBe(true);
+  });
+});
+
+describe("levelViewport (VID-03, VID-27)", () => {
+  it("fits the whole level when it is legible", () => {
+    const pos = layoutRows(wrapRows(eight, 4));
+    expect(levelViewport(pos, 1600, 900)).toEqual(fitViewport(pos, 1600, 900));
+  });
+
+  it("falls back to startViewport for a level that is too big", () => {
+    const pos = layoutRows(eight);
+    expect(levelViewport(pos, 1600, 900)).toEqual(
+      startViewport(pos, 1600, 900),
+    );
+  });
+
+  it("centers the focus card at zoom 1 when the level is too big", () => {
+    const pos = layoutRows(eight);
+    expect(levelViewport(pos, 1600, 900, { x: 760, y: 0 })).toEqual({
+      x: (1600 - 320) / 2 - 760,
+      y: (900 - 140) / 2,
+      zoom: 1,
+    });
   });
 });

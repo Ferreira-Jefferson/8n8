@@ -15,6 +15,7 @@ import "@xyflow/react/dist/style.css";
 import {
   type CSSProperties,
   type MouseEvent,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -22,13 +23,21 @@ import {
 } from "react";
 import { panelNodeOf } from "../nav/navigation";
 import { isOpenable } from "./card";
-import { layoutLR, layoutRows, type Position } from "./layout";
+import {
+  type Bands,
+  layoutLR,
+  layoutRows,
+  type Position,
+  rowBands,
+  wrapColumns,
+  wrapRows,
+} from "./layout";
 import { type Schedule, schedule } from "./motion";
 import { projectLevel } from "./project-level";
 import { type StepFlowNode, StepNode } from "./StepNode";
 import { SuggestionCard } from "./SuggestionCard";
 import { highlighted, suggestionCards } from "./suggestion-cards";
-import { revealViewport, startViewport } from "./viewport";
+import { chooseWrap, levelViewport, revealViewport } from "./viewport";
 import { WireEdge, type WireFlowEdge } from "./WireEdge";
 
 export interface FlowCanvasProps {
@@ -75,35 +84,62 @@ function prefersReducedMotion(): boolean {
   );
 }
 
-/** Sets the first view of a level once the canvas has a size (VID-03, 10). */
-function StartView({ positions }: { positions: Map<NodeId, Position> }) {
-  const { setViewport } = useReactFlow();
+interface Size {
+  width: number;
+  height: number;
+}
+
+/** Hands the canvas size that React Flow measured up to `FlowCanvas`. */
+function MeasureCanvas({ onSize }: { onSize: (size: Size) => void }) {
   const width = useStore((s) => s.width);
   const height = useStore((s) => s.height);
+  useEffect(() => {
+    onSize({ width, height });
+  }, [width, height, onSize]);
+  return null;
+}
+
+/**
+ * Sets the first view of a level once the canvas has a size: the whole level
+ * when it is legible, with the `focus` card as near the middle as it can be
+ * (VID-03, 10, 27).
+ */
+function StartView({
+  positions,
+  size,
+  focus,
+}: {
+  positions: Map<NodeId, Position>;
+  size: Size;
+  focus: NodeId | null;
+}) {
+  const { setViewport } = useReactFlow();
   const done = useRef(false);
   useEffect(() => {
-    if (done.current || width === 0 || height === 0) return;
+    if (done.current || size.width === 0 || size.height === 0) return;
     done.current = true;
-    setViewport(startViewport(positions, width, height));
-  }, [positions, width, height, setViewport]);
+    const p = focus === null ? undefined : positions.get(focus);
+    setViewport(levelViewport(positions, size.width, size.height, p));
+  }, [positions, size, focus, setViewport]);
   return null;
 }
 
 /**
  * Brings the selected card back into view when the selection changes or the
  * canvas narrows for the panel, at the same zoom (VID-22, 25). The first view
- * of a level stays with `StartView` or `fitView`.
+ * of a level stays with `StartView`.
  */
 function KeepInView({
   selected,
   positions,
+  size,
 }: {
   selected: NodeId | null;
   positions: Map<NodeId, Position>;
+  size: Size;
 }) {
   const { getViewport, setViewport } = useReactFlow();
-  const width = useStore((s) => s.width);
-  const height = useStore((s) => s.height);
+  const { width, height } = size;
   const seen = useRef<{ selected: NodeId | null; width: number } | null>(null);
   useEffect(() => {
     if (width === 0 || height === 0) return;
@@ -124,6 +160,7 @@ export function toFlowEdges(
   edges: FlowEdge[],
   times: Schedule,
   reduced: boolean,
+  turnY: ReadonlyMap<string, number> = new Map(),
 ): WireFlowEdge[] {
   return edges.map((e) => ({
     id: e.id,
@@ -134,6 +171,7 @@ export function toFlowEdges(
       drawAt: times.drawAt.get(e.id) ?? 0,
       pulseAt: times.pulseAt.get(e.id) ?? 0,
       reduced,
+      ...(turnY.has(e.id) ? { turnY: turnY.get(e.id) } : {}),
     },
     ...(e.label === undefined ? {} : { label: e.label }),
     ...(e.kind === "imports" ? { className: "edge-imports" } : {}),
@@ -158,6 +196,14 @@ export function FlowCanvas({
   const box = useRef<HTMLDivElement>(null);
   const timer = useRef<number | undefined>(undefined);
   const [frame, setFrame] = useState<Rect | null>(null);
+  const [size, setSize] = useState<Size>({ width: 0, height: 0 });
+  const onSize = useCallback(
+    (next: Size) =>
+      setSize((prev) =>
+        prev.width === next.width && prev.height === next.height ? prev : next,
+      ),
+    [],
+  );
   const expanding = frame !== null;
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -165,10 +211,43 @@ export function FlowCanvas({
   const { nodes, edges, cards, positions } = useMemo(() => {
     const reduced = prefersReducedMotion();
     const level = projectLevel(graph, levelId);
-    const positions = level.rows
-      ? layoutRows(level.rows)
-      : layoutLR(level.nodes, level.edges, levelId);
-    const times = schedule(level.nodes, level.edges, positions, reduced);
+    // A level too long for the canvas wraps into more rows, so every card
+    // shows. The entrance order keeps the unwrapped layout (VID-10, 23).
+    const { width, height } = size;
+    let order: Map<NodeId, Position>;
+    let bands: Bands;
+    if (level.rows) {
+      const rows = level.rows;
+      order = layoutRows(rows);
+      const longest = Math.max(0, ...rows.map((r) => r.length));
+      const n = chooseWrap(
+        longest,
+        (k) => layoutRows(wrapRows(rows, k)),
+        width,
+        height,
+      );
+      bands = rowBands(wrapRows(rows, n ?? longest));
+    } else {
+      order = layoutLR(level.nodes, level.edges, levelId);
+      const lr = order;
+      const columns = new Set([...lr.values()].map((p) => p.x)).size;
+      const n = chooseWrap(
+        columns,
+        (k) => wrapColumns(lr, k).positions,
+        width,
+        height,
+      );
+      bands = wrapColumns(lr, n ?? columns);
+    }
+    const positions = bands.positions;
+    const times = schedule(level.nodes, level.edges, order, reduced);
+    const turnY = new Map<string, number>();
+    for (const e of level.edges) {
+      const from = bands.band.get(e.source) ?? 0;
+      const to = bands.band.get(e.target) ?? 0;
+      const y = bands.gapAbove[to];
+      if (to > from && y !== undefined) turnY.set(e.id, y);
+    }
     const cards = suggestionCards(level, explanations, levelId, panelNodeOf);
     const lit = highlighted(cards);
     const sources = new Set(level.edges.map((e) => e.source));
@@ -192,7 +271,7 @@ export function FlowCanvas({
     }));
     return {
       nodes,
-      edges: toFlowEdges(level.edges, times, reduced),
+      edges: toFlowEdges(level.edges, times, reduced, turnY),
       cards,
       positions,
     };
@@ -204,6 +283,7 @@ export function FlowCanvas({
     codeLineOf,
     explanations,
     suggestionCounts,
+    size,
   ]);
 
   function open(node: FlowNode, card: Element) {
@@ -279,20 +359,11 @@ export function FlowCanvas({
         nodesConnectable={false}
         zoomOnDoubleClick={false}
         minZoom={0.2}
-        fitView={focusId !== null}
-        {...(focusId === null
-          ? {}
-          : {
-              fitViewOptions: {
-                nodes: [{ id: focusId }],
-                maxZoom: 1,
-                duration: 0,
-              },
-            })}
         proOptions={{ hideAttribution: true }}
       >
-        {focusId === null && <StartView positions={positions} />}
-        <KeepInView selected={selected} positions={positions} />
+        <MeasureCanvas onSize={onSize} />
+        <StartView positions={positions} size={size} focus={focusId} />
+        <KeepInView selected={selected} positions={positions} size={size} />
         <ViewportPortal>
           {anchored.map(({ card, style }) => (
             <SuggestionCard

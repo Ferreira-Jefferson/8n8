@@ -568,6 +568,15 @@ O nó `mod` aparece como GATILHO "Código solto". Nenhum cartão do primeiro ní
 
 - `NODE_WIDTH = 320`, `NODE_HEIGHT = 140`, `NODE_GAP = 60` e `ROW_GAP = 80`.
 - `layoutRows(rows)`: o nó `i` da linha `r` fica em `x = i * (320 + 60)` e `y = r * (140 + 90 + 80) − (i % 2) * 90`. Os nós ímpares sobem 90 px (`ZIGZAG`), como o 470/380 do vídeo.
+- `wrapRows(rows, perRow)` corta cada linha em linhas de no máximo `perRow` nós, na ordem. O fluxo segue da esquerda para a direita, linha após linha, como um texto. Uma entrada nova sempre começa uma linha nova.
+- `wrapColumns(posições, perBand)` corta um nível de dentro (dagre) em faixas de no máximo `perBand` colunas. Cada faixa começa na esquerda, `BAND_GAP = 120` px abaixo da faixa de cima, e mantém o próprio desenho (o "sim" continua acima do "não"). `rowBands(rows)` dá a mesma forma às linhas do fluxo principal. As duas retornam `positions`, a faixa de cada nó e `gapAbove`, o `y` do meio do vão acima de cada faixa.
+- `chooseWrap(maisLonga, layoutFor, largura, altura)` (`flow/viewport.ts`) decide o corte, nesta ordem:
+  1. um nível que cabe inteiro com zoom ≥ `LEGIBLE_ZOOM` (0,6) não é cortado;
+  2. senão, vale a linha mais longa que cabe com zoom ≥ 0,8;
+  3. senão, vale a linha com o maior zoom, se ele for ≥ 0,6;
+  4. senão, o nível fica sem corte e começa em 0,8 na esquerda (`startViewport`).
+- Exemplos com o vídeo: em 1600x900 o fluxo principal de 8 cartões vira 5 + 3, como os 5 cartões por linha do vídeo; em 1366x768, 4 + 4. Os 8 passos de `processar_pedido`, ao lado do painel, viram faixas de 3, 3 e 2. `calcular_frete` cabe inteiro ao lado do painel e não é cortado.
+- A ordem de entrada (`schedule`) usa o desenho sem corte. Assim a animação segue o fluxo.
 - `layoutLR` (dagre) continua com `nodesep: 60` e `ranksep: 60`. Depois do dagre roda `orderBranches(positions, nodes, containerId)`. Em cada coluna (mesmo `x`), os nós recebem de novo as posições `y` da própria coluna, em ordem crescente de uma chave:
   - a chave é a lista de índices `j` dos segmentos `/b<j>/` do ID, depois do prefixo do nível;
   - a comparação é elemento a elemento, e um elemento ausente vale `0.5`;
@@ -642,6 +651,7 @@ export type NavAction =
   - Handles `.port` com `visibility` conforme `hasIn` e `hasOut`.
 - **`WireEdge.tsx`** (VID-05, VID-06, VID-21), tipo de aresta `wire`:
   - path `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2` com `pathLength=1` e `class="wire"`;
+  - o fio que vai para uma faixa de baixo tem `data.turnY` (o `gapAbove` da faixa do destino) e usa `turnPath`: sai 24 px à direita, desce até `turnY`, corre até 24 px antes do cartão de destino e desce até a porta dele, com cantos de raio 20;
   - animação CSS de `stroke-dashoffset` de 1 a 0, com `data-draw-at` e `animation-delay`;
   - o ponto é `<circle class="pulse" r="9" data-pulse-at>` com `<animateMotion begin="<pulseAt>ms" dur="750ms" path=… fill="remove">` e visibilidade só durante o movimento. O ponto não é renderizado com movimento reduzido;
   - o rótulo de ramo (`.branch-label`, via `EdgeLabelRenderer`) fica junto ao cartão de destino, alinhado à borda esquerda dele e a 8 px do cartão: acima quando o fio sobe ("sim"), abaixo quando o fio desce ou segue reto ("não"). Assim ele não toca fio nem cartão. Ele tem `data-branch-label` igual ao texto e aparece em maiúsculas, como o `.eyebrow` do vídeo.
@@ -655,7 +665,11 @@ export type NavAction =
   - No fim da transição, o canvas chama `onOpen(node)` e volta a `"open"`. Com movimento reduzido, chama `onOpen` na hora.
   - O contêiner tem `data-phase` e `data-level="top" | "inner"`. Um nível de dentro ganha `.level-frame`.
   - A `key` do React Flow é `${path.length}:${levelId}`, para que a recursão anime de novo.
-  - Com `focusId` (vindo do "Voltar"), o canvas chama `fitView({ nodes: [{ id: focusId }], maxZoom: 1, duration: 0 })` depois do primeiro desenho, e o nó fica no centro. Sem `focusId`, a primeira vista vem de `startViewport` (`flow/viewport.ts`): o nível todo cabe com zoom entre 0,8 e 1; um nível mais largo fica em 0,8 e começa no primeiro cartão da esquerda, e o resto fica a um arrasto de distância.
+  - O canvas guarda o tamanho medido pelo React Flow (`MeasureCanvas`). O nível é cortado (`chooseWrap`) para esse tamanho.
+  - A primeira vista vem de `levelViewport` (`flow/viewport.ts`), quando o canvas já tem tamanho:
+    - se o nível todo cabe com zoom ≥ `LEGIBLE_ZOOM` (0,6, o título de 27 px fica acima de 16 px), o zoom é `min(1, ajuste)`, com 24 px (`FIT_PAD`) nas laterais e embaixo e 140 px (`TOP_PAD`) em cima (`fitViewport`). O nível fica no meio da área livre. Com `focusId` (vindo do "Voltar"), o nível se move para pôr esse cartão o mais perto possível do centro, sem tirar nenhum cartão da vista;
+    - senão, com `focusId`, o cartão fica no centro com zoom 1;
+    - senão, vale `startViewport`: o nível começa em 0,8 no primeiro cartão da esquerda, e o resto fica a um arrasto de distância.
   - Quando a seleção muda ou o canvas estreita porque o painel abriu, um cartão selecionado fora da vista volta para o centro do canvas, com o mesmo zoom (`revealViewport`).
 
 ### C12. Trilha: `nav/Breadcrumb.tsx` (VID-19)

@@ -2,7 +2,7 @@ import { cleanup, render } from "@testing-library/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { branchLabelAt, type WireData, WireEdge } from "../WireEdge";
+import { branchLabelAt, turnPath, type WireData, WireEdge } from "../WireEdge";
 
 // The label portal needs a mounted React Flow; here it renders in place.
 vi.mock("@xyflow/react", async (importOriginal) => ({
@@ -114,5 +114,43 @@ describe("WireEdge branch labels (VID-21)", () => {
   it("shows no label on a wire without one", () => {
     const { container } = renderWire(timed);
     expect(container.querySelector(".branch-label")).toBeNull();
+  });
+});
+
+describe("WireEdge turning to the next row (VID-10)", () => {
+  it("goes out right, down into the row gap, back left and down into the port", () => {
+    // From the end of a row (port at 1500, 70) to the start of the next one
+    // (port at 0, 380), turning in the gap at y = 180.
+    expect(turnPath(1500, 70, 0, 380, 180)).toBe(
+      "M 1500 70 H 1504 Q 1524 70, 1524 90 V 160 Q 1524 180, 1504 180 H -4 Q -24 180, -24 200 V 360 Q -24 380, -4 380 H 0",
+    );
+  });
+
+  it("runs right in the gap when the target sits further right", () => {
+    expect(turnPath(300, 70, 760, 380, 180)).toBe(
+      "M 300 70 H 304 Q 324 70, 324 90 V 160 Q 324 180, 344 180 H 716 Q 736 180, 736 200 V 360 Q 736 380, 756 380 H 760",
+    );
+  });
+
+  it("draws the turn path, and the pulse follows it, when data.turnY is set", () => {
+    const { container } = render(
+      <ReactFlowProvider>
+        <svg>
+          <title>fio</title>
+          <WireEdge
+            sourceX={1500}
+            sourceY={70}
+            targetX={0}
+            targetY={380}
+            data={{ ...timed, turnY: 180 }}
+          />
+        </svg>
+      </ReactFlowProvider>,
+    );
+    const d = turnPath(1500, 70, 0, 380, 180);
+    expect(container.querySelector("path.wire")?.getAttribute("d")).toBe(d);
+    expect(container.querySelector("animateMotion")?.getAttribute("path")).toBe(
+      d,
+    );
   });
 });
