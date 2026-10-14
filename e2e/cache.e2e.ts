@@ -14,6 +14,10 @@ import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 
 // Feature 04, story P2 (cache by node), end to end through the REAL pipeline and
 // the REAL disk cache of the keyed server (4319), against the fake LLM.
+// Feature 05: calcular_frete is not on the main flow, so it opens through the
+// loop of processar_pedido and its call, whose card shows the panel of
+// calcular_frete (VID-24). The call counts look only at the drafts and reviews
+// of calcular_frete (D2): titles and the loop's own request are not about it.
 
 const REAL = "http://127.0.0.1:4319";
 const CACHE = fileURLToPath(new URL("../.cache/e2e-real", import.meta.url));
@@ -44,20 +48,70 @@ const markedLines = (view: Locator) =>
 /** Fills the snippet and clicks "Gerar mapa"; loads the page only the first time. */
 async function generate(page: Page, source: string) {
   if (!page.url().startsWith(REAL)) await page.goto(`${REAL}/`);
+  const newCode = page.getByRole("button", { name: "Novo código" });
+  if (await newCode.isVisible()) await newCode.click();
   await page.getByLabel("Trecho Python").fill(source);
   await page.getByRole("button", { name: "Gerar mapa" }).click();
 }
 
-/** Selects the node and returns the body of its /api/explain answer. */
-async function open(page: Page, id: string): Promise<{ fromCache?: boolean }> {
-  const response = page.waitForResponse(`${REAL}/api/explain`);
-  await nodeById(page, id).click();
+/** Clicks a card even when the zoom leaves it off-screen; it must be visible first. */
+async function clickCard(page: Page, id: string): Promise<void> {
+  const card = nodeById(page, id);
+  await expect(card).toBeVisible();
+  await card.dispatchEvent("click");
+}
+
+/** Clicks the card and returns the body of the /api/explain answer for `explained`. */
+async function clickAndExplain(
+  page: Page,
+  card: string,
+  explained: string,
+): Promise<{ fromCache?: boolean }> {
+  const response = page.waitForResponse(
+    (r) =>
+      r.url() === `${REAL}/api/explain` &&
+      (r.request().postDataJSON() as { nodeId: string }).nodeId === explained,
+  );
+  await clickCard(page, card);
   return (await response).json();
 }
 
+/** Back to the main flow through the breadcrumb. */
+async function toTop(page: Page): Promise<void> {
+  await page
+    .getByRole("navigation", { name: "Caminho de navegação" })
+    .getByRole("button", { name: "Fluxo principal" })
+    .click();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Caminho de navegação" })
+      .getByRole("button"),
+  ).toHaveCount(1);
+}
+
+/**
+ * Opens a node from the main flow and returns its /api/explain answer: FRETE
+ * through the loop and its call, PEDIDO by its own card (only to change the
+ * selection: the fake answers 500 for it).
+ */
+async function open(page: Page, id: string): Promise<{ fromCache?: boolean }> {
+  await toTop(page);
+  if (id === PEDIDO) return clickAndExplain(page, PEDIDO, PEDIDO);
+  // The loop of the entry; its ID follows the entry's name, which some tests rename.
+  const loop = canvas(page)
+    .locator('[aria-roledescription="node"]')
+    .filter({ has: page.locator('[data-tag="LAÇO"]') });
+  const loopId = (await loop.getAttribute("data-id")) as string;
+  await clickCard(page, loopId);
+  return clickAndExplain(page, `${loopId}/s0`, FRETE);
+}
+
+/** Drafts and reviews about calcular_frete (D2). */
 const freteCalls = (log: FakeCall[]) =>
-  log.filter((c) =>
-    c.messages.some((m) => m.content.includes("def calcular_frete")),
+  log.filter(
+    (c) =>
+      (c.role === "draft" || c.role === "review") &&
+      c.messages.some((m) => m.content.includes("def calcular_frete")),
   );
 
 function cachedFiles(): string[] {
@@ -113,7 +167,7 @@ test.describe("Cache por nó", () => {
     await generate(page, VIDEO);
     await open(page, FRETE);
     await expect(badge(panel(page))).toHaveText("Revisado");
-    expect(await fakeLog()).toHaveLength(2);
+    expect(freteCalls(await fakeLog())).toHaveLength(2);
     await expect(panel(page).getByRole("status")).toHaveCount(0);
 
     await generate(
@@ -125,7 +179,7 @@ test.describe("Cache por nó", () => {
     await expect(panel(page).getByRole("status")).toHaveText(
       "Resumo atualizado: os vizinhos mudaram",
     );
-    const log = await fakeLog();
+    const log = freteCalls(await fakeLog());
     expect(log).toHaveLength(4);
     const lastDraft = log.filter((c) => c.role === "draft").at(-1);
     const lastUser = lastDraft?.messages
@@ -276,7 +330,7 @@ test.describe("Cache por nó", () => {
     );
     expect((await open(page, FRETE)).fromCache).toBe(true);
 
-    expect(await fakeLog()).toHaveLength(2);
+    expect(freteCalls(await fakeLog())).toHaveLength(2);
     await expect(evidence(view, "s1")).toHaveText(["L8"]);
     await expect(evidence(view, "s2")).toHaveText(["L11–12"]);
     await expect(evidence(view, "o1")).toHaveText(["L12, L14"]);

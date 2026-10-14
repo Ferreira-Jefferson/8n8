@@ -1263,13 +1263,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Os 8 testes continuam e passam. As listagens de `nodes/` ignoram a pasta nova `titles/`.
-- [ ] Gate passa.
+- [x] Os 8 testes continuam e passam. As listagens de `nodes/` ignoram a pasta nova `titles/`.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/cache.e2e.ts`
 
 **Commit**: `test(e2e): keep the cache e2e on the new map`
+**Status**: ✅ Complete
 
 ---
 
