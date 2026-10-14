@@ -1,5 +1,4 @@
 import { type Edge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react";
-import { NODE_HEIGHT } from "./layout";
 
 export interface WireData extends Record<string, unknown> {
   /** Milliseconds until the wire draws (VID-06). */
@@ -16,24 +15,28 @@ export type WireFlowEdge = Edge<WireData, "wire">;
 
 const BEND = 60;
 const PULSE_MS = 750;
-/** Space between a branch label and the edge of its target card. */
-const LABEL_GAP = 8;
+/** A branch label starts this far right of the source port, past the wire's first bend. */
+const LABEL_X = 30;
+/** Space between a branch label and the line of the source port. */
+const LABEL_GAP = 4;
 
 /**
- * Where a branch label sits: beside the target card, on the side away from the
- * source, so it touches no wire and no card (VID-21). A wire that goes up gets
- * its label above the target card; a wire that goes down or straight, below.
- * SPEC_DEVIATION: design.md put the label at t = 0.25 of the curve, 14 px up.
- * Reason: in the 60 px gap between columns that label sat on the wire.
+ * Where a branch label sits: next to the start of its wire, in the gap
+ * between the target cards, so it touches no wire and no card (VID-21). A
+ * wire that goes up gets its label above the port line; a wire that goes
+ * down or straight, below.
  */
 export function branchLabelAt(
+  sourceX: number,
   sourceY: number,
-  targetX: number,
   targetY: number,
 ): { x: number; y: number; above: boolean } {
   const above = targetY < sourceY;
-  const half = NODE_HEIGHT / 2 + LABEL_GAP;
-  return { x: targetX, y: above ? targetY - half : targetY + half, above };
+  return {
+    x: sourceX + LABEL_X,
+    y: above ? sourceY - LABEL_GAP : sourceY + LABEL_GAP,
+    above,
+  };
 }
 
 /** How far a turning wire runs out of a port before it bends. */
@@ -98,7 +101,7 @@ export function WireEdge({
       : `M ${w[0]} ${w[1]} C ${w[2]} ${w[3]}, ${w[4]} ${w[5]}, ${w[6]} ${w[7]}`;
   const drawAt = data?.drawAt ?? 0;
   const pulseAt = data?.pulseAt ?? 0;
-  const spot = branchLabelAt(sourceY, targetX, targetY);
+  const spot = branchLabelAt(sourceX, sourceY, targetY);
   return (
     <>
       <path

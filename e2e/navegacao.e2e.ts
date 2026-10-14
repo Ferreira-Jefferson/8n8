@@ -110,6 +110,77 @@ async function expectSelectedNearCentre(page: Page, id: string) {
     .toEqual([true, true, true, true]);
 }
 
+/** Most room between a branch label and the start of its wire, in screen px (VID-21). */
+const NEAR_START = 40;
+
+/**
+ * Where each branch label of the condition `source` sits: whether it is within
+ * NEAR_START of the source port, the cards it overlaps, how many points of any
+ * wire fall inside it, and whether it lies inside the canvas (VID-21).
+ */
+function labelSpots(page: Page, source: string) {
+  return page.evaluate(
+    ({ source, near }) => {
+      type R = { left: number; top: number; right: number; bottom: number };
+      const hit = (a: R, b: R) =>
+        a.left < b.right &&
+        b.left < a.right &&
+        a.top < b.bottom &&
+        b.top < a.bottom;
+      const port = document
+        .querySelector(
+          `[aria-roledescription="node"][data-id="${source}"] .port-out`,
+        )
+        ?.getBoundingClientRect();
+      const canvas = document.querySelector(".canvas")?.getBoundingClientRect();
+      if (!port || !canvas) return [];
+      const sx = port.left + port.width / 2;
+      const sy = port.top + port.height / 2;
+      const points: { x: number; y: number }[] = [];
+      for (const path of document.querySelectorAll<SVGPathElement>(
+        "path.wire",
+      )) {
+        const m = path.getScreenCTM();
+        if (!m) continue;
+        const total = path.getTotalLength();
+        for (let k = 0; k <= 200; k++) {
+          const p = path.getPointAtLength((total * k) / 200);
+          points.push({
+            x: m.a * p.x + m.c * p.y + m.e,
+            y: m.b * p.x + m.d * p.y + m.f,
+          });
+        }
+      }
+      const cards = [
+        ...document.querySelectorAll('[aria-roledescription="node"]'),
+      ].map((n) => ({
+        id: n.getAttribute("data-id"),
+        box: (n.querySelector(".node") as Element).getBoundingClientRect(),
+      }));
+      return [...document.querySelectorAll("[data-branch-label]")].map((el) => {
+        const b = el.getBoundingClientRect();
+        const dx = Math.max(b.left - sx, 0, sx - b.right);
+        const dy = Math.max(b.top - sy, 0, sy - b.bottom);
+        return {
+          label: el.textContent,
+          nearStart: Math.hypot(dx, dy) <= near,
+          cards: cards.filter((c) => hit(b, c.box)).map((c) => c.id),
+          wirePoints: points.filter(
+            (p) =>
+              p.x > b.left && p.x < b.right && p.y > b.top && p.y < b.bottom,
+          ).length,
+          inside:
+            b.left >= canvas.left &&
+            b.top >= canvas.top &&
+            b.right <= canvas.right &&
+            b.bottom <= canvas.bottom,
+        };
+      });
+    },
+    { source, near: NEAR_START },
+  );
+}
+
 test.describe("Navegação", () => {
   test.beforeEach(freshReal);
 
@@ -280,6 +351,33 @@ test.describe("Navegação", () => {
     expect(await css(page.locator('[data-branch-label="sim"]'), "color")).toBe(
       LIME,
     );
+    // Each label sits next to the start of its wire, touches no card and no
+    // wire, and stays inside the canvas.
+    const clear = (label: string) => ({
+      label,
+      nearStart: true,
+      cards: [],
+      wirePoints: 0,
+      inside: true,
+    });
+    await expect
+      .poll(() => labelSpots(page, `${FRETE}/s2`))
+      .toEqual([clear("sim"), clear("não")]);
+
+    // A condition without else, on a larger screen: "não" goes on to the
+    // next step.
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await generate(
+      page,
+      REAL,
+      "def f(x):\n    if x:\n        return 1\n    print(x)\n",
+    );
+    await expectLevel(page, ["fn:f", "fn:f/s1"]);
+    await clickCard(page, "fn:f");
+    await expectLevel(page, ["fn:f/s0", "fn:f/s0/b0/s0", "fn:f/s1"]);
+    await expect
+      .poll(() => labelSpots(page, "fn:f/s0"))
+      .toEqual([clear("sim"), clear("não")]);
   });
 
   test("VID-22: clicking a leaf draws its border in lime", async ({ page }) => {
