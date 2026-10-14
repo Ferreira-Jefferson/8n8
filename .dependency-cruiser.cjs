@@ -69,9 +69,30 @@ module.exports = {
       },
     },
     {
+      name: "llm-only-model",
+      severity: "error",
+      comment: "llm importa só model (provedores e perfis de modelo).",
+      from: { path: "^packages/llm/" },
+      to: {
+        path: [
+          "^packages/(?!llm/|model/)",
+          "^apps/",
+          "@code2n8n/(?!model|llm)",
+        ],
+      },
+    },
+    {
+      name: "explain-not-llm",
+      severity: "error",
+      comment:
+        "explain não importa llm: o pipeline só conhece o contrato LlmClient do model.",
+      from: { path: "^packages/explain/" },
+      to: { path: ["^packages/llm/", "@code2n8n/llm"] },
+    },
+    {
       name: "server-only-core-packages",
       severity: "error",
-      comment: "server importa model, extract-python, explain e input.",
+      comment: "server importa model, extract-python, explain, input e llm.",
       from: { path: "^packages/server/" },
       to: { path: ["^apps/"] },
     },
