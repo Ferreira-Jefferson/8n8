@@ -420,10 +420,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O texto diz "passo de dentro de uma função", pede "uma ou duas frases" no `summary` e traz as regras de crases e de números.
-- [ ] A versão tem 12 hex e difere de `buildSystemPrompt(pts).version` para as mesmas regras PTS.
-- [ ] Os testes atuais de `prompt.test.ts` passam sem mudança.
-- [ ] Gate passa.
+- [x] O texto diz "passo de dentro de uma função", pede "uma ou duas frases" no `summary` e traz as regras de crases e de números.
+- [x] A versão tem 12 hex e difere de `buildSystemPrompt(pts).version` para as mesmas regras PTS.
+- [x] Os testes atuais de `prompt.test.ts` passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
