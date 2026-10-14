@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
-import { createPythonExtractor } from "@code2n8n/extract-python";
+import { createPythonExtractor } from "@code2n8n/lang-python";
 import type { ExplainRequest, ExplainResponse } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
 
 const videoFixture = readFileSync(
   new URL(
-    "../../../extract-python/src/__tests__/fixtures/pedido_frete.py",
+    "../../../languages/python/src/__tests__/fixtures/pedido_frete.py",
     import.meta.url,
   ),
   "utf8",

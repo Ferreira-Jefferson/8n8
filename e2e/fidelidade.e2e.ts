@@ -21,7 +21,7 @@ const DEFAULT_CACHE = fileURLToPath(
 
 const VIDEO = readFileSync(
   new URL(
-    "../packages/extract-python/src/__tests__/fixtures/pedido_frete.py",
+    "../packages/languages/python/src/__tests__/fixtures/pedido_frete.py",
     import.meta.url,
   ),
   "utf8",

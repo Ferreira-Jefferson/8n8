@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPythonExtractor } from "@code2n8n/extract-python";
+import { createPythonExtractor } from "@code2n8n/lang-python";
 import type {
   ExplainRequest,
   ProjectResponse,
@@ -81,7 +81,7 @@ describe("POST /api/project", () => {
 const extractor = await createPythonExtractor();
 const fixtureDir = fileURLToPath(
   new URL(
-    "../../../extract-python/src/__tests__/fixtures/projeto-loja",
+    "../../../languages/python/src/__tests__/fixtures/projeto-loja",
     import.meta.url,
   ),
 );

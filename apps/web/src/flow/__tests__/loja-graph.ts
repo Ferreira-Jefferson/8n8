@@ -1,7 +1,7 @@
 import type { Graph } from "@code2n8n/model";
 
 /**
- * Graph of extract-python fixtures/projeto-loja, as `extractProject` returns it,
+ * Graph of languages/python fixtures/projeto-loja, as `extractProject` returns it,
  * with `project: { name: "loja" }` set the way the server's `composeReadProject` does.
  */
 export const lojaGraph: Graph = {

@@ -1,6 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "packages/languages/*"
 allowBuilds:
   esbuild: true
   tree-sitter-python: false

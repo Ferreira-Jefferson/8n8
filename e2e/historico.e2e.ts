@@ -12,7 +12,7 @@ test.use({ baseURL: HISTORY });
 
 const FIXTURE = fileURLToPath(
   new URL(
-    "../packages/extract-python/src/__tests__/fixtures/projeto-loja",
+    "../packages/languages/python/src/__tests__/fixtures/projeto-loja",
     import.meta.url,
   ),
 );

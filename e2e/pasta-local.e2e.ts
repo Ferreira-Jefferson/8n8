@@ -23,7 +23,7 @@ import { expect, type Page, test } from "@playwright/test";
 
 const FIXTURE = fileURLToPath(
   new URL(
-    "../packages/extract-python/src/__tests__/fixtures/projeto-loja",
+    "../packages/languages/python/src/__tests__/fixtures/projeto-loja",
     import.meta.url,
   ),
 );

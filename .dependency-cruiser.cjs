@@ -18,17 +18,27 @@ module.exports = {
       to: { path: ["^packages/(?!model/)", "^apps/", "@code2n8n/(?!model)"] },
     },
     {
-      name: "extract-python-only-model",
+      name: "languages-only-model",
       severity: "error",
       comment:
-        "extract-python importa só model (CORE-05: não alcança o explain).",
-      from: { path: "^packages/extract-python/" },
+        "Um plugin de linguagem importa só model (CORE-05: não alcança o explain).",
+      from: { path: "^packages/languages/" },
       to: {
         path: [
-          "^packages/(?!extract-python/|model/)",
+          "^packages/(?!languages/|model/)",
           "^apps/",
-          "@code2n8n/(?!model|extract-python)",
+          "@code2n8n/(?!model|lang-)",
         ],
+      },
+    },
+    {
+      name: "languages-do-not-import-each-other",
+      severity: "error",
+      comment: "Um plugin de linguagem não importa outro plugin.",
+      from: { path: "^packages/languages/([^/]+)/" },
+      to: {
+        path: "^packages/languages/",
+        pathNot: "^packages/languages/$1/",
       },
     },
     {

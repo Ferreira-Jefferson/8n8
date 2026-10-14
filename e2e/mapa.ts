@@ -19,7 +19,7 @@ export const CACHE = fileURLToPath(
 /** The video code (design, "Código do vídeo"). */
 export const VIDEO = readFileSync(
   new URL(
-    "../packages/extract-python/src/__tests__/fixtures/pedido_video.py",
+    "../packages/languages/python/src/__tests__/fixtures/pedido_video.py",
     import.meta.url,
   ),
   "utf8",

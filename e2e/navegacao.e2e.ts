@@ -44,7 +44,7 @@ const LOOP_AND_BLOCK =
 /** The committed folder fixture (feature 02); opening it only reads it. */
 const LOJA = fileURLToPath(
   new URL(
-    "../packages/extract-python/src/__tests__/fixtures/projeto-loja",
+    "../packages/languages/python/src/__tests__/fixtures/projeto-loja",
     import.meta.url,
   ),
 );

@@ -18,8 +18,8 @@ import {
   buildTitlePrompt,
   buildTitleReviewerPrompt,
 } from "@code2n8n/explain";
-import { createPythonExtractor } from "@code2n8n/extract-python";
 import { readSourceFolder } from "@code2n8n/input";
+import { createPythonExtractor } from "@code2n8n/lang-python";
 import type {
   ExplainRequest,
   ProjectResponse,
@@ -387,7 +387,7 @@ describe("resolvePort", () => {
 });
 
 const fixtureSrc = new URL(
-  "../../../extract-python/src/__tests__/fixtures/projeto-loja",
+  "../../../languages/python/src/__tests__/fixtures/projeto-loja",
   import.meta.url,
 );
 

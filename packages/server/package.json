@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@code2n8n/explain": "workspace:*",
-    "@code2n8n/extract-python": "workspace:*",
+    "@code2n8n/lang-python": "workspace:*",
     "@code2n8n/input": "workspace:*",
     "@code2n8n/model": "workspace:*",
     "@hono/node-server": "2.1.5",

@@ -16,8 +16,8 @@ import {
   resolveReviewModel,
   titleNodes,
 } from "@code2n8n/explain";
-import { createPythonExtractor } from "@code2n8n/extract-python";
 import { type FolderRead, readSourceFolder } from "@code2n8n/input";
+import { createPythonExtractor } from "@code2n8n/lang-python";
 import type {
   ExplainRequest,
   ExplainResponse,

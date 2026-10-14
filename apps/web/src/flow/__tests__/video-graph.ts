@@ -1,7 +1,7 @@
 import type { FlowEdge, FlowNode, Graph } from "@code2n8n/model";
 
 /**
- * Graph of extract-python fixtures/pedido_video.py, built by hand from the
+ * Graph of languages/python fixtures/pedido_video.py, built by hand from the
  * table "Código do vídeo" of the 05-mapa-do-video design (tracks A and C).
  */
 function step(
