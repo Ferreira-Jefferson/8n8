@@ -8,6 +8,7 @@ import {
 } from "@code2n8n/model";
 import { useCallback, useMemo, useReducer, useState } from "react";
 import { type ExplainOrigin, fetchGraph, fetchProject } from "./api";
+import { codeLineOf } from "./flow/card";
 import { FlowCanvas } from "./flow/FlowCanvas";
 import { Breadcrumb } from "./nav/Breadcrumb";
 import {
@@ -170,9 +171,18 @@ export function App() {
               <FlowCanvas
                 graph={graph}
                 levelId={levelId}
+                depth={nav.path.length}
+                selected={nav.selected}
+                titles={new Map()}
+                codeLineOf={(n) =>
+                  codeLineOf(n, mapped ? panelInput(mapped, n).source : "")
+                }
+                explanations={explanations}
                 suggestionCounts={suggestionCounts}
+                focusId={null}
                 onSelect={(id) => dispatch({ type: "select", id })}
                 onOpen={(node) => dispatch(openAction(graph, node))}
+                onSuggestion={(id) => dispatch({ type: "select", id })}
               />
             </div>
           </>

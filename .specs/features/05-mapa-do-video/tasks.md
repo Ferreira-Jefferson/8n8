@@ -1005,12 +1005,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um clique num nó que abre põe `data-phase="expanding"` e só chama `onOpen` depois da transição. Com movimento reduzido, chama na hora.
-- [ ] Um clique numa folha chama `onSelect` e não muda a fase (VID-25).
-- [ ] Não existe handler de duplo clique.
-- [ ] Os nós recebem `data-enter-at` da agenda. Os fios usam o tipo `wire`. Os cartões de sugestão aparecem com as âncoras de T25, e os nós ganham `on`/`dim`.
-- [ ] `toFlowEdges` mantém a classe `edge-imports` (PROJ-03).
-- [ ] O gate Build C passa (fecha a fase).
+- [x] Um clique num nó que abre põe `data-phase="expanding"` e só chama `onOpen` depois da transição. Com movimento reduzido, chama na hora.
+- [x] Um clique numa folha chama `onSelect` e não muda a fase (VID-25).
+- [x] Não existe handler de duplo clique.
+- [x] Os nós recebem `data-enter-at` da agenda. Os fios usam o tipo `wire`. Os cartões de sugestão aparecem com as âncoras de T25, e os nós ganham `on`/`dim`.
+- [x] `toFlowEdges` mantém a classe `edge-imports` (PROJ-03).
+- [x] O gate Build C passa (fecha a fase).
 
 **Tests**: unit
 **Gate**: build · Build C
