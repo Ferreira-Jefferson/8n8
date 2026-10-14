@@ -658,11 +658,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Sem `OPENROUTER_API_KEY`: `composeTitles` retorna `no-key` sem criar cliente.
-- [ ] Com chave: o cliente usa `OPENROUTER_BASE_URL` e os modelos de `CODE2N8N_MODEL` e `CODE2N8N_REVIEW_MODEL`. Uma string vazia conta como ausente.
-- [ ] O cache de títulos fica em `<CODE2N8N_CACHE_DIR>/titles`, e o padrão é `.cache/explain/titles`.
-- [ ] `composeExplain` usa `buildStepPrompt` num pedido de passo.
-- [ ] O gate Build B passa (fecha a trilha B).
+- [x] Sem `OPENROUTER_API_KEY`: `composeTitles` retorna `no-key` sem criar cliente.
+- [x] Com chave: o cliente usa `OPENROUTER_BASE_URL` e os modelos de `CODE2N8N_MODEL` e `CODE2N8N_REVIEW_MODEL`. Uma string vazia conta como ausente.
+- [x] O cache de títulos fica em `<CODE2N8N_CACHE_DIR>/titles`, e o padrão é `.cache/explain/titles`.
+- [x] `composeExplain` usa `buildStepPrompt` num pedido de passo.
+- [x] O gate Build B passa (fecha a trilha B).
 
 **Tests**: unit
 **Gate**: build · Build B
