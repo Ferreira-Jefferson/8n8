@@ -17,6 +17,8 @@ export interface Draft {
   inputs: string[];
   outputs: string[];
   suggestions: DraftSuggestion[];
+  /** Present only when the request had a docstring: does it match the code? */
+  docstring?: { reflects: boolean; reason: string };
 }
 
 const explanationSchema = z.object({
@@ -33,6 +35,7 @@ const explanationSchema = z.object({
       severity: z.enum(["alta", "media", "baixa"]),
     }),
   ),
+  docstring: z.object({ reflects: z.boolean(), reason: z.string() }).optional(),
 });
 
 /** Strips fences, parses and validates the LLM answer; keeps the first 5 suggestions with line in 1..lineCount (CORE-22). */
@@ -43,8 +46,10 @@ export function parseExplanation(raw: string, lineCount: number): Draft {
     .replace(/\s*```$/, "")
     .trim();
   const parsed = explanationSchema.parse(JSON.parse(cleaned));
+  const { docstring, ...rest } = parsed;
   return {
-    ...parsed,
+    ...rest,
+    ...(docstring ? { docstring } : {}),
     suggestions: parsed.suggestions
       .filter((s) => s.line >= 1 && s.line <= lineCount)
       .slice(0, MAX_SUGGESTIONS),

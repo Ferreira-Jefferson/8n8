@@ -99,3 +99,16 @@ describe("buildStepPrompt (VID-28)", () => {
     );
   });
 });
+
+describe("docstring omitted from the code", () => {
+  it("tells the model the docstring is omitted and asks for the optional docstring field", () => {
+    for (const { text } of [
+      buildSystemPrompt("regra A"),
+      buildStepPrompt("regra A"),
+    ]) {
+      expect(text).toContain("sem a docstring");
+      expect(text).toContain('"reflects"');
+      expect(text).toContain('"Docstring"');
+    }
+  });
+});

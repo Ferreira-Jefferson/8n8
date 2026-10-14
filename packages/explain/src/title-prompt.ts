@@ -5,6 +5,7 @@ import { KIND_LABEL } from "./explain";
 
 const ROLE = `Você escreve títulos de nós de um fluxo de código Python.
 Você recebe uma lista de nós. Cada nó tem um ID (n1, n2...), o tipo, o nome, os nomes dos nós que ele chama, os nomes dos nós que o chamam e o código do nó com as linhas numeradas de 1 a n.
+O código chega sem a docstring. O título vem só do código.
 Escreva um título por nó.
 O título diz a ação do nó com verbo no infinitivo, como "Calcular frete" ou "Buscar UF pelo CEP".
 O título tem no máximo ${TITLE_MAX_WORDS} palavras e não termina com ponto final.

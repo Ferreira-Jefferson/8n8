@@ -48,6 +48,12 @@ function userMessage(req: ExplainRequest): string {
     `Tipo: ${KIND_LABEL[req.nodeKind]}`,
     `Chama: ${list(req.calls)}`,
     `Chamado por: ${list(req.calledBy)}`,
+    ...(req.docstring
+      ? [
+          "Docstring (pode estar desatualizada; não use para resumir; compare com o código):",
+          req.docstring.text,
+        ]
+      : []),
     "Código:",
     numbered,
   ].join("\n");
@@ -108,6 +114,7 @@ export async function explainNode(
         user: userMessage({ ...req, code, calls, calledBy }),
         code,
         neighbours: [...calls, ...calledBy],
+        ...(req.docstring ? { docstringLine: req.docstring.line } : {}),
       },
       {
         ...deps,

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 const ROLE = `Você explica código Python para quem lê o fluxo de um programa.
 Você recebe um nó (função ou classe), os nomes dos nós que ele chama, os nomes dos nós que o chamam e o código do nó com as linhas numeradas de 1 a n.
 Explique só o que o código mostra. Não invente comportamento.
+O código chega sem a docstring (aparece só \`# docstring omitida\`). O resumo descreve só o que o código faz, nunca o que uma docstring diz.
 Cite entre crases cada identificador do código (variável, parâmetro, função, classe ou módulo), como \`peso\` ou \`requests.get\`.
 Não escreva número nem unidade (como kg, %, R$ ou segundos) que não aparece no código.`;
 
@@ -12,6 +13,7 @@ O JSON tem estes campos:
 - "inputs": lista com as entradas do nó (parâmetros, arquivos, dados externos).
 - "outputs": lista com as saídas do nó (retorno, efeitos, dados gravados).
 - "suggestions": lista de 0 a 5 sugestões de melhoria. Cada sugestão tem "command" (a ação, no imperativo), "reason" (o motivo), "line" (a linha do código numerado, de 1 a n) e "severity" ("alta", "media" ou "baixa").
+- "docstring" (opcional): peça só quando a mensagem tem um bloco "Docstring". É um objeto {"reflects": true ou false, "reason": "..."}. "reflects" é false quando a docstring diz algo que o código não faz, omite um comportamento principal ou cita parâmetros ou retornos errados. "reason" é uma frase curta que cita entre crases os identificadores do código.
 Exemplo:
 {"summary":"Calcula o frete a partir do peso.","inputs":["peso"],"outputs":["valor do frete"],"suggestions":[{"command":"Valide se peso é positivo.","reason":"Peso negativo gera frete negativo.","line":2,"severity":"media"}]}`;
 
@@ -28,6 +30,7 @@ export function buildSystemPrompt(ptsRules: string): {
 const STEP_ROLE = `Você explica um passo de dentro de uma função Python para quem lê o fluxo de um programa.
 Você recebe o passo, os nomes dos nós que ele chama e o código do passo com as linhas numeradas de 1 a n.
 Explique só o que o código mostra. Não invente comportamento.
+O código chega sem a docstring (aparece só \`# docstring omitida\`). O resumo descreve só o que o código faz, nunca o que uma docstring diz.
 Cite entre crases cada identificador do código (variável, parâmetro, função, classe ou módulo), como \`peso\` ou \`requests.get\`.
 Não escreva número nem unidade (como kg, %, R$ ou segundos) que não aparece no código.`;
 

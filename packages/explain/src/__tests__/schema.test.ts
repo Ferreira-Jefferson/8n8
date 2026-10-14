@@ -68,3 +68,21 @@ describe("parseExplanation (CORE-16, CORE-22)", () => {
     expect(parseExplanation(JSON.stringify(value), 4)).toEqual(value);
   });
 });
+
+describe("parseExplanation docstring field", () => {
+  it("accepts the optional docstring object and still parses answers without it", () => {
+    const base = explanation([]);
+    const docstring = { reflects: false, reason: "Cita `peso`." };
+    expect(parseExplanation(JSON.stringify({ ...base, docstring }), 4)).toEqual(
+      { ...base, docstring },
+    );
+    expect(parseExplanation(JSON.stringify(base), 4)).not.toHaveProperty(
+      "docstring",
+    );
+  });
+
+  it("rejects a malformed docstring object", () => {
+    const bad = { ...explanation([]), docstring: { reflects: "sim" } };
+    expect(() => parseExplanation(JSON.stringify(bad), 4)).toThrow();
+  });
+});

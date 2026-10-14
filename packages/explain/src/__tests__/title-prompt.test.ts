@@ -110,3 +110,9 @@ describe("parseTitles (VID-14)", () => {
     expect(() => parseTitles('{"titulos":[]}')).toThrow();
   });
 });
+
+describe("buildTitlePrompt docstring", () => {
+  it("says the code comes without the docstring", () => {
+    expect(buildTitlePrompt("regra A").text).toContain("sem a docstring");
+  });
+});

@@ -545,3 +545,78 @@ describe("explainNode for a step (VID-28)", () => {
     });
   });
 });
+
+describe("docstring judged against the code", () => {
+  const DOC = { text: "Calcula o imposto.", line: 2 };
+  const reflects = (value: boolean) => ({
+    ...draft,
+    suggestions: [],
+    docstring: {
+      reflects: value,
+      reason: "Fala de imposto, mas `peso` só define o frete.",
+    },
+  });
+  const userOf = (requests: LlmRequest[]) =>
+    requests[0]?.messages[1]?.content ?? "";
+
+  it("adds the Docstring block before the numbered code only when the request has one", async () => {
+    const withDoc = fakeLlm(JSON.stringify(reflects(true)));
+    await explainNode(request({ docstring: DOC }), deps(withDoc.llm));
+    const user = userOf(withDoc.requests);
+    expect(user).toContain(
+      "Docstring (pode estar desatualizada; não use para resumir; compare com o código):\nCalcula o imposto.\nCódigo:",
+    );
+
+    const without = fakeLlm(ANSWER);
+    await explainNode(request(), deps(without.llm));
+    expect(userOf(without.requests)).not.toContain("Docstring");
+  });
+
+  it("adds a first suggestion at the docstring line when reflects is false", async () => {
+    const { llm } = fakeLlm(JSON.stringify(reflects(false)));
+    const res = await explainNode(request({ docstring: DOC }), deps(llm));
+    expect(res.status === "ok" && res.explanation.suggestions).toEqual([
+      {
+        id: "g1",
+        command:
+          "Atualize a docstring: Fala de imposto, mas `peso` só define o frete",
+        reason: "A docstring não reflete o que o código faz.",
+        line: 3,
+        severity: "media",
+        lines: [3],
+      },
+    ]);
+  });
+
+  it("adds nothing when reflects is true or missing", async () => {
+    for (const answer of [reflects(true), draft]) {
+      const { llm } = fakeLlm(JSON.stringify({ ...answer, suggestions: [] }));
+      const res = await explainNode(
+        request({ docstring: DOC, nodeId: "fn:x" }),
+        deps(llm),
+      );
+      expect(res.status === "ok" && res.explanation.suggestions).toEqual([]);
+    }
+  });
+
+  it("adds nothing when the request has no docstring, even if the model answers the field", async () => {
+    const { llm } = fakeLlm(JSON.stringify(reflects(false)));
+    const res = await explainNode(request(), deps(llm));
+    expect(res.status === "ok" && res.explanation.suggestions).toEqual([]);
+  });
+
+  it("keeps at most 5 suggestions, dropping the last other one", async () => {
+    const others = [1, 2, 3, 4, 5].map((n) => ({
+      ...suggestionAt(2),
+      command: `Valide \`peso\` ${"a".repeat(n)}.`,
+    }));
+    const { llm } = fakeLlm(
+      JSON.stringify({ ...reflects(false), suggestions: others }),
+    );
+    const res = await explainNode(request({ docstring: DOC }), deps(llm));
+    const list = res.status === "ok" ? res.explanation.suggestions : [];
+    expect(list).toHaveLength(5);
+    expect(list[0]?.command).toMatch(/^Atualize a docstring: /);
+    expect(list[4]?.command).toBe(others[3]?.command);
+  });
+});

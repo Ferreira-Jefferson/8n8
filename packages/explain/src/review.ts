@@ -25,6 +25,39 @@ export interface ReviewInput {
   code: string;
   /** Neighbour names: calls and called by. */
   neighbours: string[];
+  /** Line of the docstring inside `code`; set only when the request had one. */
+  docstringLine?: number;
+}
+
+const MAX_SUGGESTIONS = 5;
+
+/** A docstring that does not reflect the code becomes the first suggestion; the 5-suggestion cap holds. */
+function withDocstringSuggestion(
+  draft: Draft,
+  line: number | undefined,
+  lineCount: number,
+): Draft {
+  if (
+    draft.docstring?.reflects !== false ||
+    line === undefined ||
+    line < 1 ||
+    line > lineCount
+  ) {
+    return draft;
+  }
+  const reason = draft.docstring.reason.trim().replace(/\.+$/, "");
+  return {
+    ...draft,
+    suggestions: [
+      {
+        command: `Atualize a docstring: ${reason}`,
+        reason: "A docstring não reflete o que o código faz.",
+        line,
+        severity: "media" as const,
+      },
+      ...draft.suggestions,
+    ].slice(0, MAX_SUGGESTIONS),
+  };
 }
 
 export interface ReviewDeps {
@@ -83,7 +116,7 @@ export async function reviewedDraft(
   for (let round = 1; ; round++) {
     const raw = await llm.complete({ model, messages, json: jsonMode(model) });
     const parsed = parseExplanation(raw, lineCount);
-    const draft =
+    const capped =
       maxSentences === undefined
         ? parsed
         : {
@@ -92,6 +125,11 @@ export async function reviewedDraft(
               .slice(0, maxSentences)
               .join(" "),
           };
+    const draft = withDocstringSuggestion(
+      capped,
+      input.docstringLine,
+      lineCount,
+    );
     const claims = toClaims(draft);
 
     const rejected = layerOne(claims, ctx);
