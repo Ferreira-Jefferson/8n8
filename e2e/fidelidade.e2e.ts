@@ -47,6 +47,8 @@ async function generate(page: Page, base: string, source: string) {
 const drafts = (log: FakeCall[]) => log.filter((c) => c.role === "draft");
 const reviews = (log: FakeCall[]) => log.filter((c) => c.role === "review");
 const text = (call: FakeCall) => JSON.stringify(call.messages);
+/** Every message content of the call, as the LLM reads it. */
+const sent = (call: FakeCall) => call.messages.map((m) => m.content).join("\n");
 
 function cachedFiles(): string[] {
   const dir = `${CACHE}/nodes`;
@@ -191,6 +193,64 @@ test.describe("Fidelidade", () => {
     await expect(
       panel(page).getByText("Nenhum efeito externo.", { exact: true }),
     ).toHaveCount(1);
+  });
+
+  test("CORE-17/FID-06/FID-05: the LLM gets only the node code, the neighbour names and, for the review, the draft", async ({
+    page,
+  }) => {
+    const other = "def registrar_log(msg):\n    print(msg)\n";
+    await generate(page, REAL, `${VIDEO}\n\n${other}`);
+    await nodeById(page, "fn:calcular_frete").click();
+    const view = panel(page);
+    // Any reviewed answer, so the requests are all in; the exact badge is checked last.
+    await expect(badge(view)).toHaveText(/^Revisado/);
+
+    const nodeLines = VIDEO.split("\n").slice(3, 11);
+    const outside = [
+      "import requests",
+      "total = 0",
+      "for item in itens:",
+      "return total",
+      "registrar_log",
+      "print(msg)",
+    ];
+    const log = await fakeLog();
+    const draft = drafts(log)[0] as FakeCall;
+    const review = reviews(log)[0] as FakeCall;
+
+    // CORE-17: the node code and the direct neighbour, nothing else of the snippet.
+    for (const line of nodeLines) expect(sent(draft)).toContain(line.trim());
+    expect(sent(draft)).toContain("processar_pedido");
+    for (const piece of outside) expect(sent(draft)).not.toContain(piece);
+
+    // FID-06: the node code, the neighbour and the draft items; no drafter turn.
+    const items = [
+      "Busca a tabela de frete com `requests.get`.",
+      "Dobra a taxa quando `peso` passa de 30.",
+      "`peso`",
+      "`distancia`",
+      "valor do frete",
+      "Guardar a tabela de frete em cache",
+      "A função busca a tabela na rede a cada chamada.",
+    ];
+    for (const line of nodeLines) expect(sent(review)).toContain(line.trim());
+    expect(sent(review)).toContain("processar_pedido");
+    for (const item of items) expect(sent(review)).toContain(item);
+    for (const piece of outside) expect(sent(review)).not.toContain(piece);
+    for (const message of draft.messages) {
+      expect(sent(review)).not.toContain(message.content);
+    }
+
+    // FID-05: each item is classified, with evidence lines, and the panel shows them.
+    const asks = review.messages.find((m) => m.role === "system")?.content;
+    expect(asks).toContain('"supported"');
+    expect(asks).toContain('"evidence"');
+    await expect(evidence(view, "s1")).toHaveText(["L5"]);
+    await expect(evidence(view, "i1")).toHaveText(["L4"]);
+    await expect(evidence(view, "o1")).toHaveText(["L9, L11"]);
+    await expect(badge(view)).toHaveText("Revisado");
+    expect(drafts(log)).toHaveLength(1);
+    expect(reviews(log)).toHaveLength(1);
   });
 
   test("FID-14: with no key the effects still show and the LLM is never called", async ({
