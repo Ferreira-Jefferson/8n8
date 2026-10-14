@@ -905,9 +905,9 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Cada valor da tabela C2 aparece literalmente no arquivo (cores, `40px 40px`, `320px`, `140px`, `stroke-width: 4`, `opacity: .55`).
-- [ ] `prefers-reduced-motion: reduce` desliga `animation` e `transition` em `.canvas`, `.node`, `.wire` e `.open-frame`.
-- [ ] Gate passa.
+- [x] Cada valor da tabela C2 aparece literalmente no arquivo (cores, `40px 40px`, `320px`, `140px`, `stroke-width: 4`, `opacity: .55`).
+- [x] `prefers-reduced-motion: reduce` desliga `animation` e `transition` em `.canvas`, `.node`, `.wire` e `.open-frame`.
+- [x] Gate passa.
 
 **Tests**: none (CSS; os valores são provados em T43 e T44 com `getComputedStyle`)
 **Gate**: build · Build C
