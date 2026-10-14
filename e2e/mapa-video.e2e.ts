@@ -278,16 +278,16 @@ test.describe("O visual do vídeo", () => {
 });
 
 test.describe("O editor", () => {
-  test("VID-08: Colar trecho opens the editor panel: trecho.py in Petróleo, mono code, a Petróleo Gerar mapa and Início", async ({
+  test("VID-08: Colar trecho opens the editor panel: trecho in Petróleo, mono code, a Petróleo Gerar mapa and Início", async ({
     page,
   }) => {
     await page.goto(`${OFFLINE}/`);
     await page.getByRole("button", { name: /Colar trecho/ }).click();
     const editor = page.getByRole("region", { name: "Editor" });
-    const file = editor.getByText("trecho.py", { exact: true });
+    const file = editor.getByText("trecho", { exact: true });
     await expect(file).toBeVisible();
     expect(await css(file, "color")).toBe(MAIN);
-    const code = page.getByLabel("Trecho Python");
+    const code = page.getByLabel("Trecho de código");
     await expect(code).toBeVisible();
     expect(await css(code, "font-family")).toMatch(/^"DM Mono"/);
     const button = page.getByRole("button", { name: "Gerar mapa" });
@@ -306,7 +306,7 @@ test.describe("O editor", () => {
   }) => {
     await generate(page, OFFLINE, VIDEO);
     await expectLevel(page, MAIN_FLOW);
-    await expect(page.getByLabel("Trecho Python")).toHaveCount(0);
+    await expect(page.getByLabel("Trecho de código")).toHaveCount(0);
     const newCode = page.getByRole("button", { name: "Novo código" });
     await expect(newCode).toBeVisible();
     const view = page.viewportSize();
@@ -320,7 +320,7 @@ test.describe("O editor", () => {
     await expect(backButton(page)).toBeVisible();
 
     await newCode.click();
-    await expect(page.getByLabel("Trecho Python")).toHaveValue(VIDEO);
+    await expect(page.getByLabel("Trecho de código")).toHaveValue(VIDEO);
     await expect(canvas(page)).toHaveCount(0);
     await expect(newCode).toHaveCount(0);
   });

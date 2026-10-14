@@ -72,9 +72,9 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 
 ## Fase 7 — Tela (`apps/web`)
 
-- [ ] 7.1 **[1ª]** Tirar os textos fixos: `App.tsx:103` (`trecho.py`), `App.tsx:327` ("arquivo .py"), `App.tsx:373` ("Trecho Python"), `Home.tsx:170` ("arquivos .py"), `DetailPanel.tsx:49` (`trecho.py`). Os textos vêm de `/api/languages`.
-- [ ] 7.2 **[D5]** A tela mostra a linguagem detectada do trecho e o aviso "linguagem incerta" quando for o caso.
-- [ ] 7.3 **[2ª]** Conferir que o card do nó (`flow/card.ts:88`) e o painel tratam o comentário de documentação de forma geral.
+- [x] 7.1 **[1ª]** Tirar os textos fixos: `App.tsx:103` (`trecho.py`), `App.tsx:327` ("arquivo .py"), `App.tsx:373` ("Trecho Python"), `Home.tsx:170` ("arquivos .py"), `DetailPanel.tsx:49` (`trecho.py`). Os textos vêm de `/api/languages`.
+- [x] 7.2 **[D5]** A tela mostra a linguagem detectada do trecho e o aviso "linguagem incerta" quando for o caso.
+- [x] 7.3 **[2ª]** Conferir que o card do nó (`flow/card.ts:88`) e o painel tratam o comentário de documentação de forma geral.
 - [ ] 7.4 **[2ª]** e2e: specs novos para o seletor, a pasta mista e o histórico com linguagem. Rodar só os specs da mudança, e a suíte inteira antes do commit.
 
 ## Fase 8 — Prova e documentação para open source

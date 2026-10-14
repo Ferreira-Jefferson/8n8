@@ -2,7 +2,10 @@ import type {
   Explanation,
   FlowNode,
   Graph,
+  GraphResponse,
+  LanguageInfo,
   ProjectResponse,
+  SnippetLanguage,
 } from "@code2n8n/model";
 import {
   act,
@@ -20,6 +23,7 @@ import {
   fetchGraph,
   fetchHistory,
   fetchHistoryEntry,
+  fetchLanguages,
   fetchProject,
   fetchTitles,
 } from "../api";
@@ -31,6 +35,7 @@ import { pedidoFreteGraph } from "../panel/__tests__/pedido-frete-graph";
 
 vi.mock("../api", () => ({
   fetchGraph: vi.fn(),
+  fetchLanguages: vi.fn(),
   fetchExplanation: vi.fn(),
   fetchProject: vi.fn(),
   fetchTitles: vi.fn(),
@@ -54,6 +59,7 @@ const projectMock = vi.mocked(fetchProject);
 const titlesMock = vi.mocked(fetchTitles);
 const historyMock = vi.mocked(fetchHistory);
 const historyEntryMock = vi.mocked(fetchHistoryEntry);
+const languagesMock = vi.mocked(fetchLanguages);
 
 beforeEach(() => {
   canvas = null;
@@ -63,10 +69,34 @@ beforeEach(() => {
   titlesMock.mockReset();
   historyMock.mockReset();
   historyEntryMock.mockReset();
+  languagesMock.mockReset();
+  languagesMock.mockResolvedValue([]);
   titlesMock.mockResolvedValue([]);
   historyMock.mockResolvedValue([]);
 });
 afterEach(cleanup);
+
+const python: LanguageInfo = {
+  id: "python",
+  label: "Python",
+  extensions: [".py"],
+};
+const typescript: LanguageInfo = {
+  id: "typescript",
+  label: "TypeScript",
+  extensions: [".ts", ".tsx"],
+};
+const detected = (
+  language: LanguageInfo,
+  uncertain = false,
+): SnippetLanguage => ({ id: language.id, label: language.label, uncertain });
+
+function withLanguage(
+  graph: Graph,
+  language: SnippetLanguage = detected(python),
+): GraphResponse {
+  return { graph, language };
+}
 
 const source = "def calcular_frete(peso):\n    return peso\n";
 
@@ -113,7 +143,7 @@ const explanation: Explanation = {
 async function generate(text = source) {
   render(<App />);
   fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
-  fireEvent.change(screen.getByLabelText("Trecho Python"), {
+  fireEvent.change(screen.getByLabelText("Trecho de código"), {
     target: { value: text },
   });
   fireEvent.click(screen.getByRole("button", { name: "Gerar mapa" }));
@@ -126,7 +156,7 @@ function currentCanvas(): FlowCanvasProps {
 
 describe("App", () => {
   it("sends the pasted text to fetchGraph and passes the graph to the canvas (CORE-01)", async () => {
-    graphMock.mockResolvedValue(graph);
+    graphMock.mockResolvedValue(withLanguage(graph));
     await generate();
     await screen.findByTestId("canvas");
     expect(graphMock).toHaveBeenCalledWith(source);
@@ -135,7 +165,9 @@ describe("App", () => {
   });
 
   it("shows the empty message for an empty graph (CORE-07)", async () => {
-    graphMock.mockResolvedValue({ ...graph, empty: true, nodes: [] });
+    graphMock.mockResolvedValue(
+      withLanguage({ ...graph, empty: true, nodes: [] }),
+    );
     await generate("# só comentário");
     expect(
       await screen.findByText("Nenhuma função ou instrução encontrada."),
@@ -152,7 +184,7 @@ describe("App", () => {
   });
 
   it("passes the suggestion count 2 to the canvas after the node is explained (CORE-23)", async () => {
-    graphMock.mockResolvedValue(graph);
+    graphMock.mockResolvedValue(withLanguage(graph));
     explainMock.mockResolvedValue({
       status: "ok",
       explanation,
@@ -172,7 +204,7 @@ describe("App", () => {
   });
 
   it("keeps the graph on the canvas when the explanation fails (CORE-20)", async () => {
-    graphMock.mockResolvedValue(graph);
+    graphMock.mockResolvedValue(withLanguage(graph));
     explainMock.mockResolvedValue({ status: "error", message: "HTTP 502" });
     await generate();
     await screen.findByTestId("canvas");
@@ -185,7 +217,7 @@ describe("App", () => {
   it("returns the canvas to the top level when Fluxo principal is clicked after opening a node (CORE-15, VID-19)", async () => {
     // VID-23: opening a node also shows its panel, which asks for a summary.
     explainMock.mockResolvedValue({ status: "no-key" });
-    graphMock.mockResolvedValue(graph);
+    graphMock.mockResolvedValue(withLanguage(graph));
     await generate();
     await screen.findByTestId("canvas");
     act(() => currentCanvas().onOpen(fnNode));
@@ -195,7 +227,7 @@ describe("App", () => {
   });
 
   it("shows the graph-derived external effects of calcular_frete without a summary (FID-14)", async () => {
-    graphMock.mockResolvedValue(pedidoFreteGraph);
+    graphMock.mockResolvedValue(withLanguage(pedidoFreteGraph));
     explainMock.mockResolvedValue({ status: "no-key" });
     await generate();
     await screen.findByTestId("canvas");
@@ -273,6 +305,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
   });
 
   it("shows the empty-folder message for a project with no .py file", async () => {
+    languagesMock.mockResolvedValue([python]);
     projectMock.mockResolvedValue({
       name: "vazia",
       graph: {
@@ -315,13 +348,13 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
       ...loja,
       ignored: [{ path: "grande.py", reason: "too-large" }],
     });
-    graphMock.mockResolvedValue(graph);
+    graphMock.mockResolvedValue(withLanguage(graph));
     render(<App />);
     openFolder();
     await screen.findByRole("region", { name: "Arquivos ignorados" });
     fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
     fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
-    fireEvent.change(screen.getByLabelText("Trecho Python"), {
+    fireEvent.change(screen.getByLabelText("Trecho de código"), {
       target: { value: source },
     });
     fireEvent.click(screen.getByRole("button", { name: "Gerar mapa" }));
@@ -489,7 +522,7 @@ const videoNode = (id: string) =>
   videoGraph.nodes.find((n) => n.id === id) as FlowNode;
 
 async function mapVideo() {
-  graphMock.mockResolvedValue(videoGraph);
+  graphMock.mockResolvedValue(withLanguage(videoGraph));
   explainMock.mockResolvedValue({ status: "no-key" });
   await generate(videoSource);
   await screen.findByTestId("canvas");
@@ -506,16 +539,16 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     expect(screen.getByLabelText("Caminho da pasta")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Mapear pasta" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Colar trecho/ })).toBeTruthy();
-    expect(screen.queryByLabelText("Trecho Python")).toBeNull();
+    expect(screen.queryByLabelText("Trecho de código")).toBeNull();
     expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
   });
 
-  it("Colar trecho shows the editor: trecho.py, the code area, Gerar mapa and Início back to the launcher", () => {
+  it("Colar trecho shows the editor: trecho, the code area, Gerar mapa and Início back to the launcher", () => {
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
     const editor = screen.getByRole("region", { name: "Editor" });
-    expect(within(editor).getByText("trecho.py")).toBeTruthy();
-    expect(within(editor).getByLabelText("Trecho Python").tagName).toBe(
+    expect(within(editor).getByText("trecho")).toBeTruthy();
+    expect(within(editor).getByLabelText("Trecho de código").tagName).toBe(
       "TEXTAREA",
     );
     expect(screen.getByRole("button", { name: "Gerar mapa" }).className).toBe(
@@ -524,7 +557,7 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     expect(screen.queryByLabelText("Caminho da pasta")).toBeNull();
     expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Início" }));
-    expect(screen.queryByLabelText("Trecho Python")).toBeNull();
+    expect(screen.queryByLabelText("Trecho de código")).toBeNull();
     expect(screen.getByLabelText("Caminho da pasta")).toBeTruthy();
   });
 
@@ -534,19 +567,19 @@ describe("App, editor and map (VID-08, VID-09)", () => {
       screen.getByLabelText("Caminho da pasta").getAttribute("placeholder"),
     ).toBe(String.raw`C:\projetos\loja`);
     fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
-    expect(screen.getByLabelText("Trecho Python").getAttribute("wrap")).toBe(
+    expect(screen.getByLabelText("Trecho de código").getAttribute("wrap")).toBe(
       "off",
     );
   });
 
   it("swaps the editor for the map, and Novo código goes back with the text kept", async () => {
     await mapVideo();
-    expect(screen.queryByLabelText("Trecho Python")).toBeNull();
+    expect(screen.queryByLabelText("Trecho de código")).toBeNull();
     expect(screen.queryByRole("region", { name: "Editor" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
     expect(screen.queryByTestId("canvas")).toBeNull();
     expect(
-      (screen.getByLabelText("Trecho Python") as HTMLTextAreaElement).value,
+      (screen.getByLabelText("Trecho de código") as HTMLTextAreaElement).value,
     ).toBe(videoSource);
   });
 
@@ -562,10 +595,12 @@ describe("App, editor and map (VID-08, VID-09)", () => {
   });
 
   it("stays in the editor for an empty graph (CORE-07)", async () => {
-    graphMock.mockResolvedValue({ ...graph, empty: true, nodes: [] });
+    graphMock.mockResolvedValue(
+      withLanguage({ ...graph, empty: true, nodes: [] }),
+    );
     await generate("# só comentário");
     await screen.findByText("Nenhuma função ou instrução encontrada.");
-    expect(screen.getByLabelText("Trecho Python")).toBeTruthy();
+    expect(screen.getByLabelText("Trecho de código")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
   });
 
@@ -585,7 +620,7 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     graphMock.mockRejectedValue(new Error("HTTP 400"));
     await generate();
     await screen.findByRole("alert");
-    expect(screen.getByLabelText("Trecho Python")).toBeTruthy();
+    expect(screen.getByLabelText("Trecho de código")).toBeTruthy();
   });
 
   it("starts a new map at the top level with nothing selected", async () => {
@@ -854,5 +889,135 @@ describe("App: history", () => {
     await screen.findByRole("region", { name: "Arquivos ignorados" });
     expect(projectMock).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Histórico" })).toBeTruthy();
+  });
+});
+
+const emptyFolder: ProjectResponse = {
+  name: "vazia",
+  graph: {
+    language: "python",
+    empty: true,
+    nodes: [],
+    edges: [],
+    project: { name: "vazia" },
+  },
+  files: [],
+  ignored: [],
+};
+
+describe("App, languages from the server (7.1, 7.2)", () => {
+  const genericReads =
+    "O 8n8 lê os arquivos de código da pasta e das subpastas.";
+
+  it("asks for the languages once, when it mounts", async () => {
+    render(<App />);
+    await waitFor(() => expect(languagesMock).toHaveBeenCalledTimes(1));
+  });
+
+  it("says the extensions of every language on the launcher", async () => {
+    languagesMock.mockResolvedValue([python, typescript]);
+    render(<App />);
+    expect(
+      await screen.findByText(
+        "O 8n8 lê os arquivos .py, .ts e .tsx da pasta e das subpastas.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("says it in generic words, with no language, while the list has not arrived", () => {
+    render(<App />);
+    expect(screen.getByText(genericReads)).toBeTruthy();
+  });
+
+  it("keeps the generic words when the list comes empty", async () => {
+    render(<App />);
+    await waitFor(() => expect(languagesMock).toHaveBeenCalled());
+    expect(screen.getByText(genericReads)).toBeTruthy();
+    expect(screen.queryByText(/\.py/)).toBeNull();
+  });
+
+  it("names the extensions in the empty-folder message, with 'ou'", async () => {
+    languagesMock.mockResolvedValue([
+      python,
+      { id: "typescript", label: "TypeScript", extensions: [".ts"] },
+    ]);
+    projectMock.mockResolvedValue(emptyFolder);
+    render(<App />);
+    await screen.findByText(/lê os arquivos \.py e \.ts/);
+    openFolder();
+    expect(
+      await screen.findByText("Nenhum arquivo .py ou .ts encontrado na pasta."),
+    ).toBeTruthy();
+  });
+
+  it("uses the generic empty-folder message when there is no list", async () => {
+    projectMock.mockResolvedValue(emptyFolder);
+    render(<App />);
+    openFolder();
+    expect(
+      await screen.findByText("Nenhum arquivo de código encontrado na pasta."),
+    ).toBeTruthy();
+  });
+
+  it("shows the detected language after Gerar mapa, with no warning when it is certain", async () => {
+    graphMock.mockResolvedValue(withLanguage(graph, detected(python)));
+    await generate();
+    await screen.findByTestId("canvas");
+    expect(screen.getByText("Python")).toBeTruthy();
+    expect(screen.queryByText(/Linguagem incerta/)).toBeNull();
+  });
+
+  it("warns when the language is uncertain", async () => {
+    graphMock.mockResolvedValue(
+      withLanguage(graph, detected(typescript, true)),
+    );
+    await generate();
+    await screen.findByTestId("canvas");
+    expect(
+      screen.getByText("Linguagem incerta. Mostrando como TypeScript."),
+    ).toBeTruthy();
+  });
+
+  it("shows no language label on a project map", async () => {
+    languagesMock.mockResolvedValue([python]);
+    projectMock.mockResolvedValue(loja);
+    render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    expect(screen.queryByText("Python")).toBeNull();
+    expect(screen.queryByText(/Linguagem incerta/)).toBeNull();
+  });
+
+  it("names the snippet after the detected language in the panel heading", async () => {
+    languagesMock.mockResolvedValue([python, typescript]);
+    explainMock.mockResolvedValue({ status: "no-key" });
+    graphMock.mockResolvedValue(withLanguage(graph, detected(typescript)));
+    render(<App />);
+    await screen.findByText(/lê os arquivos \.py, \.ts e \.tsx/);
+    fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
+    fireEvent.change(screen.getByLabelText("Trecho de código"), {
+      target: { value: source },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Gerar mapa" }));
+    await screen.findByTestId("canvas");
+    act(() => currentCanvas().onSelect("fn:calcular_frete"));
+    expect(
+      await screen.findByRole("heading", {
+        name: "CÓDIGO · trecho.ts, linhas 1 a 2",
+      }),
+    ).toBeTruthy();
+  });
+
+  it("names the snippet just 'trecho' when the languages did not arrive", async () => {
+    explainMock.mockResolvedValue({ status: "no-key" });
+    graphMock.mockResolvedValue(withLanguage(graph));
+    await generate();
+    await screen.findByTestId("canvas");
+    act(() => currentCanvas().onSelect("fn:calcular_frete"));
+    expect(
+      await screen.findByRole("heading", {
+        name: "CÓDIGO · trecho, linhas 1 a 2",
+      }),
+    ).toBeTruthy();
   });
 });

@@ -85,7 +85,7 @@ export async function generate(
 ): Promise<Graph> {
   await page.goto(`${base}/`);
   await page.getByRole("button", { name: /Colar trecho/ }).click();
-  await page.getByLabel("Trecho Python").fill(source);
+  await page.getByLabel("Trecho de código").fill(source);
   const response = page.waitForResponse("**/api/graph");
   await page.getByRole("button", { name: "Gerar mapa" }).click();
   const { graph } = (await (await response).json()) as { graph: Graph };

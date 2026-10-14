@@ -106,7 +106,7 @@ test.describe("Histórico", () => {
     await expect(drawer(page)).toBeHidden();
 
     await page.getByRole("button", { name: "Novo código" }).click();
-    await expect(page.getByLabel("Trecho Python")).toBeVisible();
+    await expect(page.getByLabel("Trecho de código")).toBeVisible();
     await toggle(page).click();
     await expect(rows(page)).toHaveCount(1);
     await expect(rows(page).first()).toContainText(item.title);

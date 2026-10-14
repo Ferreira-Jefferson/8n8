@@ -23,8 +23,10 @@ export interface DetailPanelProps {
   source: string;
   /** Where the server reads the code to explain (AD-015). */
   origin: ExplainOrigin;
-  /** The node's file in a project; a snippet is "trecho.py". */
+  /** The node's file in a project. */
   filePath?: string | undefined;
+  /** The name a snippet shows in the heading ("trecho.py"); "trecho" without a known language. */
+  snippetFile?: string | undefined;
   node: FlowNode;
   /** The reviewed title; without it the panel shows the provisional name (VID-14, 15). */
   title?: string | undefined;
@@ -46,7 +48,7 @@ const UPDATE_LABELS: Record<UpdateReason, string> = {
   "model-or-prompt": "o modelo ou o prompt mudou",
 };
 
-const SNIPPET_FILE = "trecho.py";
+const SNIPPET_FILE = "trecho";
 
 function nodeCode(source: string, node: FlowNode): string {
   return source
@@ -71,6 +73,7 @@ export function DetailPanel({
   source,
   origin,
   filePath,
+  snippetFile = SNIPPET_FILE,
   node,
   title,
   effects,
@@ -145,7 +148,7 @@ export function DetailPanel({
       {kind !== null && explainStyle(kind) === "step" && (
         <p className="rules">2 frases · voz ativa · um termo por conceito</p>
       )}
-      <h3 className="eyebrow">{codeHeading(filePath ?? SNIPPET_FILE, node)}</h3>
+      <h3 className="eyebrow">{codeHeading(filePath ?? snippetFile, node)}</h3>
       <CodeView
         code={nodeCode(source, node)}
         start={node.range.start}

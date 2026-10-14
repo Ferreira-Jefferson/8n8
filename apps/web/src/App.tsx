@@ -4,8 +4,10 @@ import {
   fileNodeOf,
   type Graph,
   type HistoryEntry,
+  type LanguageInfo,
   type NodeId,
   type ProjectResponse,
+  type SnippetLanguage,
 } from "@code2n8n/model";
 import {
   useCallback,
@@ -19,6 +21,7 @@ import {
   type ExplainOrigin,
   type ExplainResult,
   fetchGraph,
+  fetchLanguages,
   fetchProject,
 } from "./api";
 import { codeLineOf } from "./flow/card";
@@ -28,6 +31,7 @@ import { useTitles } from "./flow/use-titles";
 import { HistoryButton } from "./history/HistoryButton";
 import { HistoryDrawer } from "./history/HistoryDrawer";
 import { Home } from "./home/Home";
+import { noFilesText, readsText, snippetFileName } from "./languages";
 import { Breadcrumb } from "./nav/Breadcrumb";
 import {
   ancestry,
@@ -43,7 +47,13 @@ import { IgnoredFiles } from "./panel/IgnoredFiles";
 import { clampPanel, PanelResizer } from "./panel/PanelResizer";
 
 type Mapped =
-  | { kind: "snippet"; source: string; graph: Graph }
+  | {
+      kind: "snippet";
+      source: string;
+      graph: Graph;
+      /** Absent in a saved map: the history keeps no language. */
+      language?: SnippetLanguage | undefined;
+    }
   | { kind: "project"; root: string; response: ProjectResponse };
 
 interface PanelInput {
@@ -100,7 +110,6 @@ function isEditable(target: EventTarget | null): boolean {
   );
 }
 
-const SNIPPET_FILE = "trecho.py";
 const PANEL_WIDTH_KEY = "code2n8n.panelWidth";
 
 /** The width the viewer last dragged the panel to; storage may be blocked. */
@@ -186,6 +195,17 @@ export function App() {
   const [focusId, setFocusId] = useState<NodeId | null>(null);
   const [panelWidth, setPanelWidth] = useState(savedPanelWidth);
   const [historyOpen, setHistoryOpen] = useState(false);
+  // The languages the server reads; `[]` until they arrive, or if the call fails.
+  const [languages, setLanguages] = useState<LanguageInfo[]>([]);
+  useEffect(() => {
+    let alive = true;
+    fetchLanguages().then((list) => {
+      if (alive) setLanguages(list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   // Explanations already fetched in this map: re-opening a node asks no more.
   const explainCache = useRef(new Map<NodeId, ExplainResult>());
 
@@ -215,8 +235,8 @@ export function App() {
     setFailed(false);
     setNotFound(null);
     try {
-      const graph = await fetchGraph(text);
-      show({ kind: "snippet", source: text, graph });
+      const { graph, language } = await fetchGraph(text);
+      show({ kind: "snippet", source: text, graph, language });
     } catch {
       fail(null);
     }
@@ -324,7 +344,7 @@ export function App() {
         {graph?.empty && (
           <p>
             {mapped?.kind === "project"
-              ? "Nenhum arquivo .py encontrado na pasta."
+              ? noFilesText(languages)
               : "Nenhuma função ou instrução encontrada."}
           </p>
         )}
@@ -355,6 +375,7 @@ export function App() {
             onOpenEntry={openEntry}
             onShowHistory={() => setHistoryOpen((o) => !o)}
             historyOpen={historyOpen}
+            reads={readsText(languages)}
           />
           <div className="home-messages">{messages}</div>
           {drawer}
@@ -367,10 +388,10 @@ export function App() {
         <div className="panel editor-panel">
           <section aria-label="Editor">
             <header className="editor-head">
-              <span className="eyebrow">{SNIPPET_FILE}</span>
+              <span className="eyebrow">trecho</span>
             </header>
             <textarea
-              aria-label="Trecho Python"
+              aria-label="Trecho de código"
               value={text}
               onChange={(e) => setText(e.target.value)}
               spellCheck={false}
@@ -439,6 +460,13 @@ export function App() {
         {mapped.kind === "project" && (
           <IgnoredFiles ignored={mapped.response.ignored} />
         )}
+        {mapped.kind === "snippet" && mapped.language && (
+          <p className="snippet-language">
+            {mapped.language.uncertain
+              ? `Linguagem incerta. Mostrando como ${mapped.language.label}.`
+              : mapped.language.label}
+          </p>
+        )}
         <span className="node-count">
           {levelNodes.length === 1 ? "1 nó" : `${levelNodes.length} nós`}
         </span>
@@ -488,6 +516,10 @@ export function App() {
       {panelNode && (
         <DetailPanel
           {...panelInput(mapped, panelNode)}
+          snippetFile={snippetFileName(
+            mapped.kind === "snippet" ? mapped.language : undefined,
+            languages,
+          )}
           node={panelNode}
           title={titles.get(panelNode.id)}
           effects={externalEffects(graph, panelNode.id)}

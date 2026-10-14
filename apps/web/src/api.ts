@@ -1,8 +1,10 @@
 import type {
   ExplainResponse,
-  Graph,
+  GraphResponse,
   HistoryEntry,
   HistoryItem,
+  LanguageInfo,
+  LanguagesResponse,
   NodeTitle,
   ProjectResponse,
   TitlesResponse,
@@ -20,11 +22,23 @@ function post(url: string, body: unknown): Promise<Response> {
   });
 }
 
-export async function fetchGraph(source: string): Promise<Graph> {
+/** The graph of a snippet, with the language the server detected. */
+export async function fetchGraph(source: string): Promise<GraphResponse> {
   const res = await post("/api/graph", { source });
   if (!res.ok) throw new Error(`Falha ao gerar o mapa (HTTP ${res.status})`);
-  const body = (await res.json()) as { graph: Graph };
-  return body.graph;
+  return (await res.json()) as GraphResponse;
+}
+
+/** The languages the server reads; any failure gives `[]`, and the screen keeps its generic texts. */
+export async function fetchLanguages(): Promise<LanguageInfo[]> {
+  try {
+    const res = await fetch("/api/languages");
+    if (!res.ok) return [];
+    const body = (await res.json()) as LanguagesResponse;
+    return body.languages ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export type ProjectResult =
