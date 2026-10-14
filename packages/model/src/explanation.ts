@@ -55,7 +55,10 @@ export interface ExplainRequest {
   nodeId: NodeId;
   nodeName: string;
   nodeKind: ExplainKind;
+  /** The node's code with its docstring masked: the same number of lines, the docstring lines blank (the first reads `# docstring omitida`). */
   code: string;
+  /** The docstring text, apart from `code`; `line` is its first line inside `code` (1-based). The summary never comes from it. */
+  docstring?: { text: string; line: number };
   range: LineRange;
   calls: string[];
   calledBy: string[];

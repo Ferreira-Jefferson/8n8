@@ -47,6 +47,8 @@ export interface FlowNode {
   syntaxError?: { line: number };
   /** POSIX path relative to the root; only on `folder` and `file` nodes (`""` for the root). */
   path?: string;
+  /** function, class and module: the lines of its docstring, in the same absolute lines as `range`. */
+  docstring?: LineRange;
 }
 
 export type EdgeKind = "calls" | "next" | "branch" | "imports";
