@@ -22,7 +22,6 @@ import {
   MAIN_FLOW,
   nodeById,
   nodes,
-  OFFLINE,
   openMarks,
   PEDIDO,
   panel,
@@ -31,10 +30,9 @@ import {
 } from "./mapa";
 
 // Feature 05, navigation (VID-18..27): one click opens a node's inner flow and
-// shows its panel; "Voltar" and Esc go back one level at a time. On the server
-// with no key (4317): the trail shows provisional names (VID-19 allows them).
-// On the keyed server, a title or summary that arrives while a level opens can
-// leave that level blank (bug reported apart), so these specs avoid that race.
+// shows its panel; "Voltar" and Esc go back one level at a time. On the keyed
+// server (4319) against the fake LLM: titles and summaries arrive while the
+// levels open, and the trail shows the titles.
 
 /** The inner level of processar_pedido: its 8 steps, RETORNO included (VID-20). */
 const PEDIDO_LEVEL = [...MAIN_FLOW.slice(1), `${PEDIDO}/s7`];
@@ -113,6 +111,8 @@ async function expectSelectedNearCentre(page: Page, id: string) {
 }
 
 test.describe("Navegação", () => {
+  test.beforeEach(freshReal);
+
   test("VID-23: on the keyed server, opening Calcular frete after the titles came draws its 5 cards, every time", async ({
     page,
   }) => {
@@ -132,7 +132,7 @@ test.describe("Navegação", () => {
   test("VID-23, IT P1: one click on Calcular frete opens HTTP, EXTERNO, SE and two RETORNO and shows the panel", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, VIDEO);
+    await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     await expect(panel(page)).toHaveCount(0);
     await clickCard(page, `${PEDIDO}/s3`);
@@ -152,7 +152,7 @@ test.describe("Navegação", () => {
   test("VID-18: the clicked card grows into a lime frame over the canvas before the inner steps show", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, VIDEO);
+    await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     const c = await box(canvas(page));
     await clickCard(page, `${PEDIDO}/s3`);
@@ -186,7 +186,7 @@ test.describe("Navegação", () => {
   test("VID-19: the trail reads Fluxo principal › <title of each opened node>", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, VIDEO);
+    await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     await expect.poll(() => trail(page)).toBe("Fluxo principal");
     await clickCard(page, `${PEDIDO}/s3`);
@@ -203,7 +203,7 @@ test.describe("Navegação", () => {
     await expectLevel(page, FRETE_LEVEL);
     await expect
       .poll(() => trail(page))
-      .toBe("Fluxo principal › Processar pedido › Calcular frete");
+      .toBe("Fluxo principal › Pedido recebido › Calcular frete");
     // Each item keeps its full name in title (the middle ones may end in "…").
     const buttons = breadcrumb(page).getByRole("button");
     for (const b of await buttons.all()) {
@@ -217,7 +217,7 @@ test.describe("Navegação", () => {
   test("VID-20: RETORNO steps have no outgoing wire, in calcular_frete and in processar_pedido", async ({
     page,
   }) => {
-    const graph = await generate(page, OFFLINE, VIDEO);
+    const graph = await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     await clickCard(page, `${PEDIDO}/s3`);
     await expectLevel(page, FRETE_LEVEL);
@@ -251,7 +251,7 @@ test.describe("Navegação", () => {
     // A step after the if: the "não" wire reaches it, the RETORNO's never does.
     await generate(
       page,
-      OFFLINE,
+      REAL,
       "def f(x):\n    if x:\n        return 1\n    print(x)\n",
     );
     await expectLevel(page, ["fn:f", "fn:f/s1"]);
@@ -266,7 +266,7 @@ test.describe("Navegação", () => {
   test("VID-21: the first step of sim sits above the first step of não, each wire labelled", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, VIDEO);
+    await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     await clickCard(page, `${PEDIDO}/s3`);
     await expectLevel(page, FRETE_LEVEL);
@@ -283,7 +283,7 @@ test.describe("Navegação", () => {
   });
 
   test("VID-22: clicking a leaf draws its border in lime", async ({ page }) => {
-    await generate(page, OFFLINE, VIDEO);
+    await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     const leaf = cardOf(page, `${PEDIDO}/s1`);
     expect(await css(leaf, "border-top-color")).not.toBe(LIME);
@@ -298,14 +298,14 @@ test.describe("Navegação", () => {
   test("VID-25: clicking the HTTP leaf shows its panel and keeps the same 5 cards", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, VIDEO);
+    await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     await clickCard(page, `${PEDIDO}/s3`);
     await expectLevel(page, FRETE_LEVEL);
     const before = await crumbs(page);
     await clickCard(page, `${FRETE}/s0`);
     await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
-      "Get",
+      "Buscar UF pelo CEP",
     );
     expect(await ids(page)).toEqual(FRETE_LEVEL);
     expect(await crumbs(page)).toEqual(before);
@@ -315,7 +315,7 @@ test.describe("Navegação", () => {
   test("VID-27: Voltar is off and Esc does nothing at the top; below, each goes up one level and selects the node we came from", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, VIDEO);
+    await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     await expect(backButton(page)).toBeDisabled();
     // Top left of the canvas.
@@ -337,7 +337,7 @@ test.describe("Navegação", () => {
     await expectLevel(page, PEDIDO_LEVEL);
     await expect
       .poll(() => crumbs(page))
-      .toEqual(["Fluxo principal", "Processar pedido"]);
+      .toEqual(["Fluxo principal", "Pedido recebido"]);
     await expectSelectedNearCentre(page, `${PEDIDO}/s3`);
 
     await backButton(page).click();
@@ -349,10 +349,12 @@ test.describe("Navegação", () => {
 });
 
 test.describe("Descida até as folhas", () => {
+  test.beforeEach(freshReal);
+
   test("VID-24/26: cards of PASTA, ARQUIVO, GATILHO, FUNÇÃO, LAÇO and BLOCO show › and the others do not", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, VIDEO);
+    await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     const opens = new Set(["GATILHO", "FUNÇÃO", "LAÇO", "BLOCO"]);
     for (const level of [MAIN_FLOW, PEDIDO_LEVEL]) {
@@ -370,7 +372,7 @@ test.describe("Descida até as folhas", () => {
     ).toBe(LIME);
 
     // LAÇO and BLOCO open; the call inside the loop is a leaf.
-    await generate(page, OFFLINE, LOOP_AND_BLOCK);
+    await generate(page, REAL, LOOP_AND_BLOCK);
     await expectLevel(page, ["fn:g", "fn:g/s0", "fn:g/s1"]);
     expect(await cardTags(page)).toEqual(["GATILHO", "LAÇO", "BLOCO"]);
     expect(await openMarks(page)).toEqual([true, true, true]);
@@ -379,7 +381,7 @@ test.describe("Descida até as folhas", () => {
     expect(await openMarks(page)).toEqual([false]);
 
     // PASTA and ARQUIVO open.
-    await page.goto(`${OFFLINE}/`);
+    await page.goto(`${REAL}/`);
     await page.getByLabel("Caminho da pasta").fill(LOJA);
     await page.getByRole("button", { name: "Abrir pasta" }).click();
     await expect(nodes(page)).toHaveCount(4);
@@ -394,7 +396,7 @@ test.describe("Descida até as folhas", () => {
   test("VID-24 edge: opening a recursive call stacks the same level again, one click at a time", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, RECURSIVE);
+    await generate(page, REAL, RECURSIVE);
     await expectLevel(page, ["fn:contar", "fn:contar/s0"]);
     await clickCard(page, "fn:contar");
     const inner = ["fn:contar/s0", "fn:contar/s0/b0/s0"];
@@ -403,7 +405,7 @@ test.describe("Descida até as folhas", () => {
     await clickCard(page, "fn:contar/s0/b0/s0");
     await expect
       .poll(() => crumbs(page))
-      .toEqual(["Fluxo principal", "Contar", "Contar"]);
+      .toEqual(["Fluxo principal", "Contar até zero", "Contar"]);
     await expectLevel(page, inner);
     // The descent waits for the next click.
     await page.waitForTimeout(1500);
@@ -427,7 +429,7 @@ test.describe("Descida até as folhas", () => {
     }) => {
       test.setTimeout(120_000);
       await page.setViewportSize(size);
-      await generate(page, OFFLINE, VIDEO);
+      await generate(page, REAL, VIDEO);
       await expectLevel(page, MAIN_FLOW);
       // Panel closed: the whole level is in view.
       await expect(panel(page)).toHaveCount(0);
@@ -447,7 +449,6 @@ test.describe("Descida até as folhas", () => {
         if (!marks.some(Boolean)) leafLevels.push(level);
         for (const [i, id] of level.entries()) {
           const trailBefore = await crumbs(page);
-          const name = (await cardNames(page))[i];
           await clickCard(page, id);
           if (marks[i]) {
             opened.push(id);
@@ -465,10 +466,16 @@ test.describe("Descida até as folhas", () => {
             await expectSelectedNearCentre(page, id);
           } else {
             leaves++;
-            // A leaf only selects and shows its panel (VID-25).
-            await expect(
-              panel(page).getByRole("heading", { level: 2 }),
-            ).toHaveText(name as string);
+            // A leaf only selects and shows its panel (VID-25). Its title
+            // may arrive meanwhile: the panel and the card show the same one.
+            await expect
+              .poll(async () => {
+                const heading = await panel(page)
+                  .getByRole("heading", { level: 2 })
+                  .textContent();
+                return [heading === (await cardNames(page))[i], heading];
+              })
+              .toEqual([true, expect.stringMatching(/\S/)]);
             await expect(cardOf(page, id)).toHaveClass(/\bon\b/);
             expect(await ids(page)).toEqual(level);
             expect(await crumbs(page)).toEqual(trailBefore);

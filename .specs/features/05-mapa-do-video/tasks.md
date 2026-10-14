@@ -1386,7 +1386,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 ### T46: E2E da navegação
 
-**What**: Criar `e2e/navegacao.e2e.ts` com os testes de VID-18 a 27 e a borda da recursão, no servidor com o LLM falso. Desvio: os testes rodam no servidor sem chave (4317). No servidor com o LLM falso, um título ou resumo que chega enquanto um nível abre deixa o nível em branco (bug do canvas, relatado à parte).
+**What**: Criar `e2e/navegacao.e2e.ts` com os testes de VID-18 a 27 e a borda da recursão, no servidor com o LLM falso (4319). Os testes rodaram no servidor sem chave (4317) até a correção do bug do canvas em branco e voltaram ao 4319 depois dela.
 **Where**: `e2e/navegacao.e2e.ts` (novo)
 **Depends on**: None
 **Reuses**: os helpers de T43
