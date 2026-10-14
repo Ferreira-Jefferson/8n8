@@ -203,6 +203,14 @@ function card(container: HTMLElement, id: NodeId): HTMLElement {
   return el;
 }
 
+// The first React Flow render in a file pays a one-off cold cost in jsdom
+// (seconds when every package runs its tests at once). Paying it here keeps
+// it out of whichever test comes first, like src/__tests__/setup.tsx.
+beforeAll(() => {
+  render(<FlowCanvas {...props()} />);
+  cleanup();
+}, 30_000);
+
 const node = (id: NodeId) =>
   videoGraph.nodes.find((n) => n.id === id) as FlowNode;
 
