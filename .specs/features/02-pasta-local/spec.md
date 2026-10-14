@@ -68,9 +68,9 @@ Depende de: 01-fatia-central.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| PROJ-01..09 | P1: Pasta local | - | Pending |
+| PROJ-01..09 | P1: Pasta local | Execute | Verified |
 
-**Coverage:** 9 total, 0 mapped to tasks.
+**Coverage:** 9 total, 9 mapped to tasks, 9 verified (validation.md, iteração 3).
 
 ---
 
