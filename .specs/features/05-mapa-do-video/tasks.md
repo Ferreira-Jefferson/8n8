@@ -981,9 +981,9 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O cartão mostra o comando e tem `data-anchor-id` igual à âncora, ou `"frame"`.
-- [ ] O clique chama `onSuggestion(explainedId, line)` uma vez.
-- [ ] Gate passa.
+- [x] O cartão mostra o comando e tem `data-anchor-id` igual à âncora, ou `"frame"`.
+- [x] O clique chama `onSuggestion(explainedId, line)` uma vez.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
