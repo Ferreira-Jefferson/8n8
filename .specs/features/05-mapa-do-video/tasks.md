@@ -1168,14 +1168,15 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `FakeCall.role` aceita `"title"` e `"title-review"`, e o log registra os dois.
-- [ ] As tabelas de D1 estão no arquivo, na ordem do design.
-- [ ] `tsc -p e2e` passa.
+- [x] `FakeCall.role` aceita `"title"` e `"title-review"`, e o log registra os dois.
+- [x] As tabelas de D1 estão no arquivo, na ordem do design.
+- [x] `tsc -p e2e` passa.
 
 **Tests**: none (falso do E2E; exercitado por T40, T41 e T43 a T50)
 **Gate**: build · `pnpm typecheck`
 
 **Commit**: `test(e2e): teach the fake llm titles and the video scenarios`
+**Status**: ✅ Complete
 
 ---
 
