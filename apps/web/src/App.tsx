@@ -56,9 +56,9 @@ function openAction(graph: Graph, node: FlowNode): NavAction {
     target !== undefined &&
     fileNodeOf(graph, target) !== fileNodeOf(graph, node.id)
   ) {
-    return { type: "jump", path: ancestry(graph, target) };
+    return { type: "jump", path: ancestry(graph, target), via: node.id };
   }
-  return { type: "open", node };
+  return { type: "click", node };
 }
 
 /** Paste a snippet or open a local folder, see one level of its map, drill down and read a node's detail. */
@@ -121,7 +121,7 @@ export function App() {
   );
 
   const graph = mapped ? graphOf(mapped) : null;
-  const levelId = nav.path.at(-1) ?? null;
+  const levelId = nav.path.at(-1)?.id ?? null;
   const selected = graph?.nodes.find((n) => n.id === nav.selected) ?? null;
 
   return (
@@ -163,7 +163,7 @@ export function App() {
           <>
             <Breadcrumb
               graph={graph}
-              path={nav.path}
+              path={nav.path.map((o) => o.id)}
               onGoTo={(index) => dispatch({ type: "goTo", index })}
             />
             <div className="canvas">

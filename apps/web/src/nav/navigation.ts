@@ -1,15 +1,26 @@
 import type { FlowNode, Graph, NodeId } from "@code2n8n/model";
 
+/** An opened level; `via` is the card clicked on the level above. */
+export interface Opened {
+  id: NodeId;
+  via: NodeId;
+}
+
 export interface NavState {
-  path: NodeId[];
+  path: Opened[];
   selected: NodeId | null;
 }
 
 export type NavAction =
-  | { type: "open"; node: FlowNode }
+  /** Opens the node when it has an inner flow; otherwise only selects it. */
+  | { type: "click"; node: FlowNode }
+  /** Goes back one level; does nothing on the top level. */
+  | { type: "back" }
+  /** Breadcrumb: keeps `path[0..index)`. */
   | { type: "goTo"; index: number }
+  /** Suggestion card (VID-33). */
   | { type: "select"; id: NodeId }
-  | { type: "jump"; path: NodeId[] };
+  | { type: "jump"; path: NodeId[]; via: NodeId };
 
 export const initialNav: NavState = { path: [], selected: null };
 
@@ -42,18 +53,46 @@ function openTarget(node: FlowNode): NodeId | null {
   }
 }
 
+/** The node whose panel shows: a call shows its target's panel. */
+export function panelNodeOf(node: FlowNode): NodeId {
+  return node.kind === "call" && node.target !== undefined
+    ? node.target
+    : node.id;
+}
+
+/** Click opens, "Voltar" and the breadcrumb go back to the card you came from (VID-23, 24, 25, 27). */
 export function navReducer(state: NavState, action: NavAction): NavState {
   switch (action.type) {
-    case "open": {
-      const id = openTarget(action.node);
-      if (id === null) return state;
-      return { path: [...state.path, id], selected: null };
+    case "click": {
+      const { node } = action;
+      const id = openTarget(node);
+      if (id === null) return { ...state, selected: node.id };
+      return {
+        path: [...state.path, { id, via: node.id }],
+        selected: node.id,
+      };
     }
+    case "back":
+      return goTo(state, state.path.length - 1);
     case "goTo":
-      return { path: state.path.slice(0, action.index), selected: null };
+      return goTo(state, action.index);
     case "select":
       return { ...state, selected: action.id };
-    case "jump":
-      return { path: action.path, selected: null };
+    case "jump": {
+      const last = action.path.length - 1;
+      return {
+        path: action.path.map((id, i) => ({
+          id,
+          via: i === last ? action.via : id,
+        })),
+        selected: action.via,
+      };
+    }
   }
+}
+
+function goTo(state: NavState, index: number): NavState {
+  const left = state.path[index];
+  if (index < 0 || left === undefined) return state;
+  return { path: state.path.slice(0, index), selected: left.via };
 }

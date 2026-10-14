@@ -161,6 +161,8 @@ describe("App", () => {
   });
 
   it("returns the canvas to the top level when Trecho is clicked after opening a node (CORE-15)", async () => {
+    // VID-23: opening a node also shows its panel, which asks for a summary.
+    explainMock.mockResolvedValue({ status: "no-key" });
     graphMock.mockResolvedValue(graph);
     await generate();
     await screen.findByTestId("canvas");
@@ -334,6 +336,8 @@ function lojaNode(id: string): FlowNode {
 
 describe("App calls in a project (PROJ-04)", () => {
   it("jumps to the called function's file when the call goes to another file", async () => {
+    // VID-23: opening a node also shows its panel, which asks for a summary.
+    explainMock.mockResolvedValue({ status: "no-key" });
     projectMock.mockResolvedValue(loja);
     render(<App />);
     openFolder();
@@ -368,6 +372,8 @@ describe("App calls in a project (PROJ-04)", () => {
   });
 
   it("stacks a call to a function of the same file, like a snippet", async () => {
+    // VID-23: opening a node also shows its panel, which asks for a summary.
+    explainMock.mockResolvedValue({ status: "no-key" });
     const node = (n: Partial<FlowNode> & Pick<FlowNode, "id" | "kind">) =>
       ({
         label: n.id,

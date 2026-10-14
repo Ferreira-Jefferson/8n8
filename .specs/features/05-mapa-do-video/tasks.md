@@ -870,14 +870,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `click` em `call` empilha `{ id: target, via: <id do passo> }` e seleciona o passo. `click` em `loop`, `block`, `function`, `module`, `folder` ou `file` empilha o próprio nó.
-- [ ] `click` em `code`, `condition`, `external` ou `return` só seleciona (VID-25).
-- [ ] `back` com 2 níveis volta a 1 e seleciona o `via` do nível que saiu. `back` no topo não muda o estado (VID-27).
-- [ ] `goTo(0)` volta ao topo e seleciona o `via` do primeiro nível.
-- [ ] Recursão: `click` no passo `call` para a mesma função empilha o mesmo `id` de novo.
-- [ ] `jump` (PROJ-04) monta o caminho a partir de `ancestry`.
-- [ ] `panelNodeOf(call)` é o `target`, e os outros nós dão o próprio nó.
-- [ ] Gate Build C passa (fecha a fase).
+- [x] `click` em `call` empilha `{ id: target, via: <id do passo> }` e seleciona o passo. `click` em `loop`, `block`, `function`, `module`, `folder` ou `file` empilha o próprio nó.
+- [x] `click` em `code`, `condition`, `external` ou `return` só seleciona (VID-25).
+- [x] `back` com 2 níveis volta a 1 e seleciona o `via` do nível que saiu. `back` no topo não muda o estado (VID-27).
+- [x] `goTo(0)` volta ao topo e seleciona o `via` do primeiro nível.
+- [x] Recursão: `click` no passo `call` para a mesma função empilha o mesmo `id` de novo.
+- [x] `jump` (PROJ-04) monta o caminho a partir de `ancestry`.
+- [x] `panelNodeOf(call)` é o `target`, e os outros nós dão o próprio nó.
+- [x] Gate Build C passa (fecha a fase).
 
 **Tests**: unit
 **Gate**: build · Build C
