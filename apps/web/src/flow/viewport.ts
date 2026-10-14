@@ -138,6 +138,7 @@ export function fitViewport(
  * - A level that fits whole at `LEGIBLE_ZOOM` or more keeps its shape.
  * - Otherwise the longest row length that fits at `MIN_START_ZOOM` or more.
  * - Otherwise the row length with the largest zoom, when that is legible.
+ * - Otherwise the longest row that fills the canvas width at `MIN_START_ZOOM`.
  * A wrapped level is measured with `WRAP_PAD` at the sides.
  */
 export function chooseWrap(
@@ -158,7 +159,15 @@ export function chooseWrap(
       zoom = z;
     }
   }
-  return zoom >= LEGIBLE_ZOOM ? best : null;
+  if (zoom >= LEGIBLE_ZOOM) return best;
+  // Too tall to show whole at a legible zoom: rows as wide as the canvas
+  // takes at `MIN_START_ZOOM`; the viewer pans down for the rest.
+  const freeW = (width - 2 * WRAP_PAD) / MIN_START_ZOOM;
+  for (let n = longest - 1; n >= 1; n--) {
+    const b = boundsOf(layoutFor(n));
+    if (b && b.w <= freeW) return n;
+  }
+  return null;
 }
 
 /**

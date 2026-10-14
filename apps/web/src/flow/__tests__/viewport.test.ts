@@ -160,6 +160,17 @@ describe("chooseWrap (VID-03, VID-10, VID-23)", () => {
     expect(fitZoom(cols(3), 940, 768)).toBeGreaterThanOrEqual(MIN_START_ZOOM);
   });
 
+  it("wraps a level too tall for a legible whole view into rows that fill the width at 0.8", () => {
+    const long = (k: number) =>
+      layoutRows(wrapRows([Array.from({ length: 60 }, (_, i) => `n${i}`)], k));
+    const n = chooseWrap(60, long, 1400, 890);
+    expect(n).toBe(4);
+    expect(fitZoom(long(60), 1400, 890)).toBeLessThan(LEGIBLE_ZOOM);
+    expect(fitZoom(long(n ?? 0), 1400, 890)).toBeLessThan(LEGIBLE_ZOOM);
+    const v = levelViewport(long(4), 1400, 890, undefined, WRAP_PAD);
+    expect(v.zoom).toBe(MIN_START_ZOOM);
+  });
+
   it("measures a wrapped level with WRAP_PAD at the sides, room for the turning wires", () => {
     // Rows of 5 fit 1540 px at 0.81 with FIT_PAD but only 0.78 with WRAP_PAD.
     expect(fitZoom(main(5), 1540, 900)).toBeGreaterThanOrEqual(MIN_START_ZOOM);
