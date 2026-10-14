@@ -200,6 +200,41 @@ test.describe("Navegação", () => {
     }
   });
 
+  for (const reduced of [false, true]) {
+    test(`VID-23: on the keyed server, Calcular frete opened at once or after the titles shows 5 cards with a size, resting at opacity 1 or dimmed${reduced ? ", reduced motion" : ""}`, async ({
+      page,
+    }) => {
+      // The scenario of e2e/performance.e2e.ts (b) and (b'). Suggestion cards
+      // dim the other cards to 0.55 (.node.dim): that is drawn, not blank.
+      if (reduced) await page.emulateMedia({ reducedMotion: "reduce" });
+      for (const atOnce of [true, false]) {
+        await freshReal();
+        await generate(page, REAL, VIDEO);
+        await expectLevel(page, MAIN_FLOW);
+        if (!atOnce)
+          await expect.poll(() => cardNames(page)).toContain("Pedido recebido");
+        await clickCard(page, `${PEDIDO}/s3`);
+        await expectLevel(page, FRETE_LEVEL);
+        await expect
+          .poll(() =>
+            nodes(page).evaluateAll((els) =>
+              els.map((el) => {
+                const card = el.querySelector(".node") as HTMLElement;
+                const rest = card.classList.contains("dim") ? "0.55" : "1";
+                return (
+                  getComputedStyle(el).visibility === "visible" &&
+                  card.offsetWidth > 0 &&
+                  card.offsetHeight > 0 &&
+                  getComputedStyle(card).opacity === rest
+                );
+              }),
+            ),
+          )
+          .toEqual(FRETE_LEVEL.map(() => true));
+      }
+    });
+  }
+
   test("VID-23, IT P1: one click on Calcular frete opens HTTP, EXTERNO, SE and two RETORNO and shows the panel", async ({
     page,
   }) => {
