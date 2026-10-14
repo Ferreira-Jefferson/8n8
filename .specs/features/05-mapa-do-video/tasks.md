@@ -1286,13 +1286,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Os 9 testes continuam e passam.
-- [ ] O gate final passa (fecha a fase): typecheck, check, unit e a suíte E2E atualizada inteira.
+- [x] Os 9 testes continuam e passam.
+- [ ] O gate final passa (fecha a fase): typecheck, check, unit e a suíte E2E atualizada inteira. Typecheck, check e unit passam. O E2E inteiro falha de forma intermitente: em cerca de 1 a cada 15 mapas gerados, os cartões ficam com `visibility: hidden` para sempre (bug do canvas, fora da trilha D).
 
 **Tests**: e2e
 **Gate**: build · Build final
 
 **Commit**: `test(e2e): keep the folder e2e on single click`
+**Status**: ⚠️ Partial (gate do E2E bloqueado pelo bug do canvas em branco)
 
 ---
 
