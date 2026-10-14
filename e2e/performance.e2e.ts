@@ -59,6 +59,9 @@ const serverName = (base: string) =>
 /**
  * Milliseconds from a click (run in the page) until `ids` are drawn, and until
  * they are settled. Null when the level stays blank (the canvas bug).
+ * Settled means each card reached its resting opacity: 1, or 0.55 when it is
+ * dimmed under suggestion cards (`.node.dim`). On the keyed server the opened
+ * level shows suggestion cards, so most cards rest at 0.55, not 1.
  */
 async function timeClick(
   page: Page,
@@ -70,6 +73,7 @@ async function timeClick(
     new Function(code)();
     return t;
   }, click);
+  let drawnAt: number;
   try {
     const d = await page.waitForFunction(
       (list) =>
@@ -84,31 +88,33 @@ async function timeClick(
       ids,
       { polling: "raf", timeout: 8000 },
     );
-    const drawnAt = (await d.jsonValue()) as number;
-    const s = await page.waitForFunction(
-      (list) =>
-        list.every((id: string) => {
-          const el = document.querySelector(
-            `[aria-roledescription="node"][data-id="${id}"]`,
-          );
-          const card = el?.querySelector(".node");
-          return (
-            el !== null &&
-            card &&
-            getComputedStyle(el).visibility === "visible" &&
-            getComputedStyle(card).opacity === "1"
-          );
-        })
-          ? performance.now()
-          : 0,
-      ids,
-      { polling: "raf", timeout: 15_000 },
-    );
-    const settledAt = (await s.jsonValue()) as number;
-    return { drawn: drawnAt - t0, settled: settledAt - t0 };
+    drawnAt = (await d.jsonValue()) as number;
   } catch {
     return null;
   }
+  // Drawn but never settled is a failure, not a blank level.
+  const s = await page.waitForFunction(
+    (list) =>
+      list.every((id: string) => {
+        const el = document.querySelector(
+          `[aria-roledescription="node"][data-id="${id}"]`,
+        );
+        const card = el?.querySelector(".node");
+        return (
+          el !== null &&
+          card &&
+          getComputedStyle(el).visibility === "visible" &&
+          getComputedStyle(card).opacity ===
+            (card.classList.contains("dim") ? "0.55" : "1")
+        );
+      })
+        ? performance.now()
+        : 0,
+    ids,
+    { polling: "raf", timeout: 15_000 },
+  );
+  const settledAt = (await s.jsonValue()) as number;
+  return { drawn: drawnAt - t0, settled: settledAt - t0 };
 }
 
 const CLICK_GENERATE = `[...document.querySelectorAll("button")].find((b) => b.textContent === "Gerar mapa").click();`;
