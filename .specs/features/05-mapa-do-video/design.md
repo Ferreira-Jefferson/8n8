@@ -678,6 +678,7 @@ export type NavAction =
 - O primeiro item é "Fluxo principal" num trecho. Num projeto, continua o nome do projeto (PROJ-04).
 - Depois vem um item por `Opened`, com o título do cartão `via`: o título revisado ou, sem ele, o nome provisório.
 - O separador é `›`. Cada item continua sendo um botão de `goTo`.
+- A trilha fica numa linha só (`display: flex`, `white-space: nowrap`, `overflow: hidden`). Quando falta espaço, os itens do meio encolhem primeiro (`flex-shrink: 1000`) e terminam em "…" (`text-overflow: ellipsis`), até `min-width: 4ch`. Depois encolhe o primeiro item. O último item nunca encolhe. Cada botão tem `title` com o nome completo, e o texto completo continua no DOM.
 
 ### C13. Painel: `panel/DetailPanel.tsx` (VID-28, VID-29, VID-30, VID-33)
 

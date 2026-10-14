@@ -64,6 +64,26 @@ describe("styles: panel beside the level (VID-23, VID-25)", () => {
   });
 });
 
+describe("styles: breadcrumb (VID-19)", () => {
+  it("stays on one line", () => {
+    const r = rule(".breadcrumb");
+    expect(r).toContain("display: flex;");
+    expect(r).toContain("white-space: nowrap;");
+    expect(r).toContain("overflow: hidden;");
+  });
+
+  it("cuts the middle items with … first and keeps the last one whole", () => {
+    const item = rule(".breadcrumb button");
+    expect(item).toContain("text-overflow: ellipsis;");
+    expect(item).toContain("min-width: 4ch;");
+    expect(
+      rule(".breadcrumb button:not(:first-child):not(:last-child)"),
+    ).toContain("flex-shrink: 1000;");
+    expect(rule(".breadcrumb button:last-child")).toContain("flex-shrink: 0;");
+    expect(rule(".breadcrumb span")).toContain("flex-shrink: 0;");
+  });
+});
+
 describe("styles: branch labels (VID-21)", () => {
   it("are 22 px eyebrow labels, uppercase and tracked, on one line", () => {
     const r = rule(".branch-label");

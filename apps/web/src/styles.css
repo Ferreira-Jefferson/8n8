@@ -201,17 +201,32 @@ body {
   z-index: 10;
 }
 
+/* One line: the middle items shrink with "…" first, then the first one; the
+   last item stays whole (VID-19). */
 .breadcrumb {
   position: absolute;
   left: 160px;
   top: 34px;
   right: 240px;
   z-index: 10;
+  display: flex;
+  align-items: baseline;
+  overflow: hidden;
+  white-space: nowrap;
   font: 400 22px var(--font-mono);
   color: var(--accent);
 }
 
+.breadcrumb span {
+  flex-shrink: 0;
+  white-space: pre;
+}
+
 .breadcrumb button {
+  flex-shrink: 1;
+  min-width: 4ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   border: 0;
   background: none;
@@ -221,7 +236,12 @@ body {
   cursor: pointer;
 }
 
+.breadcrumb button:not(:first-child):not(:last-child) {
+  flex-shrink: 1000;
+}
+
 .breadcrumb button:last-child {
+  flex-shrink: 0;
   color: var(--second);
 }
 
