@@ -1,4 +1,13 @@
-import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
@@ -56,6 +65,20 @@ function cachedFiles(): string[] {
   return existsSync(dir)
     ? readdirSync(dir).filter((f) => f.endsWith(".json"))
     : [];
+}
+
+const sha256 = (text: string) =>
+  createHash("sha256").update(text).digest("hex");
+/** The node's entry: `<cache>/nodes/<sha256(node identity)>.json`; a snippet node's identity is its id. */
+const entryFile = (id: string) => join(CACHE, "nodes", `${sha256(id)}.json`);
+
+/** The rewritten entry is read back: reopening FRETE comes from the cache, with no LLM call. */
+async function expectValidEntry(page: Page) {
+  expect(cachedFiles()).toEqual([`${sha256(FRETE)}.json`]);
+  await open(page, PEDIDO);
+  expect((await open(page, FRETE)).fromCache).toBe(true);
+  await expect(badge(panel(page))).toHaveText("Revisado");
+  expect(freteCalls(await fakeLog())).toHaveLength(2);
 }
 
 test.beforeEach(async () => {
@@ -123,6 +146,75 @@ test.describe("Cache por nó", () => {
     await expect(panel(page).getByRole("status")).toHaveText(
       "Resumo atualizado: o código mudou",
     );
+  });
+
+  test("CACHE-07: a corrupted entry counts as absent and is replaced", async ({
+    page,
+  }) => {
+    mkdirSync(dirname(entryFile(FRETE)), { recursive: true });
+    writeFileSync(entryFile(FRETE), '{"schemaVersion": 2, "nodeId": ', "utf8");
+
+    await generate(page, VIDEO);
+    expect((await open(page, FRETE)).fromCache).toBe(false);
+    await expect(badge(panel(page))).toHaveText("Revisado");
+    await expect(panel(page).getByRole("status")).toHaveCount(0);
+    expect(freteCalls(await fakeLog())).toHaveLength(2);
+    await expectValidEntry(page);
+  });
+
+  test("CACHE-07: an old-format entry counts as absent and is replaced", async ({
+    page,
+  }) => {
+    await generate(page, VIDEO);
+    await open(page, FRETE);
+    await expect(badge(panel(page))).toHaveText("Revisado");
+    // The same entry as version 1, with a summary the product never wrote.
+    const entry = JSON.parse(readFileSync(entryFile(FRETE), "utf8"));
+    entry.schemaVersion = 1;
+    entry.result.summary = "Resumo antigo.";
+    entry.result.sentences = [{ id: "s1", text: "Resumo antigo.", lines: [1] }];
+    writeFileSync(entryFile(FRETE), JSON.stringify(entry), "utf8");
+    await resetFake();
+
+    await open(page, PEDIDO);
+    expect((await open(page, FRETE)).fromCache).toBe(false);
+    await expect(badge(panel(page))).toHaveText("Revisado");
+    await expect(panel(page)).not.toContainText("Resumo antigo.");
+    await expect(panel(page).getByRole("status")).toHaveCount(0);
+    expect(freteCalls(await fakeLog())).toHaveLength(2);
+    await expectValidEntry(page);
+  });
+
+  test("CACHE-07: a feature-01 file is never read and stays on disk", async ({
+    page,
+  }) => {
+    // Feature 01 kept `<dir>/<key>.json` entries with schemaVersion 1.
+    const legacy = join(CACHE, `${sha256(FRETE)}.json`);
+    const legacyBody = JSON.stringify({
+      schemaVersion: 1,
+      key: sha256(FRETE),
+      model: "e2e/drafter",
+      promptVersion: "000000000000",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      result: {
+        summary: "Resumo da feature 01.",
+        sentences: [{ id: "s1", text: "Resumo da feature 01.", lines: [1] }],
+        inputs: [],
+        outputs: [],
+        suggestions: [],
+      },
+    });
+    mkdirSync(CACHE, { recursive: true });
+    writeFileSync(legacy, legacyBody, "utf8");
+
+    await generate(page, VIDEO);
+    expect((await open(page, FRETE)).fromCache).toBe(false);
+    await expect(badge(panel(page))).toHaveText("Revisado");
+    await expect(panel(page)).not.toContainText("Resumo da feature 01.");
+    await expect(panel(page).getByRole("status")).toHaveCount(0);
+    expect(freteCalls(await fakeLog())).toHaveLength(2);
+    expect(readFileSync(legacy, "utf8")).toBe(legacyBody);
+    await expectValidEntry(page);
   });
 
   test("CACHE-05/02, IT P2: moving the node keeps the cache and shifts the evidence lines", async ({
