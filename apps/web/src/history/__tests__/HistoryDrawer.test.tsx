@@ -148,6 +148,17 @@ describe("HistoryDrawer", () => {
     fireEvent.mouseDown(document.body);
     expect(onClose).toHaveBeenCalledTimes(2);
   });
+
+  it("closes on a click outside even when the target stops the mousedown (the map pane does)", async () => {
+    const { onClose } = setup();
+    await screen.findAllByRole("listitem");
+    const pane = document.createElement("div");
+    pane.addEventListener("mousedown", (e) => e.stopImmediatePropagation());
+    document.body.append(pane);
+    fireEvent.mouseDown(pane);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    pane.remove();
+  });
 });
 
 describe("history formats", () => {

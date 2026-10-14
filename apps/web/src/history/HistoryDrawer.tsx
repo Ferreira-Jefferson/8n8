@@ -76,10 +76,11 @@ export function HistoryDrawer({
       }
     };
     window.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onDown);
+    // Capture: the map pane (d3-zoom) stops the mousedown before it bubbles up.
+    document.addEventListener("mousedown", onDown, true);
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("mousedown", onDown, true);
     };
   }, [onClose]);
 

@@ -91,7 +91,7 @@ test.describe("Histórico", () => {
     await generate(page, OFFLINE, snippet("alfa_unico"));
     const [item] = await saved(page, 1);
     if (!item) throw new Error("no row");
-    expect(item.kind).toBe("graph");
+    expect(item.kind).toBe("snippet");
 
     await toggle(page).click();
     await expect(rows(page)).toHaveCount(1);
