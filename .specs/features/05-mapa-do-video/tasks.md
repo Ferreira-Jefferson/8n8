@@ -604,12 +604,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `fn:calcular_frete/s0` de `pedido_frete.py` → 200, com o pedido `{ nodeKind: "external", nodeName: "requests.get", code: <linha 5>, range: {5,5}, calls: [], calledBy: [] }`.
-- [ ] `fn:calcular_frete/s1` → `nodeKind: "code"`. Um `call` com `target` recebe o nome do alvo em `calls`.
-- [ ] O pedido de `fn:calcular_frete` é igual ao de hoje (CORE-17).
-- [ ] Num projeto, `dir:…` e `file:…` → 400 `node has no explanation`.
-- [ ] O teste "returns 400 for a step node" vira "returns 200 for a step node" (VID-28), e um teste novo cobre o 400 de pasta e de arquivo.
-- [ ] Gate passa.
+- [x] `fn:calcular_frete/s0` de `pedido_frete.py` → 200, com o pedido `{ nodeKind: "external", nodeName: "requests.get", code: <linha 5>, range: {5,5}, calls: [], calledBy: [] }`.
+- [x] `fn:calcular_frete/s1` → `nodeKind: "code"`. Um `call` com `target` recebe o nome do alvo em `calls`.
+- [x] O pedido de `fn:calcular_frete` é igual ao de hoje (CORE-17).
+- [x] Num projeto, `dir:…` e `file:…` → 400 `node has no explanation`.
+- [x] O teste "returns 400 for a step node" vira "returns 200 for a step node" (VID-28), e um teste novo cobre o 400 de pasta e de arquivo.
+- [x] Gate passa.
 
 **Tests**: integration
 **Gate**: full · `pnpm --filter @code2n8n/server test`

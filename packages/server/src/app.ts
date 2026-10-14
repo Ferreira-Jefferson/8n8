@@ -31,6 +31,74 @@ const projectExplainBody = z.object({
 });
 const explainBody = z.object({ source: z.string(), nodeId: z.string() });
 
+/** The graph a request talks about, re-extracted on the server (AD-015). */
+interface Origin {
+  graph: Graph;
+  codeOf: (node: FlowNode) => string;
+  /** The name of `node` as seen from `home`. */
+  nameOf: (node: FlowNode, home: FlowNode) => string;
+  /** `<POSIX root>|` in a project, empty in a snippet. */
+  idPrefix: string;
+}
+
+/** Reads `{ source }` or `{ root }`; a missing folder gives `{ notFound }`. The client sends no code (AD-015). */
+async function loadOrigin(
+  body: { source: string } | { root: string },
+  deps: AppDeps,
+): Promise<Origin | { notFound: string }> {
+  if ("source" in body) {
+    const { source } = body;
+    return {
+      graph: deps.extractor.extract(source),
+      codeOf: (node) => sliceLines(source, node.range),
+      nameOf: (node) => node.label,
+      idPrefix: "",
+    };
+  }
+  const read = await deps.readProject(body.root);
+  if (read.kind === "not-found") return { notFound: body.root };
+  const { response } = read;
+  const graph = response.graph;
+  const filePath = (node: FlowNode) => fileNodeOf(graph, node.id)?.path ?? "";
+  return {
+    graph,
+    codeOf: (node) => {
+      const path = filePath(node);
+      const file = response.files.find((f) => f.path === path);
+      return sliceLines(file?.source ?? "", node.range);
+    },
+    // A neighbour from another file is named `<path>:<label>`.
+    nameOf: (node, home) =>
+      filePath(node) !== filePath(home)
+        ? `${filePath(node)}:${node.label}`
+        : node.label,
+    idPrefix: `${read.root.replaceAll("\\", "/")}|`,
+  };
+}
+
+/** calls: targets of the outgoing `calls` wires plus `node.target`, once each; calledBy: sources of the incoming `calls` wires. */
+function neighboursOf(
+  graph: Graph,
+  node: FlowNode,
+  nameOf: (other: FlowNode) => string,
+): { calls: string[]; calledBy: string[] } {
+  const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+  const names = (ids: string[]) =>
+    ids.flatMap((id) => {
+      const other = byId.get(id);
+      return other ? [nameOf(other)] : [];
+    });
+  const wires = graph.edges.filter((e) => e.kind === "calls");
+  const out = wires.filter((e) => e.source === node.id).map((e) => e.target);
+  if (node.target) out.push(node.target);
+  return {
+    calls: names([...new Set(out)]),
+    calledBy: names(
+      wires.filter((e) => e.target === node.id).map((e) => e.source),
+    ),
+  };
+}
+
 /** Local API. Refuses foreign Host headers (DNS rebinding, AD-007) and sets no CORS. */
 export function createApp(deps: AppDeps): Hono {
   const allowed = new Set([`127.0.0.1:${deps.port}`, `localhost:${deps.port}`]);
@@ -75,75 +143,31 @@ export function createApp(deps: AppDeps): Hono {
     const raw = await c.req.json().catch(() => null);
     const project = projectExplainBody.safeParse(raw);
     const snippet = explainBody.safeParse(raw);
-    if (!project.success && !snippet.success) {
-      return c.json({ error: "invalid body" }, 400);
-    }
+    const body = project.success
+      ? project.data
+      : snippet.success
+        ? snippet.data
+        : null;
+    if (!body) return c.json({ error: "invalid body" }, 400);
 
-    let graph: Graph;
-    let nodeId: string;
-    let codeOf: (node: FlowNode) => string;
-    let nameOf: (node: FlowNode) => string;
-    let idPrefix = "";
-    if (project.success) {
-      // The client sends no code: the folder is read and extracted again (AD-015).
-      const read = await deps.readProject(project.data.root);
-      if (read.kind === "not-found") {
-        return c.json({ error: "not-found", path: project.data.root }, 404);
-      }
-      const { response } = read;
-      graph = response.graph;
-      nodeId = project.data.nodeId;
-      const filePath = (node: FlowNode) => {
-        const file = fileNodeOf(graph, node.id);
-        return file?.path ?? "";
-      };
-      codeOf = (node) => {
-        const path = filePath(node);
-        const file = response.files.find((f) => f.path === path);
-        return sliceLines(file?.source ?? "", node.range);
-      };
-      // A neighbour from another file is named `<path>:<label>`.
-      const home = graph.nodes.find((n) => n.id === nodeId);
-      nameOf = (node) =>
-        home && filePath(node) !== filePath(home)
-          ? `${filePath(node)}:${node.label}`
-          : node.label;
-      idPrefix = `${read.root.replaceAll("\\", "/")}|`;
-    } else if (snippet.success) {
-      const { source } = snippet.data;
-      graph = deps.extractor.extract(source);
-      nodeId = snippet.data.nodeId;
-      codeOf = (node) => sliceLines(source, node.range);
-      nameOf = (node) => node.label;
-    } else {
-      return c.json({ error: "invalid body" }, 400);
+    const origin = await loadOrigin(body, deps);
+    if ("notFound" in origin) {
+      return c.json({ error: "not-found", path: origin.notFound }, 404);
     }
-
-    const node = graph.nodes.find((n) => n.id === nodeId);
+    const { graph, codeOf, nameOf, idPrefix } = origin;
+    const node = graph.nodes.find((n) => n.id === body.nodeId);
     if (!node) return c.json({ error: "unknown node" }, 404);
-    if (node.kind !== "function" && node.kind !== "class") {
-      return c.json({ error: "node is not a function or class" }, 400);
+    if (node.kind === "folder" || node.kind === "file") {
+      return c.json({ error: "node has no explanation" }, 400);
     }
 
-    const byId = new Map(graph.nodes.map((n) => [n.id, n]));
-    const names = (ids: string[]) =>
-      ids.flatMap((id) => {
-        const other = byId.get(id);
-        return other ? [nameOf(other)] : [];
-      });
-    const calls = graph.edges.filter((e) => e.kind === "calls");
     const request: ExplainRequest = {
       nodeId: `${idPrefix}${node.id}`,
       nodeName: node.label,
       nodeKind: node.kind,
       code: codeOf(node),
       range: node.range,
-      calls: names(
-        calls.filter((e) => e.source === node.id).map((e) => e.target),
-      ),
-      calledBy: names(
-        calls.filter((e) => e.target === node.id).map((e) => e.source),
-      ),
+      ...neighboursOf(graph, node, (other) => nameOf(other, node)),
     };
 
     const result = await deps.explain(request);
