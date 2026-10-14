@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { ExplainResponse, Explanation } from "@code2n8n/model";
+import type { ExplainResponse, Explanation, Graph } from "@code2n8n/model";
 import {
   expect,
   type Locator,
@@ -11,6 +11,8 @@ import {
 
 // Feature 01-fatia-central, end to end: real build, real server, real parser.
 // /api/explain is mocked only where a fake LLM answer is needed (no key, no network).
+// Feature 05 moved it to the video map: the top level is the main flow ("Fluxo
+// principal"), one click opens a node, and cards show a tag and a provisional name.
 
 const VIDEO = readFileSync(
   new URL(
@@ -20,9 +22,17 @@ const VIDEO = readFileSync(
   "utf8",
 ).replace(/\r\n/g, "\n");
 const VIDEO_LINES = VIDEO.split("\n");
+/**
+ * The video snippet where processar_pedido calls another name, so calcular_frete
+ * is an entry and its card shows on the main flow (VID-11). Lines 1..13 are
+ * unchanged, so the mocked explanation of calcular_frete (lines 4..11) still fits.
+ */
+const TWO_ENTRIES = VIDEO.replace("calcular_frete(item", "frete_do_item(item");
 
 const FRETE = "fn:calcular_frete";
 const PEDIDO = "fn:processar_pedido";
+/** The loop of processar_pedido, the only call command of its body (VID-10). */
+const LOOP = `${PEDIDO}/s1`;
 
 function shot(page: Page, name: string): Promise<Buffer> {
   const path = fileURLToPath(
@@ -44,16 +54,29 @@ const breadcrumb = (page: Page) =>
   page.getByRole("navigation", { name: "Caminho de navegação" });
 const panel = (page: Page) =>
   page.getByRole("complementary", { name: "Detalhe do nó" });
+const back = (page: Page) => page.getByRole("button", { name: "Voltar" });
+
+/** The card titles of the level, without the "›" open mark, in DOM order (VID-03, 15). */
+const cardNames = (page: Page) =>
+  nodes(page).evaluateAll((els) =>
+    els.map((el) => el.querySelector(".name")?.firstChild?.textContent ?? null),
+  );
+/** The "Entrada e saída" line as read, without the evidence buttons (VID-30). */
+const ioLine = (view: Locator) =>
+  view.getByLabel("Entrada e saída").evaluate((el) => {
+    const copy = el.cloneNode(true) as HTMLElement;
+    for (const b of copy.querySelectorAll("button")) b.remove();
+    return copy.textContent;
+  });
+/** The tag of each card of the level (VID-04). */
+const cardTags = (page: Page) =>
+  nodes(page).evaluateAll((els) =>
+    els.map((el) => el.querySelector("[data-tag]")?.getAttribute("data-tag")),
+  );
 
 /** Texts of the summary sentences, one per item of the "Resumo" list. */
 const summaryItems = (view: Locator) =>
   view.getByRole("list", { name: "Resumo" }).locator(":scope > li > span");
-/** Texts of the items in the list that follows a section heading. */
-const itemsAfter = (view: Locator, heading: string) =>
-  view
-    .getByRole("heading", { name: heading, exact: true })
-    .locator("xpath=following-sibling::ul[1]")
-    .locator(":scope > li > span");
 /** Suggestion buttons: "<comando> (linha N, <severidade>)". */
 const suggestionButtons = (view: Locator) =>
   view
@@ -61,10 +84,32 @@ const suggestionButtons = (view: Locator) =>
     .locator("xpath=following-sibling::ul[1]")
     .getByRole("button", { name: /\(linha \d+, / });
 
-async function generate(page: Page, source: string): Promise<void> {
+/** Generates the map and returns the graph the server sent. */
+async function generate(page: Page, source: string): Promise<Graph> {
   await page.goto("/");
   await page.getByLabel("Trecho Python").fill(source);
+  const response = page.waitForResponse("**/api/graph");
   await page.getByRole("button", { name: "Gerar mapa" }).click();
+  return ((await response).json() as Promise<{ graph: Graph }>).then(
+    (body) => body.graph,
+  );
+}
+
+/**
+ * Clicks a card even when the zoom leaves it off-screen. It must be visible
+ * first: a click never reaches a card the user cannot see.
+ */
+async function clickCard(page: Page, id: string): Promise<void> {
+  const card = nodeById(page, id);
+  await expect(card).toBeVisible();
+  await card.dispatchEvent("click");
+}
+
+/** From the main flow, through the loop and its call, into calcular_frete (VID-23, 24). */
+async function openFrete(page: Page): Promise<void> {
+  await clickCard(page, LOOP);
+  await clickCard(page, `${LOOP}/s0`);
+  await expect(nodeById(page, `${FRETE}/s0`)).toHaveCount(1);
 }
 
 async function nodeIds(page: Page): Promise<(string | null)[]> {
@@ -142,20 +187,36 @@ test.describe("Mapa", () => {
   test("CORE-01/02, IT 1: the video snippet gives two nodes and one wire", async ({
     page,
   }) => {
-    await generate(page, VIDEO);
+    const graph = await generate(page, VIDEO);
 
+    // CORE-01/02 in the graph: each function is a node, joined by a calls wire.
+    expect(
+      graph.nodes.filter((n) => n.parentId === null).map((n) => n.id),
+    ).toEqual([FRETE, PEDIDO]);
+    expect(
+      graph.edges
+        .filter((e) => e.kind === "calls")
+        .map((e) => `${e.source}->${e.target}`),
+    ).toEqual([`${PEDIDO}->${FRETE}`]);
+
+    // The main flow draws the entry and its call command, joined by one wire (VID-10).
     await expect(nodes(page)).toHaveCount(2);
-    await expect(nodes(page).locator(".step-label")).toHaveText([
-      "calcular_frete",
-      "processar_pedido",
-    ]);
+    expect(await nodeIds(page)).toEqual([PEDIDO, LOOP]);
+    await expect
+      .poll(() => cardNames(page))
+      .toEqual(["Processar pedido", "for item in itens"]);
+    expect(await cardTags(page)).toEqual(["GATILHO", "LAÇO"]);
     await expect(edges(page)).toHaveCount(1);
-    await expect(edge(page, PEDIDO, FRETE)).toHaveCount(1);
-    await expect(breadcrumb(page).getByRole("button")).toHaveText(["Trecho"]);
+    await expect(edge(page, PEDIDO, LOOP)).toHaveCount(1);
+    await expect(breadcrumb(page).getByRole("button")).toHaveText([
+      "Fluxo principal",
+    ]);
     await shot(page, "01-top-level");
   });
 
-  test("CORE-03: loose statements become one Módulo node", async ({ page }) => {
+  test("CORE-03: loose statements become one Código solto node", async ({
+    page,
+  }) => {
     await generate(
       page,
       [
@@ -171,11 +232,14 @@ test.describe("Mapa", () => {
       ].join("\n"),
     );
 
-    await expect(nodes(page)).toHaveCount(2);
-    await expect(nodes(page).locator(".step-label")).toHaveText([
-      "Módulo",
-      "f",
-    ]);
+    // Two entries (VID-11): the loose code with its print call, and f.
+    await expect(nodes(page)).toHaveCount(3);
+    expect(await nodeIds(page)).toEqual(["mod", "mod/s1", "fn:f"]);
+    await expect
+      .poll(() => cardNames(page))
+      .toEqual(["Código solto", "Print", "F"]);
+    expect(await cardTags(page)).toEqual(["GATILHO", "EXTERNO", "GATILHO"]);
+    await expect(canvas(page).getByText("Módulo")).toHaveCount(0);
   });
 
   test("CORE-04: the same snippet gives the same node IDs", async ({
@@ -185,10 +249,11 @@ test.describe("Mapa", () => {
     await expect(nodes(page)).toHaveCount(2);
     const first = await nodeIds(page);
 
+    await page.getByRole("button", { name: "Novo código" }).click();
     await page.getByRole("button", { name: "Gerar mapa" }).click();
     await expect(nodes(page)).toHaveCount(2);
 
-    expect(first).toEqual([FRETE, PEDIDO]);
+    expect(first).toEqual([PEDIDO, LOOP]);
     expect(await nodeIds(page)).toEqual(first);
   });
 
@@ -215,7 +280,7 @@ test.describe("Mapa", () => {
     );
 
     await expect(nodes(page)).toHaveCount(2);
-    await expect(nodes(page).locator(".step-label")).toHaveText(["a", "b"]);
+    await expect.poll(() => cardNames(page)).toEqual(["A", "B"]);
     await expect(page.getByText(/^Erro de sintaxe na linha \d+$/)).toHaveCount(
       1,
     );
@@ -255,33 +320,41 @@ test.describe("Drill-down", () => {
   test("CORE-08/09/12/13, IT 2: calcular_frete opens to HTTP → Código → condition with sim/não", async ({
     page,
   }) => {
-    await generate(page, VIDEO);
-    await nodeById(page, FRETE).dblclick();
+    const graph = await generate(page, VIDEO);
+    await openFrete(page);
 
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
-      "Trecho",
-      "calcular_frete",
+      "Fluxo principal",
+      "for item in itens",
+      "Calcular frete",
     ]);
     await expect(nodes(page)).toHaveCount(5);
-    await expect(nodes(page).locator(".step-label")).toHaveText([
-      "requests.get",
-      "Código",
-      "peso > 30",
-      "Código",
-      "Código",
+    await expect
+      .poll(() => cardNames(page))
+      .toEqual(["Get", "Código", "peso > 30", "Retorno", "Retorno"]);
+    expect(await cardTags(page)).toEqual([
+      "HTTP",
+      "CÓDIGO",
+      "SE",
+      "RETORNO",
+      "RETORNO",
     ]);
-    const http = nodeById(page, `${FRETE}/s0`);
-    await expect(http.locator(".step-category")).toHaveText("HTTP");
 
     await expect(edges(page)).toHaveCount(4);
     await expect(edge(page, `${FRETE}/s0`, `${FRETE}/s1`)).toHaveCount(1);
     await expect(edge(page, `${FRETE}/s1`, `${FRETE}/s2`)).toHaveCount(1);
-    await expect(edge(page, `${FRETE}/s2`, `${FRETE}/s2/b0/s0`)).toHaveText(
+    await expect(edge(page, `${FRETE}/s2`, `${FRETE}/s2/b0/s0`)).toHaveCount(1);
+    await expect(edge(page, `${FRETE}/s2`, `${FRETE}/s2/b1/s0`)).toHaveCount(1);
+    // The labels sit outside the edge group; the graph ties each one to its wire.
+    const branch = (to: string) =>
+      graph.edges.find((e) => e.source === `${FRETE}/s2` && e.target === to)
+        ?.label;
+    expect(branch(`${FRETE}/s2/b0/s0`)).toBe("sim");
+    expect(branch(`${FRETE}/s2/b1/s0`)).toBe("não");
+    await expect(canvas(page).locator("[data-branch-label]")).toHaveText([
       "sim",
-    );
-    await expect(edge(page, `${FRETE}/s2`, `${FRETE}/s2/b1/s0`)).toHaveText(
       "não",
-    );
+    ]);
 
     // Code order reads left to right.
     const x = async (id: string) =>
@@ -300,57 +373,61 @@ test.describe("Drill-down", () => {
     page,
   }) => {
     await generate(page, VIDEO);
-    await nodeById(page, PEDIDO).dblclick();
-    await expect(nodes(page).locator(".step-label")).toHaveText([
-      "Código",
-      "for item in itens",
-      "Código",
-    ]);
+    await clickCard(page, PEDIDO);
+    await expect(nodes(page)).toHaveCount(3);
+    await expect
+      .poll(() => cardNames(page))
+      .toEqual(["Código", "for item in itens", "Retorno"]);
 
-    await nodeById(page, `${PEDIDO}/s1`).dblclick();
-    await expect(nodes(page).locator(".step-label")).toHaveText([
-      "calcular_frete",
-    ]);
+    await clickCard(page, `${PEDIDO}/s1`);
+    await expect(nodes(page)).toHaveCount(1);
+    await expect.poll(() => cardNames(page)).toEqual(["Calcular frete"]);
 
-    await nodeById(page, `${PEDIDO}/s1/s0`).dblclick();
+    await clickCard(page, `${PEDIDO}/s1/s0`);
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
-      "Trecho",
-      "processar_pedido",
+      "Fluxo principal",
+      "Processar pedido",
       "for item in itens",
-      "calcular_frete",
+      "Calcular frete",
     ]);
     await expect(nodes(page)).toHaveCount(5);
     await expect(
-      nodeById(page, `${FRETE}/s2`).locator(".step-label"),
-    ).toHaveText("peso > 30");
+      nodeById(page, `${FRETE}/s2`).locator(".name"),
+    ).toHaveAttribute("title", "peso > 30");
     await shot(page, "05-breadcrumb-deep");
 
     await breadcrumb(page)
-      .getByRole("button", { name: "processar_pedido" })
+      .getByRole("button", { name: "Processar pedido" })
       .click();
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
-      "Trecho",
-      "processar_pedido",
+      "Fluxo principal",
+      "Processar pedido",
     ]);
     await expect(nodes(page)).toHaveCount(3);
 
-    await breadcrumb(page).getByRole("button", { name: "Trecho" }).click();
-    await expect(breadcrumb(page).getByRole("button")).toHaveText(["Trecho"]);
+    await breadcrumb(page)
+      .getByRole("button", { name: "Fluxo principal" })
+      .click();
+    await expect(breadcrumb(page).getByRole("button")).toHaveText([
+      "Fluxo principal",
+    ]);
     await expect(nodes(page)).toHaveCount(2);
-    await expect(edge(page, PEDIDO, FRETE)).toHaveCount(1);
+    await expect(edge(page, PEDIDO, LOOP)).toHaveCount(1);
   });
 
   test("CORE-14, IT 3: selecting the HTTP node shows the requests.get line", async ({
     page,
   }) => {
     await generate(page, VIDEO);
-    await nodeById(page, FRETE).dblclick();
-    await nodeById(page, `${FRETE}/s0`).click();
+    await openFrete(page);
+    await clickCard(page, `${FRETE}/s0`);
 
     await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
-      "requests.get",
+      "Get",
     );
-    await expect(panel(page).getByText(/^Linhas /)).toHaveText("Linhas 5–5");
+    await expect(panel(page).getByText(/^CÓDIGO · /)).toHaveText(
+      "CÓDIGO · trecho.py, linha 5",
+    );
     await expect(panel(page).locator("[data-line]")).toHaveCount(1);
     await expect(panel(page).locator("[data-line]")).toHaveText([
       `5${VIDEO_LINES[4]}`,
@@ -365,9 +442,15 @@ test.describe("Drill-down", () => {
     page,
   }) => {
     await generate(page, VIDEO);
-    await nodeById(page, FRETE).click();
+    // The call card shows the panel of the function it calls (VID-24).
+    await openFrete(page);
 
-    await expect(panel(page).getByText(/^Linhas /)).toHaveText("Linhas 4–11");
+    await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
+      "Calcular frete",
+    );
+    await expect(panel(page).getByText(/^CÓDIGO · /)).toHaveText(
+      "CÓDIGO · trecho.py, linhas 4 a 11",
+    );
     await expect(panel(page).locator("code")).toHaveText(
       VIDEO_LINES.slice(3, 11),
     );
@@ -379,8 +462,12 @@ test.describe("Explicação", () => {
     page,
   }) => {
     await generate(page, VIDEO);
-    const response = page.waitForResponse("**/api/explain");
-    await nodeById(page, FRETE).click();
+    const response = page.waitForResponse(
+      (r) =>
+        r.url().includes("/api/explain") &&
+        (r.request().postDataJSON() as { nodeId: string }).nodeId === FRETE,
+    );
+    await openFrete(page);
 
     const res = await response;
     expect(res.status()).toBe(200);
@@ -390,8 +477,8 @@ test.describe("Explicação", () => {
         exact: true,
       }),
     ).toHaveCount(1);
-    await expect(nodes(page)).toHaveCount(2);
-    await expect(edges(page)).toHaveCount(1);
+    await expect(nodes(page)).toHaveCount(5);
+    await expect(edges(page)).toHaveCount(4);
     await shot(page, "07-no-key");
   });
 
@@ -401,16 +488,15 @@ test.describe("Explicação", () => {
     const calls = await mockExplain(page, (id) =>
       ok(id === FRETE ? FRETE_EXPLANATION : PEDIDO_EXPLANATION),
     );
-    await generate(page, VIDEO);
-    await nodeById(page, FRETE).click();
+    await generate(page, TWO_ENTRIES);
+    await clickCard(page, FRETE);
 
     const view = panel(page);
     await expect(summaryItems(view)).toHaveText([FRETE_SUMMARY]);
-    await expect(itemsAfter(view, "Entradas")).toHaveText([
-      "peso",
-      "distancia",
-    ]);
-    await expect(itemsAfter(view, "Saídas")).toHaveText(["valor do frete"]);
+    // VID-30: the inputs, an arrow and the outputs, in one line.
+    await expect
+      .poll(() => ioLine(view))
+      .toBe("peso, distancia → valor do frete");
     const suggestions = suggestionButtons(view);
     await expect(suggestions).toHaveText([
       "Guardar a tabela de frete em cache (linha 5, media)",
@@ -418,6 +504,8 @@ test.describe("Explicação", () => {
     ]);
     expect(calls).toEqual([FRETE]);
 
+    // Opening shows the inside of calcular_frete; the badge sits on its card above.
+    await back(page).click();
     await expect(nodeById(page, FRETE).getByTitle("Sugestões")).toHaveText("2");
     await expect(nodeById(page, PEDIDO).getByTitle("Sugestões")).toHaveCount(0);
 
@@ -462,16 +550,19 @@ test.describe("Explicação", () => {
         fromCache.push(body.fromCache === true);
       }
     });
-    await generate(page, VIDEO);
+    await generate(page, TWO_ENTRIES);
 
-    await nodeById(page, FRETE).click();
+    await clickCard(page, FRETE);
     await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
-    await nodeById(page, PEDIDO).click();
+    await back(page).click();
+    await clickCard(page, PEDIDO);
     await expect(summaryItems(panel(page))).toHaveText([PEDIDO_SUMMARY]);
-    await nodeById(page, FRETE).click();
+    await back(page).click();
+    await clickCard(page, FRETE);
 
     await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
     await expect(suggestionButtons(panel(page))).toHaveCount(2);
+    await back(page).click();
     await expect(nodeById(page, FRETE).getByTitle("Sugestões")).toHaveText("2");
     expect(calls).toEqual([FRETE, PEDIDO, FRETE]);
     await expect.poll(() => fromCache).toEqual([false, false, true]);
@@ -483,8 +574,8 @@ test.describe("Explicação", () => {
     const calls = await mockExplain(page, (id, nth) =>
       id === FRETE && nth >= 2 ? ok(FRETE_EXPLANATION) : failure,
     );
-    await generate(page, VIDEO);
-    await nodeById(page, FRETE).click();
+    await generate(page, TWO_ENTRIES);
+    await clickCard(page, FRETE);
 
     await expect(
       panel(page).getByText("Resumo indisponível", { exact: true }),
@@ -494,13 +585,20 @@ test.describe("Explicação", () => {
     ).toHaveCount(1);
     await shot(page, "09-explain-error");
 
-    // The map is still usable: drill down and come back.
-    await nodeById(page, PEDIDO).dblclick();
+    // The map is still usable: go back, drill down and come back.
+    await back(page).click();
+    await expect(nodes(page)).toHaveCount(4);
+    await clickCard(page, PEDIDO);
     await expect(nodes(page)).toHaveCount(3);
-    await breadcrumb(page).getByRole("button", { name: "Trecho" }).click();
-    await expect(nodes(page)).toHaveCount(2);
+    await breadcrumb(page)
+      .getByRole("button", { name: "Fluxo principal" })
+      .click();
+    await expect(nodes(page)).toHaveCount(4);
 
-    await nodeById(page, FRETE).click();
+    await clickCard(page, FRETE);
+    await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
+      "Calcular frete",
+    );
     await expect(
       panel(page).getByText("Resumo indisponível", { exact: true }),
     ).toHaveCount(1);

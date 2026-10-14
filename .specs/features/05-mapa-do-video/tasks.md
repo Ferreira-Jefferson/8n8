@@ -1215,15 +1215,16 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Os 14 testes continuam existindo, com o mesmo ID de AC no nome, e passam.
-- [ ] O fio `calls` de CORE-02 é conferido na resposta de `/api/graph`, porque o fluxo principal não desenha `calls`.
-- [ ] Nenhuma asserção fica mais fraca: cada contagem e cada texto exato continuam exatos, com os valores novos.
-- [ ] Gate passa.
+- [x] Os 14 testes continuam existindo, com o mesmo ID de AC no nome, e passam.
+- [x] O fio `calls` de CORE-02 é conferido na resposta de `/api/graph`, porque o fluxo principal não desenha `calls`.
+- [x] Nenhuma asserção fica mais fraca: cada contagem e cada texto exato continuam exatos, com os valores novos.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/fatia-central.e2e.ts`
 
 **Commit**: `test(e2e): move the core e2e to the main flow and single click`
+**Status**: ✅ Complete
 
 ---
 
