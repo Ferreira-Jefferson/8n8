@@ -285,15 +285,16 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um teste por forma de ligação: parâmetro simples, com padrão, com tipo, `*args`, `**kw` e de `lambda`; `=` simples e em tupla/lista; `+=`; anotação; `for`; `for` de compreensão; `with ... as`; `except ... as`; `import ... as`; `:=`; `def`; `class`; `global`; `nonlocal`.
-- [ ] Um nome só usado (`print(x)` sem ligar `x`) não entra no conjunto.
-- [ ] Um nome ligado numa função conta no arquivo todo (risco documentado no design).
-- [ ] Gate passa; a contagem do pacote não cai.
+- [x] Um teste por forma de ligação: parâmetro simples, com padrão, com tipo, `*args`, `**kw` e de `lambda`; `=` simples e em tupla/lista; `+=`; anotação; `for`; `for` de compreensão; `with ... as`; `except ... as`; `import ... as`; `:=`; `def`; `class`; `global`; `nonlocal`.
+- [x] Um nome só usado (`print(x)` sem ligar `x`) não entra no conjunto.
+- [x] Um nome ligado numa função conta no arquivo todo (risco documentado no design).
+- [x] Gate passa; a contagem do pacote não cai.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): collect the names bound in a file`
+**Status**: ✅ Complete (162 unit = 139 + 23)
 
 ---
 
