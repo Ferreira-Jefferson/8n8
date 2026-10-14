@@ -37,6 +37,7 @@ vi.mock("../api", () => ({
   fetchHistory: vi.fn(),
   fetchHistoryEntry: vi.fn(),
   deleteHistory: vi.fn(),
+  starHistory: vi.fn(),
 }));
 
 let canvas: FlowCanvasProps | null = null;
@@ -63,6 +64,7 @@ beforeEach(() => {
   historyMock.mockReset();
   historyEntryMock.mockReset();
   titlesMock.mockResolvedValue([]);
+  historyMock.mockResolvedValue([]);
 });
 afterEach(cleanup);
 
@@ -110,6 +112,7 @@ const explanation: Explanation = {
 
 async function generate(text = source) {
   render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
   fireEvent.change(screen.getByLabelText("Trecho Python"), {
     target: { value: text },
   });
@@ -227,7 +230,7 @@ function openFolder(path = lojaRoot) {
   fireEvent.change(screen.getByLabelText("Caminho da pasta"), {
     target: { value: path },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Abrir pasta" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mapear pasta" }));
 }
 
 function breadcrumbItems() {
@@ -317,6 +320,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     openFolder();
     await screen.findByRole("region", { name: "Arquivos ignorados" });
     fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
+    fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
     fireEvent.change(screen.getByLabelText("Trecho Python"), {
       target: { value: source },
     });
@@ -497,8 +501,18 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     expect(screen.getByText("8 nós")).toBeTruthy();
   });
 
-  it("shows the editor without a map: trecho.py, the code area, Gerar mapa, the folder field and Abrir pasta", () => {
+  it("opens on the launcher: the folder field, Mapear pasta, Colar trecho and no editor", () => {
     render(<App />);
+    expect(screen.getByLabelText("Caminho da pasta")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Mapear pasta" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Colar trecho/ })).toBeTruthy();
+    expect(screen.queryByLabelText("Trecho Python")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
+  });
+
+  it("Colar trecho shows the editor: trecho.py, the code area, Gerar mapa and Início back to the launcher", () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
     const editor = screen.getByRole("region", { name: "Editor" });
     expect(within(editor).getByText("trecho.py")).toBeTruthy();
     expect(within(editor).getByLabelText("Trecho Python").tagName).toBe(
@@ -507,19 +521,22 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     expect(screen.getByRole("button", { name: "Gerar mapa" }).className).toBe(
       "btn",
     );
-    expect(screen.getByLabelText("Caminho da pasta")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Abrir pasta" })).toBeTruthy();
+    expect(screen.queryByLabelText("Caminho da pasta")).toBeNull();
     expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Início" }));
+    expect(screen.queryByLabelText("Trecho Python")).toBeNull();
+    expect(screen.getByLabelText("Caminho da pasta")).toBeTruthy();
   });
 
   it("keeps long code lines unwrapped and hints the folder field", () => {
     render(<App />);
+    expect(
+      screen.getByLabelText("Caminho da pasta").getAttribute("placeholder"),
+    ).toBe(String.raw`C:\projetos\loja`);
+    fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
     expect(screen.getByLabelText("Trecho Python").getAttribute("wrap")).toBe(
       "off",
     );
-    expect(
-      screen.getByLabelText("Caminho da pasta").getAttribute("placeholder"),
-    ).toBe("Caminho de uma pasta Python");
   });
 
   it("swaps the editor for the map, and Novo código goes back with the text kept", async () => {
@@ -533,7 +550,7 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     ).toBe(videoSource);
   });
 
-  it("keeps the folder field when Novo código goes back to the editor", async () => {
+  it("keeps the folder field when Novo código goes back to the launcher", async () => {
     projectMock.mockResolvedValue(loja);
     render(<App />);
     openFolder();
@@ -550,6 +567,18 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     await screen.findByText("Nenhuma função ou instrução encontrada.");
     expect(screen.getByLabelText("Trecho Python")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
+  });
+
+  it("shows Pasta não encontrada on the launcher, and the message goes on Colar trecho", async () => {
+    projectMock.mockResolvedValue({ error: "not-found", path: "C:/nada" });
+    render(<App />);
+    openFolder("C:/nada");
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Pasta não encontrada: C:/nada",
+    );
+    expect(screen.getByLabelText("Caminho da pasta")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("shows the failure alert in the editor", async () => {
@@ -768,15 +797,33 @@ describe("App: history", () => {
     files: 1,
     nodes: 2,
     edges: 1,
+    starred: false,
   };
+  const drawer = () => screen.getByRole("complementary", { name: "Histórico" });
+
+  it("opens a map from the launcher's Recentes, without asking the parser", async () => {
+    historyMock.mockResolvedValue([item]);
+    historyEntryMock.mockResolvedValue({ kind: "snippet", source, graph });
+    render(<App />);
+    const recent = await screen.findByRole("region", { name: "Recentes" });
+    fireEvent.click(
+      within(recent).getByRole("button", { name: /^def calcular_frete/ }),
+    );
+    await waitFor(() => expect(breadcrumbItems()).toEqual(["Fluxo principal"]));
+    expect(graphMock).not.toHaveBeenCalled();
+  });
 
   it("opens a saved snippet as a fresh map, without asking the parser", async () => {
     historyMock.mockResolvedValue([item]);
     historyEntryMock.mockResolvedValue({ kind: "snippet", source, graph });
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: "Histórico" }));
     fireEvent.click(
-      await screen.findByRole("button", { name: /^def calcular_frete/ }),
+      screen.getByRole("button", { name: "Ver todo o histórico" }),
+    );
+    fireEvent.click(
+      await within(drawer()).findByRole("button", {
+        name: /^def calcular_frete/,
+      }),
     );
     await waitFor(() => expect(breadcrumbItems()).toEqual(["Fluxo principal"]));
     expect(historyEntryMock).toHaveBeenCalledWith(9);
@@ -798,8 +845,12 @@ describe("App: history", () => {
       response: { ...loja, ignored: [{ path: "g.py", reason: "too-large" }] },
     });
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: "Histórico" }));
-    fireEvent.click(await screen.findByRole("button", { name: /^loja/ }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver todo o histórico" }),
+    );
+    fireEvent.click(
+      await within(drawer()).findByRole("button", { name: /^loja/ }),
+    );
     await screen.findByRole("region", { name: "Arquivos ignorados" });
     expect(projectMock).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Histórico" })).toBeTruthy();

@@ -849,3 +849,298 @@ body {
   color: var(--second);
   border-color: var(--accent);
 }
+
+/* The favourite star, in the drawer and on the launcher. */
+.star-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+}
+
+.star-btn[aria-pressed="true"] {
+  color: var(--star, var(--main));
+}
+
+.star-btn:hover,
+.star-btn:focus-visible {
+  outline: none;
+  border-color: var(--panel-border);
+  color: var(--star, var(--main));
+}
+
+/* ---- Launcher (home) ----
+   The 8n8 brand tokens (Grafite, Névoa, Pedra, Petróleo), scoped to this
+   screen; the map keeps the video theme for now. */
+.home {
+  --h-bg: #161818;
+  --h-card: #202323;
+  --h-field: #1a1c1c;
+  --h-line: #363b3a;
+  --h-fg: #e9ebea;
+  --h-muted: #979d9b;
+  --h-dim: #6b706f;
+  --h-accent: #3dbfa8;
+  --star: var(--h-accent);
+  --dim: var(--h-dim);
+  --panel-border: var(--h-line);
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 0 clamp(16px, 5vw, 64px) 40px;
+  background: var(--h-bg);
+  color: var(--h-fg);
+  display: flex;
+  flex-direction: column;
+}
+
+.home-bar {
+  display: flex;
+  align-items: center;
+  padding: 24px 0;
+}
+
+.home-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font: 400 22px / 1 var(--font-display);
+}
+
+.home-mark {
+  color: var(--h-accent);
+}
+
+.home-grid {
+  flex: 1;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-block: 4vh;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 40px 64px;
+  align-content: center;
+  align-items: start;
+}
+
+.home-start {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.home-title {
+  margin: 0 0 8px;
+  font: 400 clamp(30px, 3.4vw, 44px) / 1.1 var(--font-display);
+}
+
+.home-label {
+  margin: 0;
+  font: 500 13px / 1.3 var(--font-sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--h-muted);
+}
+
+.home-card {
+  box-sizing: border-box;
+  border: 2px solid var(--h-line);
+  border-radius: 6px;
+  background: var(--h-card);
+  color: var(--h-fg);
+}
+
+.home-folder {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border-color: var(--h-accent);
+}
+
+.home-folder small {
+  color: var(--h-muted);
+  font: 400 15px var(--font-sans);
+}
+
+.home-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  height: 54px;
+  border: 2px solid var(--h-line);
+  border-radius: 6px;
+  background: var(--h-field);
+  color: var(--h-muted);
+}
+
+.home-field:focus-within {
+  border-color: var(--h-accent);
+}
+
+.home-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--h-fg);
+  font: 400 18px var(--font-mono);
+}
+
+.home-field input::placeholder {
+  color: var(--h-dim);
+}
+
+.home-btn {
+  height: 52px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--h-accent);
+  color: var(--h-bg);
+  font: 700 18px var(--font-sans);
+  cursor: pointer;
+}
+
+.home-btn:focus-visible,
+.home-paste:focus-visible,
+.home-open:focus-visible,
+.home-more:focus-visible {
+  outline: 2px solid var(--h-accent);
+  outline-offset: 3px;
+}
+
+.home-paste {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-paste:hover {
+  border-color: var(--h-muted);
+}
+
+.home-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.home-item b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 17px var(--font-sans);
+}
+
+.home-item small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--h-muted);
+  font: 400 14px var(--font-sans);
+}
+
+.home-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+.home-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--h-line);
+}
+
+.home-list li {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--h-line);
+}
+
+.home-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--h-fg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-icon {
+  flex-shrink: 0;
+  color: var(--h-muted);
+}
+
+.home-list li[data-kind="project"] .home-icon {
+  color: var(--h-accent);
+}
+
+.home-open:hover .home-item b {
+  color: var(--h-accent);
+}
+
+.home-list li[data-kind="snippet"] .home-item b {
+  font-family: var(--font-mono);
+  font-weight: 400;
+}
+
+.home-empty {
+  margin: 0;
+  color: var(--h-muted);
+  font: 400 16px / 1.5 var(--font-sans);
+}
+
+.home-more {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--h-muted);
+  font: 500 16px var(--font-sans);
+  text-decoration: underline;
+  text-decoration-color: var(--h-line);
+  text-underline-offset: 5px;
+  cursor: pointer;
+}
+
+.home-more:hover {
+  color: var(--h-fg);
+}
+
+.home-lists p[role="alert"],
+.home-messages p {
+  margin: 0;
+  font: 400 18px var(--font-sans);
+}
+
+.home-messages {
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+}

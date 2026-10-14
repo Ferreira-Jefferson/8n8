@@ -516,7 +516,7 @@ test.describe("Descida até as folhas", () => {
     // PASTA and ARQUIVO open.
     await page.goto(`${REAL}/`);
     await page.getByLabel("Caminho da pasta").fill(LOJA);
-    await page.getByRole("button", { name: "Abrir pasta" }).click();
+    await page.getByRole("button", { name: "Mapear pasta" }).click();
     // Three subfolders and the two root files (PROJ-02).
     await expect(nodes(page)).toHaveCount(5);
     await expect(nodes(page).first()).toBeVisible();

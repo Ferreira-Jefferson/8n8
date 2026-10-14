@@ -56,7 +56,9 @@ test.beforeEach(async ({ page }) => {
 const snippet = (name: string) =>
   `def ${name}(x):\n    return x + 1\n\ndef principal():\n    return ${name}(1)\n`;
 
-const toggle = (page: Page) => page.getByRole("button", { name: "Histórico" });
+/** The hamburger on the map and the editor; "Ver todo o histórico" on the launcher. */
+const toggle = (page: Page) =>
+  page.getByRole("button", { name: /^(Histórico|Ver todo o histórico)$/ });
 const drawer = (page: Page) =>
   page.getByRole("complementary", { name: "Histórico" });
 const rows = (page: Page) => drawer(page).locator("li");
@@ -65,7 +67,7 @@ async function openFolder(page: Page, path: string): Promise<void> {
   await page.goto("/");
   await page.getByLabel("Caminho da pasta").fill(path);
   const response = page.waitForResponse("**/api/project");
-  await page.getByRole("button", { name: "Abrir pasta" }).click();
+  await page.getByRole("button", { name: "Mapear pasta" }).click();
   await response;
 }
 
@@ -73,9 +75,7 @@ const levelIds = (page: Page) =>
   nodes(page).evaluateAll((els) => els.map((el) => el.getAttribute("data-id")));
 
 test.describe("Histórico", () => {
-  test("the drawer is empty at first, on the editor screen", async ({
-    page,
-  }) => {
+  test("the drawer is empty at first, on the launcher", async ({ page }) => {
     await page.goto("/");
     await toggle(page).click();
     await expect(drawer(page)).toBeVisible();
@@ -239,5 +239,66 @@ test.describe("Histórico", () => {
     await expect(drawer(page)).toBeVisible();
     await page.mouse.click(5, 5);
     await expect(drawer(page)).toBeHidden();
+  });
+
+  test("the launcher: a mapped folder shows under Recentes, its star moves it to Favoritos, and it stays there after a reload", async ({
+    page,
+  }) => {
+    await openFolder(page, LOJA);
+    await expect(nodes(page).first()).toBeVisible();
+    const before = await levelIds(page);
+    await saved(page, 1);
+    await page.getByRole("button", { name: "Novo código" }).click();
+
+    const recent = page.getByRole("region", { name: "Recentes" });
+    const favorites = page.getByRole("region", { name: "Favoritos" });
+    await expect(recent.getByRole("listitem")).toHaveCount(1);
+    await expect(recent).toContainText("loja");
+    await expect(recent).toContainText(LOJA);
+    await expect(favorites).toHaveCount(0);
+
+    await recent
+      .getByRole("button", { name: "Pôr loja nos favoritos" })
+      .click();
+    await expect(favorites.getByRole("listitem")).toHaveCount(1);
+    await expect(recent).toHaveCount(0);
+    await expect
+      .poll(async () => (await list(page))[0])
+      .toMatchObject({ title: "loja", starred: true });
+
+    await page.reload();
+    const star = favorites.getByRole("button", {
+      name: "Tirar loja dos favoritos",
+    });
+    await expect(star).toHaveAttribute("aria-pressed", "true");
+    await page.screenshot({ path: "test-results/tela-inicial.png" });
+
+    await favorites.getByRole("button", { name: /^loja/ }).click();
+    await expect.poll(() => levelIds(page)).toEqual(before);
+  });
+
+  test("a star set in the drawer shows on the launcher when the drawer closes", async ({
+    page,
+  }) => {
+    await generate(page, OFFLINE, snippet("gama_unico"));
+    const [item] = await saved(page, 1);
+    if (!item) throw new Error("no row");
+    await page.goto("/");
+    await toggle(page).click();
+    await rows(page)
+      .first()
+      .getByRole("button", { name: `Pôr ${item.title} nos favoritos` })
+      .click();
+    await expect(
+      rows(page)
+        .first()
+        .getByRole("button", { name: `Tirar ${item.title} dos favoritos` }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(drawer(page)).toBeHidden();
+    await expect(
+      page.getByRole("region", { name: "Favoritos" }).getByRole("listitem"),
+    ).toHaveCount(1);
+    await expect(page.getByRole("region", { name: "Recentes" })).toHaveCount(0);
   });
 });

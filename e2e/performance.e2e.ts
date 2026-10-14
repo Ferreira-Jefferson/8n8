@@ -150,6 +150,7 @@ async function quiet(page: Page, inFlight: () => number, quietMs = 400) {
 
 async function toEditor(page: Page, base: string, source: string) {
   await page.goto(`${base}/`);
+  await page.getByRole("button", { name: /Colar trecho/ }).click();
   await page.getByLabel("Trecho Python").fill(source);
 }
 

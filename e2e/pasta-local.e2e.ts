@@ -87,7 +87,7 @@ async function clickCard(page: Page, id: string): Promise<void> {
 async function openFolder(page: Page, path: string): Promise<void> {
   await page.goto("/");
   await page.getByLabel("Caminho da pasta").fill(path);
-  await page.getByRole("button", { name: "Abrir pasta" }).click();
+  await page.getByRole("button", { name: "Mapear pasta" }).click();
 }
 
 /** IDs of the nodes on the current level; none may come from an ignored file or folder (PROJ-01, 06). */

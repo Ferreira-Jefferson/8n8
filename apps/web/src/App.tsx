@@ -27,6 +27,7 @@ import { projectLevel } from "./flow/project-level";
 import { useTitles } from "./flow/use-titles";
 import { HistoryButton } from "./history/HistoryButton";
 import { HistoryDrawer } from "./history/HistoryDrawer";
+import { Home } from "./home/Home";
 import { Breadcrumb } from "./nav/Breadcrumb";
 import {
   ancestry,
@@ -112,9 +113,34 @@ function savedPanelWidth(): number | undefined {
   }
 }
 
-/** The editor, then the map: one level at a time, one click opens, "Voltar" and Esc go back, the panel shows the node (VID-08, 09, 14, 19, 23, 27, 33). */
+/** The 8n8 mark: the two linked blocks and the edge between them. */
+function BrandMark() {
+  return (
+    <svg
+      className="home-mark"
+      width="40"
+      height="32"
+      viewBox="-8 -8 112 92"
+      aria-hidden="true"
+    >
+      <g fill="none" stroke="currentColor">
+        <rect x="3" y="3" width="34" height="34" rx="6" strokeWidth="6" />
+        <rect x="59" y="39" width="34" height="34" rx="6" strokeWidth="6" />
+        <path
+          d="M40 8C52 8 44 68 56 68"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+      </g>
+      <circle cx="40" cy="8" r="5" fill="currentColor" />
+      <circle cx="56" cy="68" r="5" fill="currentColor" />
+    </svg>
+  );
+}
+
+/** The launcher, the snippet editor, then the map: one level at a time, one click opens, "Voltar" and Esc go back, the panel shows the node (VID-08, 09, 14, 19, 23, 27, 33). */
 export function App() {
-  const [view, setView] = useState<"editor" | "map">("editor");
+  const [view, setView] = useState<"home" | "editor" | "map">("home");
   const [text, setText] = useState("");
   const [folder, setFolder] = useState("");
   const [mapped, setMapped] = useState<Mapped | null>(null);
@@ -185,9 +211,17 @@ export function App() {
     show(entry);
   }
 
+  /** A snippet map goes back to its text; a folder map goes back to the launcher. */
   function newCode() {
+    const from = mapped?.kind;
     clearMap();
-    setView("editor");
+    setView(from === "project" ? "home" : "editor");
+  }
+
+  function goHome() {
+    setFailed(false);
+    setNotFound(null);
+    setView("home");
   }
 
   const back = useCallback(() => {
@@ -249,7 +283,57 @@ export function App() {
   const selected = byId(nav.selected);
   const panelNode = selected ? byId(panelNodeOf(selected)) : null;
 
-  if (view === "editor" || !mapped || !graph) {
+  if (view !== "map" || !mapped || !graph) {
+    const messages = (
+      <>
+        {failed && <p role="alert">Não foi possível gerar o mapa.</p>}
+        {notFound !== null && (
+          <p role="alert">{`Pasta não encontrada: ${notFound}`}</p>
+        )}
+        {graph?.empty && (
+          <p>
+            {mapped?.kind === "project"
+              ? "Nenhum arquivo .py encontrado na pasta."
+              : "Nenhuma função ou instrução encontrada."}
+          </p>
+        )}
+      </>
+    );
+    const drawer = historyOpen && (
+      <HistoryDrawer
+        onClose={() => setHistoryOpen(false)}
+        onOpenEntry={openEntry}
+      />
+    );
+
+    if (view === "home") {
+      return (
+        <main className="home">
+          <header className="home-bar">
+            <span className="home-brand">
+              <BrandMark />
+              8n8
+            </span>
+          </header>
+          <Home
+            folder={folder}
+            onFolderChange={setFolder}
+            onOpenFolder={openFolder}
+            onPaste={() => {
+              setFailed(false);
+              setNotFound(null);
+              setView("editor");
+            }}
+            onOpenEntry={openEntry}
+            onShowHistory={() => setHistoryOpen((o) => !o)}
+            historyOpen={historyOpen}
+          />
+          <div className="home-messages">{messages}</div>
+          {drawer}
+        </main>
+      );
+    }
+
     return (
       <main className="editor">
         <div className="panel editor-panel">
@@ -274,35 +358,12 @@ export function App() {
           <button type="button" className="btn" onClick={generate}>
             Gerar mapa
           </button>
-          <input
-            type="text"
-            aria-label="Caminho da pasta"
-            placeholder="Caminho de uma pasta Python"
-            value={folder}
-            onChange={(e) => setFolder(e.target.value)}
-            spellCheck={false}
-          />
-          <button type="button" className="btn-ghost" onClick={openFolder}>
-            Abrir pasta
+          <button type="button" className="btn-ghost" onClick={goHome}>
+            Início
           </button>
         </div>
-        {historyOpen && (
-          <HistoryDrawer
-            onClose={() => setHistoryOpen(false)}
-            onOpenEntry={openEntry}
-          />
-        )}
-        {failed && <p role="alert">Não foi possível gerar o mapa.</p>}
-        {notFound !== null && (
-          <p role="alert">{`Pasta não encontrada: ${notFound}`}</p>
-        )}
-        {graph?.empty && (
-          <p>
-            {mapped?.kind === "project"
-              ? "Nenhum arquivo .py encontrado na pasta."
-              : "Nenhuma função ou instrução encontrada."}
-          </p>
-        )}
+        {drawer}
+        {messages}
       </main>
     );
   }

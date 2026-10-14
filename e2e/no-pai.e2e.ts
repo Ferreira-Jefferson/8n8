@@ -76,7 +76,7 @@ const panel = (page: Page) =>
 async function openApp(page: Page): Promise<void> {
   await page.goto("/");
   await page.getByLabel("Caminho da pasta").fill(APP);
-  await page.getByRole("button", { name: "Abrir pasta" }).click();
+  await page.getByRole("button", { name: "Mapear pasta" }).click();
   await expect(children(page)).toHaveCount(6);
 }
 

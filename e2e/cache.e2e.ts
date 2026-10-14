@@ -47,7 +47,10 @@ const markedLines = (view: Locator) =>
 
 /** Fills the snippet and clicks "Gerar mapa"; loads the page only the first time. */
 async function generate(page: Page, source: string) {
-  if (!page.url().startsWith(REAL)) await page.goto(`${REAL}/`);
+  if (!page.url().startsWith(REAL)) {
+    await page.goto(`${REAL}/`);
+    await page.getByRole("button", { name: /Colar trecho/ }).click();
+  }
   const newCode = page.getByRole("button", { name: "Novo código" });
   if (await newCode.isVisible()) await newCode.click();
   await page.getByLabel("Trecho Python").fill(source);

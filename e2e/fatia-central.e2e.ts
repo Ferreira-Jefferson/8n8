@@ -87,6 +87,7 @@ const suggestionButtons = (view: Locator) =>
 /** Generates the map and returns the graph the server sent. */
 async function generate(page: Page, source: string): Promise<Graph> {
   await page.goto("/");
+  await page.getByRole("button", { name: /Colar trecho/ }).click();
   await page.getByLabel("Trecho Python").fill(source);
   const response = page.waitForResponse("**/api/graph");
   await page.getByRole("button", { name: "Gerar mapa" }).click();

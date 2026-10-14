@@ -1,6 +1,12 @@
 import type { HistoryEntry, HistoryItem } from "@code2n8n/model";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { deleteHistory, fetchHistory, fetchHistoryEntry } from "../api";
+import {
+  deleteHistory,
+  fetchHistory,
+  fetchHistoryEntry,
+  starHistory,
+} from "../api";
+import { StarButton } from "./StarButton";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
@@ -35,7 +41,7 @@ function sizes(item: HistoryItem): string {
   ].join(" · ");
 }
 
-/** The saved searches: a search box, one row per map, delete per row. Esc and a click outside close it. */
+/** The saved searches: a search box, one row per map, a star and a delete per row. Esc and a click outside close it. */
 export function HistoryDrawer({
   onClose,
   onOpenEntry,
@@ -109,6 +115,20 @@ export function HistoryDrawer({
     }
   }
 
+  async function star(item: HistoryItem) {
+    try {
+      await starHistory(item.id, !item.starred);
+      setItems(
+        (prev) =>
+          prev?.map((i) =>
+            i.id === item.id ? { ...i, starred: !item.starred } : i,
+          ) ?? null,
+      );
+    } catch {
+      setError("Não foi possível marcar o favorito.");
+    }
+  }
+
   const tag = (item: HistoryItem) =>
     item.kind === "project" ? "PASTA" : "TRECHO";
 
@@ -145,6 +165,11 @@ export function HistoryDrawer({
                 </span>
                 <span className="history-sizes">{sizes(item)}</span>
               </button>
+              <StarButton
+                title={item.title}
+                starred={item.starred}
+                onToggle={() => star(item)}
+              />
               <button
                 type="button"
                 className="history-delete"

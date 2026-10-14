@@ -8,18 +8,25 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteHistory, fetchHistory, fetchHistoryEntry } from "../../api";
+import {
+  deleteHistory,
+  fetchHistory,
+  fetchHistoryEntry,
+  starHistory,
+} from "../../api";
 import { HistoryDrawer, humanBytes, relativeDate } from "../HistoryDrawer";
 
 vi.mock("../../api", () => ({
   fetchHistory: vi.fn(),
   fetchHistoryEntry: vi.fn(),
   deleteHistory: vi.fn(),
+  starHistory: vi.fn(),
 }));
 
 const listMock = vi.mocked(fetchHistory);
 const entryMock = vi.mocked(fetchHistoryEntry);
 const deleteMock = vi.mocked(deleteHistory);
+const starMock = vi.mocked(starHistory);
 
 const now = Date.now();
 const snippet: HistoryItem = {
@@ -34,6 +41,7 @@ const snippet: HistoryItem = {
   files: 1,
   nodes: 5,
   edges: 4,
+  starred: false,
 };
 const project: HistoryItem = {
   ...snippet,
@@ -50,6 +58,7 @@ beforeEach(() => {
   listMock.mockReset();
   entryMock.mockReset();
   deleteMock.mockReset();
+  starMock.mockReset();
   listMock.mockResolvedValue([snippet, project]);
 });
 afterEach(cleanup);
@@ -101,6 +110,36 @@ describe("HistoryDrawer", () => {
       expect(screen.getAllByRole("listitem")).toHaveLength(1),
     );
     expect(deleteMock).toHaveBeenCalledWith(2);
+  });
+
+  it("stars a row and unstars it again", async () => {
+    starMock.mockResolvedValue();
+    setup();
+    await screen.findAllByRole("listitem");
+    const on = screen.getByRole("button", { name: "Pôr loja nos favoritos" });
+    expect(on.getAttribute("aria-pressed")).toBe("false");
+    fireEvent.click(on);
+    const off = await screen.findByRole("button", {
+      name: "Tirar loja dos favoritos",
+    });
+    expect(off.getAttribute("aria-pressed")).toBe("true");
+    expect(starMock).toHaveBeenCalledWith(2, true);
+    fireEvent.click(off);
+    await screen.findByRole("button", { name: "Pôr loja nos favoritos" });
+    expect(starMock).toHaveBeenLastCalledWith(2, false);
+  });
+
+  it("keeps the star as it was when starring fails", async () => {
+    starMock.mockRejectedValue(new Error("x"));
+    setup();
+    await screen.findAllByRole("listitem");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Pôr loja nos favoritos" }),
+    );
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Pôr loja nos favoritos" }),
+    ).toBeTruthy();
   });
 
   it("shows an error line when the delete fails", async () => {

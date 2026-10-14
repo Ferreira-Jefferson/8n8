@@ -102,3 +102,14 @@ export async function deleteHistory(id: number): Promise<void> {
   if (!res.ok)
     throw new Error(`Falha ao apagar a pesquisa (HTTP ${res.status})`);
 }
+
+/** Marks or unmarks a saved map as a favourite. */
+export async function starHistory(id: number, starred: boolean): Promise<void> {
+  const res = await fetch(`/api/history/${id}/star`, {
+    method: "PUT",
+    headers: JSON_HEADERS,
+    body: JSON.stringify({ starred }),
+  });
+  if (!res.ok)
+    throw new Error(`Falha ao marcar o favorito (HTTP ${res.status})`);
+}

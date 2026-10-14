@@ -84,6 +84,7 @@ export async function generate(
   source: string,
 ): Promise<Graph> {
   await page.goto(`${base}/`);
+  await page.getByRole("button", { name: /Colar trecho/ }).click();
   await page.getByLabel("Trecho Python").fill(source);
   const response = page.waitForResponse("**/api/graph");
   await page.getByRole("button", { name: "Gerar mapa" }).click();

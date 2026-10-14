@@ -235,7 +235,7 @@ test.describe("O visual do vídeo", () => {
 
     await page.goto(`${OFFLINE}/`);
     await page.getByLabel("Caminho da pasta").fill(FIXTURE);
-    await page.getByRole("button", { name: "Abrir pasta" }).click();
+    await page.getByRole("button", { name: "Mapear pasta" }).click();
     const folders = await levelTags(page);
     // The top level holds the subfolders and the root files (PROJ-02).
     expect(folders).toEqual(["PASTA", "PASTA", "PASTA", "ARQUIVO", "ARQUIVO"]);
@@ -278,10 +278,11 @@ test.describe("O visual do vídeo", () => {
 });
 
 test.describe("O editor", () => {
-  test("VID-08: the editor panel has trecho.py in lime, mono code, a lime Gerar mapa and the folder field", async ({
+  test("VID-08: Colar trecho opens the editor panel: trecho.py in lime, mono code, a lime Gerar mapa and Início", async ({
     page,
   }) => {
     await page.goto(`${OFFLINE}/`);
+    await page.getByRole("button", { name: /Colar trecho/ }).click();
     const editor = page.getByRole("region", { name: "Editor" });
     const file = editor.getByText("trecho.py", { exact: true });
     await expect(file).toBeVisible();
@@ -292,10 +293,7 @@ test.describe("O editor", () => {
     const button = page.getByRole("button", { name: "Gerar mapa" });
     await expect(button).toBeVisible();
     expect(await css(button, "background-color")).toBe(LIME);
-    await expect(page.getByLabel("Caminho da pasta")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Abrir pasta" }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Início" })).toBeVisible();
     // No map yet: no canvas and no "Novo código".
     await expect(canvas(page)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Novo código" })).toHaveCount(
