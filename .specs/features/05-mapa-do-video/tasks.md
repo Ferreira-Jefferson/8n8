@@ -496,10 +496,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] A primeira linha do prompt é exatamente `Você escreve títulos de nós de um fluxo de código Python.`. O texto pede no máximo 6 palavras, PTS e JSON `{"titles":[…]}`.
-- [ ] `titleMessage` numera `n1..nk` na ordem dos itens e mostra o tipo, o nome, "Chama", "Chamado por" e o código numerado de cada item, no formato do design.
-- [ ] `parseTitles` aceita uma resposta com cercas, apara espaços e descarta título vazio. Um JSON inválido ou fora do schema lança erro.
-- [ ] Gate passa.
+- [x] A primeira linha do prompt é exatamente `Você escreve títulos de nós de um fluxo de código Python.`. O texto pede no máximo 6 palavras, PTS e JSON `{"titles":[…]}`.
+- [x] `titleMessage` numera `n1..nk` na ordem dos itens e mostra o tipo, o nome, "Chama", "Chamado por" e o código numerado de cada item, no formato do design.
+- [x] `parseTitles` aceita uma resposta com cercas, apara espaços e descarta título vazio. Um JSON inválido ou fora do schema lança erro.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`

@@ -24,7 +24,7 @@ export interface ExplainDeps {
   reviewer: { text: string; version: string };
 }
 
-const KIND_LABEL: Record<ExplainKind, string> = {
+export const KIND_LABEL: Record<ExplainKind, string> = {
   function: "função",
   class: "classe",
   module: "código solto",
