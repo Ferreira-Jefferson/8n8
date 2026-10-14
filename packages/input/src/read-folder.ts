@@ -3,16 +3,19 @@ import type { IgnoredFile, SourceFile } from "@code2n8n/model";
 import { readdir, realpath, stat } from "./fs-read";
 import { readSourceFile } from "./read-file";
 
+/** Folders no language wants; each plugin adds its own through `ReadFilter.ignoredDirs`. */
 export const IGNORED_DIRS: ReadonlySet<string> = new Set([
   ".git",
-  ".venv",
-  "venv",
   "node_modules",
-  "__pycache__",
-  "site-packages",
   "build",
   "dist",
 ]);
+
+/** What to read: the files of these extensions (with the dot, any case), skipping these folders besides `IGNORED_DIRS`. */
+export interface ReadFilter {
+  extensions: string[];
+  ignoredDirs: string[];
+}
 
 export type FolderRead =
   | {
@@ -33,8 +36,10 @@ const byCode = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 export async function readSourceFolder(
   path: string,
-  extension: string,
+  { extensions, ignoredDirs }: ReadFilter,
 ): Promise<FolderRead> {
+  const wanted = extensions.map((e) => e.toLowerCase());
+  const skipped = new Set([...IGNORED_DIRS, ...ignoredDirs]);
   let root: string;
   try {
     root = await realpath(resolve(path));
@@ -53,11 +58,12 @@ export async function readSourceFolder(
       const entryAbs = join(abs, entry.name);
       const entryRel = rel === "" ? entry.name : `${rel}/${entry.name}`;
       if (entry.isSymbolicLink() || entry.isFile()) {
-        if (!entry.name.endsWith(extension)) continue;
+        const name = entry.name.toLowerCase();
+        if (!wanted.some((e) => name.endsWith(e))) continue;
         const read = await readSourceFile(entryAbs, entryRel);
         if (read.kind === "ok") files.push(read.file);
         else ignored.push(read.ignored);
-      } else if (entry.isDirectory() && !IGNORED_DIRS.has(entry.name)) {
+      } else if (entry.isDirectory() && !skipped.has(entry.name)) {
         await walk(entryAbs, entryRel);
       }
     }
