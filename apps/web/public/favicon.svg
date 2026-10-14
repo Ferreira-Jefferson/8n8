@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -10 96 96">
+  <title>8n8</title>
+  <style>
+    .n { stroke: #0f7a6b; fill: none; }
+    .p { fill: #0f7a6b; }
+    @media (prefers-color-scheme: dark) {
+      .n { stroke: #3dbfa8; }
+      .p { fill: #3dbfa8; }
+    }
+  </style>
+  <rect class="n" x="3" y="3" width="34" height="34" rx="6" stroke-width="6"/>
+  <rect class="n" x="59" y="39" width="34" height="34" rx="6" stroke-width="6"/>
+  <path class="n" d="M40 8C52 8 44 68 56 68" stroke-width="5" stroke-linecap="round"/>
+  <circle class="p" cx="40" cy="8" r="5"/>
+  <circle class="p" cx="56" cy="68" r="5"/>
+</svg>

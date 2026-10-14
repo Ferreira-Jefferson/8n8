@@ -171,7 +171,7 @@ test("VID-30: inputs → outputs in DM Mono; a RETORNO with neither omits the se
     /^"DM Mono"/,
   );
   expect(await css(view.locator(".io .arrow"), "color")).toBe(
-    "rgb(212, 255, 63)",
+    "rgb(61, 191, 168)",
   );
 
   await showStep(page, PESADA, "Retorna o valor da tabela pesada para a `uf`.");

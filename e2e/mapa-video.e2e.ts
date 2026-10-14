@@ -17,8 +17,8 @@ import {
   FRETE_LEVEL,
   GROUND,
   generate,
-  LIME,
   levelIds,
+  MAIN,
   MAIN_FLOW,
   nodes,
   OFFLINE,
@@ -91,7 +91,7 @@ async function levelTags(page: Page): Promise<string[]> {
 }
 
 test.describe("O visual do vídeo", () => {
-  test("VID-01: dark canvas with a 40 px dot grid, light titles, grey code, lime open mark", async ({
+  test("VID-01: dark canvas with a 40 px dot grid, light titles, grey code, Petróleo open mark", async ({
     page,
   }) => {
     await generate(page, OFFLINE, VIDEO);
@@ -105,7 +105,7 @@ test.describe("O visual do vídeo", () => {
     const trigger = cardOf(page, PEDIDO);
     expect(await css(trigger.locator(".name"), "color")).toBe(SECOND);
     expect(await css(trigger.locator(".fn"), "color")).toBe(ACCENT);
-    expect(await css(trigger.locator(".open-mark"), "color")).toBe(LIME);
+    expect(await css(trigger.locator(".open-mark"), "color")).toBe(MAIN);
     expect(await css(page.locator("body"), "background-color")).toBe(GROUND);
   });
 
@@ -153,7 +153,7 @@ test.describe("O visual do vídeo", () => {
     expect(new Set(fontHosts)).toEqual(new Set(["127.0.0.1:4317"]));
   });
 
-  test("VID-03: each card has tag, title and code line in that order, with lime round ports only where a wire is", async ({
+  test("VID-03: each card has tag, title and code line in that order, with Petróleo round ports only where a wire is", async ({
     page,
   }) => {
     await generate(page, OFFLINE, VIDEO);
@@ -192,7 +192,7 @@ test.describe("O visual do vídeo", () => {
       out: "hidden",
     });
     const port = cardOf(page, `${PEDIDO}/s3`).locator(".port-out");
-    expect(await css(port, "background-color")).toBe(LIME);
+    expect(await css(port, "background-color")).toBe(MAIN);
     expect(await css(port, "border-radius")).toBe("50%");
     expect(await css(port, "width")).toBe(await css(port, "height"));
   });
@@ -249,7 +249,7 @@ test.describe("O visual do vídeo", () => {
     expect([...seen].sort()).toEqual([...TAGS].sort());
   });
 
-  test("VID-05: wires are lime 4 px curves", async ({ page }) => {
+  test("VID-05: wires are Petróleo 4 px curves", async ({ page }) => {
     // The video stage: the main flow fits on one row, so every wire is the plain curve.
     await page.setViewportSize({ width: 1920, height: 1080 });
     await generate(page, OFFLINE, VIDEO);
@@ -269,7 +269,7 @@ test.describe("O visual do vídeo", () => {
     );
     expect(wires).toHaveLength(7);
     for (const w of wires) {
-      expect(w.stroke).toBe(LIME);
+      expect(w.stroke).toBe(MAIN);
       expect(w.width).toBe("4px");
       expect(w.fill).toBe("none");
       expect(w.d).toMatch(/^M [-\d.]+ [-\d.]+ C [-\d.]+ [-\d.]+, /);
@@ -278,7 +278,7 @@ test.describe("O visual do vídeo", () => {
 });
 
 test.describe("O editor", () => {
-  test("VID-08: Colar trecho opens the editor panel: trecho.py in lime, mono code, a lime Gerar mapa and Início", async ({
+  test("VID-08: Colar trecho opens the editor panel: trecho.py in Petróleo, mono code, a Petróleo Gerar mapa and Início", async ({
     page,
   }) => {
     await page.goto(`${OFFLINE}/`);
@@ -286,13 +286,13 @@ test.describe("O editor", () => {
     const editor = page.getByRole("region", { name: "Editor" });
     const file = editor.getByText("trecho.py", { exact: true });
     await expect(file).toBeVisible();
-    expect(await css(file, "color")).toBe(LIME);
+    expect(await css(file, "color")).toBe(MAIN);
     const code = page.getByLabel("Trecho Python");
     await expect(code).toBeVisible();
     expect(await css(code, "font-family")).toMatch(/^"DM Mono"/);
     const button = page.getByRole("button", { name: "Gerar mapa" });
     await expect(button).toBeVisible();
-    expect(await css(button, "background-color")).toBe(LIME);
+    expect(await css(button, "background-color")).toBe(MAIN);
     await expect(page.getByRole("button", { name: "Início" })).toBeVisible();
     // No map yet: no canvas and no "Novo código".
     await expect(canvas(page)).toHaveCount(0);

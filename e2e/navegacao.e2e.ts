@@ -18,7 +18,7 @@ import {
   FRETE_LEVEL,
   freshReal,
   generate,
-  LIME,
+  MAIN,
   MAIN_FLOW,
   nodeById,
   nodes,
@@ -85,7 +85,7 @@ async function expectAllInside(page: Page): Promise<void> {
  */
 async function expectSelectedNearCentre(page: Page, id: string) {
   await expect(cardOf(page, id)).toHaveClass(/\bon\b/);
-  expect(await css(cardOf(page, id), "border-top-color")).toBe(LIME);
+  expect(await css(cardOf(page, id), "border-top-color")).toBe(MAIN);
   await expectAllInside(page);
   await expect
     .poll(async () => {
@@ -255,7 +255,7 @@ test.describe("Navegação", () => {
     );
   });
 
-  test("VID-18: the clicked card grows into a lime frame over the canvas before the inner steps show", async ({
+  test("VID-18: the clicked card grows into a Petróleo frame over the canvas before the inner steps show", async ({
     page,
   }) => {
     await generate(page, REAL, VIDEO);
@@ -266,7 +266,7 @@ test.describe("Navegação", () => {
     await expect(canvas(page)).toHaveAttribute("data-phase", "expanding");
     const frame = page.locator(".open-frame");
     await expect(frame).toHaveCount(1);
-    expect(await css(frame, "border-top-color")).toBe(LIME);
+    expect(await css(frame, "border-top-color")).toBe(MAIN);
     expect(await css(frame, "border-top-width")).toBe("2px");
     expect(
       await nodes(page).evaluateAll(
@@ -286,7 +286,7 @@ test.describe("Navegação", () => {
     await expect(frame).toHaveCount(0);
     await expectLevel(page, FRETE_LEVEL);
     await expect(canvas(page)).toHaveClass(/\blevel-frame\b/);
-    expect(await css(canvas(page), "border-top-color")).toBe(LIME);
+    expect(await css(canvas(page), "border-top-color")).toBe(MAIN);
   });
 
   test("VID-19: the trail reads Fluxo principal › <title of each opened node>", async ({
@@ -384,7 +384,7 @@ test.describe("Navegação", () => {
       "não",
     ]);
     expect(await css(page.locator('[data-branch-label="sim"]'), "color")).toBe(
-      LIME,
+      MAIN,
     );
     // Each label sits next to the start of its wire, touches no card and no
     // wire, and stays inside the canvas.
@@ -415,17 +415,19 @@ test.describe("Navegação", () => {
       .toEqual([clear("sim"), clear("não")]);
   });
 
-  test("VID-22: clicking a leaf draws its border in lime", async ({ page }) => {
+  test("VID-22: clicking a leaf draws its border in Petróleo", async ({
+    page,
+  }) => {
     await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     const leaf = cardOf(page, `${PEDIDO}/s1`);
-    expect(await css(leaf, "border-top-color")).not.toBe(LIME);
+    expect(await css(leaf, "border-top-color")).not.toBe(MAIN);
     await clickCard(page, `${PEDIDO}/s1`);
     await expect(leaf).toHaveClass(/\bon\b/);
-    expect(await css(leaf, "border-top-color")).toBe(LIME);
+    expect(await css(leaf, "border-top-color")).toBe(MAIN);
     expect(
       await css(cardOf(page, `${PEDIDO}/s2`), "border-top-color"),
-    ).not.toBe(LIME);
+    ).not.toBe(MAIN);
   });
 
   test("VID-25: clicking the HTTP leaf shows its panel and keeps the same 5 cards", async ({
@@ -502,7 +504,7 @@ test.describe("Descida até as folhas", () => {
     }
     expect(
       await css(cardOf(page, `${PEDIDO}/s3`).locator(".open-mark"), "color"),
-    ).toBe(LIME);
+    ).toBe(MAIN);
 
     // LAÇO and BLOCO open; the call inside the loop is a leaf.
     await generate(page, REAL, LOOP_AND_BLOCK);

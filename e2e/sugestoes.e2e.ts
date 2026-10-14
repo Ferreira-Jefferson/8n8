@@ -10,7 +10,7 @@ import {
   freshReal,
   GROUND,
   generate,
-  LIME,
+  MAIN,
   MAIN_FLOW,
   nodes,
   PEDIDO,
@@ -88,7 +88,7 @@ test("VID-31, IT P3: the GATILHO's suggestions pin to BANCO and E-MAIL, inside a
   await expectAbove(page, FILA, EMAIL);
 });
 
-test("VID-32: nodes with a card get the lime border; the others show at 55% opacity", async ({
+test("VID-32: nodes with a card get the Petróleo border; the others show at 55% opacity", async ({
   page,
 }) => {
   await openTrigger(page);
@@ -98,10 +98,10 @@ test("VID-32: nodes with a card get the lime border; the others show at 55% opac
   for (const id of level) {
     const card = cardOf(page, id);
     if (id === SALVAR || id === EMAIL) {
-      expect(await css(card, "border-top-color")).toBe(LIME);
+      expect(await css(card, "border-top-color")).toBe(MAIN);
       await expect.poll(() => css(card, "opacity")).toBe("1");
     } else {
-      expect(await css(card, "border-top-color")).not.toBe(LIME);
+      expect(await css(card, "border-top-color")).not.toBe(MAIN);
       await expect.poll(() => css(card, "opacity")).toBe("0.55");
     }
   }

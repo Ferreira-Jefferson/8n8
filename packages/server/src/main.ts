@@ -164,7 +164,7 @@ async function main(): Promise<void> {
     );
     process.exit(1);
   });
-  console.log(`code2n8n em http://127.0.0.1:${port}`);
+  console.log(`8n8 em http://127.0.0.1:${port}`);
 }
 
 if (

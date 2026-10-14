@@ -47,11 +47,11 @@ export const FRETE_LEVEL = [
   `${FRETE}/s2/b1/s0`,
 ];
 
-/** The video colours (VID-01). */
-export const LIME = "rgb(212, 255, 63)";
-export const GROUND = "rgb(18, 17, 16)";
-export const SECOND = "rgb(245, 242, 236)";
-export const ACCENT = "rgb(168, 163, 153)";
+/** The brand colours (docs/marca/manual.html), dark theme. */
+export const MAIN = "rgb(61, 191, 168)";
+export const GROUND = "rgb(22, 24, 24)";
+export const SECOND = "rgb(233, 235, 234)";
+export const ACCENT = "rgb(151, 157, 155)";
 
 export const canvas = (page: Page) => page.locator(".canvas");
 export const flow = (page: Page) => page.getByRole("application");

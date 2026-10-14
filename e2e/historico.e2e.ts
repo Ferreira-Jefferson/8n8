@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
-import { css, generate, LIME, nodes } from "./mapa";
+import { css, generate, MAIN, nodes } from "./mapa";
 
 // The search history, end to end: a keyless server of its own on 4321 (playwright.config.ts),
 // a persistent SQLite file. Every test starts by wiping it through the DELETE API.
@@ -169,7 +169,7 @@ test.describe("Histórico", () => {
     await expect(rows(page)).toHaveCount(1);
     const tag = rows(page).first().locator(".history-tag");
     await expect(tag).toHaveText("PASTA");
-    expect(await css(tag, "color")).toBe(LIME);
+    expect(await css(tag, "color")).toBe(MAIN);
   });
 
   test("the search filters the rows and says when nothing matches", async ({

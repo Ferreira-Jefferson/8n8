@@ -113,27 +113,58 @@ function savedPanelWidth(): number | undefined {
   }
 }
 
-/** The 8n8 mark: the two linked blocks and the edge between them. */
-function BrandMark() {
+/**
+ * The 8n8 logo (docs/marca/manual.html): two 8s of stacked blocks. The two
+ * linked blocks and the edge between them are Petróleo; the other two are
+ * the text color at 20%.
+ */
+function Logo() {
   return (
     <svg
-      className="home-mark"
-      width="40"
+      className="home-logo"
+      width="50"
       height="32"
-      viewBox="-8 -8 112 92"
-      aria-hidden="true"
+      viewBox="0 0 124 80"
+      role="img"
+      aria-label="8n8"
     >
-      <g fill="none" stroke="currentColor">
-        <rect x="3" y="3" width="34" height="34" rx="6" strokeWidth="6" />
-        <rect x="59" y="39" width="34" height="34" rx="6" strokeWidth="6" />
+      <g fill="none" strokeWidth="6">
+        <rect
+          x="3"
+          y="43"
+          width="38"
+          height="34"
+          rx="6"
+          stroke="currentColor"
+          strokeOpacity="0.2"
+        />
+        <rect
+          x="83"
+          y="3"
+          width="38"
+          height="34"
+          rx="6"
+          stroke="currentColor"
+          strokeOpacity="0.2"
+        />
+        <rect x="3" y="3" width="38" height="34" rx="6" stroke="var(--main)" />
+        <rect
+          x="83"
+          y="43"
+          width="38"
+          height="34"
+          rx="6"
+          stroke="var(--main)"
+        />
         <path
-          d="M40 8C52 8 44 68 56 68"
+          d="M44 8C66 8 58 72 80 72"
+          stroke="var(--main)"
           strokeWidth="5"
           strokeLinecap="round"
         />
       </g>
-      <circle cx="40" cy="8" r="5" fill="currentColor" />
-      <circle cx="56" cy="68" r="5" fill="currentColor" />
+      <circle cx="44" cy="8" r="5" fill="var(--main)" />
+      <circle cx="80" cy="72" r="5" fill="var(--main)" />
     </svg>
   );
 }
@@ -310,10 +341,7 @@ export function App() {
       return (
         <main className="home">
           <header className="home-bar">
-            <span className="home-brand">
-              <BrandMark />
-              8n8
-            </span>
+            <Logo />
           </header>
           <Home
             folder={folder}
