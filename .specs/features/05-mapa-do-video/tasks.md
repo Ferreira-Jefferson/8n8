@@ -817,11 +817,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Três nós em `x` 0, 380 e 760 → `enterAt` 0, 350 e 700. Um empate em `x` desempata por `y`.
-- [ ] O fio a→b tem `drawAt = enterAt(a) + 400`.
-- [ ] Os pontos seguem a ordem do fluxo, com `pulseAt` de `T0 = max(drawAt) + 800` e passo de 750. Há um ponto por fio.
-- [ ] `reduced = true` → todos os valores são 0.
-- [ ] Gate passa.
+- [x] Três nós em `x` 0, 380 e 760 → `enterAt` 0, 350 e 700. Um empate em `x` desempata por `y`.
+- [x] O fio a→b tem `drawAt = enterAt(a) + 400`.
+- [x] Os pontos seguem a ordem do fluxo, com `pulseAt` de `T0 = max(drawAt) + 800` e passo de 750. Há um ponto por fio.
+- [x] `reduced = true` → todos os valores são 0.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
