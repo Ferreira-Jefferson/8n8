@@ -28,7 +28,7 @@ import { projectLevel } from "./project-level";
 import { type StepFlowNode, StepNode } from "./StepNode";
 import { SuggestionCard } from "./SuggestionCard";
 import { highlighted, suggestionCards } from "./suggestion-cards";
-import { startViewport } from "./viewport";
+import { revealViewport, startViewport } from "./viewport";
 import { WireEdge, type WireFlowEdge } from "./WireEdge";
 
 export interface FlowCanvasProps {
@@ -86,6 +86,36 @@ function StartView({ positions }: { positions: Map<NodeId, Position> }) {
     done.current = true;
     setViewport(startViewport(positions, width, height));
   }, [positions, width, height, setViewport]);
+  return null;
+}
+
+/**
+ * Brings the selected card back into view when the selection changes or the
+ * canvas narrows for the panel, at the same zoom (VID-22, 25). The first view
+ * of a level stays with `StartView` or `fitView`.
+ */
+function KeepInView({
+  selected,
+  positions,
+}: {
+  selected: NodeId | null;
+  positions: Map<NodeId, Position>;
+}) {
+  const { getViewport, setViewport } = useReactFlow();
+  const width = useStore((s) => s.width);
+  const height = useStore((s) => s.height);
+  const seen = useRef<{ selected: NodeId | null; width: number } | null>(null);
+  useEffect(() => {
+    if (width === 0 || height === 0) return;
+    const prev = seen.current;
+    seen.current = { selected, width };
+    if (prev === null) return;
+    if (prev.selected === selected && prev.width === width) return;
+    const p = selected === null ? undefined : positions.get(selected);
+    if (!p) return;
+    const next = revealViewport(getViewport(), p, width, height);
+    if (next) setViewport(next);
+  }, [selected, positions, width, height, getViewport, setViewport]);
   return null;
 }
 
@@ -262,6 +292,7 @@ export function FlowCanvas({
         proOptions={{ hideAttribution: true }}
       >
         {focusId === null && <StartView positions={positions} />}
+        <KeepInView selected={selected} positions={positions} />
         <ViewportPortal>
           {anchored.map(({ card, style }) => (
             <SuggestionCard

@@ -46,3 +46,29 @@ export function startViewport(
       : TOP_PAD - minY * zoom;
   return { x, y, zoom };
 }
+
+/**
+ * The view that brings the card at `p` back into a canvas of `width` by
+ * `height`, at the same zoom, or null when the card is already in view. The
+ * canvas narrows when the panel opens, so a selected card can end up behind
+ * it (VID-22, 25).
+ */
+export function revealViewport(
+  v: Viewport,
+  p: Position,
+  width: number,
+  height: number,
+): Viewport | null {
+  const w = NODE_WIDTH * v.zoom;
+  const h = NODE_HEIGHT * v.zoom;
+  const left = p.x * v.zoom + v.x;
+  const top = p.y * v.zoom + v.y;
+  const inX = left >= SIDE_PAD && left + w <= width - SIDE_PAD;
+  const inY = top >= 0 && top + h <= height;
+  if (inX && inY) return null;
+  return {
+    x: inX ? v.x : (width - w) / 2 - p.x * v.zoom,
+    y: inY ? v.y : (height - h) / 2 - p.y * v.zoom,
+    zoom: v.zoom,
+  };
+}

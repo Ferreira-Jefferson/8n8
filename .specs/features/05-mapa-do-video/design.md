@@ -656,6 +656,7 @@ export type NavAction =
   - O contêiner tem `data-phase` e `data-level="top" | "inner"`. Um nível de dentro ganha `.level-frame`.
   - A `key` do React Flow é `${path.length}:${levelId}`, para que a recursão anime de novo.
   - Com `focusId` (vindo do "Voltar"), o canvas chama `fitView({ nodes: [{ id: focusId }], maxZoom: 1, duration: 0 })` depois do primeiro desenho, e o nó fica no centro. Sem `focusId`, a primeira vista vem de `startViewport` (`flow/viewport.ts`): o nível todo cabe com zoom entre 0,8 e 1; um nível mais largo fica em 0,8 e começa no primeiro cartão da esquerda, e o resto fica a um arrasto de distância.
+  - Quando a seleção muda ou o canvas estreita porque o painel abriu, um cartão selecionado fora da vista volta para o centro do canvas, com o mesmo zoom (`revealViewport`).
 
 ### C12. Trilha: `nav/Breadcrumb.tsx` (VID-19)
 

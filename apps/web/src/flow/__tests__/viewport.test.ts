@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { layoutRows } from "../layout";
-import { MIN_START_ZOOM, SIDE_PAD, startViewport, TOP_PAD } from "../viewport";
+import {
+  MIN_START_ZOOM,
+  revealViewport,
+  SIDE_PAD,
+  startViewport,
+  TOP_PAD,
+} from "../viewport";
 
 const row = (n: number) =>
   layoutRows([Array.from({ length: n }, (_, i) => `n${i}`)]);
@@ -49,5 +55,29 @@ describe("startViewport (VID-03, VID-10)", () => {
       y: 0,
       zoom: 1,
     });
+  });
+});
+
+describe("revealViewport (VID-22, VID-25)", () => {
+  const v = { x: 40, y: 300, zoom: 0.8 };
+
+  it("leaves the view alone when the card is in view", () => {
+    // Card at x = 380: 344..600 on screen, inside an 800 px canvas.
+    expect(revealViewport(v, { x: 380, y: 0 }, 800, 900)).toBeNull();
+  });
+
+  it("centers a card that the narrower canvas hides, at the same zoom", () => {
+    // Card at x = 1140: 952..1208 on screen, past an 800 px canvas.
+    const next = revealViewport(v, { x: 1140, y: 0 }, 800, 900);
+    expect(next).toEqual({
+      x: (800 - 256) / 2 - 1140 * 0.8,
+      y: 300,
+      zoom: 0.8,
+    });
+  });
+
+  it("brings back a card hidden above or below the canvas", () => {
+    const next = revealViewport(v, { x: 0, y: 1000 }, 1600, 900);
+    expect(next).toEqual({ x: 40, y: (900 - 112) / 2 - 800, zoom: 0.8 });
   });
 });

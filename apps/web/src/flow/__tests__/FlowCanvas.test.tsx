@@ -281,11 +281,28 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
       container.querySelector<HTMLElement>(".react-flow__viewport")?.style
         .transform;
     // React Flow reads the canvas size from the offsetWidth / offsetHeight
-    // stubs, 320 x 140: too small for the level, so it starts at its top-left
-    // card, 40 px from the left and 140 px from the top (the odd cards sit 90 px
-    // higher: 140 + 90 * 0.8 = 212).
+    // stubs: the pane's "100%" parses to 100 x 100. That is too small for the
+    // level, so it starts at its top-left card, 40 px from the left and 140 px
+    // from the top (the odd cards sit 90 px higher: 140 + 90 * 0.8 = 212).
     await waitFor(() =>
       expect(viewport()).toBe("translate(40px,212px) scale(0.8)"),
+    );
+  });
+
+  it("brings a selected card that sits outside the canvas back into view (VID-22, VID-25)", async () => {
+    const { container, rerender } = render(<FlowCanvas {...props()} />);
+    const viewport = () =>
+      container.querySelector<HTMLElement>(".react-flow__viewport")?.style
+        .transform;
+    await waitFor(() =>
+      expect(viewport()).toBe("translate(40px,212px) scale(0.8)"),
+    );
+    // s2 (the 4th card) sits at x = 1140 and y = -90, far past the 100 px
+    // stub canvas: it is centered, (100 - 256) / 2 - 1140 * 0.8 = -990 and
+    // (100 - 112) / 2 + 90 * 0.8 = 66.
+    rerender(<FlowCanvas {...props({ selected: `${P}/s2` })} />);
+    await waitFor(() =>
+      expect(viewport()).toBe("translate(-990px,66px) scale(0.8)"),
     );
   });
 
