@@ -2,6 +2,8 @@ export type { CacheEntryV2, ExplainCache } from "./cache";
 export { createDiskCache } from "./cache";
 export type { ExplainDeps } from "./explain";
 export { explainNode } from "./explain";
+export type { PromptLanguage } from "./language";
+export { docstringOmitted } from "./language";
 export { buildStepPrompt, buildSystemPrompt } from "./prompt";
 export { buildReviewerPrompt } from "./reviewer";
 export type { TitleCache } from "./title-cache";

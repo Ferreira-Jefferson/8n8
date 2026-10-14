@@ -2,17 +2,18 @@ import { createHash } from "node:crypto";
 import type { TitleItem } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
 import { buildTitlePrompt, parseTitles, titleMessage } from "../title-prompt";
+import { PY } from "./py";
 
 describe("buildTitlePrompt (VID-14)", () => {
   it("starts with the exact role line the fake LLM recognizes", () => {
-    const { text } = buildTitlePrompt("REGRAS PTS");
+    const { text } = buildTitlePrompt("REGRAS PTS", PY);
     expect(text.split("\n")[0]).toBe(
       "Você escreve títulos de nós de um fluxo de código Python.",
     );
   });
 
   it("asks for at most 6 words, the PTS rules and JSON titles", () => {
-    const { text } = buildTitlePrompt("REGRAS PTS");
+    const { text } = buildTitlePrompt("REGRAS PTS", PY);
     expect(text).toContain("no máximo 6 palavras");
     expect(text).toContain("REGRAS PTS");
     expect(text).toContain('{"titles":[{"id":"n1","title":');
@@ -23,18 +24,19 @@ describe("buildTitlePrompt (VID-14)", () => {
   });
 
   it("versions the text with the first 12 hex chars of its sha256", () => {
-    const { text, version } = buildTitlePrompt("regra A");
+    const { text, version } = buildTitlePrompt("regra A", PY);
     expect(version).toMatch(/^[0-9a-f]{12}$/);
     expect(version).toBe(
       createHash("sha256").update(text).digest("hex").slice(0, 12),
     );
-    expect(version).not.toBe(buildTitlePrompt("regra B").version);
+    expect(version).not.toBe(buildTitlePrompt("regra B", PY).version);
   });
 });
 
 const item = (overrides: Partial<TitleItem>): TitleItem => ({
   nodeId: "fn:x",
   cacheKey: "fn:x",
+  language: "python",
   kind: "function",
   name: "x",
   code: "def x():\n    pass",
@@ -113,6 +115,6 @@ describe("parseTitles (VID-14)", () => {
 
 describe("buildTitlePrompt docstring", () => {
   it("says the code comes without the docstring", () => {
-    expect(buildTitlePrompt("regra A").text).toContain("sem a docstring");
+    expect(buildTitlePrompt("regra A", PY).text).toContain("sem a docstring");
   });
 });

@@ -24,12 +24,13 @@ import {
   explainNode,
 } from "../index";
 import { buildStepPrompt } from "../prompt";
+import { PY } from "./py";
 
 type LlmRequest = Parameters<LlmClient["complete"]>[0];
 
-const prompt = buildSystemPrompt("REGRAS PTS");
-const stepPrompt = buildStepPrompt("REGRAS PTS");
-const reviewer = buildReviewerPrompt();
+const prompt = buildSystemPrompt("REGRAS PTS", PY);
+const stepPrompt = buildStepPrompt("REGRAS PTS", PY);
+const reviewer = buildReviewerPrompt(PY);
 const MODEL = "~deepseek/deepseek-v4-flash-latest";
 
 /** Relative evidence the fake reviewer gives by claim kind. */
@@ -76,6 +77,7 @@ const CODE = sliceLines(SOURCE, RANGE);
 
 const request = (overrides: Partial<ExplainRequest> = {}): ExplainRequest => ({
   nodeId: "fn:calcular_frete",
+  language: "python",
   nodeName: "calcular_frete",
   nodeKind: "function",
   code: CODE,
@@ -212,7 +214,7 @@ describe("explainNode", () => {
       request(),
       deps(llm, {
         model: "openai/gpt-x",
-        prompt: buildSystemPrompt("OUTRAS REGRAS"),
+        prompt: buildSystemPrompt("OUTRAS REGRAS", PY),
       }),
     );
     expect(requests).toHaveLength(6);
@@ -561,7 +563,7 @@ describe("explainNode for a step (VID-28)", () => {
 
     const res = await explainNode(
       step(),
-      deps(llm, { stepPrompt: buildStepPrompt("OUTRAS REGRAS") }),
+      deps(llm, { stepPrompt: buildStepPrompt("OUTRAS REGRAS", PY) }),
     );
     expect(requests).toHaveLength(4);
     expect(res).toMatchObject({
