@@ -1313,19 +1313,20 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-01: `.canvas` tem `background-color` `rgb(18, 17, 16)` e `background-size` `40px 40px`. Um título de cartão tem cor `rgb(245, 242, 236)`, um `.fn` tem `rgb(168, 163, 153)` e um `.open-mark` tem `rgb(212, 255, 63)`.
-- [ ] VID-02: `document.fonts.check` é verdadeiro para `"Archivo Black"`, `"Space Grotesk"` e `"DM Mono"`. O `h2` do painel usa Archivo Black, o cartão usa Space Grotesk e o `.fn` usa DM Mono. Todo pedido `.woff2` vai para `127.0.0.1:4317`.
-- [ ] VID-03: cada cartão tem `.tag`, `.name` e `.fn` nessa ordem. O GATILHO tem só a porta de saída, o último só a de entrada, e as portas são círculos `rgb(212, 255, 63)`.
-- [ ] VID-04: o código de etiquetas do design (GATILHO, FUNÇÃO, HTTP, BANCO, DISCO, E-MAIL, EXTERNO, SE, LAÇO, BLOCO, CÓDIGO, RETORNO), mais o projeto `projeto-loja` (PASTA, ARQUIVO), mostra cada uma das 14 etiquetas. Nenhum cartão mostra outra.
-- [ ] VID-05: cada `.wire` tem `stroke` `rgb(212, 255, 63)` e `stroke-width` `4px`, com um path curvo (`C`).
-- [ ] VID-08: o editor mostra "trecho.py" em `rgb(212, 255, 63)`, o `textarea` em DM Mono, "Gerar mapa" com fundo `rgb(212, 255, 63)`, o campo de pasta e "Abrir pasta".
-- [ ] VID-09: depois de "Gerar mapa", o `textarea` some e "Novo código" aparece. "Novo código" volta ao editor com o mesmo texto.
-- [ ] Gate passa.
+- [x] VID-01: `.canvas` tem `background-color` `rgb(18, 17, 16)` e `background-size` `40px 40px`. Um título de cartão tem cor `rgb(245, 242, 236)`, um `.fn` tem `rgb(168, 163, 153)` e um `.open-mark` tem `rgb(212, 255, 63)`.
+- [x] VID-02: `document.fonts.check` é verdadeiro para `"Archivo Black"`, `"Space Grotesk"` e `"DM Mono"`. O `h2` do painel usa Archivo Black, o cartão usa Space Grotesk e o `.fn` usa DM Mono. Todo pedido `.woff2` vai para `127.0.0.1:4317`.
+- [x] VID-03: cada cartão tem `.tag`, `.name` e `.fn` nessa ordem. O GATILHO tem só a porta de saída, o último só a de entrada, e as portas são círculos `rgb(212, 255, 63)`.
+- [x] VID-04: o código de etiquetas do design (GATILHO, FUNÇÃO, HTTP, BANCO, DISCO, E-MAIL, EXTERNO, SE, LAÇO, BLOCO, CÓDIGO, RETORNO), mais o projeto `projeto-loja` (PASTA, ARQUIVO), mostra cada uma das 14 etiquetas. Nenhum cartão mostra outra.
+- [x] VID-05: cada `.wire` tem `stroke` `rgb(212, 255, 63)` e `stroke-width` `4px`, com um path curvo (`C`).
+- [x] VID-08: o editor mostra "trecho.py" em `rgb(212, 255, 63)`, o `textarea` em DM Mono, "Gerar mapa" com fundo `rgb(212, 255, 63)`, o campo de pasta e "Abrir pasta".
+- [x] VID-09: depois de "Gerar mapa", o `textarea` some e "Novo código" aparece. "Novo código" volta ao editor com o mesmo texto.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/mapa-video.e2e.ts`
 
 **Commit**: `test(e2e): check the video look and the editor`
+**Status**: ✅ Complete (helpers comuns em `e2e/mapa.ts`)
 
 ---
 
