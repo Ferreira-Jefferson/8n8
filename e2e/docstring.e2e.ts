@@ -130,8 +130,9 @@ test.describe("Docstring", () => {
 test("a module docstring: the GATILHO card shows the first real code line, not the quotes", async ({
   page,
 }) => {
+  // The module runs a call (print): loose code with no call is no entry (VID-12).
   const source =
-    '"""Rotinas do pedido.\n\nMais detalhes aqui.\n"""\nLIMITE = 30\nNOME = "x"\n\ndef a():\n    print(1)\n';
+    '"""Rotinas do pedido.\n\nMais detalhes aqui.\n"""\nLIMITE = 30\nNOME = "x"\nprint(NOME)\n\ndef a():\n    print(1)\n';
   const graph = await generate(page, OFFLINE, source);
   const module = graph.nodes.find((n) => n.kind === "module");
   expect(module?.docstring).toEqual({ start: 1, end: 4 });

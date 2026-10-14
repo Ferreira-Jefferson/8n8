@@ -56,14 +56,14 @@ export const ACCENT = "rgb(168, 163, 153)";
 export const canvas = (page: Page) => page.locator(".canvas");
 export const flow = (page: Page) => page.getByRole("application");
 export const nodes = (page: Page) =>
-  flow(page).locator('[aria-roledescription="node"]');
+  flow(page).locator('[aria-roledescription="node"]:not(.hub-node)');
 export const nodeById = (page: Page, id: string) =>
   flow(page).locator(`[aria-roledescription="node"][data-id="${id}"]`);
 /** The card inside a React Flow node: `div.node` with tag, name and code line. */
 export const cardOf = (page: Page, id: string) =>
   nodeById(page, id).locator(".node");
 export const edges = (page: Page) =>
-  flow(page).locator('[aria-roledescription="edge"]');
+  flow(page).locator('[aria-roledescription="edge"]:not(.edge-contains)');
 export const breadcrumb = (page: Page) =>
   page.getByRole("navigation", { name: "Caminho de navegação" });
 export const panel = (page: Page) =>

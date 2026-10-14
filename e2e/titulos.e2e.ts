@@ -99,7 +99,11 @@ test.describe("Títulos", () => {
       ]);
     log = await fakeLog();
     expect(titleCalls(log)).toHaveLength(1);
-    expect(blocks(titleCalls(log)[0] as FakeCall)).toHaveLength(5);
+    // The 5 steps and the hub, calcular_frete itself.
+    expect(blocks(titleCalls(log)[0] as FakeCall)).toHaveLength(6);
+    await expect(
+      page.locator('.hub-node[data-id="fn:calcular_frete"] .name'),
+    ).toHaveText("Calcular frete");
   });
 
   test("VID-14: a title longer than 6 words never shows and never reaches the reviewer", async ({

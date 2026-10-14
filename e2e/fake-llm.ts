@@ -340,6 +340,8 @@ const SCENARIOS: Scenario[] = [
 /** Titles (VID-14): the first marker of this table found in a node block wins. */
 const TITLES: [marker: string, title: string][] = [
   ["def processar_pedido", "Pedido recebido"],
+  // The hub of its level: its block also holds "if peso > 30".
+  ["def calcular_frete", "Calcular frete"],
   ["if peso > 30", "Peso acima de 30?"],
   ["json.loads", "Ler o pedido"],
   ["validar_pedido(pedido)", "Validar pedido"],

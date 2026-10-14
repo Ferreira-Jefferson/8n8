@@ -43,9 +43,9 @@ function shot(page: Page, name: string): Promise<Buffer> {
 
 const canvas = (page: Page) => page.getByRole("application");
 const nodes = (page: Page) =>
-  canvas(page).locator('[aria-roledescription="node"]');
+  canvas(page).locator('[aria-roledescription="node"]:not(.hub-node)');
 const edges = (page: Page) =>
-  canvas(page).locator('[aria-roledescription="edge"]');
+  canvas(page).locator('[aria-roledescription="edge"]:not(.edge-contains)');
 const nodeById = (page: Page, id: string) =>
   canvas(page).locator(`[aria-roledescription="node"][data-id="${id}"]`);
 const edge = (page: Page, from: string, to: string) =>
