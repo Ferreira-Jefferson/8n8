@@ -1,13 +1,10 @@
-/// <reference types="node" />
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-
-// Vitest does not process CSS, so `?raw` comes back empty: read the file.
-// Vitest runs from apps/web.
-const css = readFileSync("src/styles.css", "utf8");
+// vitest.config.ts includes styles.css, so `?raw` gives its text.
+import css from "../styles.css?raw";
 
 /** The declarations of the rule whose selector list is exactly `selector`. */
 function rule(selector: string): string {
+  if (css === "") throw new Error("styles.css came back empty");
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const m = css.match(new RegExp(`(?:^|\\n)${escaped} \\{([^}]*)\\}`));
   if (!m?.[1]) throw new Error(`no rule ${selector}`);
