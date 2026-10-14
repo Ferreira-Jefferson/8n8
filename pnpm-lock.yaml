@@ -302,6 +302,9 @@ importers:
       '@code2n8n/lang-python':
         specifier: workspace:*
         version: link:../languages/python
+      '@code2n8n/llm':
+        specifier: workspace:*
+        version: link:../llm
       '@code2n8n/model':
         specifier: workspace:*
         version: link:../model

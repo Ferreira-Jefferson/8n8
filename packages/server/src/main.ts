@@ -8,19 +8,21 @@ import {
   buildTitlePrompt,
   buildTitleReviewerPrompt,
   createDiskCache,
-  createOpenRouterClient,
   createTitleCache,
   explainNode,
-  type LlmClient,
-  resolveModel,
-  resolveReviewModel,
   titleNodes,
 } from "@code2n8n/explain";
 import { type FolderRead, readSourceFolder } from "@code2n8n/input";
 import { createPythonExtractor } from "@code2n8n/lang-python";
+import {
+  createLlmClient,
+  type LlmConfig,
+  resolveLlmConfig,
+} from "@code2n8n/llm";
 import type {
   ExplainRequest,
   ExplainResponse,
+  LlmClient,
   ProjectExtractor,
   TitleRequest,
   TitlesResponse,
@@ -33,26 +35,39 @@ import { type History, openHistory } from "./history";
 const DEFAULT_PORT = 4317;
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 
+/** The one LLM client of the server and the config it came from; the client is absent when the provider lacks its key or URL (CORE-19). */
+export interface LlmSetup {
+  client: LlmClient | undefined;
+  config: LlmConfig;
+}
+
 export interface ComposeDeps {
-  /** `baseURL` is undefined when OPENROUTER_BASE_URL is unset or empty. */
-  createClient: (apiKey: string, baseURL: string | undefined) => LlmClient;
+  llm: LlmSetup;
   ptsRules: string;
   cacheDir: string;
 }
 
-/** Wires explainNode: the client exists only when OPENROUTER_API_KEY is set (CORE-19, CORE-21, FID-15); empty env values count as absent. */
+/** Resolves the config and builds the client once; `createClient` is injectable for tests. */
+export function composeLlm(
+  env: Record<string, string | undefined>,
+  createClient: (config: LlmConfig) => LlmClient | undefined = createLlmClient,
+): LlmSetup {
+  const config = resolveLlmConfig(env);
+  return { client: createClient(config), config };
+}
+
+/** Wires explainNode with the shared client, provider and models (CORE-19, CORE-21, FID-15). */
 export function composeExplain(
   env: Record<string, string | undefined>,
   deps: ComposeDeps,
 ): (req: ExplainRequest) => Promise<ExplainResponse> {
-  const apiKey = env.OPENROUTER_API_KEY;
+  const { client, config } = deps.llm;
   const explainDeps = {
-    llm: apiKey
-      ? deps.createClient(apiKey, env.OPENROUTER_BASE_URL || undefined)
-      : undefined,
+    llm: client,
     cache: createDiskCache(env.CODE2N8N_CACHE_DIR || deps.cacheDir),
-    model: resolveModel(env),
-    reviewModel: resolveReviewModel(env),
+    provider: config.provider,
+    model: config.model,
+    reviewModel: config.reviewModel,
     prompt: buildSystemPrompt(deps.ptsRules),
     stepPrompt: buildStepPrompt(deps.ptsRules),
     reviewer: buildReviewerPrompt(),
@@ -60,19 +75,18 @@ export function composeExplain(
   return (req) => explainNode(req, explainDeps);
 }
 
-/** Wires titleNodes with the same key, base URL, model and cache folder rules as composeExplain; titles live in `<cache>/titles` (VID-14, VID-17). */
+/** Wires titleNodes with the same client, provider, models and cache folder rules as composeExplain; titles live in `<cache>/titles` (VID-14, VID-17). */
 export function composeTitles(
   env: Record<string, string | undefined>,
   deps: ComposeDeps,
 ): (req: TitleRequest) => Promise<TitlesResponse> {
-  const apiKey = env.OPENROUTER_API_KEY;
+  const { client, config } = deps.llm;
   const titleDeps = {
-    llm: apiKey
-      ? deps.createClient(apiKey, env.OPENROUTER_BASE_URL || undefined)
-      : undefined,
+    llm: client,
     cache: createTitleCache(env.CODE2N8N_CACHE_DIR || deps.cacheDir),
-    model: resolveModel(env),
-    reviewModel: resolveReviewModel(env),
+    provider: config.provider,
+    model: config.model,
+    reviewModel: config.reviewModel,
     prompt: buildTitlePrompt(deps.ptsRules),
     reviewer: buildTitleReviewerPrompt(),
   };
@@ -131,8 +145,7 @@ async function main(): Promise<void> {
   );
   const extractor = await createPythonExtractor();
   const compose = {
-    createClient: (key: string, baseURL: string | undefined) =>
-      createOpenRouterClient(key, { baseURL }),
+    llm: composeLlm(process.env),
     ptsRules,
     cacheDir: join(repoRoot, ".cache/explain"),
   };
