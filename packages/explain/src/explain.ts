@@ -4,17 +4,19 @@ import {
   type ExplainResponse,
   type Explanation,
   explainStyle,
+  type LlmClient,
   STEP_SENTENCE_LIMIT,
 } from "@code2n8n/model";
 import type { ExplainCache } from "./cache";
 import { diffReasons, fingerprintOf, normalizeCode } from "./fingerprint";
-import type { LlmClient } from "./openrouter";
 import { type ReviewOutcome, reviewedDraft } from "./review";
 
 export interface ExplainDeps {
   /** Absent when OPENROUTER_API_KEY is not set (CORE-19). */
   llm?: LlmClient | undefined;
   cache: ExplainCache;
+  /** Id of the LLM provider; joins the fingerprint. */
+  provider: string;
   model: string;
   /** Model of the reviewer (FID-15). */
   reviewModel: string;
@@ -136,7 +138,7 @@ export async function explainNode(
 
   try {
     await cache.set({
-      schemaVersion: 2,
+      schemaVersion: 3,
       nodeId: req.nodeId,
       fingerprint: fp,
       review: outcome.review,

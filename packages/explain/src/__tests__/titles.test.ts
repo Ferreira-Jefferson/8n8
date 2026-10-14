@@ -1,14 +1,13 @@
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { TitleItem, TitlesResponse } from "@code2n8n/model";
+import type { LlmClient, TitleItem, TitlesResponse } from "@code2n8n/model";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import * as api from "../index";
 import {
   buildTitlePrompt,
   buildTitleReviewerPrompt,
   createTitleCache,
-  type LlmClient,
   type TitleCache,
   type TitleDeps,
   titleNodes,
@@ -128,6 +127,7 @@ const deps = (
 ): TitleDeps => ({
   llm,
   cache,
+  provider: "openrouter",
   model: "openai/gpt-x",
   reviewModel: "openai/gpt-r",
   prompt,
@@ -238,6 +238,7 @@ describe("titleNodes (VID-14, VID-16, VID-17)", () => {
   });
 
   it.each<[string, Partial<TitleDeps>]>([
+    ["the provider", { provider: "openai-compatible" }],
     ["the model", { model: "openai/outro" }],
     ["the reviewer model", { reviewModel: "openai/outro" }],
     ["the title prompt version", { prompt: buildTitlePrompt("OUTRAS") }],

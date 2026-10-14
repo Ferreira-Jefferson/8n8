@@ -31,11 +31,12 @@ const fileOf = (key: string) =>
   join(titlesDir(), `${createHash("sha256").update(key).digest("hex")}.json`);
 
 const entry = (cacheKey: string): TitleCacheEntry => ({
-  schemaVersion: 1,
+  schemaVersion: 2,
   cacheKey,
   fingerprint: {
     code: "c",
     neighbours: "n",
+    provider: "openrouter",
     model: "m",
     reviewModel: "r",
     promptVersion: "p",
@@ -46,11 +47,11 @@ const entry = (cacheKey: string): TitleCacheEntry => ({
 });
 
 describe("createTitleCache (VID-17)", () => {
-  it("writes <dir>/titles/<sha256(cacheKey)>.json with schemaVersion 1 and reads it back", async () => {
+  it("writes <dir>/titles/<sha256(cacheKey)>.json with schemaVersion 2 and reads it back", async () => {
     await cache.set(entry("fn:a"));
     const stored = JSON.parse(await readFile(fileOf("fn:a"), "utf8"));
     expect(stored).toEqual(entry("fn:a"));
-    expect(stored.schemaVersion).toBe(1);
+    expect(stored.schemaVersion).toBe(2);
     expect(await cache.get("fn:a")).toEqual(entry("fn:a"));
     expect(await readdir(titlesDir())).toHaveLength(1);
   });
@@ -61,7 +62,8 @@ describe("createTitleCache (VID-17)", () => {
 
   it.each([
     ["invalid JSON", "{ corrompido"],
-    ["schemaVersion 2", JSON.stringify({ ...entry("fn:a"), schemaVersion: 2 })],
+    ["schemaVersion 1", JSON.stringify({ ...entry("fn:a"), schemaVersion: 1 })],
+    ["schemaVersion 3", JSON.stringify({ ...entry("fn:a"), schemaVersion: 3 })],
     ["a missing field", JSON.stringify({ ...entry("fn:a"), title: undefined })],
   ])(
     "treats %s as absent and lets the next set overwrite it",

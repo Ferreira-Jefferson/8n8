@@ -14,11 +14,12 @@ const entry = (
   summary = "Resumo.",
   code = "c0de",
 ): CacheEntryV2 => ({
-  schemaVersion: 2,
+  schemaVersion: 3,
   nodeId,
   fingerprint: {
     code,
     neighbours: "n31gh",
+    provider: "openrouter",
     model: "~deepseek/deepseek-v4-flash-latest",
     reviewModel: "~deepseek/deepseek-v4-flash-latest",
     promptVersion: "abcdef123456",
@@ -121,6 +122,27 @@ describe("createDiskCache (CORE-18, CACHE-06, CACHE-07)", () => {
     await writeFile(
       join(nodes(), fileName("fn:a")),
       JSON.stringify({ ...entry("fn:a"), schemaVersion: 1 }),
+      "utf8",
+    );
+    expect(await createDiskCache(root).get("fn:a")).toBeUndefined();
+  });
+
+  it("returns undefined for a schemaVersion 2 entry, written before the provider joined the fingerprint (CACHE-07)", async () => {
+    await mkdir(nodes(), { recursive: true });
+    await writeFile(
+      join(nodes(), fileName("fn:a")),
+      JSON.stringify({ ...entry("fn:a"), schemaVersion: 2 }),
+      "utf8",
+    );
+    expect(await createDiskCache(root).get("fn:a")).toBeUndefined();
+  });
+
+  it("returns undefined for an entry whose fingerprint has no provider (CACHE-07)", async () => {
+    const { provider: _, ...fingerprint } = entry("fn:a").fingerprint;
+    await mkdir(nodes(), { recursive: true });
+    await writeFile(
+      join(nodes(), fileName("fn:a")),
+      JSON.stringify({ ...entry("fn:a"), fingerprint }),
       "utf8",
     );
     expect(await createDiskCache(root).get("fn:a")).toBeUndefined();

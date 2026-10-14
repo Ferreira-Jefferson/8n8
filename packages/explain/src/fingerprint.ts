@@ -7,6 +7,8 @@ export interface Fingerprint {
   code: string;
   /** sha256 hex of JSON {calls, calledBy}, deduplicated and sorted */
   neighbours: string;
+  /** Id of the LLM provider: the same model name on two providers may answer differently. */
+  provider: string;
   model: string;
   reviewModel: string;
   promptVersion: string;
@@ -14,6 +16,7 @@ export interface Fingerprint {
 }
 
 export interface FingerprintDeps {
+  provider: string;
   model: string;
   reviewModel: string;
   prompt: { version: string };
@@ -60,6 +63,7 @@ ${normalizeCode(req.docstring.text)}`
         : normalizeCode(req.code),
     ),
     neighbours: neighbourKey(req.calls, req.calledBy),
+    provider: deps.provider,
     model: deps.model,
     reviewModel: deps.reviewModel,
     promptVersion: deps.prompt.version,
@@ -76,6 +80,7 @@ export function diffReasons(
   if (old.code !== now.code) reasons.push("code");
   if (old.neighbours !== now.neighbours) reasons.push("neighbours");
   if (
+    old.provider !== now.provider ||
     old.model !== now.model ||
     old.reviewModel !== now.reviewModel ||
     old.promptVersion !== now.promptVersion ||
