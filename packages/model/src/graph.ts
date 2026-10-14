@@ -11,7 +11,8 @@ export type NodeKind =
   | "loop"
   | "block"
   | "folder"
-  | "file";
+  | "file"
+  | "return";
 
 export type ExternalCategory =
   | "HTTP"
@@ -32,8 +33,15 @@ export interface FlowNode {
   label: string;
   parentId: NodeId | null;
   range: LineRange;
+  /**
+   * Regra de abertura (VID-24): true em folder, file, module, function,
+   * class, loop, block e call (com target). false em code, condition,
+   * external e return.
+   */
   openable: boolean;
+  /** call: a função chamada. return: a função chamada pela expressão, se houver. */
   target?: NodeId;
+  /** external: o nome chamado. return: o nome externo chamado pela expressão, se houver. */
   callee?: string;
   category?: ExternalCategory;
   syntaxError?: { line: number };

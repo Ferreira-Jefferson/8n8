@@ -210,13 +210,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `NodeKind` inclui `"return"`, e os comentários de `FlowNode` batem com o design.
-- [ ] `pnpm typecheck` passa no repositório inteiro.
+- [x] `NodeKind` inclui `"return"`, e os comentários de `FlowNode` batem com o design.
+- [x] `pnpm typecheck` passa no repositório inteiro.
 
 **Tests**: none (tipos)
 **Gate**: build · `pnpm typecheck && pnpm check`
 
 **Commit**: `feat(model): add the return node kind`
+**Status**: ✅ Complete
 
 ---
 

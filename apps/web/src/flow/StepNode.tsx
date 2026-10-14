@@ -20,6 +20,7 @@ const ICONS: Record<NodeKind, string> = {
   block: "▢",
   folder: "⊞",
   file: "▭",
+  return: "↩",
 };
 
 /** One node of the canvas: kind icon, label, external category and badges (CORE-06, 12, 23). */
