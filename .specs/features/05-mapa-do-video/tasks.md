@@ -259,13 +259,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O arquivo bate byte a byte com o bloco do design. As linhas 6, 17 e 18 são `def processar_pedido(req):`, `def calcular_frete(pedido, cep):` e a linha do `requests.get`.
-- [ ] O gate Build Fase 0 passa (fecha a fase): typecheck, check, 477 unit e 40 E2E verdes.
+- [x] O arquivo bate byte a byte com o bloco do design. As linhas 6, 17 e 18 são `def processar_pedido(req):`, `def calcular_frete(pedido, cep):` e a linha do `requests.get`.
+- [x] O gate Build Fase 0 passa (fecha a fase): typecheck, check, 477 unit e 40 E2E verdes.
 
 **Tests**: none (fixture)
 **Gate**: build · `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
 
 **Commit**: `test(extract-python): add the video snippet fixture`
+**Status**: ✅ Complete (489 unit = 477 + 12 do T2; 40 E2E)
 
 ---
 
