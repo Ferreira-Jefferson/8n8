@@ -31,6 +31,14 @@ describe("styles: editor (VID-08)", () => {
   });
 });
 
+describe("styles: card tag", () => {
+  it("paints the PASTA tag in the main green, so folders differ from files", () => {
+    expect(rule('.node[data-tag="PASTA"] .tag')).toContain(
+      "color: var(--main);",
+    );
+  });
+});
+
 describe("styles: panel code (VID-29)", () => {
   it("sets a dense mono size and wraps long lines, so the code shows in full", () => {
     const r = rule(".detail-panel .code-view");

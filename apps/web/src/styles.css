@@ -362,6 +362,11 @@ body {
   color: var(--accent);
 }
 
+/* A folder is told apart from a file by its green tag. */
+.node[data-tag="PASTA"] .tag {
+  color: var(--main);
+}
+
 .node .name {
   font-size: 27px;
   font-weight: 700;
