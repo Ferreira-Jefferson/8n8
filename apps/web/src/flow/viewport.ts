@@ -163,8 +163,8 @@ export function chooseWrap(
 
 /**
  * The first view of a level: the whole level when it is legible, else the
- * card `focus` in the middle at zoom 1 (after "Voltar", VID-27), else
- * `startViewport`.
+ * card `focus` at zoom 1 in the middle of the free area below "Voltar"
+ * (VID-27), else `startViewport`.
  */
 export function levelViewport(
   positions: ReadonlyMap<NodeId, Position>,
@@ -178,7 +178,7 @@ export function levelViewport(
   if (focus) {
     return {
       x: (width - NODE_WIDTH) / 2 - focus.x,
-      y: (height - NODE_HEIGHT) / 2 - focus.y,
+      y: TOP_PAD + (height - TOP_PAD - FIT_PAD - NODE_HEIGHT) / 2 - focus.y,
       zoom: 1,
     };
   }

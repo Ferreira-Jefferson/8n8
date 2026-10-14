@@ -668,7 +668,7 @@ export type NavAction =
   - O canvas guarda o tamanho medido pelo React Flow (`MeasureCanvas`), por nível: um nível que acabou de abrir espera o próprio tamanho. O nível é cortado (`chooseWrap`) para esse tamanho. Um nível cortado deixa `WRAP_PAD = 48` px nas laterais, porque os fios que descem saem 24 px dos cartões.
   - A primeira vista vem de `levelViewport` (`flow/viewport.ts`), quando o canvas já tem tamanho:
     - se o nível todo cabe com zoom ≥ `LEGIBLE_ZOOM` (0,6, o título de 27 px fica acima de 16 px), o zoom é `min(1, ajuste)`, com 24 px (`FIT_PAD`) nas laterais e embaixo e 140 px (`TOP_PAD`) em cima (`fitViewport`). O nível fica no meio da área livre. Com `focusId` (vindo do "Voltar"), o nível se move para pôr esse cartão o mais perto possível do centro, sem tirar nenhum cartão da vista;
-    - senão, com `focusId`, o cartão fica no centro com zoom 1;
+    - senão, com `focusId`, o cartão fica no centro da área livre (abaixo dos 140 px de `TOP_PAD`, acima dos 24 px de `FIT_PAD`) com zoom 1;
     - senão, vale `startViewport`: o nível começa em 0,8 no primeiro cartão da esquerda, e o resto fica a um arrasto de distância.
   - Quando o canvas estreita ou alarga porque o painel abriu ou fechou, o nível é cortado de novo e volta a aparecer inteiro (`fitViewport`), com o cartão selecionado o mais perto possível do centro.
   - Quando só a seleção muda, ou quando o nível não cabe legível, um cartão selecionado fora da vista volta para o centro do canvas, com o mesmo zoom (`revealViewport`). O cartão conta como visível a 24 px (`FIT_PAD`) das laterais.
