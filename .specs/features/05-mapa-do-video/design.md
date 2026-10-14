@@ -474,13 +474,13 @@ body { margin: 0; background: var(--ground); color: var(--second); font-family: 
 
 **Editor** (`view: "editor"`, sem mapa):
 
-- O contêiner fica em `margin: 170px 0 0 140px`, com `width: 1020px`.
+- O contêiner fica em `margin: min(170px, 19vh) 0 0 140px`, com `width: 1020px` e a altura do resto da janela. Numa janela baixa, o painel sobe e encolhe, e a linha de botões continua visível (1600x900 e 1366x768).
 - Dentro dele, um `.panel` com `height: 620px` e `<section aria-label="Editor">`. A seção tem:
   - o cabeçalho com `<span class="eyebrow">trecho.py</span>` em `var(--main)`, em `padding: 20px 28px` e com `border-bottom: 2px solid color-mix(in srgb, var(--second) 12%, var(--ground))`;
-  - o `textarea` com `aria-label="Trecho Python"`, que mantém o seletor do E2E. Ele usa `padding: 28px 32px`, `font: 400 25px/1.6 var(--font-mono)` e `color: var(--code)`, sem borda e com fundo transparente.
+  - o `textarea` com `aria-label="Trecho Python"`, que mantém o seletor do E2E. Ele usa `padding: 28px 32px`, `font: 400 25px/1.6 var(--font-mono)` e `color: var(--code)`, sem borda e com fundo transparente. Ele não quebra linhas (`wrap="off"`, `white-space: pre`): uma linha longa rola na horizontal.
 - Abaixo do painel, a `margin-top: 40px`, fica uma linha com:
   - o botão `.btn` "Gerar mapa";
-  - o campo `aria-label="Caminho da pasta"`;
+  - o campo `aria-label="Caminho da pasta"`, com o placeholder "Caminho de uma pasta Python";
   - o botão `.btn-ghost` "Abrir pasta".
 - Os avisos "Não foi possível gerar o mapa.", "Pasta não encontrada: …", "Nenhuma função ou instrução encontrada." e "Nenhum arquivo .py encontrado na pasta." ficam no editor. Um grafo vazio não troca de tela.
 

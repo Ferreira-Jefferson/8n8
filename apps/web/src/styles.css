@@ -89,13 +89,23 @@ body {
 
 /* ---- Editor screen (VID-08) ---- */
 
+/* The video places the panel at 170 px on a 1080 px stage. A shorter window
+   moves it up and shortens it, so the button row always fits. */
 .editor {
-  margin: 170px 0 0 140px;
+  --editor-top: min(170px, 19vh);
+  box-sizing: border-box;
+  margin: var(--editor-top) 0 0 140px;
   width: 1020px;
+  height: calc(100vh - var(--editor-top));
+  padding-bottom: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .editor-panel {
   height: 620px;
+  flex: 0 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -122,6 +132,8 @@ body {
   padding: 28px 32px;
   font: 400 25px / 1.6 var(--font-mono);
   color: var(--code);
+  white-space: pre;
+  overflow: auto;
   border: 0;
   background: transparent;
   outline: none;
@@ -132,6 +144,10 @@ body {
   display: flex;
   gap: 16px;
   align-items: center;
+}
+
+.editor-actions input::placeholder {
+  color: var(--dim);
 }
 
 .editor-actions input {

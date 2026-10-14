@@ -14,6 +14,26 @@ function rule(selector: string): string {
   return m[1];
 }
 
+describe("styles: editor (VID-08)", () => {
+  it("fits the panel and the button row in the window height", () => {
+    const r = rule(".editor");
+    expect(r).toContain("--editor-top: min(170px, 19vh);");
+    expect(r).toContain("height: calc(100vh - var(--editor-top));");
+    expect(r).toContain("box-sizing: border-box;");
+    expect(r).toContain("flex-direction: column;");
+    const panel = rule(".editor-panel");
+    expect(panel).toContain("height: 620px;");
+    expect(panel).toContain("flex: 0 1 auto;");
+    expect(panel).toContain("min-height: 0;");
+  });
+
+  it("scrolls long code lines instead of wrapping them", () => {
+    const r = rule(".editor textarea");
+    expect(r).toContain("white-space: pre;");
+    expect(r).toContain("overflow: auto;");
+  });
+});
+
 describe("styles: panel code (VID-29)", () => {
   it("scales the mono size to the panel and scrolls long lines inside the block", () => {
     const r = rule(".detail-panel .code-view");
