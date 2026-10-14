@@ -14,6 +14,25 @@ function rule(selector: string): string {
   return m[1];
 }
 
+describe("styles: panel code (VID-29)", () => {
+  it("scales the mono size to the panel and scrolls long lines inside the block", () => {
+    const r = rule(".detail-panel .code-view");
+    expect(r).toContain("font-size: clamp(16px, 1.23vw, 26px);");
+    expect(r).toContain("overflow-x: auto;");
+    expect(r).toContain("scrollbar-width: thin;");
+  });
+
+  it("never lets the panel squeeze the block, which would hide lines", () => {
+    expect(rule(".detail-panel .code-view")).toContain("flex-shrink: 0;");
+  });
+
+  it("glows at an edge while code is hidden past it", () => {
+    const r = rule(".detail-panel .code-view");
+    expect(r.match(/no-repeat local/g)).toHaveLength(2);
+    expect(r.match(/no-repeat scroll/g)).toHaveLength(2);
+  });
+});
+
 describe("styles: branch labels (VID-21)", () => {
   it("are 22 px eyebrow labels, uppercase and tracked, on one line", () => {
     const r = rule(".branch-label");
