@@ -109,20 +109,21 @@
 
 ## Handoff
 
-*Pausado a pedido do usuário em 2026-10-13.*
+*Rodada concluída em 2026-10-13. Nada foi enviado ao remoto.*
 
-- **Ordem das features:** 01-fatia-central ✅ → 04-fidelidade-e-cache (em andamento) → 02-pasta-local → 03-modo-grafo.
-- **01-fatia-central:** concluída e verificada (Verifier PASS, 24/24). As lacunas SP-1..SP-5 foram fechadas na spec. Suíte Playwright: `e2e/fatia-central.e2e.ts`, 14 testes verdes (commit 50f0441).
-- **04-fidelidade-e-cache:** spec, design e tasks aprovados (commit 145e84b). Já feito: T1–T15 (fases 1–4), 1 commit por tarefa, último commit 23a57a1.
-  - **Testes:** model 14, extract-python 85, explain 128, server 29, todos verdes.
-  - **Typecheck da web e E2E:** ficam vermelhos até a T22. Isso é esperado, porque o contrato mudou na T1.
-- **Próximo passo:** fase 5 (T16–T22, web e regressão da feature 01) num worker, depois a fase 6 (T23–T26, E2E com o OpenRouter falso). Depois o Verifier da feature 04.
-- **Contrato que a fase 5 e a fase 6 consomem:**
-  - `/api/explain` responde `{status:"ok", explanation:{summary, sentences, inputs, outputs, suggestions}, fromCache, review:"full"|"cut", update?}`, ou `unfaithful`, `no-key` ou `error`. Os claims trazem `{id,text,lines}` e as sugestões trazem `lines`, com linhas absolutas.
-  - Variáveis de ambiente: `CODE2N8N_REVIEW_MODEL`, `OPENROUTER_BASE_URL`, `CODE2N8N_CACHE_DIR`, `CODE2N8N_PORT`.
-  - Formato da mensagem do revisor (o OpenRouter falso da T23 depende dele): o system prompt contém `"verdicts"`, e o user traz `Código:`, `Vizinhos:` e `Itens:` com `- <id>: <texto>`.
-- **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) entraram com testes vermelhos, que a tarefa seguinte corrigiu. O corpo de cada commit explica. O Verifier deve conferir.
+- **Ordem das features:** 01-fatia-central ✅ → 04-fidelidade-e-cache ✅ → 02-pasta-local ✅.
+- **Features futuras (decisão do usuário em 2026-10-13):** 03-modo-grafo e o tour em vídeo (degrau 4). A spec, o design e as tasks da 03 ficam guardados, mas não serão implementados agora.
+- **01-fatia-central:** verificada (PASS, 24/24). E2E em `e2e/fatia-central.e2e.ts` (14 testes).
+- **04-fidelidade-e-cache:** verificada (PASS na iteração 2, commit 7895637). E2E em `e2e/fidelidade.e2e.ts` (4) e `e2e/cache.e2e.ts` (4).
+- **02-pasta-local:** verificada (PASS na iteração 3, commit 1d691f8). Feita num worktree e mesclada sem conflito. As iterações 1 e 2 falharam só por lacunas de teste, sem bug de produção. E2E em `e2e/pasta-local.e2e.ts` (9).
+- **Gate atual:** `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` verde. Unitários 477, E2E 31.
+- **Próximo passo:** nenhum agendado. O usuário escolhe a próxima feature.
+- **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 entraram com testes vermelhos. O histórico não foi reescrito.
 - **Ambiente:**
   - O pnpm 12.6.0 global está quebrado em chamadas aninhadas. Os workers usam o shim em `<scratchpad>/shim`.
   - O Playwright precisa de `C:\Windows\System32` no PATH para chamar o `taskkill`.
-- **Pendências não bloqueantes:** a decisão de remover os commits vermelhos do histórico (não fazer sem pedido).
+- **Pendências não bloqueantes:**
+  - Reinstalar o pnpm global.
+  - O worktree `../code2n8n-f02` e o branch `feat/02-pasta-local` continuam existindo. Não apagar sem pedido.
+  - Preencher a seção "Comandos" do CLAUDE.md.
+  - Lições candidatas L-015..L-017 esperam confirmação de outra feature.
