@@ -1386,7 +1386,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 ### T46: E2E da navegação
 
-**What**: Criar `e2e/navegacao.e2e.ts` com os testes de VID-18 a 27 e a borda da recursão, no servidor com o LLM falso.
+**What**: Criar `e2e/navegacao.e2e.ts` com os testes de VID-18 a 27 e a borda da recursão, no servidor com o LLM falso. Desvio: os testes rodam no servidor sem chave (4317). No servidor com o LLM falso, um título ou resumo que chega enquanto um nível abre deixa o nível em branco (bug do canvas, relatado à parte).
 **Where**: `e2e/navegacao.e2e.ts` (novo)
 **Depends on**: None
 **Reuses**: os helpers de T43
@@ -1396,21 +1396,23 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-23 e Independent Test P1: um clique em "Calcular frete" abre o nível com HTTP, EXTERNO, SE e dois RETORNO e mostra o painel.
-- [ ] VID-18: logo depois do clique, `data-phase="expanding"`, `.open-frame` com borda `rgb(212, 255, 63)` e 0 cartões novos. Depois, `data-phase="open"` e os 5 cartões.
-- [ ] VID-19: a trilha mostra "Fluxo principal › Calcular frete". Num segundo nível, ela ganha o segundo título.
-- [ ] VID-20: os dois RETORNO não têm fio de saída, e o GATILHO de `processar_pedido`, aberto, mostra o RETORNO da linha 14 sem fio de saída.
-- [ ] VID-21: o primeiro passo do "sim" fica acima do primeiro do "não", e os rótulos "sim" e "não" ficam mais perto da origem que do destino.
-- [ ] VID-22: clicar numa folha deixa a borda do cartão em `rgb(212, 255, 63)`.
-- [ ] VID-24 e VID-26: cada cartão com "›" abre e cada cartão sem "›" não abre. Descer por todo "›" a partir do primeiro nível termina num nível só de folhas. Na recursão (`def contar`), abrir a chamada empilha o mesmo nível de novo.
-- [ ] VID-25: clicar no HTTP mostra o painel e mantém os mesmos 5 cartões.
-- [ ] VID-27: "Voltar" está desabilitado no topo e Esc não faz nada. Depois de descer 2 níveis, Esc e "Voltar" sobem um nível por vez. O cartão de onde se veio fica com borda `rgb(212, 255, 63)` e com o centro a até 2 px do centro do canvas.
-- [ ] Gate passa.
+- [x] VID-23 e Independent Test P1: um clique em "Calcular frete" abre o nível com HTTP, EXTERNO, SE e dois RETORNO e mostra o painel.
+- [x] VID-18: logo depois do clique, `data-phase="expanding"`, `.open-frame` com borda `rgb(212, 255, 63)` e 0 cartões novos. Depois, `data-phase="open"` e os 5 cartões.
+- [x] VID-19: a trilha mostra "Fluxo principal › Calcular frete". Num segundo nível, ela ganha o segundo título.
+- [x] VID-20: os dois RETORNO não têm fio de saída, e o GATILHO de `processar_pedido`, aberto, mostra o RETORNO da linha 14 sem fio de saída.
+- [x] VID-21: o primeiro passo do "sim" fica acima do primeiro do "não".
+- [ ] VID-21: os rótulos "sim" e "não" ficam mais perto da origem que do destino. Não vale: o rótulo fica junto ao cartão de destino (SPEC_DEVIATION em `WireEdge.tsx`); o "sim" fica a 188 px do início do fio e a 84 px do fim.
+- [x] VID-22: clicar numa folha deixa a borda do cartão em `rgb(212, 255, 63)`.
+- [x] VID-24 e VID-26: cada cartão com "›" abre e cada cartão sem "›" não abre. Descer por todo "›" a partir do primeiro nível termina num nível só de folhas. Na recursão (`def contar`), abrir a chamada empilha o mesmo nível de novo.
+- [x] VID-25: clicar no HTTP mostra o painel e mantém os mesmos 5 cartões.
+- [x] VID-27: "Voltar" está desabilitado no topo e Esc não faz nada. Depois de descer 2 níveis, Esc e "Voltar" sobem um nível por vez. O cartão de onde se veio fica com borda `rgb(212, 255, 63)` e com o centro a até 2 px do centro da área livre do canvas (abaixo de "Voltar"), ou fora dele só do lado em que o nível já encosta na borda da área livre (design C11 depois da mescla do master).
+- [ ] Gate passa. Os testes passam, mas o bug do canvas em branco faz um teste falhar de vez em quando (cerca de 1 mapa em 20 fica em branco).
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/navegacao.e2e.ts`
 
 **Commit**: `test(e2e): check click to open, frame, breadcrumb and back`
+**Status**: ⚠️ Partial (rótulos da VID-21 fora da spec; servidor sem chave por causa do bug do canvas). Inclui a descida completa até as folhas e a volta, em 1280x720, 1366x768 e 1600x900, com todo cartão dentro do canvas.
 
 ---
 
