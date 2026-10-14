@@ -81,7 +81,7 @@ const nodeTypes = { step: StepNode };
 const edgeTypes = { wire: WireEdge };
 
 /** The frame grows from the card to the canvas in this time (VID-18). */
-export const OPEN_MS = 1100;
+const OPEN_MS = 1100;
 const CARD_LIFT = 64;
 const CARD_INDENT = 20;
 

@@ -6,7 +6,7 @@ const STEP = 24;
 const MARGINS = 48;
 
 /** The widest panel: the canvas keeps at least 30% of the window. */
-export function panelMax(): number {
+function panelMax(): number {
   return Math.round(window.innerWidth * 0.7);
 }
 

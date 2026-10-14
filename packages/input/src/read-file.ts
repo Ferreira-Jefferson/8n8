@@ -1,7 +1,7 @@
 import type { IgnoredFile, SourceFile } from "@code2n8n/model";
 import { lstat, readFile } from "./fs-read";
 
-export const MAX_FILE_BYTES = 1_048_576;
+const MAX_FILE_BYTES = 1_048_576;
 
 export type FileRead =
   | { kind: "ok"; file: SourceFile }

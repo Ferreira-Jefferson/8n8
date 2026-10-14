@@ -54,7 +54,7 @@ export const SECOND = "rgb(233, 235, 234)";
 export const ACCENT = "rgb(151, 157, 155)";
 
 export const canvas = (page: Page) => page.locator(".canvas");
-export const flow = (page: Page) => page.getByRole("application");
+const flow = (page: Page) => page.getByRole("application");
 export const nodes = (page: Page) =>
   flow(page).locator('[aria-roledescription="node"]:not(.hub-node)');
 export const nodeById = (page: Page, id: string) =>
