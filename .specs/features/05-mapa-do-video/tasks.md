@@ -572,15 +572,15 @@ T49 → T50
 
 **Done when**:
 
-- [ ] 3 itens sem cache: exatamente 2 chamadas (títulos e revisor). Retorna `ok` com 3 `NodeTitle` na ordem dos itens, linhas absolutas e `fromCache: false`.
-- [ ] Na segunda vez, 0 chamadas e `fromCache: true` (VID-17).
-- [ ] Mudar o código, um vizinho, o modelo, o modelo revisor ou a versão de um prompt de **um** item gera um pedido só com esse item (VID-17).
-- [ ] Um título reprovado pelo revisor fica fora da resposta e do cache (VID-16).
-- [ ] Um título de 7 palavras fica fora e não vai ao revisor. Se nenhum título passa na camada 1, só há 1 chamada.
-- [ ] Um ID `n9` não pedido é ignorado (VID-14, borda).
-- [ ] Sem `llm`: `no-key` com os acertos de cache. Uma exceção no LLM: `error` com os acertos e nada gravado.
-- [ ] `index.ts` exporta `titleNodes`, `createTitleCache`, `buildTitlePrompt`, `buildTitleReviewerPrompt` e `buildStepPrompt`.
-- [ ] O gate Build B passa para o `explain` (fecha a fase): `pnpm --filter @code2n8n/explain typecheck && pnpm check && pnpm --filter @code2n8n/explain test`.
+- [x] 3 itens sem cache: exatamente 2 chamadas (títulos e revisor). Retorna `ok` com 3 `NodeTitle` na ordem dos itens, linhas absolutas e `fromCache: false`.
+- [x] Na segunda vez, 0 chamadas e `fromCache: true` (VID-17).
+- [x] Mudar o código, um vizinho, o modelo, o modelo revisor ou a versão de um prompt de **um** item gera um pedido só com esse item (VID-17).
+- [x] Um título reprovado pelo revisor fica fora da resposta e do cache (VID-16).
+- [x] Um título de 7 palavras fica fora e não vai ao revisor. Se nenhum título passa na camada 1, só há 1 chamada.
+- [x] Um ID `n9` não pedido é ignorado (VID-14, borda).
+- [x] Sem `llm`: `no-key` com os acertos de cache. Uma exceção no LLM: `error` com os acertos e nada gravado.
+- [x] `index.ts` exporta `titleNodes`, `createTitleCache`, `buildTitlePrompt`, `buildTitleReviewerPrompt` e `buildStepPrompt`.
+- [x] O gate Build B passa para o `explain` (fecha a fase): `pnpm --filter @code2n8n/explain typecheck && pnpm check && pnpm --filter @code2n8n/explain test`.
 
 **Tests**: unit
 **Gate**: build · Build B (só `explain`)

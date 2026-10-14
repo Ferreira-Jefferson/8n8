@@ -40,7 +40,7 @@ export interface ReviewDeps {
 /** The draft plus at most 2 new drafts (FID-08). */
 const ROUNDS = 3;
 
-const jsonMode = (model: string) =>
+export const jsonMode = (model: string) =>
   model.startsWith("google/") ? "prompt" : "native";
 
 /** Builds the stored explanation from the kept claims; ids keep their gaps (FID-09). */
