@@ -141,8 +141,13 @@ async function main(): Promise<void> {
     explain: composeExplain(process.env, compose),
     titles: composeTitles(process.env, compose),
     readProject: composeReadProject(readSourceFolder, extractor),
+    // The history is user data, not explain cache: it has its own folder, so wiping
+    // the cache never meets the open database file (Windows refuses that delete).
     history: openHistoryOrWarn(
-      join(process.env.CODE2N8N_CACHE_DIR || compose.cacheDir, "historico.db"),
+      join(
+        process.env.CODE2N8N_HISTORY_DIR || compose.cacheDir,
+        "historico.db",
+      ),
     ),
     port,
   });

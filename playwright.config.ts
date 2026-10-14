@@ -67,6 +67,8 @@ export default defineConfig({
         // A cache dir of its own (<repo>/.cache/e2e-offline), apart from the user's entries;
         // with no key the server never writes.
         CODE2N8N_CACHE_DIR: cacheDir("e2e-offline"),
+        // The history lives apart: the specs wipe the cache dir, never this one.
+        CODE2N8N_HISTORY_DIR: cacheDir("e2e-offline-history"),
         CODE2N8N_MODEL: "e2e/offline",
       },
     },
@@ -86,6 +88,7 @@ export default defineConfig({
         CODE2N8N_REVIEW_MODEL: "e2e/reviewer",
         // Isolated cache, wiped by the specs before each test.
         CODE2N8N_CACHE_DIR: cacheDir("e2e-real"),
+        CODE2N8N_HISTORY_DIR: cacheDir("e2e-real-history"),
       },
     },
     {
@@ -103,6 +106,7 @@ export default defineConfig({
         CODE2N8N_MODEL: "",
         CODE2N8N_REVIEW_MODEL: "",
         CODE2N8N_CACHE_DIR: cacheDir("e2e-default-model"),
+        CODE2N8N_HISTORY_DIR: cacheDir("e2e-default-model-history"),
       },
     },
   ],
