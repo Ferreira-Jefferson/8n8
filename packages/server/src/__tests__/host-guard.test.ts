@@ -1,6 +1,7 @@
 import type { Graph } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
+import { fakeLang } from "./fake-lang";
 
 const emptyGraph: Graph = {
   language: "python",
@@ -10,7 +11,7 @@ const emptyGraph: Graph = {
 };
 
 const app = createApp({
-  extractor: { language: "python", extract: () => emptyGraph },
+  plugins: [fakeLang(() => emptyGraph)],
   explain: async () => ({ status: "no-key" }),
   titles: async () => ({ status: "ok", titles: [] }),
   readProject: async () => ({ kind: "not-found" }),

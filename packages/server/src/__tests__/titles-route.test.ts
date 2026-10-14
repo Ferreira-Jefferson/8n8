@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { createPythonExtractor, pythonPlugin } from "@code2n8n/lang-python";
+import { pythonPlugin } from "@code2n8n/lang-python";
 import type { SourceFile, TitleRequest, TitlesResponse } from "@code2n8n/model";
 import { buildProject } from "@code2n8n/project";
 import { describe, expect, it } from "vitest";
@@ -14,8 +14,6 @@ const fixture = readFileSync(
 );
 const lines = fixture.split("\n");
 
-const extractor = await createPythonExtractor();
-
 const WIN_ROOT = String.raw`C:\tmp\loja`;
 const FILES: SourceFile[] = [
   {
@@ -27,7 +25,7 @@ const FILES: SourceFile[] = [
 function setup(reply: TitlesResponse = { status: "ok", titles: [] }) {
   const received: TitleRequest[] = [];
   const app = createApp({
-    extractor,
+    plugins: [pythonPlugin],
     explain: async () => ({ status: "no-key" }),
     titles: async (req) => {
       received.push(req);
@@ -86,7 +84,8 @@ describe("POST /api/titles (VID-14)", () => {
         items: [
           {
             nodeId: "fn:calcular_frete",
-            cacheKey: "fn:calcular_frete",
+            cacheKey: "python|fn:calcular_frete",
+            language: "python",
             kind: "function",
             name: "calcular_frete",
             code: lines.slice(3, 11).join("\n"),
@@ -96,7 +95,8 @@ describe("POST /api/titles (VID-14)", () => {
           },
           {
             nodeId: "fn:calcular_frete/s0",
-            cacheKey: "fn:calcular_frete/s0",
+            cacheKey: "python|fn:calcular_frete/s0",
+            language: "python",
             kind: "external",
             name: "requests.get",
             code: lines[4],
@@ -122,6 +122,7 @@ describe("POST /api/titles (VID-14)", () => {
           {
             nodeId: "file:pkg/a.py/fn:f",
             cacheKey: "C:/tmp/loja|file:pkg/a.py/fn:f",
+            language: "python",
             kind: "function",
             name: "f",
             code: "def f():\n    return g()",

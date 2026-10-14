@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPythonExtractor, pythonPlugin } from "@code2n8n/lang-python";
+import { pythonPlugin } from "@code2n8n/lang-python";
 import type {
   ExplainRequest,
   ProjectResponse,
@@ -10,6 +10,7 @@ import type {
 import { buildProject } from "@code2n8n/project";
 import { describe, expect, it } from "vitest";
 import { createApp, type ProjectRead } from "../app";
+import { fakeLang } from "./fake-lang";
 
 const response: ProjectResponse = {
   name: "loja",
@@ -21,10 +22,7 @@ const response: ProjectResponse = {
 function setup(read: ProjectRead) {
   const paths: string[] = [];
   const app = createApp({
-    extractor: {
-      language: "python",
-      extract: () => response.graph,
-    },
+    plugins: [fakeLang(() => response.graph)],
     explain: async () => ({ status: "no-key" }),
     titles: async () => ({ status: "ok", titles: [] }),
     readProject: async (path) => {
@@ -79,7 +77,6 @@ describe("POST /api/project", () => {
   });
 });
 
-const extractor = await createPythonExtractor();
 const fixtureDir = fileURLToPath(
   new URL(
     "../../../languages/python/src/__tests__/fixtures/projeto-loja",
@@ -103,7 +100,7 @@ const WIN_ROOT = String.raw`C:\tmp\loja`;
 function explainSetup(files: SourceFile[], root = WIN_ROOT) {
   const received: ExplainRequest[] = [];
   const app = createApp({
-    extractor,
+    plugins: [pythonPlugin],
     explain: async (req) => {
       received.push(req);
       return { status: "no-key" };

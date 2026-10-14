@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { createPythonExtractor } from "@code2n8n/lang-python";
+import { pythonPlugin } from "@code2n8n/lang-python";
 import type { ExplainRequest, Graph } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
@@ -12,10 +12,9 @@ const videoFixture = readFileSync(
   "utf8",
 );
 
-const extractor = await createPythonExtractor();
 const explainCalls: ExplainRequest[] = [];
 const app = createApp({
-  extractor,
+  plugins: [pythonPlugin],
   explain: async (req) => {
     explainCalls.push(req);
     return { status: "no-key" };

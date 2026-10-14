@@ -1,17 +1,20 @@
 import {
   type ExplainRequest,
   type ExplainResponse,
-  type Extractor,
   type FlowNode,
   fileNodeOf,
   type Graph,
+  type GraphResponse,
   type HistoryEntry,
+  type LanguagePlugin,
+  type LanguagesResponse,
   type ProjectResponse,
   type TitleItem,
   type TitleRequest,
   type TitlesResponse,
 } from "@code2n8n/model";
-import { Hono } from "hono";
+import { detectLanguage, pluginForPath } from "@code2n8n/project";
+import { type Context, Hono } from "hono";
 import { z } from "zod";
 import { maskDocstring } from "./docstring";
 import type { History } from "./history";
@@ -21,7 +24,8 @@ export type ProjectRead =
   | { kind: "not-found" };
 
 export interface AppDeps {
-  extractor: Extractor;
+  /** The registered languages, in a stable order: a snippet is read by the best score, a file by its extension. */
+  plugins: LanguagePlugin[];
   explain: (req: ExplainRequest) => Promise<ExplainResponse>;
   titles: (req: TitleRequest) => Promise<TitlesResponse>;
   readProject: (path: string) => Promise<ProjectRead>;
@@ -50,7 +54,9 @@ interface Origin {
   codeOf: (node: FlowNode) => Pick<ExplainRequest, "code" | "docstring">;
   /** The name of `node` as seen from `home`. */
   nameOf: (node: FlowNode, home: FlowNode) => string;
-  /** `<POSIX root>|` in a project, empty in a snippet. */
+  /** The language of `node`: the detected one in a snippet, the one of its file in a project. */
+  pluginOf: (node: FlowNode) => LanguagePlugin;
+  /** `<POSIX root>|` in a project, `<languageId>|` in a snippet: the cache never mixes two languages. */
   idPrefix: string;
 }
 
@@ -61,12 +67,19 @@ async function loadOrigin(
 ): Promise<Origin | { notFound: string }> {
   if ("source" in body) {
     const { source } = body;
+    const { plugin } = detectLanguage(source, deps.plugins);
     return {
-      graph: deps.extractor.extract(source),
+      graph: plugin.extract(source),
       codeOf: (node) =>
-        maskDocstring(node.range, node.docstring, source.split(/\r?\n/)),
+        maskDocstring(
+          node.range,
+          node.docstring,
+          source.split(/\r?\n/),
+          plugin.commentPrefix,
+        ),
       nameOf: (node) => node.label,
-      idPrefix: "",
+      pluginOf: () => plugin,
+      idPrefix: `${plugin.id}|`,
     };
   }
   const read = await deps.readProject(body.root);
@@ -74,6 +87,12 @@ async function loadOrigin(
   const { response } = read;
   const graph = response.graph;
   const filePath = (node: FlowNode) => fileNodeOf(graph, node.id)?.path ?? "";
+  // A file is read by its extension, so every node has the plugin of its file.
+  const pluginOf = (node: FlowNode) => {
+    const plugin = pluginForPath(filePath(node), deps.plugins);
+    if (!plugin) throw new Error(`no language plugin for ${filePath(node)}`);
+    return plugin;
+  };
   return {
     graph,
     codeOf: (node) => {
@@ -83,8 +102,10 @@ async function loadOrigin(
         node.range,
         node.docstring,
         (file?.source ?? "").split(/\r?\n/),
+        pluginOf(node).commentPrefix,
       );
     },
+    pluginOf,
     // A neighbour from another file is named `<path>:<label>`.
     nameOf: (node, home) =>
       filePath(node) !== filePath(home)
@@ -115,6 +136,13 @@ function neighboursOf(
       wires.filter((e) => e.target === node.id).map((e) => e.source),
     ),
   };
+}
+
+/** A parser or plugin that throws is an answer, not a crash: 500 with a JSON body the screen can show. */
+function extractFailed(c: Context, err: unknown): Response {
+  console.error("servidor: o extrator falhou", err);
+  const message = err instanceof Error ? err.message : String(err);
+  return c.json({ error: "extract-failed", message }, 500);
 }
 
 /** Saves a map after the response is sent; a failing save is logged, never raised (best effort). */
@@ -159,15 +187,38 @@ export function createApp(deps: AppDeps): Hono {
   app.post("/api/graph", async (c) => {
     const body = graphBody.safeParse(await c.req.json().catch(() => null));
     if (!body.success) return c.json({ error: "invalid body" }, 400);
-    const graph = deps.extractor.extract(body.data.source);
-    if (!graph.empty) {
+    let response: GraphResponse;
+    try {
+      const { plugin, uncertain } = detectLanguage(
+        body.data.source,
+        deps.plugins,
+      );
+      response = {
+        graph: plugin.extract(body.data.source),
+        language: { id: plugin.id, label: plugin.label, uncertain },
+      };
+    } catch (err) {
+      return extractFailed(c, err);
+    }
+    if (!response.graph.empty) {
       saveLater(deps.history, {
         kind: "snippet",
         source: body.data.source,
-        graph,
+        graph: response.graph,
       });
     }
-    return c.json({ graph });
+    return c.json(response);
+  });
+
+  app.get("/api/languages", (c) => {
+    const response: LanguagesResponse = {
+      languages: deps.plugins.map(({ id, label, extensions }) => ({
+        id,
+        label,
+        extensions,
+      })),
+    };
+    return c.json(response);
   });
 
   app.post("/api/project", async (c) => {
@@ -230,25 +281,30 @@ export function createApp(deps: AppDeps): Hono {
         : null;
     if (!body) return c.json({ error: "invalid body" }, 400);
 
-    const origin = await loadOrigin(body, deps);
-    if ("notFound" in origin) {
-      return c.json({ error: "not-found", path: origin.notFound }, 404);
+    let request: ExplainRequest;
+    try {
+      const origin = await loadOrigin(body, deps);
+      if ("notFound" in origin) {
+        return c.json({ error: "not-found", path: origin.notFound }, 404);
+      }
+      const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
+      const node = graph.nodes.find((n) => n.id === body.nodeId);
+      if (!node) return c.json({ error: "unknown node" }, 404);
+      if (node.kind === "folder" || node.kind === "file") {
+        return c.json({ error: "node has no explanation" }, 400);
+      }
+      request = {
+        nodeId: `${idPrefix}${node.id}`,
+        language: pluginOf(node).id,
+        nodeName: node.label,
+        nodeKind: node.kind,
+        ...codeOf(node),
+        range: node.range,
+        ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+      };
+    } catch (err) {
+      return extractFailed(c, err);
     }
-    const { graph, codeOf, nameOf, idPrefix } = origin;
-    const node = graph.nodes.find((n) => n.id === body.nodeId);
-    if (!node) return c.json({ error: "unknown node" }, 404);
-    if (node.kind === "folder" || node.kind === "file") {
-      return c.json({ error: "node has no explanation" }, 400);
-    }
-
-    const request: ExplainRequest = {
-      nodeId: `${idPrefix}${node.id}`,
-      nodeName: node.label,
-      nodeKind: node.kind,
-      ...codeOf(node),
-      range: node.range,
-      ...neighboursOf(graph, node, (other) => nameOf(other, node)),
-    };
 
     const result = await deps.explain(request);
     // unfaithful is an answer, not a failure: 200 like ok and no-key (FID-10).
@@ -266,28 +322,34 @@ export function createApp(deps: AppDeps): Hono {
         : null;
     if (!body) return c.json({ error: "invalid body" }, 400);
 
-    const origin = await loadOrigin(body, deps);
-    if ("notFound" in origin) {
-      return c.json({ error: "not-found", path: origin.notFound }, 404);
+    let items: TitleItem[];
+    try {
+      const origin = await loadOrigin(body, deps);
+      if ("notFound" in origin) {
+        return c.json({ error: "not-found", path: origin.notFound }, 404);
+      }
+      const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
+      const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+      // Each id once, in the order received; unknown, folder and file ids are dropped.
+      items = [...new Set(body.nodeIds)].flatMap((id) => {
+        const node = byId.get(id);
+        if (!node || node.kind === "folder" || node.kind === "file") return [];
+        return [
+          {
+            nodeId: node.id,
+            cacheKey: `${idPrefix}${node.id}`,
+            language: pluginOf(node).id,
+            kind: node.kind,
+            name: node.label,
+            code: codeOf(node).code,
+            range: node.range,
+            ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+          },
+        ];
+      });
+    } catch (err) {
+      return extractFailed(c, err);
     }
-    const { graph, codeOf, nameOf, idPrefix } = origin;
-    const byId = new Map(graph.nodes.map((n) => [n.id, n]));
-    // Each id once, in the order received; unknown, folder and file ids are dropped.
-    const items: TitleItem[] = [...new Set(body.nodeIds)].flatMap((id) => {
-      const node = byId.get(id);
-      if (!node || node.kind === "folder" || node.kind === "file") return [];
-      return [
-        {
-          nodeId: node.id,
-          cacheKey: `${idPrefix}${node.id}`,
-          kind: node.kind,
-          name: node.label,
-          code: codeOf(node).code,
-          range: node.range,
-          ...neighboursOf(graph, node, (other) => nameOf(other, node)),
-        },
-      ];
-    });
     if (items.length === 0) {
       const empty: TitlesResponse = { status: "ok", titles: [] };
       return c.json(empty);
