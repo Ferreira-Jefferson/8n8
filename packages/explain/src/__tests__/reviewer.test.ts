@@ -9,6 +9,7 @@ import {
   type Verdict,
 } from "../reviewer";
 import type { DraftClaim } from "../sentences";
+import { PY } from "./py";
 
 const CODE = [
   "def calcular_frete(peso):",
@@ -31,7 +32,7 @@ const ok = (id: string, evidence: number[]): Verdict => ({
 
 describe("buildReviewerPrompt (FID-05)", () => {
   it("asks for one verdict and evidence lines per item, only as JSON with verdicts", () => {
-    const { text } = buildReviewerPrompt();
+    const { text } = buildReviewerPrompt(PY);
     expect(text).toContain('"verdicts"');
     expect(text).toContain('"supported"');
     expect(text).toContain('"evidence"');
@@ -41,9 +42,9 @@ describe("buildReviewerPrompt (FID-05)", () => {
   });
 
   it("has a 12-hex version that is stable across calls", () => {
-    const a = buildReviewerPrompt();
+    const a = buildReviewerPrompt(PY);
     expect(a.version).toMatch(/^[0-9a-f]{12}$/);
-    expect(buildReviewerPrompt().version).toBe(a.version);
+    expect(buildReviewerPrompt(PY).version).toBe(a.version);
   });
 
   afterEach(() => {
@@ -52,13 +53,13 @@ describe("buildReviewerPrompt (FID-05)", () => {
   });
 
   it("changes version when UNITS changes", async () => {
-    const before = buildReviewerPrompt();
+    const before = buildReviewerPrompt(PY);
     vi.resetModules();
     vi.doMock("../checks", async (importOriginal) => {
       const real = await importOriginal<typeof import("../checks")>();
       return { ...real, UNITS: [...real.UNITS, "pol"] };
     });
-    const changed = (await import("../reviewer")).buildReviewerPrompt();
+    const changed = (await import("../reviewer")).buildReviewerPrompt(PY);
     expect(changed.text).toBe(before.text);
     expect(changed.version).not.toBe(before.version);
   });
@@ -85,7 +86,7 @@ describe("reviewerMessage (FID-06)", () => {
       .filter((line) => !/^\d+ \| /.test(line))
       .join("\n");
     expect(outsideCode).not.toContain("calcular_frete");
-    const pts = buildSystemPrompt("REGRAS PTS").text;
+    const pts = buildSystemPrompt("REGRAS PTS", PY).text;
     expect(msg).not.toContain("REGRAS PTS");
     expect(msg).not.toContain(pts.slice(0, 40));
     expect(msg).not.toContain('"summary"');

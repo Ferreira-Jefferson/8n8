@@ -7,12 +7,15 @@ import {
   checkUnits,
   UNITS,
 } from "./checks";
+import type { PromptLanguage } from "./language";
 import { applyVerdicts, type Verdict } from "./reviewer";
 
 /** Bump when the title review rules change without a text change (VID-16). */
 export const TITLE_RULES_VERSION = "1";
 
-const REVIEWER = `Você revisa títulos de nós de um fluxo de código Python.
+const reviewer = (
+  lang: PromptLanguage,
+) => `Você revisa títulos de nós de um fluxo de código ${lang.label}.
 Você recebe um bloco por nó, com o código do nó com as linhas numeradas de 1 a n, os nomes dos nós vizinhos e o título do nó com o ID do nó.
 Julgue cada título só pelo código do próprio nó. Um título é suportado quando o código do nó mostra o que o título afirma.
 Para cada título, dê um veredicto e as linhas de evidência: os números das linhas do código do nó que mostram o que o título afirma.
@@ -22,12 +25,16 @@ Exemplo:
 {"verdicts":[{"id":"n1","supported":true,"evidence":[1,2]},{"id":"n2","supported":false,"evidence":[],"problem":"O código não mostra essa ação."}]}`;
 
 /** Title reviewer system prompt; version = sha256(text + JSON(UNITS) + rules version)[:12] (VID-16). */
-export function buildTitleReviewerPrompt(): { text: string; version: string } {
+export function buildTitleReviewerPrompt(lang: PromptLanguage): {
+  text: string;
+  version: string;
+} {
+  const text = reviewer(lang);
   const version = createHash("sha256")
-    .update([REVIEWER, JSON.stringify(UNITS), TITLE_RULES_VERSION].join("\n"))
+    .update([text, JSON.stringify(UNITS), TITLE_RULES_VERSION].join("\n"))
     .digest("hex")
     .slice(0, 12);
-  return { text: REVIEWER, version };
+  return { text, version };
 }
 
 /** A title that passed layer one, with the normalized code and neighbours of its node. */

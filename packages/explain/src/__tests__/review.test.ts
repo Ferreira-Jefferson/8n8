@@ -3,11 +3,12 @@ import { describe, expect, it } from "vitest";
 import { buildSystemPrompt } from "../prompt";
 import { type ReviewDeps, reviewedDraft } from "../review";
 import { buildReviewerPrompt, type Verdict } from "../reviewer";
+import { PY } from "./py";
 
 type LlmRequest = Parameters<LlmClient["complete"]>[0];
 
-const prompt = buildSystemPrompt("REGRAS PTS");
-const reviewer = buildReviewerPrompt();
+const prompt = buildSystemPrompt("REGRAS PTS", PY);
+const reviewer = buildReviewerPrompt(PY);
 
 // Code without `5` and without `kg`.
 const CODE = ["def pesar_caixa(caixa):", "    return caixa.peso"].join("\n");

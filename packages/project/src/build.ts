@@ -11,6 +11,7 @@ import {
   type Offer,
   type SourceFile,
 } from "@code2n8n/model";
+import { pluginForPath } from "./detect";
 import { baseName, byCode, dirOf, lastLine, layoutProject } from "./layout";
 import { validateAnalysis } from "./validate";
 
@@ -28,13 +29,6 @@ const EMPTY: LanguageAnalysis = {
   requests: [],
 };
 
-/** `.py` for `a/B.PY`: the last extension, in lower case; `""` when there is none. */
-function extensionOf(path: string): string {
-  const base = baseName(path);
-  const dot = base.lastIndexOf(".");
-  return dot < 0 ? "" : base.slice(dot).toLowerCase();
-}
-
 /** Each file goes to the first plugin that serves its extension; the rest are ignored. */
 function groupByPlugin(
   files: SourceFile[],
@@ -42,8 +36,7 @@ function groupByPlugin(
 ): Map<LanguagePlugin, SourceFile[]> {
   const groups = new Map<LanguagePlugin, SourceFile[]>();
   for (const file of [...files].sort((a, b) => byCode(a.path, b.path))) {
-    const ext = extensionOf(file.path);
-    const plugin = plugins.find((p) => p.extensions.includes(ext));
+    const plugin = pluginForPath(file.path, plugins);
     if (plugin === undefined) continue;
     groups.set(plugin, [...(groups.get(plugin) ?? []), file]);
   }

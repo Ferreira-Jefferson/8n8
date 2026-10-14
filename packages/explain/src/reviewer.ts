@@ -2,12 +2,15 @@ import { createHash } from "node:crypto";
 import type { ClaimId } from "@code2n8n/model";
 import { z } from "zod";
 import { type Problem, UNITS } from "./checks";
+import type { PromptLanguage } from "./language";
 import type { DraftClaim } from "./sentences";
 
 /** Bump when the review rules change without a text change (FID-07, C4). */
 const REVIEW_RULES_VERSION = "1";
 
-const REVIEWER = `Você revisa uma explicação de código Python, item por item.
+const reviewer = (
+  lang: PromptLanguage,
+) => `Você revisa uma explicação de código ${lang.label}, item por item.
 Você recebe o código de um nó com as linhas numeradas de 1 a n, os nomes dos nós vizinhos e uma lista de itens, cada um com um ID.
 Julgue cada item só pelo código. Um item é suportado quando o código mostra o que ele afirma.
 Uma sugestão é suportada quando o problema descrito no motivo está visível no código.
@@ -21,11 +24,15 @@ const REDRAFT_HEADER = "Problemas encontrados:";
 const REDRAFT_FOOTER = "Reescreva o JSON inteiro sem essas afirmações.";
 
 /** Reviewer system prompt; version = sha256(prompt + redraft template + JSON(UNITS) + rules version)[:12] (C3, C5). */
-export function buildReviewerPrompt(): { text: string; version: string } {
+export function buildReviewerPrompt(lang: PromptLanguage): {
+  text: string;
+  version: string;
+} {
+  const text = reviewer(lang);
   const version = createHash("sha256")
     .update(
       [
-        REVIEWER,
+        text,
         REDRAFT_HEADER,
         REDRAFT_FOOTER,
         JSON.stringify(UNITS),
@@ -34,7 +41,7 @@ export function buildReviewerPrompt(): { text: string; version: string } {
     )
     .digest("hex")
     .slice(0, 12);
-  return { text: REVIEWER, version };
+  return { text, version };
 }
 
 /** The user turn that asks for a new draft without the listed claims (FID-08). */

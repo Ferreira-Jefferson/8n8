@@ -9,6 +9,7 @@ import {
   titleLayerOne,
   titleReviewerMessage,
 } from "../title-reviewer";
+import { PY } from "./py";
 
 const CODE = [
   "def calcular_frete(peso):",
@@ -19,20 +20,20 @@ const ctx = { code: CODE, neighbours: ["buscar_tabela"] };
 
 describe("buildTitleReviewerPrompt (VID-16)", () => {
   it("starts with the exact role line the fake LLM recognizes", () => {
-    expect(buildTitleReviewerPrompt().text.split("\n")[0]).toBe(
+    expect(buildTitleReviewerPrompt(PY).text.split("\n")[0]).toBe(
       "Você revisa títulos de nós de um fluxo de código Python.",
     );
   });
 
   it("asks for the verdicts contract", () => {
-    const { text } = buildTitleReviewerPrompt();
+    const { text } = buildTitleReviewerPrompt(PY);
     for (const field of ['"verdicts"', '"supported"', '"evidence"']) {
       expect(text).toContain(field);
     }
   });
 
   it("versions text + units + rules version, so a new text gives a new version", () => {
-    const { text, version } = buildTitleReviewerPrompt();
+    const { text, version } = buildTitleReviewerPrompt(PY);
     expect(version).toMatch(/^[0-9a-f]{12}$/);
     expect(version).toBe(
       createHash("sha256")

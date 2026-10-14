@@ -14,11 +14,12 @@ import {
 } from "../index";
 import type { Verdict } from "../reviewer";
 import { titleMessage } from "../title-prompt";
+import { PY } from "./py";
 
 type LlmRequest = Parameters<LlmClient["complete"]>[0];
 
-const prompt = buildTitlePrompt("REGRAS PTS");
-const reviewer = buildTitleReviewerPrompt();
+const prompt = buildTitlePrompt("REGRAS PTS", PY);
+const reviewer = buildTitleReviewerPrompt(PY);
 
 const supportAll = (id: string): Verdict => ({
   id,
@@ -82,6 +83,7 @@ const answerByName =
 const PROCESSAR: TitleItem = {
   nodeId: "fn:processar_pedido",
   cacheKey: "fn:processar_pedido",
+  language: "python",
   kind: "function",
   name: "processar_pedido",
   code: "def processar_pedido(req):\n    return calcular_frete(req)",
@@ -92,6 +94,7 @@ const PROCESSAR: TitleItem = {
 const CALCULAR: TitleItem = {
   nodeId: "fn:calcular_frete",
   cacheKey: "fn:calcular_frete",
+  language: "python",
   kind: "function",
   name: "calcular_frete",
   code: 'def calcular_frete(peso):\n    r = requests.get("x")\n    return r',
@@ -102,6 +105,7 @@ const CALCULAR: TitleItem = {
 const HTTP: TitleItem = {
   nodeId: "fn:calcular_frete/s0",
   cacheKey: "fn:calcular_frete/s0",
+  language: "python",
   kind: "external",
   name: "requests.get",
   code: '    r = requests.get("x")',
@@ -241,7 +245,7 @@ describe("titleNodes (VID-14, VID-16, VID-17)", () => {
     ["the provider", { provider: "openai-compatible" }],
     ["the model", { model: "openai/outro" }],
     ["the reviewer model", { reviewModel: "openai/outro" }],
-    ["the title prompt version", { prompt: buildTitlePrompt("OUTRAS") }],
+    ["the title prompt version", { prompt: buildTitlePrompt("OUTRAS", PY) }],
     [
       "the reviewer prompt version",
       { reviewer: { ...reviewer, version: "000000000000" } },

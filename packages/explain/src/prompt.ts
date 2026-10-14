@@ -1,9 +1,12 @@
 import { createHash } from "node:crypto";
+import { docstringOmitted, type PromptLanguage } from "./language";
 
-const ROLE = `Você explica código Python para quem lê o fluxo de um programa.
+const role = (
+  lang: PromptLanguage,
+) => `Você explica código ${lang.label} para quem lê o fluxo de um programa.
 Você recebe um nó (função ou classe), os nomes dos nós que ele chama, os nomes dos nós que o chamam e o código do nó com as linhas numeradas de 1 a n.
 Explique só o que o código mostra. Não invente comportamento.
-O código chega sem a docstring (aparece só \`# docstring omitida\`). O resumo descreve só o que o código faz, nunca o que uma docstring diz.
+O código chega sem a docstring (aparece só \`${docstringOmitted(lang.commentPrefix)}\`). O resumo descreve só o que o código faz, nunca o que uma docstring diz.
 Cite entre crases cada identificador do código (variável, parâmetro, função, classe ou módulo), como \`peso\` ou \`requests.get\`.
 Não escreva número nem unidade (como kg, %, R$ ou segundos) que não aparece no código.`;
 
@@ -18,19 +21,24 @@ Exemplo:
 {"summary":"Calcula o frete a partir do peso.","inputs":["peso"],"outputs":["valor do frete"],"suggestions":[{"command":"Valide se peso é positivo.","reason":"Peso negativo gera frete negativo.","line":2,"severity":"media"}]}`;
 
 /** System prompt with role, JSON format and PTS rules; version = first 12 hex of sha256(text) (CORE-16, CORE-18). */
-export function buildSystemPrompt(ptsRules: string): {
+export function buildSystemPrompt(
+  ptsRules: string,
+  lang: PromptLanguage,
+): {
   text: string;
   version: string;
 } {
-  const text = `${ROLE}\n\n${FORMAT}\n\nEscreva os textos do JSON com as regras abaixo.\n\n${ptsRules}`;
+  const text = `${role(lang)}\n\n${FORMAT}\n\nEscreva os textos do JSON com as regras abaixo.\n\n${ptsRules}`;
   const version = createHash("sha256").update(text).digest("hex").slice(0, 12);
   return { text, version };
 }
 
-const STEP_ROLE = `Você explica um passo de dentro de uma função Python para quem lê o fluxo de um programa.
+const stepRole = (
+  lang: PromptLanguage,
+) => `Você explica um passo de dentro de uma função ${lang.label} para quem lê o fluxo de um programa.
 Você recebe o passo, os nomes dos nós que ele chama e o código do passo com as linhas numeradas de 1 a n.
 Explique só o que o código mostra. Não invente comportamento.
-O código chega sem a docstring (aparece só \`# docstring omitida\`). O resumo descreve só o que o código faz, nunca o que uma docstring diz.
+O código chega sem a docstring (aparece só \`${docstringOmitted(lang.commentPrefix)}\`). O resumo descreve só o que o código faz, nunca o que uma docstring diz.
 Cite entre crases cada identificador do código (variável, parâmetro, função, classe ou módulo), como \`peso\` ou \`requests.get\`.
 Não escreva número nem unidade (como kg, %, R$ ou segundos) que não aparece no código.`;
 
@@ -40,11 +48,14 @@ const STEP_FORMAT = FORMAT.replace(
 );
 
 /** Step prompt: same JSON, summary in one or two sentences; version = first 12 hex of sha256(text) (VID-28). */
-export function buildStepPrompt(ptsRules: string): {
+export function buildStepPrompt(
+  ptsRules: string,
+  lang: PromptLanguage,
+): {
   text: string;
   version: string;
 } {
-  const text = `${STEP_ROLE}\n\n${STEP_FORMAT}\n\nEscreva os textos do JSON com as regras abaixo.\n\n${ptsRules}`;
+  const text = `${stepRole(lang)}\n\n${STEP_FORMAT}\n\nEscreva os textos do JSON com as regras abaixo.\n\n${ptsRules}`;
   const version = createHash("sha256").update(text).digest("hex").slice(0, 12);
   return { text, version };
 }

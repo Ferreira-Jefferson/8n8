@@ -51,11 +51,13 @@ export const STEP_SENTENCE_LIMIT = 2; // VID-28
 export const TITLE_MAX_WORDS = 6; // VID-14
 
 export interface ExplainRequest {
-  /** Identidade no cache (AD-015). */
+  /** Identidade no cache (AD-015): `<languageId>|<nodeId>` num trecho, `<raiz POSIX>|<nodeId>` num projeto. */
   nodeId: NodeId;
+  /** Id do plugin da linguagem do código (`python`); escolhe o prompt. */
+  language: string;
   nodeName: string;
   nodeKind: ExplainKind;
-  /** The node's code with its docstring masked: the same number of lines, the docstring lines blank (the first reads `# docstring omitida`). */
+  /** The node's code with its docstring masked: the same number of lines, the docstring lines blank (the first reads `<comment prefix> docstring omitida`). */
   code: string;
   /** The docstring text, apart from `code`; `line` is its first line inside `code` (1-based). The summary never comes from it. */
   docstring?: { text: string; line: number };
@@ -80,8 +82,10 @@ export type ExplainResponse =
 export interface TitleItem {
   /** ID do nó no grafo; volta na resposta. */
   nodeId: NodeId;
-  /** Identidade no cache: o nodeId num trecho, `<raiz POSIX>|<nodeId>` num projeto. */
+  /** Identidade no cache: `<languageId>|<nodeId>` num trecho, `<raiz POSIX>|<nodeId>` num projeto. */
   cacheKey: string;
+  /** Id do plugin da linguagem do código; escolhe o prompt. */
+  language: string;
   kind: ExplainKind;
   /** FlowNode.label */
   name: string;
