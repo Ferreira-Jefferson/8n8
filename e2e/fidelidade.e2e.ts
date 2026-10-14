@@ -93,6 +93,22 @@ test.describe("Fidelidade", () => {
     }
   });
 
+  test("FID-04: a sentence citing an invented `calcular_imposto` is cut after two redrafts", async ({
+    page,
+  }) => {
+    await generate(
+      page,
+      REAL,
+      "def somar_itens(itens):\n    return sum(itens)\n",
+    );
+    await nodeById(page, "fn:somar_itens").click();
+
+    const view = panel(page);
+    await expect(badge(view)).toHaveText("Revisado com cortes");
+    await expect(summaryItems(view)).toHaveText(["Soma os itens da lista."]);
+    await expect(view).not.toContainText("calcular_imposto");
+  });
+
   test("FID-11/12/13/15/06/14: a faithful draft is fully reviewed, with evidence lines and effects", async ({
     page,
   }) => {

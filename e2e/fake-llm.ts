@@ -92,6 +92,23 @@ const SCENARIOS: Scenario[] = [
     },
     evidence: {},
   },
+  {
+    // FID-04: the reviewer would accept the invented identifier; only layer one stops it.
+    marker: "def somar_itens",
+    draft: {
+      summary:
+        "Soma os itens da lista. Chama `calcular_imposto` antes de somar.",
+      inputs: ["`itens`"],
+      outputs: ["soma dos itens"],
+      suggestions: [],
+    },
+    evidence: {
+      "Soma os itens da lista.": [2],
+      "Chama `calcular_imposto` antes de somar.": [2],
+      "`itens`": [1],
+      "soma dos itens": [2],
+    },
+  },
 ];
 
 /** Verdicts for each `- <id>: <text>` line of the reviewer request. */
