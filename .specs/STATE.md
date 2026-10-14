@@ -114,9 +114,9 @@
 - **Ordem das features:** 01-fatia-central ✅ → 04-fidelidade-e-cache ✅ → 02-pasta-local ✅.
 - **Features futuras (decisão do usuário em 2026-10-13):** 03-modo-grafo e o tour em vídeo (degrau 4). A spec, o design e as tasks da 03 ficam guardados, mas não serão implementados agora.
 - **01-fatia-central:** verificada (PASS, 24/24). E2E em `e2e/fatia-central.e2e.ts` (14 testes).
-- **04-fidelidade-e-cache:** verificada (PASS na iteração 2, commit 7895637). E2E em `e2e/fidelidade.e2e.ts` (4) e `e2e/cache.e2e.ts` (4).
+- **04-fidelidade-e-cache:** verificada (PASS na iteração 2, commit 7895637). E2E em `e2e/fidelidade.e2e.ts` e `e2e/cache.e2e.ts`.
 - **02-pasta-local:** verificada (PASS na iteração 3, commit 1d691f8). Feita num worktree e mesclada sem conflito. As iterações 1 e 2 falharam só por lacunas de teste, sem bug de produção. E2E em `e2e/pasta-local.e2e.ts` (9).
-- **Gate atual:** `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` verde. Unitários 477, E2E 34 (FID-04, FID-07 e CORE-22 ganharam E2E). Teste manual com a chave real em 2026-10-13: resumos fiéis; o modelo deixa passar sugestões óbvias.
+- **Gate atual:** `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` verde. Unitários 477, E2E 40. Os últimos a ganhar E2E: FID-04, FID-07, CORE-22, CORE-17, FID-05, FID-06, CORE-21, CACHE-07 e CACHE-01. O teste do CORE-21 usa um quarto servidor (porta 4320) sem modelo configurado. Teste manual com a chave real em 2026-10-13: resumos fiéis; o modelo deixa passar sugestões óbvias.
 - **Próximo passo:** nenhum agendado. O usuário escolhe a próxima feature.
 - **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 entraram com testes vermelhos. O histórico não foi reescrito.
 - **Ambiente:**
