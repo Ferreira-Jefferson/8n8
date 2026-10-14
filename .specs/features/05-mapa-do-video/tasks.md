@@ -843,12 +843,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] No nível de `processar_pedido` com a explicação do vídeo (sugestões nas linhas 12 e 13): âncoras `…/s5` e `…/s6`, com o texto igual ao comando.
-- [ ] No fluxo principal, a mesma explicação (do GATILHO visível) prende os cartões em `s5` e `s6`.
-- [ ] Uma sugestão numa linha sem nó visível fica presa ao nó dono da explicação. Se o dono é o nó do nível, `anchorId` é `null`.
-- [ ] Empate de intervalo: vence o primeiro na ordem do nível. Uma sugestão da mesma explicação aparece uma vez só.
-- [ ] `highlighted` tem só as âncoras não nulas. Sem cartão, o conjunto fica vazio.
-- [ ] Gate passa.
+- [x] No nível de `processar_pedido` com a explicação do vídeo (sugestões nas linhas 12 e 13): âncoras `…/s5` e `…/s6`, com o texto igual ao comando.
+- [x] No fluxo principal, a mesma explicação (do GATILHO visível) prende os cartões em `s5` e `s6`.
+- [x] Uma sugestão numa linha sem nó visível fica presa ao nó dono da explicação. Se o dono é o nó do nível, `anchorId` é `null`.
+- [x] Empate de intervalo: vence o primeiro na ordem do nível. Uma sugestão da mesma explicação aparece uma vez só.
+- [x] `highlighted` tem só as âncoras não nulas. Sem cartão, o conjunto fica vazio.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
