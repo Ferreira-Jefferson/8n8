@@ -198,6 +198,31 @@ describe("VID-03: codeLineOf", () => {
     ).toBe("def calcular_frete(pedido, cep):");
   });
 
+  it("skips the docstring and shows the first real code line", () => {
+    const src = ['"""Modulo.', "", 'Mais."""', "import os", "x = 1"].join("\n");
+    expect(
+      codeLineOf(
+        node("module", "Módulo", {
+          range: { start: 1, end: 5 },
+          docstring: { start: 1, end: 3 },
+        }),
+        src,
+      ),
+    ).toBe("import os");
+  });
+
+  it("falls back to the first line when the node is only a docstring", () => {
+    expect(
+      codeLineOf(
+        node("module", "Módulo", {
+          range: { start: 1, end: 1 },
+          docstring: { start: 1, end: 1 },
+        }),
+        '"""So doc."""',
+      ),
+    ).toBe('"""So doc."""');
+  });
+
   it("shows the path of a folder and of a file", () => {
     expect(codeLineOf(node("folder", "frete", { path: "frete" }), source)).toBe(
       "frete/",

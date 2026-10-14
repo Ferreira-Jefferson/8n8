@@ -84,7 +84,16 @@ export function codeLineOf(node: FlowNode, source: string): string {
     case "file":
       return node.path ?? node.label;
     default: {
-      const line = (source.split("\n")[node.range.start - 1] ?? "").trim();
+      const lines = source.split("\n");
+      const doc = node.docstring;
+      let line = "";
+      for (let n = node.range.start; n <= node.range.end; n++) {
+        if (doc && n >= doc.start && n <= doc.end) continue;
+        line = (lines[n - 1] ?? "").trim();
+        if (line) break;
+      }
+      // Only a docstring (or blank): today's behaviour, the first line.
+      if (!line) line = (lines[node.range.start - 1] ?? "").trim();
       return line.length > CODE_LINE_MAX
         ? `${line.slice(0, CODE_LINE_MAX - 1)}…`
         : line;
