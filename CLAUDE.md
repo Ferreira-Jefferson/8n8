@@ -42,6 +42,7 @@ As visualizações podem ser descartáveis: uma vista gerada para responder a um
 
 - Toda mudança precisa ser verificada antes de ser dada como pronta: rode os testes, o typecheck ou o app. Se não deu para verificar, diga isso.
 - Relate o resultado como ele é. Teste falhando é reportado com a saída.
+- Quando houver uma referência visual (vídeo, mock, print), compare prints do app com ela antes de dar a feature como pronta. Teste passando não prova que a tela é a que foi pedida.
 
 ## Explicações para mim
 
