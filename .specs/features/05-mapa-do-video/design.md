@@ -567,7 +567,7 @@ O nó `mod` aparece como GATILHO "Código solto". Nenhum cartão do primeiro ní
 ### C7. Posições: `flow/layout.ts` (VID-03, VID-10, VID-11, VID-21)
 
 - `NODE_WIDTH = 320`, `NODE_HEIGHT = 140`, `NODE_GAP = 60` e `ROW_GAP = 80`.
-- `layoutRows(rows)`: o nó `i` da linha `r` fica em `x = i * (320 + 60)` e `y = r * (140 + 80)`.
+- `layoutRows(rows)`: o nó `i` da linha `r` fica em `x = i * (320 + 60)` e `y = r * (140 + 90 + 80) − (i % 2) * 90`. Os nós ímpares sobem 90 px (`ZIGZAG`), como o 470/380 do vídeo.
 - `layoutLR` (dagre) continua com `nodesep: 60` e `ranksep: 60`. Depois do dagre roda `orderBranches(positions, nodes, containerId)`. Em cada coluna (mesmo `x`), os nós recebem de novo as posições `y` da própria coluna, em ordem crescente de uma chave:
   - a chave é a lista de índices `j` dos segmentos `/b<j>/` do ID, depois do prefixo do nível;
   - a comparação é elemento a elemento, e um elemento ausente vale `0.5`;
@@ -655,7 +655,7 @@ export type NavAction =
   - No fim da transição, o canvas chama `onOpen(node)` e volta a `"open"`. Com movimento reduzido, chama `onOpen` na hora.
   - O contêiner tem `data-phase` e `data-level="top" | "inner"`. Um nível de dentro ganha `.level-frame`.
   - A `key` do React Flow é `${path.length}:${levelId}`, para que a recursão anime de novo.
-  - Com `focusId` (vindo do "Voltar"), o canvas chama `fitView({ nodes: [{ id: focusId }], maxZoom: 1, duration: 0 })` depois do primeiro desenho, e o nó fica no centro. Sem `focusId`, vale `fitView` no nível todo.
+  - Com `focusId` (vindo do "Voltar"), o canvas chama `fitView({ nodes: [{ id: focusId }], maxZoom: 1, duration: 0 })` depois do primeiro desenho, e o nó fica no centro. Sem `focusId`, a primeira vista vem de `startViewport` (`flow/viewport.ts`): o nível todo cabe com zoom entre 0,8 e 1; um nível mais largo fica em 0,8 e começa no primeiro cartão da esquerda, e o resto fica a um arrasto de distância.
 
 ### C12. Trilha: `nav/Breadcrumb.tsx` (VID-19)
 

@@ -5,7 +5,12 @@ import type {
   Graph,
   NodeId,
 } from "@code2n8n/model";
-import { ReactFlow, ViewportPortal } from "@xyflow/react";
+import {
+  ReactFlow,
+  useReactFlow,
+  useStore,
+  ViewportPortal,
+} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
   type CSSProperties,
@@ -17,12 +22,13 @@ import {
 } from "react";
 import { panelNodeOf } from "../nav/navigation";
 import { isOpenable } from "./card";
-import { layoutLR, layoutRows } from "./layout";
+import { layoutLR, layoutRows, type Position } from "./layout";
 import { type Schedule, schedule } from "./motion";
 import { projectLevel } from "./project-level";
 import { type StepFlowNode, StepNode } from "./StepNode";
 import { SuggestionCard } from "./SuggestionCard";
 import { highlighted, suggestionCards } from "./suggestion-cards";
+import { startViewport } from "./viewport";
 import { WireEdge, type WireFlowEdge } from "./WireEdge";
 
 export interface FlowCanvasProps {
@@ -67,6 +73,20 @@ function prefersReducedMotion(): boolean {
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+}
+
+/** Sets the first view of a level once the canvas has a size (VID-03, 10). */
+function StartView({ positions }: { positions: Map<NodeId, Position> }) {
+  const { setViewport } = useReactFlow();
+  const width = useStore((s) => s.width);
+  const height = useStore((s) => s.height);
+  const done = useRef(false);
+  useEffect(() => {
+    if (done.current || width === 0 || height === 0) return;
+    done.current = true;
+    setViewport(startViewport(positions, width, height));
+  }, [positions, width, height, setViewport]);
+  return null;
 }
 
 /** Wires drawn by `WireEdge`; `imports` wires get the dashed `edge-imports` class (VID-05, PROJ-03). */
@@ -229,14 +249,19 @@ export function FlowCanvas({
         nodesConnectable={false}
         zoomOnDoubleClick={false}
         minZoom={0.2}
-        fitView
-        fitViewOptions={
-          focusId === null
-            ? { maxZoom: 1 }
-            : { nodes: [{ id: focusId }], maxZoom: 1, duration: 0 }
-        }
+        fitView={focusId !== null}
+        {...(focusId === null
+          ? {}
+          : {
+              fitViewOptions: {
+                nodes: [{ id: focusId }],
+                maxZoom: 1,
+                duration: 0,
+              },
+            })}
         proOptions={{ hideAttribution: true }}
       >
+        {focusId === null && <StartView positions={positions} />}
         <ViewportPortal>
           {anchored.map(({ card, style }) => (
             <SuggestionCard

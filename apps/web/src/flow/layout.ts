@@ -5,6 +5,8 @@ export const NODE_WIDTH = 320;
 export const NODE_HEIGHT = 140;
 export const NODE_GAP = 60;
 export const ROW_GAP = 80;
+/** Odd cards of a main-flow row sit this much higher, like the video's 470/380 (VID-10). */
+export const ZIGZAG = 90;
 
 export interface Position {
   x: number;
@@ -32,14 +34,17 @@ export function layoutLR(
   return orderBranches(out, nodes, containerId);
 }
 
-/** The main flow: node i of row r at x = i * 380 and y = r * 220 (VID-10, 11). */
+/**
+ * The main flow: node i of row r at x = i * 380 and y = r * 310, and an odd
+ * node 90 px higher, so the row zigzags like the video (VID-10, 11).
+ */
 export function layoutRows(rows: NodeId[][]): Map<NodeId, Position> {
   const out = new Map<NodeId, Position>();
   rows.forEach((row, r) => {
     row.forEach((id, i) => {
       out.set(id, {
         x: i * (NODE_WIDTH + NODE_GAP),
-        y: r * (NODE_HEIGHT + ROW_GAP),
+        y: r * (NODE_HEIGHT + ZIGZAG + ROW_GAP) - (i % 2) * ZIGZAG,
       });
     });
   });

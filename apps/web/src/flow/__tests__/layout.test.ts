@@ -8,6 +8,7 @@ import {
   NODE_WIDTH,
   orderBranches,
   ROW_GAP,
+  ZIGZAG,
 } from "../layout";
 import { projectLevel } from "../project-level";
 import { videoGraph } from "./video-graph";
@@ -68,13 +69,32 @@ describe("VID-03: card size", () => {
 });
 
 describe("VID-10, 11: layoutRows", () => {
-  it("places node i of row r at x = i * 380 and y = r * 220", () => {
-    const pos = layoutRows([["a", "b"], ["c"]]);
+  it("places node i of row r at x = i * 380 and y = r * 310, odd nodes 90 px higher", () => {
+    const pos = layoutRows([
+      ["a", "b", "c"],
+      ["d", "e"],
+    ]);
+    expect(ZIGZAG).toBe(90);
     expect(Object.fromEntries(pos)).toEqual({
       a: { x: 0, y: 0 },
-      b: { x: 380, y: 0 },
-      c: { x: 0, y: 220 },
+      b: { x: 380, y: -90 },
+      c: { x: 760, y: 0 },
+      d: { x: 0, y: 310 },
+      e: { x: 380, y: 220 },
     });
+  });
+
+  it("keeps the rows apart: the highest card of a row is below the lowest card of the row above", () => {
+    const pos = layoutRows([
+      ["a", "b"],
+      ["c", "d"],
+    ]);
+    const lowestOfFirst = Math.max(pos.get("a")?.y ?? 0, pos.get("b")?.y ?? 0);
+    const highestOfSecond = Math.min(
+      pos.get("c")?.y ?? 0,
+      pos.get("d")?.y ?? 0,
+    );
+    expect(highestOfSecond - (lowestOfFirst + NODE_HEIGHT)).toBe(ROW_GAP);
   });
 
   it("returns an empty result for no rows", () => {

@@ -275,6 +275,20 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
     );
   });
 
+  it("starts the 8-card main flow at zoom 0.8 with the first card at the left (VID-03, VID-10)", async () => {
+    const { container } = render(<FlowCanvas {...props()} />);
+    const viewport = () =>
+      container.querySelector<HTMLElement>(".react-flow__viewport")?.style
+        .transform;
+    // React Flow reads the canvas size from the offsetWidth / offsetHeight
+    // stubs, 320 x 140: too small for the level, so it starts at its top-left
+    // card, 40 px from the left and 140 px from the top (the odd cards sit 90 px
+    // higher: 140 + 90 * 0.8 = 212).
+    await waitFor(() =>
+      expect(viewport()).toBe("translate(40px,212px) scale(0.8)"),
+    );
+  });
+
   it("gives the main flow cards data-enter-at from left to right", () => {
     const { container } = render(<FlowCanvas {...props()} />);
     const ids = [P, ...[0, 1, 2, 3, 4, 5, 6].map((i) => `${P}/s${i}`)];
