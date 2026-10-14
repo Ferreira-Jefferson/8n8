@@ -311,17 +311,18 @@ T49 → T50
 
 **Done when**:
 
-- [ ] (a) `db.salvar`, `cursor.x`, `conn.x`, `connection.x` e `session.x` → `BANCO`. `dbx.salvar`, `DB.salvar` e `meu.db.salvar` não caem em (a).
-- [ ] (b) `enviar_email`, `sendEmail`, `notificar.EMAIL_cliente` e `email` → `EMAIL`. `emailer.enviar` não cai em (b), porque `email` está no primeiro segmento e não no último.
-- [ ] (a) vence (b): `db.enviar_email` → `BANCO`.
-- [ ] (c) `requests.get` → `HTTP` e `open` → `ARQUIVO`. (d) `validar_pedido` e `sum` → `EXTERNO`.
-- [ ] Os testes atuais de `classify` passam sem mudança.
-- [ ] Gate passa.
+- [x] (a) `db.salvar`, `cursor.x`, `conn.x`, `connection.x` e `session.x` → `BANCO`. `dbx.salvar`, `DB.salvar` e `meu.db.salvar` não caem em (a).
+- [x] (b) `enviar_email`, `sendEmail`, `notificar.EMAIL_cliente` e `email` → `EMAIL`. `emailer.enviar` não cai em (b), porque `email` está no primeiro segmento e não no último.
+- [x] (a) vence (b): `db.enviar_email` → `BANCO`.
+- [x] (c) `requests.get` → `HTTP` e `open` → `ARQUIVO`. (d) `validar_pedido` e `sum` → `EXTERNO`.
+- [x] Os testes atuais de `classify` passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): classify calls to names the snippet does not define`
+**Status**: ✅ Complete (180 unit = 162 + 18)
 
 ---
 

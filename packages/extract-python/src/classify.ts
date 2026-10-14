@@ -21,3 +21,19 @@ export function classify(callee: string): ExternalCategory {
   }
   return "EXTERNO";
 }
+
+/** Receivers that name a database connection, compared by whole segment. */
+const DB_RECEIVERS = new Set(["db", "cursor", "conn", "connection", "session"]);
+
+/**
+ * Category of a call to a name the snippet neither defines nor imports
+ * (VID-13): (a) a database receiver, (b) an e-mail name, (c) the table,
+ * (d) EXTERNO.
+ */
+export function classifyUnknown(callee: string): ExternalCategory {
+  const segments = callee.split(".");
+  if (DB_RECEIVERS.has(segments[0] ?? "")) return "BANCO";
+  const last = segments[segments.length - 1] ?? "";
+  if (last.toLowerCase().includes("email")) return "EMAIL";
+  return classify(callee);
+}
