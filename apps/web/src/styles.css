@@ -401,7 +401,10 @@ body {
   pointer-events: none;
   font-size: 22px;
   font-weight: 500;
+  line-height: 1;
   letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
   color: var(--accent);
 }
 

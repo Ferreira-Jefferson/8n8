@@ -459,7 +459,7 @@ body { margin: 0; background: var(--ground); color: var(--second); font-family: 
 | Porta | `.port` (Handle) | `width: 16px`; `height: 16px`; `border-radius: 50%`; `background: var(--main)`; `border: 0`; `top: 50%`; `margin-top: -8px`. A entrada usa `left: -9px` e a saída `right: -9px`. Um lado sem fio usa `visibility: hidden`. |
 | Fio | `.wire` | `fill: none`; `stroke: var(--main)`; `stroke-width: 4`; `stroke-linecap: round` |
 | Ponto | `.pulse` | `fill: var(--main)`; `r = 9` |
-| Rótulo de ramo | `.branch-label` | `font-size: 22px`; `font-weight: 500`; `letter-spacing: .18em`. "sim" em `var(--main)`; "não" e os rótulos de `elif` em `var(--accent)`. |
+| Rótulo de ramo | `.branch-label` | `font-size: 22px`; `font-weight: 500`; `letter-spacing: .18em`; `text-transform: uppercase`; `white-space: nowrap`. "sim" em `var(--main)`; "não" e os rótulos de `elif` em `var(--accent)`. |
 | Cartão de sugestão | `.alert` | `display: flex`; `gap: 14px`; `align-items: center`; `padding: 14px 22px`; `border-radius: 6px`; `background: var(--second)`; `color: var(--ground)`; `font-size: 24px`; `font-weight: 700`; `white-space: nowrap`; `box-shadow: 0 12px 26px rgba(0,0,0,.3)`. `.alert .dot`: `14px` por `14px`, `border-radius: 50%`, `background: var(--ground)`. |
 | Botão principal | `.btn` | `padding: 16px 30px`; `border-radius: 6px`; `border: 0`; `background: var(--main)`; `color: var(--ground)`; `font: 700 26px var(--font-sans)` |
 | Botão secundário | `.btn-ghost` ("Abrir pasta", "Novo código", "Voltar") | `padding: 12px 22px`; `border-radius: 6px`; `background: transparent`; `border: 2px solid var(--panel-border)`; `color: var(--second)`; `font: 500 22px var(--font-sans)`. Desabilitado: `opacity: .4`. |
@@ -644,7 +644,7 @@ export type NavAction =
   - path `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2` com `pathLength=1` e `class="wire"`;
   - animação CSS de `stroke-dashoffset` de 1 a 0, com `data-draw-at` e `animation-delay`;
   - o ponto é `<circle class="pulse" r="9" data-pulse-at>` com `<animateMotion begin="<pulseAt>ms" dur="750ms" path=… fill="remove">` e visibilidade só durante o movimento. O ponto não é renderizado com movimento reduzido;
-  - o rótulo de ramo (`.branch-label`, via `EdgeLabelRenderer`) fica no ponto `t = 0.25` da curva, deslocado 14 px para cima, com `data-branch-label` igual ao texto.
+  - o rótulo de ramo (`.branch-label`, via `EdgeLabelRenderer`) fica junto ao cartão de destino, alinhado à borda esquerda dele e a 8 px do cartão: acima quando o fio sobe ("sim"), abaixo quando o fio desce ou segue reto ("não"). Assim ele não toca fio nem cartão. Ele tem `data-branch-label` igual ao texto e aparece em maiúsculas, como o `.eyebrow` do vídeo.
 - **`SuggestionCard.tsx`** (VID-31, VID-33): um `button.alert` com `<i class="dot">`, o texto e `data-anchor-id` (ou `"frame"`).
   - Os cartões entram no `ViewportPortal` do React Flow. O de ordem `k` na mesma âncora fica em `x = âncora.x + 20` e `y = âncora.y − 64 − k * 64`.
   - Um cartão preso à moldura fica fora do viewport, em `left: 24px; top: 96px`, empilhado.
