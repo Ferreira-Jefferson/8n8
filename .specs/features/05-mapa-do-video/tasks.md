@@ -234,15 +234,16 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Os tipos batem campo a campo com o design.
-- [ ] Teste novo `packages/model/src/__tests__/explanation.test.ts`: `explainStyle` retorna `"full"` para `function`, `class` e `module` e `"step"` para `code`, `call`, `external`, `condition`, `loop`, `block` e `return`; `STEP_SENTENCE_LIMIT === 2` e `TITLE_MAX_WORDS === 6`.
-- [ ] `KIND_LABEL` tem os 10 rótulos da tabela. O pedido de função continua igual ao de hoje (os testes atuais do `explain` passam sem mudança).
-- [ ] Gate passa.
+- [x] Os tipos batem campo a campo com o design.
+- [x] Teste novo `packages/model/src/__tests__/explanation.test.ts`: `explainStyle` retorna `"full"` para `function`, `class` e `module` e `"step"` para `code`, `call`, `external`, `condition`, `loop`, `block` e `return`; `STEP_SENTENCE_LIMIT === 2` e `TITLE_MAX_WORDS === 6`.
+- [x] `KIND_LABEL` tem os 10 rótulos da tabela. O pedido de função continua igual ao de hoje (os testes atuais do `explain` passam sem mudança).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/model test && pnpm typecheck`
 
 **Commit**: `feat(model): add explain kinds, step style and title contracts`
+**Status**: ✅ Complete
 
 ---
 

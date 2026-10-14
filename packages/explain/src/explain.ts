@@ -1,4 +1,5 @@
 import type {
+  ExplainKind,
   ExplainRequest,
   ExplainResponse,
   Explanation,
@@ -19,7 +20,18 @@ export interface ExplainDeps {
   reviewer: { text: string; version: string };
 }
 
-const KIND_LABEL = { function: "função", class: "classe" } as const;
+const KIND_LABEL: Record<ExplainKind, string> = {
+  function: "função",
+  class: "classe",
+  module: "código solto",
+  code: "passo de código",
+  call: "chamada de função",
+  external: "chamada externa",
+  condition: "condição",
+  loop: "laço",
+  block: "bloco",
+  return: "retorno",
+};
 
 function userMessage(req: ExplainRequest): string {
   const numbered = req.code

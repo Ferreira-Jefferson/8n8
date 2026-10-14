@@ -1,14 +1,25 @@
 export type {
   Claim,
   ClaimId,
+  ExplainKind,
   ExplainRequest,
   ExplainResponse,
+  ExplainStyle,
   Explanation,
   ExternalEffect,
+  NodeTitle,
   ReviewStatus,
   Severity,
   Suggestion,
+  TitleItem,
+  TitleRequest,
+  TitlesResponse,
   UpdateReason,
+} from "./explanation";
+export {
+  explainStyle,
+  STEP_SENTENCE_LIMIT,
+  TITLE_MAX_WORDS,
 } from "./explanation";
 export type {
   EdgeKind,
