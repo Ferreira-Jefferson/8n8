@@ -956,10 +956,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O path tem `d` igual a `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2`, `class="wire"` e `pathLength="1"`.
-- [ ] `data-draw-at` e `data-pulse-at` vêm da agenda. Com `reduced`, nenhum `circle.pulse` é renderizado.
-- [ ] "sim" e "não" aparecem como `.branch-label`, com `data-branch-label`, perto do início do fio.
-- [ ] Gate passa.
+- [x] O path tem `d` igual a `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2`, `class="wire"` e `pathLength="1"`.
+- [x] `data-draw-at` e `data-pulse-at` vêm da agenda. Com `reduced`, nenhum `circle.pulse` é renderizado.
+- [x] "sim" e "não" aparecem como `.branch-label`, com `data-branch-label`, perto do início do fio.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
