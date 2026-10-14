@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { createPythonExtractor } from "../index";
+import { createPythonExtractor, pythonPlugin } from "../index";
 import { lojaFiles } from "./loja";
 
 const videoFixture = readFileSync(
@@ -31,28 +31,21 @@ describe("createPythonExtractor", () => {
     );
   });
 
-  it("extracts the projeto-loja fixture as a project: 11 folder and file nodes, 4 imports wires", async () => {
-    const graph = (await createPythonExtractor()).extractProject(lojaFiles());
+  it("analyzes the projeto-loja fixture: 8 file graphs, 4 imports wires", () => {
+    const analysis = pythonPlugin.analyze(lojaFiles());
 
-    expect(
-      graph.nodes
-        .filter((n) => n.kind === "folder" || n.kind === "file")
-        .map((n) => n.id),
-    ).toEqual([
-      "dir:frete",
+    expect(analysis.files.map((f) => f.graph.nodes[0]?.id)).toEqual([
       "file:frete/__init__.py",
       "file:frete/calculo.py",
-      "dir:legado",
       "file:legado/frete_antigo.py",
-      "dir:pedidos",
+      "file:main.py",
       "file:pedidos/__init__.py",
       "file:pedidos/itens.py",
       "file:pedidos/pedidos.py",
-      "file:main.py",
       "file:relatorio.py",
     ]);
     expect(
-      graph.edges
+      analysis.imports
         .filter((e) => e.kind === "imports")
         .map((e) => [e.source, e.target])
         .sort(),

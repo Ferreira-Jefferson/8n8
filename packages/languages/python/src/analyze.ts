@@ -4,12 +4,13 @@ import {
   fileId,
   folderId,
   type Graph,
-  type NodeId,
+  type LanguageAnalysis,
   type SourceFile,
 } from "@code2n8n/model";
 import type { Node, Parser, Tree } from "web-tree-sitter";
 import { allocateTopLevel, buildGraph } from "./build-graph";
 import { markSyntaxErrors } from "./errors";
+import { collectLinks } from "./links";
 import {
   absoluteName,
   buildModuleIndex,
@@ -39,18 +40,6 @@ function baseName(path: string): string {
 function lastLine(source: string): number {
   const lines = source.split("\n").length - (source.endsWith("\n") ? 1 : 0);
   return Math.max(1, lines);
-}
-
-function folderNode(rel: string, parentId: NodeId | null): FlowNode {
-  return {
-    id: folderId(rel),
-    kind: "folder",
-    label: baseName(rel),
-    parentId,
-    range: { start: 1, end: 1 },
-    openable: true,
-    path: rel,
-  };
 }
 
 /** The file node followed by its inner nodes; syntax errors marked per file. */
@@ -92,38 +81,6 @@ function fileGraph(
       ...inner,
     ],
   };
-}
-
-/** Folder and file nodes in pre-order, each file followed by its inner nodes. */
-function layoutProject(graphs: Map<string, Graph>): FlowNode[] {
-  const paths = [...graphs.keys()].sort(byCode);
-  const dirs = new Set<string>();
-  for (const path of paths) {
-    const parts = path.split("/").slice(0, -1);
-    for (let i = 1; i <= parts.length; i++) {
-      dirs.add(parts.slice(0, i).join("/"));
-    }
-  }
-  const sortedDirs = [...dirs].sort(byCode);
-  const nodes: FlowNode[] = [];
-  const emitFiles = (dir: string) => {
-    for (const path of paths) {
-      if (dirOf(path) === dir) nodes.push(...(graphs.get(path)?.nodes ?? []));
-    }
-  };
-  const emitFolder = (dir: string, parentId: NodeId | null) => {
-    nodes.push(folderNode(dir, parentId));
-    for (const sub of sortedDirs) {
-      if (dirOf(sub) === dir) emitFolder(sub, folderId(dir));
-    }
-    emitFiles(dir);
-  };
-
-  for (const dir of sortedDirs) {
-    if (dirOf(dir) === "") emitFolder(dir, null);
-  }
-  emitFiles("");
-  return nodes;
 }
 
 /** Dotted names each import statement brings in (`a.b`, `.x`, `a` for `*`). */
@@ -186,10 +143,14 @@ function importsEdges(parsed: Parsed[], index: ModuleIndex): FlowEdge[] {
 }
 
 /**
- * Builds the graph of a project (PROJ-02, 03, 04, 09): one pass indexes the
- * modules, a second builds each file under its `file:` prefix.
+ * Analyzes the files of a project (PROJ-02, 03, 04, 09): one pass indexes the
+ * modules, a second builds each file under its `file:` prefix. The folders
+ * are the project's job, not the plugin's.
  */
-export function extractProject(parser: Parser, files: SourceFile[]): Graph {
+export function analyzeFiles(
+  parser: Parser,
+  files: SourceFile[],
+): LanguageAnalysis {
   const parsed: Parsed[] = [];
   try {
     for (const file of [...files].sort((a, b) => byCode(a.path, b.path))) {
@@ -208,21 +169,19 @@ export function extractProject(parser: Parser, files: SourceFile[]): Graph {
         ...allocateTopLevel(tree.rootNode).topLevel.keys(),
       ]),
     );
-    const graphs = new Map(
-      parsed.map((p) => [p.file.path, fileGraph(p, index, projectNames)]),
+    const graphs = parsed.map((p) => ({
+      path: p.file.path,
+      graph: fileGraph(p, index, projectNames),
+    }));
+    const links = parsed.map((p, i) =>
+      collectLinks(p.file.path, p.tree.rootNode, graphs[i]?.graph.nodes ?? []),
     );
-
-    const nodes = layoutProject(graphs);
-    const edges: FlowEdge[] = [
-      ...[...graphs.values()].flatMap((g) => g.edges),
-      ...importsEdges(parsed, index),
-    ];
-    const seen = new Set<NodeId>();
-    for (const node of nodes) {
-      if (seen.has(node.id)) throw new Error(`duplicate node id: ${node.id}`);
-      seen.add(node.id);
-    }
-    return { language: "python", empty: nodes.length === 0, nodes, edges };
+    return {
+      files: graphs,
+      imports: importsEdges(parsed, index),
+      offers: links.flatMap((l) => l.offers),
+      requests: links.flatMap((l) => l.requests),
+    };
   } finally {
     for (const { tree } of parsed) tree.delete();
   }

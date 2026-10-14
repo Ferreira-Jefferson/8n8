@@ -1,8 +1,8 @@
 import type { FlowNode, Graph } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
+import { analyzeFiles } from "../analyze";
 import { buildGraph } from "../build-graph";
 import { loadPythonParser } from "../parse";
-import { extractProject } from "../project";
 
 async function graphOf(source: string): Promise<Graph> {
   const tree = (await loadPythonParser()).parse(source);
@@ -64,9 +64,11 @@ describe("docstring range", () => {
   });
 
   it("works for ids prefixed with the file path in a project", async () => {
-    const graph = await extractProject(await loadPythonParser(), [
+    const [first] = analyzeFiles(await loadPythonParser(), [
       { path: "a.py", source: '"""Arquivo."""\n\ndef f():\n    """Doc."""\n' },
-    ]);
+    ]).files;
+    if (!first) throw new Error("no graph for a.py");
+    const graph = first.graph;
 
     expect(node(graph, "file:a.py")).not.toHaveProperty("docstring");
     expect(node(graph, "file:a.py/mod").docstring).toEqual({

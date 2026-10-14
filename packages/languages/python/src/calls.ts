@@ -29,7 +29,7 @@ export type CallResolution =
   | { kind: "external"; callee: string; category: ExternalCategory };
 
 /** `a`, `a.b`, `a.b.c`...; null when the expression is not a plain dotted name. */
-function dottedName(node: Node): string | null {
+export function dottedName(node: Node): string | null {
   if (node.type === "identifier") return node.text;
   if (node.type !== "attribute") return null;
   const object = node.childForFieldName("object");
