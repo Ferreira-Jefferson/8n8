@@ -20,6 +20,7 @@ import {
 } from "@code2n8n/explain";
 import { type ReadFilter, readSourceFolder } from "@code2n8n/input";
 import { pythonPlugin } from "@code2n8n/lang-python";
+import { typescriptPlugin } from "@code2n8n/lang-typescript";
 import type {
   ExplainRequest,
   LanguagePlugin,
@@ -784,8 +785,15 @@ describe("composeReadProject: the plugin registry", () => {
     ]);
   });
 
-  it("registers the Python plugin", () => {
-    expect(languagePlugins).toEqual([pythonPlugin]);
+  it("registers the Python and TypeScript plugins", () => {
+    expect(languagePlugins).toEqual([pythonPlugin, typescriptPlugin]);
+  });
+
+  it("gives every plugin its own id and its own extensions", () => {
+    const ids = languagePlugins.map((p) => p.id);
+    const extensions = languagePlugins.flatMap((p) => p.extensions);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(new Set(extensions).size).toBe(extensions.length);
   });
 
   it("maps the files the reader returns with the plugins, naming the project", async () => {

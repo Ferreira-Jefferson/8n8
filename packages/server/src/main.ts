@@ -21,6 +21,7 @@ import {
   readSourceFolder,
 } from "@code2n8n/input";
 import { pythonPlugin } from "@code2n8n/lang-python";
+import { typescriptPlugin } from "@code2n8n/lang-typescript";
 import { linkProject } from "@code2n8n/links";
 import {
   createLlmClient,
@@ -186,7 +187,10 @@ export function resolvePort(env: Record<string, string | undefined>): number {
 }
 
 /** The languages the server knows; a new language is one more entry. */
-export const languagePlugins: LanguagePlugin[] = [pythonPlugin];
+export const languagePlugins: LanguagePlugin[] = [
+  pythonPlugin,
+  typescriptPlugin,
+];
 
 /** Reads the files of the plugins' extensions and maps them: the project sets `graph.project` (PROJ-01, PROJ-05, PROJ-06, PROJ-07). */
 export function composeReadProject(

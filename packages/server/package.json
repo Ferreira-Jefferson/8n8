@@ -13,6 +13,7 @@
   "dependencies": {
     "@code2n8n/explain": "workspace:*",
     "@code2n8n/lang-python": "workspace:*",
+    "@code2n8n/lang-typescript": "workspace:*",
     "@code2n8n/links": "workspace:*",
     "@code2n8n/input": "workspace:*",
     "@code2n8n/llm": "workspace:*",

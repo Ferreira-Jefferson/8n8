@@ -367,6 +367,9 @@ importers:
       '@code2n8n/lang-python':
         specifier: workspace:*
         version: link:../languages/python
+      '@code2n8n/lang-typescript':
+        specifier: workspace:*
+        version: link:../languages/typescript
       '@code2n8n/links':
         specifier: workspace:*
         version: link:../links
