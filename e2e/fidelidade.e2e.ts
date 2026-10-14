@@ -10,6 +10,11 @@ import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 const REAL = "http://127.0.0.1:4319";
 const OFFLINE = "http://127.0.0.1:4317";
 const CACHE = fileURLToPath(new URL("../.cache/e2e-real", import.meta.url));
+/** Keyed server with no model set (CORE-21). */
+const DEFAULT_MODEL_SERVER = "http://127.0.0.1:4320";
+const DEFAULT_CACHE = fileURLToPath(
+  new URL("../.cache/e2e-default-model", import.meta.url),
+);
 
 const VIDEO = readFileSync(
   new URL(
@@ -251,6 +256,23 @@ test.describe("Fidelidade", () => {
     await expect(badge(view)).toHaveText("Revisado");
     expect(drafts(log)).toHaveLength(1);
     expect(reviews(log)).toHaveLength(1);
+  });
+
+  test("CORE-21/FID-15: with no model set, draft and review use ~deepseek/deepseek-v4-flash-latest", async ({
+    page,
+  }) => {
+    rmSync(DEFAULT_CACHE, { recursive: true, force: true });
+    await generate(page, DEFAULT_MODEL_SERVER, VIDEO);
+    await nodeById(page, "fn:calcular_frete").click();
+    await expect(badge(panel(page))).toHaveText("Revisado");
+
+    const log = await fakeLog();
+    expect(drafts(log).map((c) => c.model)).toEqual([
+      "~deepseek/deepseek-v4-flash-latest",
+    ]);
+    expect(reviews(log).map((c) => c.model)).toEqual([
+      "~deepseek/deepseek-v4-flash-latest",
+    ]);
   });
 
   test("FID-14: with no key the effects still show and the LLM is never called", async ({

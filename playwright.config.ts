@@ -62,5 +62,22 @@ export default defineConfig({
         CODE2N8N_CACHE_DIR: cacheDir("e2e-real"),
       },
     },
+    {
+      // The same pipeline with no model chosen: the default model (CORE-21, FID-15).
+      command: "tsx packages/server/src/main.ts start",
+      url: "http://127.0.0.1:4320",
+      reuseExistingServer: false,
+      timeout: 180_000,
+      env: {
+        CODE2N8N_PORT: "4320",
+        OPENROUTER_API_KEY: "e2e-fake-key",
+        OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
+        // Set and empty: process.loadEnvFile keeps them, so .env never supplies a model,
+        // and an empty value counts as absent.
+        CODE2N8N_MODEL: "",
+        CODE2N8N_REVIEW_MODEL: "",
+        CODE2N8N_CACHE_DIR: cacheDir("e2e-default-model"),
+      },
+    },
   ],
 });
