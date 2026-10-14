@@ -120,10 +120,9 @@
 - **Próximo passo:** nenhum agendado. O usuário escolhe a próxima feature.
 - **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 entraram com testes vermelhos. O histórico não foi reescrito.
 - **Ambiente:**
-  - O pnpm 12.6.0 global está quebrado em chamadas aninhadas. Os workers usam o shim em `<scratchpad>/shim`.
+  - O pnpm 12.6.0 global foi reinstalado em 2026-10-13 com os scripts de instalação ligados e agora roda o binário nativo (`pnpm.exe`). Se ele voltar a dizer "pnpm is running through Node.js", reinstale com `npm install -g pnpm@12.6.0 --foreground-scripts`.
   - O Playwright precisa de `C:\Windows\System32` no PATH para chamar o `taskkill`.
 - **Pendências não bloqueantes:**
-  - Reinstalar o pnpm global.
   - O worktree `../code2n8n-f02` e o branch `feat/02-pasta-local` continuam existindo. Não apagar sem pedido.
   - Preencher a seção "Comandos" do CLAUDE.md.
   - Lições candidatas L-015..L-017 esperam confirmação de outra feature.
