@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual da marca 8n8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap">
+<style>
+/* Layout: árvore de arquivos à esquerda (como o explorador de um repositório), capítulos numa coluna;
+   o produto aparece em "palcos" com a grade de pontos do canvas. Escuro por padrão, claro pelo tema. */
+:root {
+  /* Marca, tema escuro */
+  --c-grafite: #161818;
+  --c-nevoa: #e9ebea;
+  --c-pedra: #979d9b;
+  --c-petroleo: #3dbfa8;
+  /* Marca, tema claro */
+  --c-papel: #f2f3f0;
+  --c-tinta: #12292a;
+  --c-pedra-escura: #5b6d6a;
+  --c-petroleo-escuro: #0f7a6b;
+  --c-coral: #ea4b71;
+  --c-limao: #d4ff3f;
+
+  --bg: #161818;
+  --fg: #e9ebea;
+  --muted: #979d9b;
+  --ink: #3dbfa8;
+  --surface: #1d2020;
+  --line: #313635;
+  --dim: #6b706f;
+
+  --font-display: "Archivo Black", "Arial Black", Impact, sans-serif;
+  --font-sans: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f2f3f0; --fg: #12292a; --muted: #5b6d6a; --ink: #0f7a6b;
+    --surface: #e8ebe8; --line: #d3d8d5; --dim: #8f9a98; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f2f3f0; --fg: #12292a; --muted: #5b6d6a; --ink: #0f7a6b;
+  --surface: #e8ebe8; --line: #d3d8d5; --dim: #8f9a98; color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 16px/1.6 var(--font-sans);
+  padding-inline: 16px;
+}
+code, .mono { font-family: var(--font-mono); }
+code { font-size: 0.92em; color: var(--ink); }
+a { color: var(--ink); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+.shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  padding-block: 24px 96px;
+}
+@media (min-width: 1000px) {
+  .shell { grid-template-columns: 200px minmax(0, 1fr); gap: 56px; }
+}
+
+/* ---- Árvore de navegação ---- */
+.tree {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  background: var(--bg);
+  font: 400 14px/1.9 var(--font-mono);
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding-block: 10px;
+}
+.tree .root { color: var(--fg); font-weight: 500; display: none; }
+.tree ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 18px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+.tree a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+.tree a::before { content: ""; width: 8px; height: 8px; border-radius: 2px; border: 1.5px solid var(--dim); flex-shrink: 0; }
+.tree a:hover { color: var(--fg); }
+.tree a[aria-current="true"] { color: var(--fg); }
+.tree a[aria-current="true"]::before { background: var(--ink); border-color: var(--ink); }
+.tree .pre { display: none; color: var(--dim); }
+@media (min-width: 1000px) {
+  .tree { align-self: start; top: calc(env(safe-area-inset-top, 0px) + 24px); border-bottom: 0; padding-block: 0; }
+  .tree .root { display: block; margin-bottom: 4px; }
+  .tree ol { display: block; overflow: visible; }
+  .tree li { display: flex; }
+  .tree .pre { display: inline; white-space: pre; }
+}
+
+main { min-width: 0; display: grid; gap: 112px; }
+section { display: grid; gap: 28px; scroll-margin-top: 72px; }
+
+.eyebrow {
+  font: 500 12px/1.3 var(--font-sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h2 { font: 400 clamp(30px, 5vw, 44px)/1.05 var(--font-display); letter-spacing: -0.01em; }
+h3 { font: 700 19px/1.3 var(--font-sans); }
+p { margin: 0; max-width: 64ch; }
+.lead { font-size: 19px; line-height: 1.55; max-width: 60ch; }
+.muted { color: var(--muted); }
+.head { display: grid; gap: 12px; }
+
+/* ---- Palco: o mundo do produto no tema escuro ---- */
+.stage {
+  --s-bg: var(--c-grafite);
+  --s-fg: var(--c-nevoa);
+  --s-muted: var(--c-pedra);
+  --s-accent: var(--c-petroleo);
+  --s-card: #202323;
+  --s-card-border: #363b3a;
+  --s-panel: #1c1e1e;
+  --s-panel-border: #2f3433;
+  --s-dim: #6b706f;
+  position: relative;
+  background-color: var(--s-bg);
+  background-image: radial-gradient(color-mix(in srgb, var(--c-nevoa) 14%, transparent) 1.4px, transparent 1.9px);
+  background-size: 24px 24px;
+  color: var(--s-fg);
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.scroll-x { overflow-x: auto; border-radius: 6px; }
+
+/* ---- Hero ---- */
+.hero { padding: clamp(28px, 6vw, 64px) clamp(20px, 5vw, 56px); display: grid; gap: 36px; overflow: hidden; }
+.hero .logo { width: min(100%, 380px); height: auto; color: var(--c-nevoa); --logo-n: var(--c-petroleo); display: block; }
+.hero .tag { font: 400 clamp(22px, 3.4vw, 32px)/1.2 var(--font-sans); max-width: 22ch; text-wrap: balance; }
+.hero .tag b { color: var(--c-petroleo); font-weight: 500; }
+.hero .slogan { display: grid; gap: 6px; }
+.hero .slogan .tag { font: 400 clamp(30px, 5vw, 48px)/1.05 var(--font-display); }
+.hero .tag-pt { font: 400 clamp(17px, 2.2vw, 20px)/1.3 var(--font-sans); color: var(--s-muted); }
+.hero dl { display: flex; flex-wrap: wrap; gap: 12px 40px; margin: 0; font: 400 14px/1.4 var(--font-mono); }
+.hero dt { color: var(--s-muted); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; font-family: var(--font-sans); font-weight: 500; }
+.hero dd { margin: 4px 0 0; }
+.hero .wire-draw { stroke-dasharray: 1; stroke-dashoffset: 0; animation: draw 1.1s 0.2s ease-out backwards; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/* ---- Blocos de conteúdo ---- */
+.promise {
+  font: 400 clamp(26px, 4.4vw, 40px)/1.15 var(--font-display);
+  border-left: 4px solid var(--ink);
+  padding-left: 20px;
+  max-width: 22ch;
+}
+.principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 40px; margin: 0; }
+.principles div { display: grid; gap: 6px; align-content: start; border-top: 1px solid var(--line); padding-top: 14px; }
+.principles dt { font-weight: 700; }
+.principles dd { margin: 0; color: var(--muted); }
+
+.ladder { display: grid; gap: 6px; font: 400 15px/1.3 var(--font-mono); margin: 0; padding: 0; list-style: none; }
+.ladder li { display: flex; align-items: center; gap: 12px; }
+.ladder li::before { content: ""; width: 10px; height: 10px; border-radius: 2px; border: 2px solid var(--ink); flex-shrink: 0; }
+.ladder li span { color: var(--muted); font-family: var(--font-sans); font-size: 14px; }
+
+.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px 40px; align-items: start; }
+
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line); }
+th { font: 500 11px/1.3 var(--font-sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+td.bad { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
+.table-wrap { overflow-x: auto; }
+.table-wrap table { min-width: 560px; }
+
+.rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: r; }
+.rules li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; }
+.rules li::before { counter-increment: r; content: counter(r); font: 500 13px/1.7 var(--font-mono); color: var(--ink); }
+
+/* ---- Logo ---- */
+.logo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.tile { border-radius: 6px; aspect-ratio: 16 / 10; max-width: 100%; display: grid; place-items: center; padding: 24px; border: 1px solid var(--line); }
+.tile svg { width: 58%; height: auto; }
+.tile.t-dark { background: var(--c-grafite); color: var(--c-nevoa); --logo-n: var(--c-petroleo); }
+.tile.t-light { background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo-escuro); }
+.tile.t-dark-mono { background: var(--c-grafite); color: var(--c-nevoa); --logo-n: var(--c-nevoa); }
+.tile.t-light-mono { background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-tinta); }
+.tile.t-accent { background: var(--c-petroleo); color: var(--c-grafite); --logo-n: var(--c-grafite); }
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+figcaption { font-size: 14px; color: var(--muted); }
+figcaption b { color: var(--fg); font-weight: 500; }
+
+.construct { padding: 24px; }
+.construct svg { width: 100%; height: auto; display: block; }
+
+.icons { display: flex; flex-wrap: wrap; align-items: end; gap: 28px; }
+.icon { background: var(--c-grafite); border-radius: 22%; display: grid; place-items: center; --logo-n: var(--c-petroleo); color: var(--c-nevoa); border: 1px solid var(--line); }
+.icon.light { background: var(--c-papel); --logo-n: var(--c-petroleo-escuro); color: var(--c-tinta); }
+.icon svg { width: 74%; height: auto; }
+.icon-wrap { display: grid; gap: 8px; justify-items: center; font: 400 12px var(--font-mono); color: var(--muted); }
+
+.dont-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.dont .tile { aspect-ratio: 4 / 3; position: relative; }
+.dont .tile::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(to top right, transparent calc(50% - 1px), color-mix(in srgb, #d0453b 85%, transparent) 50%, transparent calc(50% + 1px));
+  border-radius: 6px;
+  pointer-events: none;
+}
+.dont figcaption::before { content: "Não "; color: var(--fg); font-weight: 700; }
+
+/* ---- Nota n8n ---- */
+.notice { border: 1px solid var(--line); border-radius: 6px; padding: clamp(20px, 4vw, 32px); display: grid; gap: 20px; background: var(--surface); }
+
+/* ---- Cores ---- */
+.theme-row { display: grid; gap: 14px; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.swatch { display: grid; gap: 10px; }
+.chip { border-radius: 6px; aspect-ratio: 3 / 2; max-width: 100%; border: 1px solid var(--line); padding: 14px; display: flex; align-items: end; font: 500 12px/1.2 var(--font-mono); }
+.swatch h4 { margin: 0; font: 700 16px/1.3 var(--font-sans); }
+.swatch dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; font: 400 13px/1.5 var(--font-mono); }
+.swatch dt { color: var(--muted); }
+.swatch dd { margin: 0; font-variant-numeric: tabular-nums; }
+.swatch p { font-size: 14px; color: var(--muted); }
+
+.ratio { display: flex; height: 56px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.ratio div { display: flex; align-items: end; padding: 8px 10px; font: 500 12px var(--font-mono); min-width: 0; }
+
+.derived { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.derived div { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 14px; }
+.derived i { width: 36px; height: 36px; border-radius: 6px; border: 1px solid var(--line); display: block; }
+.derived span { display: grid; line-height: 1.3; }
+.derived small { font: 400 12px var(--font-mono); color: var(--muted); }
+
+/* ---- Tipografia ---- */
+.faces { display: grid; gap: 0; }
+.face { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 24px; border-top: 1px solid var(--line); }
+@media (min-width: 720px) { .face { grid-template-columns: 220px minmax(0, 1fr); gap: 32px; } }
+.face .meta { display: grid; gap: 4px; align-content: start; font-size: 14px; color: var(--muted); }
+.face .meta b { color: var(--fg); font-size: 16px; }
+.face .sample { min-width: 0; overflow-wrap: anywhere; }
+.s-display { font: 400 clamp(40px, 7vw, 68px)/1 var(--font-display); }
+.s-sans { font: 400 clamp(22px, 3vw, 28px)/1.3 var(--font-sans); }
+.s-sans .w5 { font-weight: 500; } .s-sans .w7 { font-weight: 700; }
+.s-mono { font: 400 clamp(17px, 2.4vw, 22px)/1.5 var(--font-mono); }
+
+/* ---- Componentes (escala 0,625 do palco de 1920 px) ---- */
+.flow { width: 760px; height: 350px; }
+.flow svg.wires { position: absolute; inset: 0; width: 760px; height: 350px; overflow: visible; }
+.wire { fill: none; stroke: var(--s-accent); stroke-width: 3; stroke-linecap: round; }
+.wire.imports { stroke-dasharray: 2 9; }
+.port { fill: var(--s-accent); }
+.node {
+  position: absolute;
+  width: 200px; height: 104px;
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 4px;
+  background: var(--s-card);
+  border: 2px solid var(--s-card-border);
+  border-radius: 6px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+}
+.node.on { border-color: var(--s-accent); }
+.node .ntag { font: 500 11px/1.2 var(--font-sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--s-muted); }
+.node .ntag.folder { color: var(--s-accent); }
+.node .nname { font: 700 18px/1.2 var(--font-sans); color: var(--s-fg); }
+.node .nfn { font: 400 13px/1.3 var(--font-mono); color: var(--s-muted); }
+.node .badge { position: absolute; right: 10px; top: 10px; min-width: 20px; height: 20px; border-radius: 10px; background: var(--s-accent); color: var(--c-grafite); font: 700 12px/20px var(--font-sans); text-align: center; }
+.branch { position: absolute; font: 500 13px var(--font-sans); color: var(--s-muted); }
+.branch.yes { color: var(--s-accent); }
+.alert {
+  position: absolute;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 9px 14px;
+  border-radius: 6px;
+  background: var(--c-nevoa); color: var(--c-grafite);
+  font: 700 15px var(--font-sans);
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+.alert i { width: 9px; height: 9px; border-radius: 50%; background: var(--c-grafite); display: block; }
+
+.legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px 32px; font-size: 15px; }
+.legend li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: start; }
+.legend svg { width: 44px; height: 22px; display: block; margin-top: 2px; }
+.legend b { font-weight: 500; }
+.legend span { color: var(--muted); display: block; font-size: 14px; }
+
+.panel-demo { display: grid; gap: 16px; padding: 20px; }
+.crumb { display: flex; flex-wrap: wrap; gap: 0 8px; font: 400 14px/1.6 var(--font-mono); color: var(--c-pedra); }
+.crumb b { color: var(--c-nevoa); font-weight: 400; }
+.crumb i { font-style: normal; color: var(--s-dim); }
+.dpanel { background: var(--s-panel); border: 2px solid var(--s-panel-border); border-radius: 6px; padding: 20px; display: grid; gap: 14px; max-width: 560px; }
+.dpanel h4 { margin: 0; font: 400 18px var(--font-display); }
+.dpanel .ey { font: 500 10px/1.3 var(--font-sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-pedra); }
+.dpanel .sum { font-size: 15px; line-height: 1.5; margin: 0; }
+.dpanel .io { font: 400 13px var(--font-mono); }
+.dpanel .io i { font-style: normal; color: var(--s-accent); padding-inline: 6px; }
+.dpanel .rev { justify-self: start; font: 500 11px var(--font-sans); padding: 3px 8px; border-radius: 4px; background: color-mix(in srgb, var(--s-accent) 16%, transparent); color: var(--s-accent); }
+.codeview { background: var(--c-grafite); border: 1px solid var(--s-panel-border); border-radius: 6px; padding: 10px 0; font: 400 13px/1.7 var(--font-mono); color: color-mix(in srgb, var(--c-nevoa) 82%, var(--c-grafite)); overflow-x: auto; }
+.codeview div { display: flex; gap: 14px; padding-inline: 12px; white-space: pre; }
+.codeview div.cur { background: color-mix(in srgb, var(--s-accent) 18%, transparent); }
+.codeview s { text-decoration: none; color: var(--s-dim); min-width: 2ch; text-align: right; flex-shrink: 0; }
+.dpanel .sug { background: var(--c-nevoa); color: var(--c-grafite); border-radius: 6px; padding: 12px 14px; font-size: 14px; line-height: 1.5; }
+.dpanel .sug b { display: block; font-size: 15px; }
+.dpanel .sug code { color: var(--c-grafite); background: rgba(22, 24, 24, 0.08); padding: 0 4px; border-radius: 3px; }
+
+.specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; border-top: 1px solid var(--line); margin: 0; }
+.specs div { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); }
+.specs dt { font: 500 11px/1.3 var(--font-sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+.specs dd { margin: 6px 0 0; font: 400 20px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ---- Tokens ---- */
+.code-block { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.code-block pre { margin: 0; padding: 20px; overflow-x: auto; font: 400 13px/1.7 var(--font-mono); color: var(--fg); }
+.code-block .cm { color: var(--muted); }
+.copy { position: absolute; top: 10px; right: 10px; font: 500 13px var(--font-sans); background: var(--fg); color: var(--bg); border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+
+footer { border-top: 1px solid var(--line); padding-top: 20px; font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero .wire-draw { animation: none; }
+  html { scroll-behavior: auto; }
+}
+html { scroll-behavior: smooth; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Logotipo: dois 8 de blocos; os blocos ligados e o fio na cor de destaque. -->
+    <symbol id="wordmark" viewBox="0 0 124 80">
+      <g fill="none" stroke-width="6">
+        <rect x="3" y="43" width="38" height="34" rx="6" stroke="currentColor"/>
+        <rect x="83" y="3" width="38" height="34" rx="6" stroke="currentColor"/>
+        <rect x="3" y="3" width="38" height="34" rx="6" stroke="var(--logo-n, currentColor)"/>
+        <rect x="83" y="43" width="38" height="34" rx="6" stroke="var(--logo-n, currentColor)"/>
+        <path d="M44 8C66 8 58 72 80 72" stroke="var(--logo-n, currentColor)" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <circle cx="44" cy="8" r="5" fill="var(--logo-n, currentColor)"/>
+      <circle cx="80" cy="72" r="5" fill="var(--logo-n, currentColor)"/>
+    </symbol>
+    <!-- Símbolo: só o caminho, para tamanhos pequenos. -->
+    <symbol id="mark" viewBox="0 0 96 76">
+      <g fill="none" stroke="var(--logo-n, currentColor)">
+        <rect x="3" y="3" width="34" height="34" rx="6" stroke-width="6"/>
+        <rect x="59" y="39" width="34" height="34" rx="6" stroke-width="6"/>
+        <path d="M40 8C52 8 44 68 56 68" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <circle cx="40" cy="8" r="5" fill="var(--logo-n, currentColor)"/>
+      <circle cx="56" cy="68" r="5" fill="var(--logo-n, currentColor)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="shell">
+  <nav class="tree" aria-label="Capítulos">
+    <div class="root">8n8/manual/</div>
+    <ol>
+      <li><span class="pre">├─ </span><a href="#essencia">essencia</a></li>
+      <li><span class="pre">├─ </span><a href="#voz">voz</a></li>
+      <li><span class="pre">├─ </span><a href="#logo">logo</a></li>
+      <li><span class="pre">├─ </span><a href="#n8n">n8n</a></li>
+      <li><span class="pre">├─ </span><a href="#cores">cores</a></li>
+      <li><span class="pre">├─ </span><a href="#tipografia">tipografia</a></li>
+      <li><span class="pre">├─ </span><a href="#componentes">componentes</a></li>
+      <li><span class="pre">└─ </span><a href="#tokens">tokens</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="stage hero">
+      <p class="eyebrow" style="color: var(--c-pedra)">Manual da marca · versão 0.2 · outubro de 2026</p>
+      <svg class="logo" viewBox="-4 -4 132 88" role="img" aria-label="8n8">
+        <g fill="none" stroke-width="6">
+          <rect x="3" y="43" width="38" height="34" rx="6" stroke="currentColor"/>
+          <rect x="83" y="3" width="38" height="34" rx="6" stroke="currentColor"/>
+          <rect x="3" y="3" width="38" height="34" rx="6" stroke="var(--logo-n)"/>
+          <rect x="83" y="43" width="38" height="34" rx="6" stroke="var(--logo-n)"/>
+          <path class="wire-draw" pathLength="1" d="M44 8C66 8 58 72 80 72" stroke="var(--logo-n)" stroke-width="5" stroke-linecap="round"/>
+        </g>
+        <circle cx="44" cy="8" r="5" fill="var(--logo-n)"/>
+        <circle cx="80" cy="72" r="5" fill="var(--logo-n)"/>
+      </svg>
+      <div class="slogan">
+        <p class="tag">Your code, <b>drawn</b>.</p>
+      </div>
+      <dl>
+        <div><dt>Escrita</dt><dd>8n8</dd></div>
+        <div><dt>Leitura</dt><dd>"eight-en-eight", em inglês</dd></div>
+        <div><dt>Repositório</dt><dd>code2n8n</dd></div>
+      </dl>
+    </header>
+
+    <!-- ===================== ESSÊNCIA ===================== -->
+    <section id="essencia" aria-labelledby="h-essencia">
+      <div class="head">
+        <p class="eyebrow">Essência</p>
+        <h2 id="h-essencia">O que o 8n8 é</h2>
+      </div>
+      <p class="lead">O 8n8 lê um código e desenha esse código como nós e fios. Você começa na vista ampla. Depois, abre um nó para ver o fluxo interno dele e desce até as linhas reais.</p>
+      <p>O 8n8 é para quem precisa supervisionar código, muitas vezes escrito por IA, sem ler linha por linha. O 8n8 não migra nada para o n8n. Do n8n, o 8n8 usa só o modelo mental de nós ligados por fios.</p>
+
+      <p class="promise">Todo nó leva de volta à linha.</p>
+
+      <div class="split">
+        <div class="head">
+          <h3>O nome</h3>
+          <p class="muted">O n8n parte de nós e chega à automação. O 8n8 faz o caminho inverso: parte do código pronto e chega aos nós. O nome espelha a referência porque o produto espelha a direção.</p>
+          <p class="muted">Escreva sempre <code>8n8</code>: minúsculo, sem espaço, sem hífen. Nunca escreva "8N8", "8-n-8" ou "Eight". Leia em inglês: "eight-en-eight".</p>
+          <p class="muted">O slogan é <b>Your code, drawn.</b> Ele fica sempre em inglês, como a leitura do nome, e não tem tradução. Ele diz o propósito do 8n8: transformar o código em desenho para que ele fique simples de entender.</p>
+        </div>
+        <div class="head">
+          <h3>A escada de níveis</h3>
+          <ol class="ladder" aria-label="Níveis do mapa">
+            <li>repositório <span>a vista inicial</span></li>
+            <li style="padding-left:16px">módulo</li>
+            <li style="padding-left:32px">arquivo</li>
+            <li style="padding-left:48px">função</li>
+            <li style="padding-left:64px">bloco <span>a linha real</span></li>
+          </ol>
+        </div>
+      </div>
+
+      <dl class="principles">
+        <div><dt>A estrutura vem do parser</dt><dd>O Tree-sitter monta o mapa. O LLM só escreve resumos e sugestões, e cada texto aponta o nó e a linha de origem.</dd></div>
+        <div><dt>Amplo primeiro, fundo depois</dt><dd>A tela abre no nível mais alto. Você escolhe onde descer.</dd></div>
+        <div><dt>Sempre volta ao código</dt><dd>Todo nó mostra o arquivo e as linhas. Nenhum nó fica sem origem.</dd></div>
+        <div><dt>Uma palavra, um sentido</dt><dd>Nó é etapa. Fio é conexão. A interface e os textos usam os mesmos termos.</dd></div>
+      </dl>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>A marca é</th><th>A marca não é</th><th>Na prática</th></tr></thead>
+          <tbody>
+            <tr><td>Precisa</td><td class="bad">Aproximada</td><td>Cita arquivo e linha, sem "mais ou menos aqui".</td></tr>
+            <tr><td>Calma</td><td class="bad">Alarmista</td><td>Uma sugestão é um cartão discreto, nunca um alerta vermelho.</td></tr>
+            <tr><td>Sóbria</td><td class="bad">Chamativa</td><td>Uma cor de destaque, usada pouco. Nada de neon.</td></tr>
+            <tr><td>Direta</td><td class="bad">Enfeitada</td><td>Sem emoji, sem exclamação, sem "ops".</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== VOZ ===================== -->
+    <section id="voz" aria-labelledby="h-voz">
+      <div class="head">
+        <p class="eyebrow">Voz</p>
+        <h2 id="h-voz">Português Técnico Simplificado</h2>
+      </div>
+      <p class="lead">A marca fala em Português Técnico Simplificado (PTS): a adaptação do ASD-STE100, a norma aeroespacial para manuais sem ambiguidade. O leitor entende a frase na primeira leitura.</p>
+      <div class="split">
+        <ol class="rules">
+          <li>Use voz ativa. O sujeito faz a ação.</li>
+          <li>Use o presente para descrever o código e o imperativo para instruir.</li>
+          <li>Use o verbo, não o substantivo: "valida", não "faz a validação".</li>
+          <li>Escreva até 25 palavras por frase e até 2 frases por resumo de nó.</li>
+          <li>Mantenha os nomes do código como estão, em formato de código.</li>
+          <li>Na sugestão, dê primeiro o comando, depois o motivo e o local.</li>
+        </ol>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Termo</th><th>Sentido</th><th>Não use</th></tr></thead>
+            <tbody>
+              <tr><td>nó</td><td>uma etapa do fluxo no mapa</td><td class="bad">bloco, caixa</td></tr>
+              <tr><td>fio</td><td>a conexão entre dois nós</td><td class="bad">linha, seta, link</td></tr>
+              <tr><td>entrada / saída</td><td>o dado que o nó recebe / produz</td><td class="bad">input, output</td></tr>
+              <tr><td>chama</td><td>uma função executa outra</td><td class="bad">invoca, dispara</td></tr>
+              <tr><td>falha</td><td>um erro acontece</td><td class="bad">quebra, estoura</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Onde</th><th>Antes</th><th>Na voz do 8n8</th></tr></thead>
+          <tbody>
+            <tr><td>Botão</td><td class="bad">Clique aqui para realizar a análise</td><td>Mapear código</td></tr>
+            <tr><td>Busca vazia</td><td class="bad">Nenhum resultado encontrado :(</td><td>Nenhum nó com esse nome. Busque pelo nome da função ou do arquivo.</td></tr>
+            <tr><td>Erro</td><td class="bad">Ops! Algo deu errado.</td><td>O parser falhou em <code>app.ts</code>, linha 42. Corrija a sintaxe e mapeie de novo.</td></tr>
+            <tr><td>Resumo de nó</td><td class="bad">Essa função é responsável por realizar a busca da UF a partir do CEP.</td><td>A função consulta uma API externa com o CEP. A função retorna a UF.</td></tr>
+            <tr><td>Sugestão</td><td class="bad">Talvez seja interessante considerar tratar possíveis erros aqui.</td><td>Trate o erro da chamada HTTP. Se a API falhar, <code>calcular_frete()</code> falha junto. <code>frete.py</code>, linha 44.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted">A norma completa e o glossário ficam em <code>docs/portugues-tecnico-simplificado.md</code>.</p>
+    </section>
+
+    <!-- ===================== LOGO ===================== -->
+    <section id="logo" aria-labelledby="h-logo">
+      <div class="head">
+        <p class="eyebrow">Logo</p>
+        <h2 id="h-logo">Dois 8 e um fio</h2>
+      </div>
+      <p class="lead">Cada 8 é feito de dois blocos empilhados, como os nós do canvas. O fio liga a saída de um bloco à entrada do outro e desenha o n. Os dois blocos ligados ficam na cor de destaque; os outros dois ficam na cor do texto.</p>
+
+      <div class="stage construct scroll-x">
+        <svg viewBox="-30 -26 236 136" role="img" aria-label="Construção do logotipo: blocos de 44 por 40, traço 6, fio 5, portas de diâmetro 10, distância de 36 entre os dois 8">
+          <g stroke="var(--c-pedra)" stroke-width="0.5" fill="none">
+            <rect x="-20" y="-20" width="164" height="120" stroke-dasharray="2 2"/>
+            <line x1="-12" y1="0" x2="140" y2="0"/>
+            <line x1="-12" y1="40" x2="140" y2="40" stroke-dasharray="1 2"/>
+            <line x1="-12" y1="80" x2="140" y2="80"/>
+            <line x1="44" y1="-10" x2="44" y2="90" stroke-dasharray="1 2"/>
+            <line x1="80" y1="-10" x2="80" y2="90" stroke-dasharray="1 2"/>
+            <line x1="44" y1="88" x2="80" y2="88"/>
+          </g>
+          <use href="#wordmark" x="0" y="0" width="124" height="80" style="color: var(--c-nevoa); --logo-n: var(--c-petroleo)"/>
+          <g font-family="DM Mono, monospace" font-size="4.6" fill="var(--c-pedra)">
+            <text x="148" y="3.5">topo</text>
+            <text x="148" y="42">meio</text>
+            <text x="148" y="82">base</text>
+            <text x="54" y="95">36 = espaço do fio</text>
+            <text x="-20" y="106">respiro mínimo: 20 u em toda a volta (metade da altura de um bloco)</text>
+          </g>
+        </svg>
+      </div>
+      <dl class="specs">
+        <div><dt>Bloco</dt><dd>44 × 40 u</dd></div>
+        <div><dt>Traço</dt><dd>6 u</dd></div>
+        <div><dt>Raio</dt><dd>6 u</dd></div>
+        <div><dt>Fio</dt><dd>5 u</dd></div>
+        <div><dt>Porta</dt><dd>Ø 10 u</dd></div>
+        <div><dt>Respiro</dt><dd>20 u</dd></div>
+      </dl>
+      <p class="muted">A unidade <code>u</code> vale 1/80 da altura do logotipo. O logotipo tem no mínimo 40 px de largura. Abaixo disso, use o símbolo.</p>
+
+      <div class="logo-grid">
+        <figure><div class="tile t-dark"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Principal, escuro.</b> Névoa e Petróleo sobre Grafite.</figcaption></figure>
+        <figure><div class="tile t-light"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Principal, claro.</b> Tinta e Petróleo escuro sobre Papel.</figcaption></figure>
+        <figure><div class="tile t-dark-mono"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Uma cor, escuro.</b> Para fundos escuros com outras cores perto.</figcaption></figure>
+        <figure><div class="tile t-light-mono"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Uma cor, claro.</b> Para impressão em uma cor.</figcaption></figure>
+        <figure><div class="tile t-accent"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Sobre Petróleo.</b> Grafite sobre Petróleo. Só em peças de destaque.</figcaption></figure>
+      </div>
+
+      <div class="split">
+        <div class="head">
+          <h3>Símbolo</h3>
+          <p class="muted">O símbolo guarda só o caminho: os dois blocos ligados e o fio. Use no favicon, no ícone do app e no avatar. Ele se lê até 16 px, onde o logotipo inteiro vira um borrão.</p>
+        </div>
+        <div class="icons">
+          <div class="icon-wrap"><div class="icon" style="width:96px;height:96px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark"/></svg></div>96</div>
+          <div class="icon-wrap"><div class="icon" style="width:48px;height:48px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark"/></svg></div>48</div>
+          <div class="icon-wrap"><div class="icon" style="width:32px;height:32px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark"/></svg></div>32</div>
+          <div class="icon-wrap"><div class="icon" style="width:16px;height:16px;border-radius:3px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark"/></svg></div>16</div>
+          <div class="icon-wrap"><div class="icon light" style="width:48px;height:48px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8, claro"><use href="#mark"/></svg></div>claro</div>
+        </div>
+      </div>
+
+      <div class="head"><h3>Usos errados</h3></div>
+      <div class="dont-grid">
+        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-coral)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark"/></svg></div><figcaption>use as cores do n8n.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-limao)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark"/></svg></div><figcaption>use o verde-limão antigo nem outra cor neon.</figcaption></figure>
+        <figure class="dont"><div class="tile" style="background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark"/></svg></div><figcaption>ponha o Petróleo claro sobre Papel. O contraste é de 2,0:1.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" preserveAspectRatio="none" style="width:86%;height:40%" aria-hidden="true"><use href="#wordmark"/></svg></div><figcaption>estique nem comprima.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" aria-hidden="true"><g transform="translate(124 0) scale(-1 1)"><use href="#wordmark"/></g></svg></div><figcaption>espelhe: o fio sai sempre do bloco de cima.</figcaption></figure>
+      </div>
+    </section>
+
+    <!-- ===================== N8N ===================== -->
+    <section id="n8n" aria-labelledby="h-n8n">
+      <div class="head">
+        <p class="eyebrow">Relação com o n8n</p>
+        <h2 id="h-n8n">Inspiração, não parentesco</h2>
+      </div>
+      <div class="notice">
+        <p class="lead">O 8n8 não tem ligação com a n8n GmbH. n8n é marca registrada deles. O nome do 8n8 fica perto do n8n de propósito. Então, todo o resto precisa ficar longe.</p>
+        <ol class="rules">
+          <li>Nunca use o rosa-coral do n8n, o logo do n8n ou a forma dos nós do n8n.</li>
+          <li>Nunca escreva "n8n" para falar do 8n8. São dois produtos.</li>
+          <li>Cite o n8n só como a origem do modelo mental de nós e fios.</li>
+          <li>Ponha esta frase no README e no site: "O 8n8 não tem ligação com o n8n."</li>
+          <li>Antes de lançar em público, consulte um advogado sobre o registro do nome.</li>
+        </ol>
+        <p class="muted">Por que isso importa: os dois produtos são ferramentas de desenvolvedor com nós e fios. Na mesma categoria, nomes parecidos aumentam o risco de confusão. A identidade visual (grafite e verde-petróleo, blocos retos) é a principal defesa.</p>
+      </div>
+    </section>
+
+    <!-- ===================== CORES ===================== -->
+    <section id="cores" aria-labelledby="h-cores">
+      <div class="head">
+        <p class="eyebrow">Cores</p>
+        <h2 id="h-cores">Grafite, Papel e Petróleo</h2>
+      </div>
+      <p class="lead">A marca é sóbria: poucas cores e nenhum tom chamativo. O Petróleo é a única cor de destaque. Ele marca o que liga, o que está em foco e a ação principal.</p>
+
+      <div class="theme-row">
+        <h3>Tema escuro</h3>
+        <div class="swatches">
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-grafite); color: var(--c-nevoa)">--ground</div>
+            <h4>Grafite</h4>
+            <dl><dt>HEX</dt><dd>#161818</dd><dt>RGB</dt><dd>22 24 24</dd></dl>
+            <p>O fundo do canvas e das peças escuras.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-nevoa); color: var(--c-grafite)">--second</div>
+            <h4>Névoa</h4>
+            <dl><dt>HEX</dt><dd>#e9ebea</dd><dt>Grafite</dt><dd>14,7:1</dd></dl>
+            <p>Texto principal, nomes dos nós, cartão de sugestão.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-pedra); color: var(--c-grafite)">--accent</div>
+            <h4>Pedra</h4>
+            <dl><dt>HEX</dt><dd>#979d9b</dd><dt>Grafite</dt><dd>6,4:1</dd></dl>
+            <p>Rótulos, tags, assinaturas de função, breadcrumb.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-petroleo); color: var(--c-grafite)">--main</div>
+            <h4>Petróleo</h4>
+            <dl><dt>HEX</dt><dd>#3dbfa8</dd><dt>Grafite</dt><dd>7,8:1</dd></dl>
+            <p>Fios, portas, nó selecionado, linha atual, botão principal.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-row">
+        <h3>Tema claro</h3>
+        <div class="swatches">
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-papel); color: var(--c-tinta)">--ground</div>
+            <h4>Papel</h4>
+            <dl><dt>HEX</dt><dd>#f2f3f0</dd><dt>RGB</dt><dd>242 243 240</dd></dl>
+            <p>O fundo no tema claro, em documentos e impressos.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-tinta); color: var(--c-papel)">--second</div>
+            <h4>Tinta</h4>
+            <dl><dt>HEX</dt><dd>#12292a</dd><dt>Papel</dt><dd>13,7:1</dd></dl>
+            <p>Texto principal. Um preto puxado para o petróleo.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-pedra-escura); color: var(--c-papel)">--accent</div>
+            <h4>Pedra escura</h4>
+            <dl><dt>HEX</dt><dd>#5b6d6a</dd><dt>Papel</dt><dd>4,9:1</dd></dl>
+            <p>Rótulos e textos de apoio.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-petroleo-escuro); color: var(--c-papel)">--main</div>
+            <h4>Petróleo escuro</h4>
+            <dl><dt>HEX</dt><dd>#0f7a6b</dd><dt>Papel</dt><dd>4,7:1</dd></dl>
+            <p>O mesmo papel do Petróleo, escurecido para ler sobre Papel.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="head">
+        <h3>Proporção</h3>
+        <div class="ratio" role="img" aria-label="Proporção de uso no tema escuro: Grafite 75%, Névoa 12%, Pedra 8%, Petróleo 5%">
+          <div style="flex:75; background: var(--c-grafite); color: var(--c-pedra)">Grafite 75</div>
+          <div style="flex:12; background: var(--c-nevoa); color: var(--c-grafite)">Névoa 12</div>
+          <div style="flex:8; background: var(--c-pedra); color: var(--c-grafite)">8</div>
+          <div style="flex:5; background: var(--c-petroleo); color: var(--c-grafite)">5</div>
+        </div>
+        <p class="muted">Se o Petróleo passa de 5% de uma tela, ele perde o sentido de foco. O Petróleo claro nunca vai sobre Papel (2,0:1). No tema claro, use o Petróleo escuro.</p>
+      </div>
+
+      <div class="head">
+        <h3>Superfícies</h3>
+        <p class="muted">Cartões e bordas saem de misturas do fundo com o texto. Use estas misturas, não cinzas novos.</p>
+        <div class="derived">
+          <div><i style="background:#202323"></i><span>Cartão, escuro <small>#202323</small></span></div>
+          <div><i style="background:#363b3a"></i><span>Borda, escuro <small>#363b3a</small></span></div>
+          <div><i style="background:#ffffff"></i><span>Cartão, claro <small>#ffffff</small></span></div>
+          <div><i style="background:#d3d8d5"></i><span>Borda, claro <small>#d3d8d5</small></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TIPOGRAFIA ===================== -->
+    <section id="tipografia" aria-labelledby="h-tipo">
+      <div class="head">
+        <p class="eyebrow">Tipografia</p>
+        <h2 id="h-tipo">Três fontes, três papéis</h2>
+      </div>
+      <div class="faces">
+        <div class="face">
+          <div class="meta"><b>Archivo Black</b>Títulos de capítulo e do painel. Só em tamanhos grandes, nunca em texto corrido.</div>
+          <div class="sample s-display">Mapa do pedido</div>
+        </div>
+        <div class="face">
+          <div class="meta"><b>Space Grotesk</b>Interface e texto. Pesos 400, 500 e 700.</div>
+          <div class="sample s-sans">A função valida o pedido. <span class="w5">Se o pedido é válido,</span> <span class="w7">o fluxo segue.</span></div>
+        </div>
+        <div class="face">
+          <div class="meta"><b>DM Mono</b>Código, caminhos, breadcrumb, números de linha e contadores.</div>
+          <div class="sample s-mono">frete.py:44 · calcular_frete(peso) → valor</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Papel no app</th><th>Fonte</th><th>Tamanho*</th><th>Detalhe</th></tr></thead>
+          <tbody>
+            <tr><td>Nome do nó</td><td>Space Grotesk 700</td><td class="mono">27 px</td><td>Texto principal</td></tr>
+            <tr><td>Rótulo (eyebrow)</td><td>Space Grotesk 500</td><td class="mono">22 px</td><td>Caixa alta, espaço 0,18 em</td></tr>
+            <tr><td>Breadcrumb</td><td>DM Mono 400</td><td class="mono">22 px</td><td>Pedra; o último item no texto principal</td></tr>
+            <tr><td>Assinatura de função</td><td>DM Mono 400</td><td class="mono">20 px</td><td>Pedra</td></tr>
+            <tr><td>Tag do nó</td><td>Space Grotesk 500</td><td class="mono">16 px</td><td>Pedra; PASTA em Petróleo</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted">* Medidas no palco de 1920 × 1080 do vídeo de referência, como estão em <code>apps/web/src/styles.css</code>.</p>
+    </section>
+
+    <!-- ===================== COMPONENTES ===================== -->
+    <section id="componentes" aria-labelledby="h-comp">
+      <div class="head">
+        <p class="eyebrow">Componentes</p>
+        <h2 id="h-comp">Nós, fios e sugestões</h2>
+      </div>
+      <p class="lead">O canvas é Grafite com uma grade de pontos. Os nós são cartões. Os fios são traços em Petróleo que se desenham da saída para a entrada.</p>
+
+      <div class="scroll-x">
+        <div class="stage flow" role="img" aria-label="Exemplo de mapa: a pasta pedidos liga a frete.py e importa validar_pedido; frete.py, selecionado, liga a calcular_frete pelo ramo sim">
+          <svg class="wires" viewBox="0 0 760 350" aria-hidden="true">
+            <path class="wire" d="M224 92 H280"/>
+            <path class="wire imports" d="M224 92 C252 92 252 252 280 252"/>
+            <path class="wire" d="M480 92 C512 92 504 172 536 172"/>
+            <path class="wire" d="M480 252 C512 252 504 172 536 172" style="opacity:.45"/>
+            <circle class="port" cx="224" cy="92" r="6"/><circle class="port" cx="280" cy="92" r="6"/>
+            <circle class="port" cx="280" cy="252" r="6"/><circle class="port" cx="480" cy="92" r="6"/>
+            <circle class="port" cx="480" cy="252" r="6"/><circle class="port" cx="536" cy="172" r="6"/>
+          </svg>
+          <div class="node" style="left:24px; top:40px"><span class="ntag folder">Pasta</span><span class="nname">pedidos/</span><span class="nfn">3 arquivos</span></div>
+          <div class="node on" style="left:280px; top:40px"><span class="ntag">Arquivo</span><span class="nname">frete.py</span><span class="nfn">calcular_frete()</span><span class="badge">2</span></div>
+          <div class="node" style="left:280px; top:200px"><span class="ntag">Função</span><span class="nname">validar_pedido</span><span class="nfn">linhas 12–31</span></div>
+          <div class="node" style="left:536px; top:120px"><span class="ntag">Função</span><span class="nname">calcular_frete</span><span class="nfn">linhas 40–45</span></div>
+          <span class="branch yes" style="left:500px; top:104px">sim</span>
+          <span class="branch" style="left:500px; top:222px">não</span>
+          <span class="alert" style="left:24px; top:278px"><i></i>Trate o erro da API</span>
+        </div>
+      </div>
+
+      <ul class="legend">
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect x="2" y="2" width="40" height="18" rx="3" fill="#202323" stroke="#363b3a" stroke-width="2"/></svg><div><b>Nó</b><span>Cartão de 320 × 140 px, borda de 2 px, raio de 6 px.</span></div></li>
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect x="2" y="2" width="40" height="18" rx="3" fill="#202323" stroke="#3dbfa8" stroke-width="2"/></svg><div><b>Nó selecionado</b><span>A borda vira Petróleo. O resto continua igual.</span></div></li>
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><path d="M4 11 H40" stroke="#3dbfa8" stroke-width="3" stroke-linecap="round"/></svg><div><b>Fio cheio</b><span>Chama. Traço de 4 px com ponta redonda.</span></div></li>
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><path d="M4 11 H40" stroke="#3dbfa8" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 7"/></svg><div><b>Fio tracejado</b><span>Importa. Liga pastas e arquivos.</span></div></li>
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><circle cx="22" cy="11" r="6" fill="#3dbfa8"/></svg><div><b>Porta</b><span>Círculo de 16 px. A entrada fica à esquerda e a saída, à direita.</span></div></li>
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><circle cx="22" cy="11" r="8" fill="#3dbfa8"/><text x="22" y="15" font-size="11" font-weight="700" text-anchor="middle" fill="#161818" font-family="Space Grotesk, sans-serif">2</text></svg><div><b>Contador de passo</b><span>A ordem do nó no fluxo aberto.</span></div></li>
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect x="1" y="2" width="42" height="18" rx="3" fill="#e9ebea"/><circle cx="9" cy="11" r="3" fill="#161818"/><rect x="15" y="9" width="22" height="4" rx="1" fill="#161818"/></svg><div><b>Cartão de sugestão</b><span>Névoa com texto em Grafite. Começa pelo comando.</span></div></li>
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><text x="22" y="15" font-size="11" text-anchor="middle" fill="#3dbfa8" font-family="Space Grotesk, sans-serif">sim</text></svg><div><b>Rótulo de ramo</b><span>"sim" em Petróleo. Os outros ramos em Pedra.</span></div></li>
+      </ul>
+
+      <div class="stage panel-demo">
+        <div class="crumb" aria-label="Breadcrumb"><span>repositório</span><i>/</i><span>pedidos</span><i>/</i><span>frete.py</span><i>/</i><b>calcular_frete()</b></div>
+        <div class="dpanel">
+          <h4>calcular_frete</h4>
+          <span class="ey">O que faz · Português Técnico Simplificado</span>
+          <p class="sum">A função calcula o frete pelo peso. Se o peso passa de 30 kg, a função usa a tabela pesada.</p>
+          <div class="io">peso: float<i>→</i>valor: Decimal</div>
+          <div class="codeview" aria-label="Código de frete.py, linhas 40 a 45">
+            <div><s>40</s>def calcular_frete(peso):</div>
+            <div><s>41</s>    tabela = TABELA_LEVE</div>
+            <div><s>42</s>    if peso &gt; 30:</div>
+            <div><s>43</s>        tabela = TABELA_PESADA</div>
+            <div class="cur"><s>44</s>    resposta = requests.get(URL_FRETE)</div>
+            <div><s>45</s>    return tabela[peso] + resposta.json()["taxa"]</div>
+          </div>
+          <div class="sug"><b>Trate o erro da chamada HTTP.</b>Se a API falhar, <code>calcular_frete()</code> falha junto. <code>frete.py</code>, linha 44.</div>
+          <span class="rev">revisado</span>
+        </div>
+      </div>
+
+      <dl class="specs">
+        <div><dt>Raio</dt><dd>6 px</dd></div>
+        <div><dt>Borda</dt><dd>2 px</dd></div>
+        <div><dt>Grade do canvas</dt><dd>40 px</dd></div>
+        <div><dt>Entrada do nó</dt><dd>500 ms</dd></div>
+      </dl>
+      <p class="muted">Movimento: os nós entram com <code>ease-out</code> em 500 ms e os fios se desenham da saída para a entrada. Com "reduzir movimento" ligado, o nível aparece completo, sem animação.</p>
+    </section>
+
+    <!-- ===================== TOKENS ===================== -->
+    <section id="tokens" aria-labelledby="h-tokens">
+      <div class="head">
+        <p class="eyebrow">Tokens</p>
+        <h2 id="h-tokens">Para copiar</h2>
+      </div>
+      <p>Os nomes dos tokens são os mesmos de <code>apps/web/src/styles.css</code>. Os valores são os novos. O app ainda usa a paleta antiga (verde-limão) e não tem tema claro.</p>
+      <div class="code-block">
+        <button class="copy" type="button" id="copy-tokens">Copiar</button>
+<pre id="tokens-src">:root {
+  <span class="cm">/* marca, tema escuro */</span>
+  --ground: #161818;  <span class="cm">/* Grafite */</span>
+  --main: #3dbfa8;    <span class="cm">/* Petróleo */</span>
+  --second: #e9ebea;  <span class="cm">/* Névoa */</span>
+  --accent: #979d9b;  <span class="cm">/* Pedra */</span>
+
+  <span class="cm">/* superfícies */</span>
+  --card-bg: #202323;
+  --card-border: #363b3a;
+  --panel-bg: #1c1e1e;
+  --panel-border: #2f3433;
+  --code: color-mix(in srgb, var(--second) 82%, var(--ground));
+  --dim: #6b706f;
+
+  <span class="cm">/* fontes */</span>
+  --font-display: "Archivo Black", sans-serif;
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, monospace;
+}
+
+<span class="cm">/* tema claro */</span>
+:root[data-theme="light"] {
+  --ground: #f2f3f0;  <span class="cm">/* Papel */</span>
+  --main: #0f7a6b;    <span class="cm">/* Petróleo escuro */</span>
+  --second: #12292a;  <span class="cm">/* Tinta */</span>
+  --accent: #5b6d6a;  <span class="cm">/* Pedra escura */</span>
+  --card-bg: #ffffff;
+  --card-border: #d3d8d5;
+  --panel-bg: #f8f9f7;
+  --panel-border: #d3d8d5;
+  --dim: #8f9a98;
+}</pre>
+      </div>
+    </section>
+
+    <footer>
+      <span>8n8 · manual da marca · v0.2</span>
+      <span>O 8n8 não tem ligação com o n8n.</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.tree a'));
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  function mark(id) {
+    links.forEach(function (a) { a.removeAttribute('aria-current'); });
+    if (byId[id]) byId[id].setAttribute('aria-current', 'true');
+  }
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) mark(e.target.id); });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    Object.keys(byId).forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  }
+  mark('essencia');
+
+  var btn = document.getElementById('copy-tokens');
+  btn.addEventListener('click', function () {
+    var text = document.getElementById('tokens-src').textContent;
+    function done() { btn.textContent = 'Copiado'; setTimeout(function () { btn.textContent = 'Copiar'; }, 1600); }
+    function fallback() {
+      var r = document.createRange(); r.selectNodeContents(document.getElementById('tokens-src'));
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = 'Selecionado';
+    }
+    try {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } catch (e) { fallback(); }
+  });
+})();
+</script>
+</html>
