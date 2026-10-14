@@ -108,21 +108,21 @@ O plugin não conhece outra linguagem. Ele só declara dois tipos de dado neutro
 
 O pipeline já fala com o LLM por uma interface só (`LlmClient.complete`), e os testes já usam um cliente falso. Isso fica. O problema: o conhecimento do provedor e do modelo está espalhado em quatro lugares.
 
-- [ ] 10.1 O contrato `LlmClient` sai de `openrouter.ts` e vai para o `model`, como o `LanguagePlugin`. O `explain` passa a depender só do contrato, nunca de um provedor.
-- [ ] 10.2 Pacote `packages/llm` (`@code2n8n/llm`), com um arquivo por provedor e o mesmo contrato `LlmProvider` (`id`, `create(config)`):
+- [x] 10.1 O contrato `LlmClient` sai de `openrouter.ts` e vai para o `model`, como o `LanguagePlugin`. O `explain` passa a depender só do contrato, nunca de um provedor.
+- [x] 10.2 Pacote `packages/llm` (`@code2n8n/llm`), com um arquivo por provedor e o mesmo contrato `LlmProvider` (`id`, `create(config)`):
   - `openrouter.ts`: o cliente de hoje.
   - `openai-compatible.ts`: qualquer API compatível com a da OpenAI (OpenAI, Ollama, LM Studio), só com `baseURL` e chave. Para um projeto open source, permite rodar com um modelo local e de graça.
-- [ ] 10.3 Os ajustes por modelo saem do código e vão para uma tabela de perfis no `llm`:
+- [x] 10.3 Os ajustes por modelo saem do código e vão para uma tabela de perfis no `llm`:
   - hoje, `openrouter.ts` desliga o raciocínio e fixa a ordem de provedores para `deepseek/` com uma regex;
   - hoje, `review.ts:76` (`jsonMode`) decide o modo JSON pelo prefixo `google/`, dentro do pipeline.
   - O perfil diz: modo JSON, raciocínio, roteamento. O pipeline pergunta ao cliente e não conhece nenhum modelo.
-- [ ] 10.4 Configuração única. Hoje o `main.ts` lê `OPENROUTER_API_KEY` e `OPENROUTER_BASE_URL` duas vezes (`composeExplain` e `composeTitles`) e cria dois clientes. Passa a existir uma função `resolveLlmConfig(env)` no `llm`, que devolve provedor, chave, URL, modelo e modelo do revisor. O servidor cria um cliente só e o passa aos dois.
-- [ ] 10.5 Variável nova `CODE2N8N_LLM_PROVIDER` (padrão `openrouter`). As variáveis atuais continuam valendo, para não quebrar o `.env` de ninguém. Atualizar o `.env.example`.
-- [ ] 10.6 `DEFAULT_MODEL` vira o padrão do provedor `openrouter`, não do sistema. Cada provedor tem o seu padrão.
-- [ ] 10.7 Cache: o id do provedor entra na impressão digital. O mesmo nome de modelo em dois provedores pode dar respostas diferentes.
-- [ ] 10.8 Regra no dependency-cruiser: `explain` não importa `llm`, e `llm` importa só o `model`. Só o servidor junta os dois.
-- [ ] 10.9 Testes: cada provedor com `fetch` falso (o padrão de hoje em `openrouter.test.ts`), a tabela de perfis, e `resolveLlmConfig` com cada combinação de variáveis.
-- [ ] 10.10 Guia `docs/adicionar-provedor-llm.md`: o contrato, o perfil de modelo e um exemplo.
+- [x] 10.4 Configuração única. Hoje o `main.ts` lê `OPENROUTER_API_KEY` e `OPENROUTER_BASE_URL` duas vezes (`composeExplain` e `composeTitles`) e cria dois clientes. Passa a existir uma função `resolveLlmConfig(env)` no `llm`, que devolve provedor, chave, URL, modelo e modelo do revisor. O servidor cria um cliente só e o passa aos dois.
+- [x] 10.5 Variável nova `CODE2N8N_LLM_PROVIDER` (padrão `openrouter`). As variáveis atuais continuam valendo, para não quebrar o `.env` de ninguém. Atualizar o `.env.example`.
+- [x] 10.6 `DEFAULT_MODEL` vira o padrão do provedor `openrouter`, não do sistema. Cada provedor tem o seu padrão.
+- [x] 10.7 Cache: o id do provedor entra na impressão digital. O mesmo nome de modelo em dois provedores pode dar respostas diferentes.
+- [x] 10.8 Regra no dependency-cruiser: `explain` não importa `llm`, e `llm` importa só o `model`. Só o servidor junta os dois.
+- [x] 10.9 Testes: cada provedor com `fetch` falso (o padrão de hoje em `openrouter.test.ts`), a tabela de perfis, e `resolveLlmConfig` com cada combinação de variáveis.
+- [x] 10.10 Guia `docs/adicionar-provedor-llm.md`: o contrato, o perfil de modelo e um exemplo.
 
 ## Fora do escopo
 
