@@ -164,7 +164,8 @@ export function App() {
           <>
             <Breadcrumb
               graph={graph}
-              path={nav.path.map((o) => o.id)}
+              path={nav.path}
+              titles={new Map()}
               onGoTo={(index) => dispatch({ type: "goTo", index })}
             />
             <div className="canvas">

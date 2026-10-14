@@ -1034,11 +1034,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Trecho com caminho `[{id: fn:calcular_frete, via: …/s3}]` e título "Calcular frete" → "Fluxo principal › Calcular frete".
-- [ ] Sem título, a trilha usa o nome provisório do `via`.
-- [ ] Projeto: começa com o nome do projeto (PROJ-04).
-- [ ] O clique em cada item chama `onGoTo(i)`.
-- [ ] Gate passa.
+- [x] Trecho com caminho `[{id: fn:calcular_frete, via: …/s3}]` e título "Calcular frete" → "Fluxo principal › Calcular frete".
+- [x] Sem título, a trilha usa o nome provisório do `via`.
+- [x] Projeto: começa com o nome do projeto (PROJ-04).
+- [x] O clique em cada item chama `onGoTo(i)`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`

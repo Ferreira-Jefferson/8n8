@@ -160,7 +160,7 @@ describe("App", () => {
     expect(currentCanvas().graph).toEqual(graph);
   });
 
-  it("returns the canvas to the top level when Trecho is clicked after opening a node (CORE-15)", async () => {
+  it("returns the canvas to the top level when Fluxo principal is clicked after opening a node (CORE-15, VID-19)", async () => {
     // VID-23: opening a node also shows its panel, which asks for a summary.
     explainMock.mockResolvedValue({ status: "no-key" });
     graphMock.mockResolvedValue(graph);
@@ -168,7 +168,7 @@ describe("App", () => {
     await screen.findByTestId("canvas");
     act(() => currentCanvas().onOpen(fnNode));
     expect(currentCanvas().levelId).toBe("fn:calcular_frete");
-    fireEvent.click(screen.getByRole("button", { name: "Trecho" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fluxo principal" }));
     expect(currentCanvas().levelId).toBeNull();
   });
 
@@ -287,7 +287,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     ).toEqual(["grande.py — maior que 1 MB"]);
   });
 
-  it("replaces the folder map with a snippet map: Trecho is back and Arquivos ignorados is gone", async () => {
+  it("replaces the folder map with a snippet map: Fluxo principal is back and Arquivos ignorados is gone", async () => {
     projectMock.mockResolvedValue({
       ...loja,
       ignored: [{ path: "grande.py", reason: "too-large" }],
@@ -300,7 +300,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
       target: { value: source },
     });
     fireEvent.click(screen.getByRole("button", { name: "Gerar mapa" }));
-    await waitFor(() => expect(breadcrumbItems()).toEqual(["Trecho"]));
+    await waitFor(() => expect(breadcrumbItems()).toEqual(["Fluxo principal"]));
     expect(
       screen.queryByRole("region", { name: "Arquivos ignorados" }),
     ).toBeNull();
@@ -353,7 +353,7 @@ describe("App calls in a project (PROJ-04)", () => {
       "loja",
       "pedidos",
       "pedidos.py",
-      "processar_pedido",
+      "Processar pedido",
     ]);
     act(() =>
       currentCanvas().onOpen(
@@ -364,7 +364,7 @@ describe("App calls in a project (PROJ-04)", () => {
       "loja",
       "frete",
       "calculo.py",
-      "calcular_frete",
+      "Calcular frete",
     ]);
     expect(currentCanvas().levelId).toBe(
       "file:frete/calculo.py/fn:calcular_frete",
@@ -423,8 +423,8 @@ describe("App calls in a project (PROJ-04)", () => {
       sameFile.nodes.find((n) => n.id === id) as FlowNode;
     act(() => currentCanvas().onOpen(byId("file:a.py")));
     act(() => currentCanvas().onOpen(byId("file:a.py/fn:f")));
-    expect(breadcrumbItems()).toEqual(["p", "a.py", "f"]);
+    expect(breadcrumbItems()).toEqual(["p", "a.py", "F"]);
     act(() => currentCanvas().onOpen(byId("file:a.py/fn:f/s0")));
-    expect(breadcrumbItems()).toEqual(["p", "a.py", "f", "g"]);
+    expect(breadcrumbItems()).toEqual(["p", "a.py", "F", "G"]);
   });
 });
