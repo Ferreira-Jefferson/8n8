@@ -28,6 +28,7 @@ import type {
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { createApp, type ProjectRead } from "./app";
+import { type History, openHistory } from "./history";
 
 const DEFAULT_PORT = 4317;
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -107,6 +108,16 @@ export function listenOptions(port: number): {
   return { port, hostname: "127.0.0.1" };
 }
 
+/** The history is a convenience: when the file cannot open, the app runs without it. */
+function openHistoryOrWarn(path: string): History | undefined {
+  try {
+    return openHistory(path);
+  } catch (err) {
+    console.error("histórico: não abriu o banco", err);
+    return undefined;
+  }
+}
+
 async function main(): Promise<void> {
   try {
     process.loadEnvFile(join(repoRoot, ".env"));
@@ -130,6 +141,9 @@ async function main(): Promise<void> {
     explain: composeExplain(process.env, compose),
     titles: composeTitles(process.env, compose),
     readProject: composeReadProject(readSourceFolder, extractor),
+    history: openHistoryOrWarn(
+      join(process.env.CODE2N8N_CACHE_DIR || compose.cacheDir, "historico.db"),
+    ),
     port,
   });
   if (process.argv[2] === "start") {

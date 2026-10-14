@@ -5,6 +5,7 @@ import {
   type FlowNode,
   fileNodeOf,
   type Graph,
+  type HistoryEntry,
   type ProjectResponse,
   type TitleItem,
   type TitleRequest,
@@ -13,6 +14,7 @@ import {
 import { Hono } from "hono";
 import { z } from "zod";
 import { maskDocstring } from "./docstring";
+import type { History } from "./history";
 
 export type ProjectRead =
   | { kind: "ok"; root: string; response: ProjectResponse }
@@ -24,6 +26,8 @@ export interface AppDeps {
   titles: (req: TitleRequest) => Promise<TitlesResponse>;
   readProject: (path: string) => Promise<ProjectRead>;
   port: number;
+  /** Saved searches; absent in tests that do not need them. */
+  history?: History | undefined;
 }
 
 const projectBody = z.object({ path: z.string().min(1) });
@@ -112,6 +116,21 @@ function neighboursOf(
   };
 }
 
+/** Saves a map after the response is sent; a failing save is logged, never raised (best effort). */
+function saveLater(history: History | undefined, entry: HistoryEntry): void {
+  if (!history) return;
+  setImmediate(() => {
+    try {
+      history.save(entry);
+    } catch (err) {
+      console.error("histórico: não salvou", err);
+    }
+  });
+}
+
+const historyId = (raw: string): number | null =>
+  /^\d+$/.test(raw) ? Number(raw) : null;
+
 /** Local API. Refuses foreign Host headers (DNS rebinding, AD-007) and sets no CORS. */
 export function createApp(deps: AppDeps): Hono {
   const allowed = new Set([`127.0.0.1:${deps.port}`, `localhost:${deps.port}`]);
@@ -139,7 +158,15 @@ export function createApp(deps: AppDeps): Hono {
   app.post("/api/graph", async (c) => {
     const body = graphBody.safeParse(await c.req.json().catch(() => null));
     if (!body.success) return c.json({ error: "invalid body" }, 400);
-    return c.json({ graph: deps.extractor.extract(body.data.source) });
+    const graph = deps.extractor.extract(body.data.source);
+    if (!graph.empty) {
+      saveLater(deps.history, {
+        kind: "snippet",
+        source: body.data.source,
+        graph,
+      });
+    }
+    return c.json({ graph });
   });
 
   app.post("/api/project", async (c) => {
@@ -149,7 +176,35 @@ export function createApp(deps: AppDeps): Hono {
     if (read.kind === "not-found") {
       return c.json({ error: "not-found", path: body.data.path }, 404);
     }
+    if (!read.response.graph.empty) {
+      saveLater(deps.history, {
+        kind: "project",
+        root: read.root,
+        response: read.response,
+      });
+    }
     return c.json(read.response);
+  });
+
+  app.get("/api/history", (c) => {
+    if (!deps.history) return c.json({ items: [] });
+    return c.json({ items: deps.history.list() });
+  });
+
+  app.get("/api/history/:id", (c) => {
+    const id = historyId(c.req.param("id"));
+    if (id === null) return c.json({ error: "invalid id" }, 400);
+    const entry = deps.history?.get(id);
+    if (!entry) return c.json({ error: "not-found" }, 404);
+    deps.history?.touch(id);
+    return c.json({ entry });
+  });
+
+  app.delete("/api/history/:id", (c) => {
+    const id = historyId(c.req.param("id"));
+    if (id === null) return c.json({ error: "invalid id" }, 400);
+    if (!deps.history?.remove(id)) return c.json({ error: "not-found" }, 404);
+    return c.body(null, 204);
   });
 
   app.post("/api/explain", async (c) => {
