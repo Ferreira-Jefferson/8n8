@@ -183,6 +183,24 @@ function sequence(
     sequence(inner, id, id, ctx);
   };
 
+  /** `return`: a step of its own with no outgoing wire (VID-20). */
+  const returnStep = (statement: Node) => {
+    const node: Omit<FlowNode, "id" | "parentId"> = {
+      kind: "return",
+      label: statement.namedChildren[0]?.text ?? "",
+      range: lineRange(statement),
+      openable: false,
+    };
+    const resolved = resolveCall(statement, ctx.call);
+    if (resolved?.kind === "call") node.target = resolved.target;
+    if (resolved?.kind === "external") {
+      node.callee = resolved.callee;
+      node.category = resolved.category;
+    }
+    place(node);
+    pending = [];
+  };
+
   for (const statement of body) {
     if (IGNORED.has(statement.type)) continue;
     if (statement.type === "if_statement") {
@@ -193,6 +211,11 @@ function sequence(
     if (LOOPS.has(statement.type) || BLOCKS.has(statement.type)) {
       flush();
       opener(statement);
+      continue;
+    }
+    if (statement.type === "return_statement") {
+      flush();
+      returnStep(statement);
       continue;
     }
     const resolved = resolveCall(statement, ctx.call);

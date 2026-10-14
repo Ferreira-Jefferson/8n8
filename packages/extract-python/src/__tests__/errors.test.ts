@@ -65,7 +65,7 @@ describe("markSyntaxErrors (CORE-06)", () => {
     const line = lineOf(source, "y = 2");
     expect(node(marked, "fn:a/s0")).toMatchObject({
       kind: "code",
-      range: { start: 2, end: 4 },
+      range: { start: 2, end: 3 },
     });
     expect(marks(marked)).toEqual([["fn:a/s0", line]]);
     expect(node(marked, "fn:b")).toBeDefined();

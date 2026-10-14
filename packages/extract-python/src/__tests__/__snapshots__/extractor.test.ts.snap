@@ -53,8 +53,8 @@ exports[`createPythonExtractor > gives the same graph from two new extractors, m
     },
     {
       "id": "fn:calcular_frete/s2/b0/s0",
-      "kind": "code",
-      "label": "Código",
+      "kind": "return",
+      "label": "base + taxa * 2",
       "parentId": "fn:calcular_frete",
       "range": {
         "start": 9,
@@ -64,8 +64,8 @@ exports[`createPythonExtractor > gives the same graph from two new extractors, m
     },
     {
       "id": "fn:calcular_frete/s2/b1/s0",
-      "kind": "code",
-      "label": "Código",
+      "kind": "return",
+      "label": "base + taxa",
       "parentId": "fn:calcular_frete",
       "range": {
         "start": 11,
@@ -120,8 +120,8 @@ exports[`createPythonExtractor > gives the same graph from two new extractors, m
     },
     {
       "id": "fn:processar_pedido/s2",
-      "kind": "code",
-      "label": "Código",
+      "kind": "return",
+      "label": "total",
       "parentId": "fn:processar_pedido",
       "range": {
         "start": 18,

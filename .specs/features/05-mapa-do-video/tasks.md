@@ -285,15 +285,16 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um teste por forma de ligação: parâmetro simples, com padrão, com tipo, `*args`, `**kw` e de `lambda`; `=` simples e em tupla/lista; `+=`; anotação; `for`; `for` de compreensão; `with ... as`; `except ... as`; `import ... as`; `:=`; `def`; `class`; `global`; `nonlocal`.
-- [ ] Um nome só usado (`print(x)` sem ligar `x`) não entra no conjunto.
-- [ ] Um nome ligado numa função conta no arquivo todo (risco documentado no design).
-- [ ] Gate passa; a contagem do pacote não cai.
+- [x] Um teste por forma de ligação: parâmetro simples, com padrão, com tipo, `*args`, `**kw` e de `lambda`; `=` simples e em tupla/lista; `+=`; anotação; `for`; `for` de compreensão; `with ... as`; `except ... as`; `import ... as`; `:=`; `def`; `class`; `global`; `nonlocal`.
+- [x] Um nome só usado (`print(x)` sem ligar `x`) não entra no conjunto.
+- [x] Um nome ligado numa função conta no arquivo todo (risco documentado no design).
+- [x] Gate passa; a contagem do pacote não cai.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): collect the names bound in a file`
+**Status**: ✅ Complete (162 unit = 139 + 23)
 
 ---
 
@@ -310,17 +311,18 @@ T49 → T50
 
 **Done when**:
 
-- [ ] (a) `db.salvar`, `cursor.x`, `conn.x`, `connection.x` e `session.x` → `BANCO`. `dbx.salvar`, `DB.salvar` e `meu.db.salvar` não caem em (a).
-- [ ] (b) `enviar_email`, `sendEmail`, `notificar.EMAIL_cliente` e `email` → `EMAIL`. `emailer.enviar` não cai em (b), porque `email` está no primeiro segmento e não no último.
-- [ ] (a) vence (b): `db.enviar_email` → `BANCO`.
-- [ ] (c) `requests.get` → `HTTP` e `open` → `ARQUIVO`. (d) `validar_pedido` e `sum` → `EXTERNO`.
-- [ ] Os testes atuais de `classify` passam sem mudança.
-- [ ] Gate passa.
+- [x] (a) `db.salvar`, `cursor.x`, `conn.x`, `connection.x` e `session.x` → `BANCO`. `dbx.salvar`, `DB.salvar` e `meu.db.salvar` não caem em (a).
+- [x] (b) `enviar_email`, `sendEmail`, `notificar.EMAIL_cliente` e `email` → `EMAIL`. `emailer.enviar` não cai em (b), porque `email` está no primeiro segmento e não no último.
+- [x] (a) vence (b): `db.enviar_email` → `BANCO`.
+- [x] (c) `requests.get` → `HTTP` e `open` → `ARQUIVO`. (d) `validar_pedido` e `sum` → `EXTERNO`.
+- [x] Os testes atuais de `classify` passam sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): classify calls to names the snippet does not define`
+**Status**: ✅ Complete (180 unit = 162 + 18)
 
 ---
 
@@ -337,17 +339,18 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `validar_pedido(p)` → external `EXTERNO`; `db.salvar(p)` → `BANCO`; `enviar_email(x)` → `EMAIL`; `print(x)` e `len(x)` → `EXTERNO`. Nenhum desses nós gera fio `calls`.
-- [ ] `r = f()` seguido de `r.json()` → `null` (receptor ligado). `self.x()` sem método `x` → `null`.
-- [ ] Nome definido no trecho continua `call` (CORE-02). Nome importado continua com a tabela (CORE-12). PROJ-09 continua: o nome de projeto sem import vira `EXTERNO`, sem fio.
-- [ ] `foo().append(x)` continua `null` (receptor encadeado fora da tabela).
-- [ ] `project-calls.test.ts` passa sem mudança.
-- [ ] Gate passa.
+- [x] `validar_pedido(p)` → external `EXTERNO`; `db.salvar(p)` → `BANCO`; `enviar_email(x)` → `EMAIL`; `print(x)` e `len(x)` → `EXTERNO`. Nenhum desses nós gera fio `calls`.
+- [x] `r = f()` seguido de `r.json()` → `null` (receptor ligado). `self.x()` sem método `x` → `null`.
+- [x] Nome definido no trecho continua `call` (CORE-02). Nome importado continua com a tabela (CORE-12). PROJ-09 continua: o nome de projeto sem import vira `EXTERNO`, sem fio.
+- [x] `foo().append(x)` continua `null` (receptor encadeado fora da tabela).
+- [x] `project-calls.test.ts` passa sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): turn calls to undefined names into categorized steps`
+**Status**: ✅ Complete (191 unit = 180 + 11)
 
 ---
 
@@ -364,19 +367,20 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `def x(): a = 1; return a` → `s0` code (linha 2) e `s1` return (linha 3) com `label` `a`, `openable: false` e um fio `next:s0->s1`.
-- [ ] Nenhum fio sai do RETORNO: num `return` seguido de outro comando, o comando seguinte não recebe fio do RETORNO.
-- [ ] `if/else` com `return` nos dois ramos: os ramos têm um RETORNO cada, e a condição não deixa fio pendente para depois do `if`.
-- [ ] `if` sem `else` com `return` no ramo "sim": o "não" continua indo ao passo seguinte.
-- [ ] `return` dentro de laço: RETORNO filho do laço.
-- [ ] `return calcular(x)` (função do trecho) → RETORNO com `target`, e o grafo mantém `calls:<dono>->fn:calcular`. `return requests.get(u)` → RETORNO com `callee` e `category: "HTTP"`. `return` sozinho → `label` `""`.
-- [ ] Em `pedido_frete.py`, `fn:calcular_frete/s2/b0/s0` e `b1/s0` são `return` com os mesmos IDs de antes.
-- [ ] Gate passa.
+- [x] `def x(): a = 1; return a` → `s0` code (linha 2) e `s1` return (linha 3) com `label` `a`, `openable: false` e um fio `next:s0->s1`.
+- [x] Nenhum fio sai do RETORNO: num `return` seguido de outro comando, o comando seguinte não recebe fio do RETORNO.
+- [x] `if/else` com `return` nos dois ramos: os ramos têm um RETORNO cada, e a condição não deixa fio pendente para depois do `if`.
+- [x] `if` sem `else` com `return` no ramo "sim": o "não" continua indo ao passo seguinte.
+- [x] `return` dentro de laço: RETORNO filho do laço.
+- [x] `return calcular(x)` (função do trecho) → RETORNO com `target`, e o grafo mantém `calls:<dono>->fn:calcular`. `return requests.get(u)` → RETORNO com `callee` e `category: "HTTP"`. `return` sozinho → `label` `""`.
+- [x] Em `pedido_frete.py`, `fn:calcular_frete/s2/b0/s0` e `b1/s0` são `return` com os mesmos IDs de antes.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): add a return step with no outgoing wire`
+**Status**: ✅ Complete (200 unit = 191 + 9; errors.test e project.test também mudam pela VID-20)
 
 ---
 
@@ -392,16 +396,17 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O teste confere a lista de nós em pré-ordem com `id`, `kind`, `range`, `category`, `callee` e `target` de cada linha da tabela.
-- [ ] O teste confere `openable` de cada nó contra a regra da VID-24.
-- [ ] O teste confere os fios: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); os fios de `calcular_frete` (2 `next`, "sim" e "não"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhum fio sai de um nó `return`.
-- [ ] O teste confere que extrair duas vezes dá o mesmo grafo (CORE-04).
-- [ ] O gate Build A passa (fecha a fase).
+- [x] O teste confere a lista de nós em pré-ordem com `id`, `kind`, `range`, `category`, `callee` e `target` de cada linha da tabela.
+- [x] O teste confere `openable` de cada nó contra a regra da VID-24.
+- [x] O teste confere os fios: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); os fios de `calcular_frete` (2 `next`, "sim" e "não"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhum fio sai de um nó `return`.
+- [x] O teste confere que extrair duas vezes dá o mesmo grafo (CORE-04).
+- [x] O gate Build A passa (fecha a fase).
 
 **Tests**: unit
 **Gate**: build · Build A
 
 **Commit**: `test(extract-python): check the graph of the video snippet`
+**Status**: ✅ Complete (206 unit = 200 + 6; Build A verde: model 34, extract-python 206)
 
 ---
 
