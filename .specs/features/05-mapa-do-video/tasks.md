@@ -792,10 +792,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `layoutRows([[a,b],[c]])` → a(0,0), b(380,0), c(0,220).
-- [ ] Os passos do `calcular_frete` do vídeo: `b0/s0` tem `y` menor que `b1/s0` (VID-21). O mesmo vale com `elif` (b0 < b1 < b2) e num `if` aninhado.
-- [ ] Os testes atuais de `layoutLR` passam (o determinismo e a ordem da esquerda para a direita).
-- [ ] Gate passa.
+- [x] `layoutRows([[a,b],[c]])` → a(0,0), b(380,0), c(0,220).
+- [x] Os passos do `calcular_frete` do vídeo: `b0/s0` tem `y` menor que `b1/s0` (VID-21). O mesmo vale com `elif` (b0 < b1 < b2) e num `if` aninhado.
+- [x] Os testes atuais de `layoutLR` passam (o determinismo e a ordem da esquerda para a direita).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
