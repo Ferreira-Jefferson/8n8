@@ -15,8 +15,14 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App";
-import { fetchExplanation, fetchGraph, fetchProject } from "../api";
+import {
+  fetchExplanation,
+  fetchGraph,
+  fetchProject,
+  fetchTitles,
+} from "../api";
 import { lojaGraph } from "../flow/__tests__/loja-graph";
+import { videoGraph } from "../flow/__tests__/video-graph";
 import type { FlowCanvasProps } from "../flow/FlowCanvas";
 import { projectLevel } from "../flow/project-level";
 import { pedidoFreteGraph } from "../panel/__tests__/pedido-frete-graph";
@@ -25,6 +31,7 @@ vi.mock("../api", () => ({
   fetchGraph: vi.fn(),
   fetchExplanation: vi.fn(),
   fetchProject: vi.fn(),
+  fetchTitles: vi.fn(),
 }));
 
 let canvas: FlowCanvasProps | null = null;
@@ -38,12 +45,15 @@ vi.mock("../flow/FlowCanvas", () => ({
 const graphMock = vi.mocked(fetchGraph);
 const explainMock = vi.mocked(fetchExplanation);
 const projectMock = vi.mocked(fetchProject);
+const titlesMock = vi.mocked(fetchTitles);
 
 beforeEach(() => {
   canvas = null;
   graphMock.mockReset();
   explainMock.mockReset();
   projectMock.mockReset();
+  titlesMock.mockReset();
+  titlesMock.mockResolvedValue([]);
 });
 afterEach(cleanup);
 
@@ -296,6 +306,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     render(<App />);
     openFolder();
     await screen.findByRole("region", { name: "Arquivos ignorados" });
+    fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
     fireEvent.change(screen.getByLabelText("Trecho Python"), {
       target: { value: source },
     });
@@ -430,5 +441,225 @@ describe("App calls in a project (PROJ-04)", () => {
     expect(breadcrumbItems()).toEqual(["p", "a.py", "F"]);
     act(() => currentCanvas().onOpen(byId("file:a.py/fn:f/s0")));
     expect(breadcrumbItems()).toEqual(["p", "a.py", "F", "G"]);
+  });
+});
+
+const videoSource = [
+  "import json",
+  "",
+  "import requests",
+  "",
+  "",
+  "def processar_pedido(req):",
+  "    pedido = json.loads(req.body)",
+  "    validar_pedido(pedido)",
+  '    cliente = db.buscar_cliente(pedido["cliente_id"])',
+  "    frete = calcular_frete(pedido, cliente.cep)",
+  "    total = soma_itens(pedido) + frete",
+  "    db.salvar(pedido, total)",
+  "    enviar_email(cliente.email, total)",
+  '    return {"ok": True, "total": total}',
+  "",
+  "",
+  "def calcular_frete(pedido, cep):",
+  '    uf = requests.get("https://viacep.com.br/ws/" + cep).json()["uf"]',
+  '    peso = sum(item["peso"] for item in pedido["itens"])',
+  "    if peso > 30:",
+  "        return TABELA_PESADA[uf]",
+  "    else:",
+  "        return TABELA_PADRAO[uf]",
+  "",
+].join("\n");
+const P = "fn:processar_pedido";
+const videoNode = (id: string) =>
+  videoGraph.nodes.find((n) => n.id === id) as FlowNode;
+
+async function mapVideo() {
+  graphMock.mockResolvedValue(videoGraph);
+  explainMock.mockResolvedValue({ status: "no-key" });
+  await generate(videoSource);
+  await screen.findByTestId("canvas");
+}
+
+describe("App, editor and map (VID-08, VID-09)", () => {
+  it("shows the editor without a map: trecho.py, the code area, Gerar mapa, the folder field and Abrir pasta", () => {
+    render(<App />);
+    const editor = screen.getByRole("region", { name: "Editor" });
+    expect(within(editor).getByText("trecho.py")).toBeTruthy();
+    expect(within(editor).getByLabelText("Trecho Python").tagName).toBe(
+      "TEXTAREA",
+    );
+    expect(screen.getByRole("button", { name: "Gerar mapa" }).className).toBe(
+      "btn",
+    );
+    expect(screen.getByLabelText("Caminho da pasta")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Abrir pasta" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
+  });
+
+  it("swaps the editor for the map, and Novo código goes back with the text kept", async () => {
+    await mapVideo();
+    expect(screen.queryByLabelText("Trecho Python")).toBeNull();
+    expect(screen.queryByRole("region", { name: "Editor" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
+    expect(screen.queryByTestId("canvas")).toBeNull();
+    expect(
+      (screen.getByLabelText("Trecho Python") as HTMLTextAreaElement).value,
+    ).toBe(videoSource);
+  });
+
+  it("keeps the folder field when Novo código goes back to the editor", async () => {
+    projectMock.mockResolvedValue(loja);
+    render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
+    expect(
+      (screen.getByLabelText("Caminho da pasta") as HTMLInputElement).value,
+    ).toBe(lojaRoot);
+  });
+
+  it("stays in the editor for an empty graph (CORE-07)", async () => {
+    graphMock.mockResolvedValue({ ...graph, empty: true, nodes: [] });
+    await generate("# só comentário");
+    await screen.findByText("Nenhuma função ou instrução encontrada.");
+    expect(screen.getByLabelText("Trecho Python")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
+  });
+
+  it("shows the failure alert in the editor", async () => {
+    graphMock.mockRejectedValue(new Error("HTTP 400"));
+    await generate();
+    await screen.findByRole("alert");
+    expect(screen.getByLabelText("Trecho Python")).toBeTruthy();
+  });
+
+  it("starts a new map at the top level with nothing selected", async () => {
+    await mapVideo();
+    act(() => currentCanvas().onOpen(videoNode(P)));
+    expect(currentCanvas().levelId).toBe(P);
+    fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
+    fireEvent.click(screen.getByRole("button", { name: "Gerar mapa" }));
+    await waitFor(() => expect(currentCanvas().levelId).toBeNull());
+    expect(currentCanvas().selected).toBeNull();
+    expect(currentCanvas().depth).toBe(0);
+  });
+});
+
+describe("App, Voltar and Esc (VID-19, VID-23, VID-27)", () => {
+  const voltar = () =>
+    screen.getByRole("button", { name: "Voltar" }) as HTMLButtonElement;
+
+  it("disables Voltar on the top level, and Esc does nothing there", async () => {
+    await mapVideo();
+    expect(voltar().disabled).toBe(true);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(currentCanvas().levelId).toBeNull();
+    expect(currentCanvas().selected).toBeNull();
+  });
+
+  it("opens with one click, and Voltar goes back with the opened card selected and focused", async () => {
+    await mapVideo();
+    act(() => currentCanvas().onOpen(videoNode(P)));
+    act(() => currentCanvas().onOpen(videoNode(`${P}/s3`)));
+    expect(currentCanvas().levelId).toBe("fn:calcular_frete");
+    expect(breadcrumbItems()).toEqual([
+      "Fluxo principal",
+      "Processar pedido",
+      "Calcular frete",
+    ]);
+    expect(voltar().disabled).toBe(false);
+    fireEvent.click(voltar());
+    expect(currentCanvas().levelId).toBe(P);
+    expect(currentCanvas().selected).toBe(`${P}/s3`);
+    expect(currentCanvas().focusId).toBe(`${P}/s3`);
+  });
+
+  it("goes back one level with Esc", async () => {
+    await mapVideo();
+    act(() => currentCanvas().onOpen(videoNode(P)));
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(currentCanvas().levelId).toBeNull();
+    expect(currentCanvas().selected).toBe(P);
+    expect(currentCanvas().focusId).toBe(P);
+  });
+
+  it("does not navigate on Esc inside an editable field", async () => {
+    await mapVideo();
+    act(() => currentCanvas().onOpen(videoNode(P)));
+    const field = document.createElement("textarea");
+    document.body.append(field);
+    fireEvent.keyDown(field, { key: "Escape" });
+    field.remove();
+    expect(currentCanvas().levelId).toBe(P);
+  });
+
+  it("shows the panel of the called function when a call card is open (VID-23, VID-24)", async () => {
+    await mapVideo();
+    act(() => currentCanvas().onOpen(videoNode(P)));
+    act(() => currentCanvas().onOpen(videoNode(`${P}/s3`)));
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Calcular frete" }),
+    ).toBeTruthy();
+    expect(explainMock).toHaveBeenLastCalledWith(
+      { source: videoSource },
+      "fn:calcular_frete",
+    );
+  });
+});
+
+describe("App, titles, code lines and suggestion cards (VID-14, VID-33)", () => {
+  it("asks for the titles of the visible level and passes them to the canvas and the breadcrumb", async () => {
+    titlesMock.mockResolvedValue([
+      { nodeId: P, text: "Recebe o pedido", lines: [6], fromCache: false },
+    ]);
+    await mapVideo();
+    expect(titlesMock).toHaveBeenCalledTimes(1);
+    expect(titlesMock).toHaveBeenCalledWith(
+      { source: videoSource },
+      projectLevel(videoGraph, null).nodes.map((n) => n.id),
+    );
+    await waitFor(() =>
+      expect(currentCanvas().titles.get(P)).toBe("Recebe o pedido"),
+    );
+    act(() => currentCanvas().onOpen(videoNode(P)));
+    expect(breadcrumbItems()).toEqual(["Fluxo principal", "Recebe o pedido"]);
+  });
+
+  it("gives the canvas the code line read from the snippet", async () => {
+    await mapVideo();
+    expect(currentCanvas().codeLineOf(videoNode(`${P}/s7`))).toBe(
+      'return {"ok": True, "total": to…',
+    );
+  });
+
+  it("selects the explained node and marks the suggestion's line on a card click, again on a second click", async () => {
+    await mapVideo();
+    explainMock.mockResolvedValue({
+      status: "ok",
+      explanation: {
+        summary: "Processa o pedido.",
+        sentences: [{ id: "s1", text: "Processa o pedido.", lines: [6] }],
+        inputs: [],
+        outputs: [],
+        suggestions: [],
+      },
+      fromCache: false,
+      review: "full",
+    });
+    act(() => currentCanvas().onSuggestion(P, 13));
+    expect(currentCanvas().selected).toBe(P);
+    const marked = () =>
+      [...document.querySelectorAll("[aria-current]")].map((el) =>
+        el.getAttribute("data-line"),
+      );
+    await waitFor(() => expect(marked()).toEqual(["13"]));
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Processar pedido" }),
+    ).toBeTruthy();
+    fireEvent.click(await screen.findByRole("button", { name: "L6" }));
+    expect(marked()).toEqual(["6"]);
+    act(() => currentCanvas().onSuggestion(P, 13));
+    expect(marked()).toEqual(["13"]);
   });
 });

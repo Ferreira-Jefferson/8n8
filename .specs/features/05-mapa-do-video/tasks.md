@@ -1139,13 +1139,13 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Sem mapa, o editor mostra "trecho.py", o `textarea`, "Gerar mapa", o campo de pasta e "Abrir pasta" (VID-08).
-- [ ] Depois de "Gerar mapa" com grafo não vazio, o editor some, e "Novo código" aparece. "Novo código" volta com o texto mantido (VID-09).
-- [ ] Um grafo vazio fica no editor com a mensagem (CORE-07). Uma falha mostra o alerta no editor.
-- [ ] "Voltar" fica desabilitado no topo. Depois de abrir, "Voltar" e Esc voltam um nível. Esc dentro do `textarea` não navega.
-- [ ] Clicar num cartão de sugestão seleciona o nó explicado e passa `mark` com a linha.
-- [ ] Os testes de projeto (PROJ-04, 05, 06) mantêm a intenção.
-- [ ] O gate Build C passa (fecha a trilha C).
+- [x] Sem mapa, o editor mostra "trecho.py", o `textarea`, "Gerar mapa", o campo de pasta e "Abrir pasta" (VID-08).
+- [x] Depois de "Gerar mapa" com grafo não vazio, o editor some, e "Novo código" aparece. "Novo código" volta com o texto mantido (VID-09).
+- [x] Um grafo vazio fica no editor com a mensagem (CORE-07). Uma falha mostra o alerta no editor.
+- [x] "Voltar" fica desabilitado no topo. Depois de abrir, "Voltar" e Esc voltam um nível. Esc dentro do `textarea` não navega.
+- [x] Clicar num cartão de sugestão seleciona o nó explicado e passa `mark` com a linha.
+- [x] Os testes de projeto (PROJ-04, 05, 06) mantêm a intenção.
+- [x] O gate Build C passa (fecha a trilha C).
 
 **Tests**: unit
 **Gate**: build · Build C
