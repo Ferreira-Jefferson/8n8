@@ -40,7 +40,7 @@ export function tagOf(node: FlowNode, isTrigger: boolean): string {
     case "file":
       return "ARQUIVO";
     case "module":
-      return "GATILHO";
+      return "CÓDIGO SOLTO";
   }
 }
 

@@ -45,7 +45,7 @@ describe("VID-04: tagOf", () => {
     expect(tagOf(node("return", "a"), false)).toBe("RETORNO");
     expect(tagOf(node("folder", "frete"), false)).toBe("PASTA");
     expect(tagOf(node("file", "a.py"), false)).toBe("ARQUIVO");
-    expect(tagOf(node("module", "Módulo"), false)).toBe("GATILHO");
+    expect(tagOf(node("module", "Módulo"), false)).toBe("CÓDIGO SOLTO");
   });
 
   it("names an external node by its category, with DISCO and E-MAIL", () => {

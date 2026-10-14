@@ -28,6 +28,9 @@ import { isOpenable } from "./card";
 import { wireLanes } from "./lanes";
 import {
   type Bands,
+  HUB_FAN,
+  hubGridColumns,
+  layoutHubGrid,
   layoutLR,
   layoutRows,
   type Position,
@@ -70,6 +73,8 @@ export interface FlowCanvasProps {
   onOpen: (node: FlowNode) => void;
   /** A click on a suggestion card (VID-33). */
   onSuggestion: (explainedId: NodeId, line: number) => void;
+  /** The round button on the hub of an inner level. */
+  onBack: () => void;
 }
 
 const nodeTypes = { step: StepNode };
@@ -208,7 +213,7 @@ function KeepInView({
   return null;
 }
 
-/** Wires drawn by `WireEdge`; `imports` wires get the dashed `edge-imports` class (VID-05, PROJ-03). */
+/** Wires drawn by `WireEdge`; `imports` wires get the dashed `edge-imports` class (VID-05, PROJ-03), `contains` wires the faint `edge-contains` one. */
 export function toFlowEdges(
   edges: FlowEdge[],
   times: Schedule,
@@ -229,7 +234,9 @@ export function toFlowEdges(
       ...(lanes.has(e.id) ? { lane: lanes.get(e.id) } : {}),
     },
     ...(e.label === undefined ? {} : { label: e.label }),
-    ...(e.kind === "imports" ? { className: "edge-imports" } : {}),
+    ...(e.kind === "imports" || e.kind === "contains"
+      ? { className: `edge-${e.kind}` }
+      : {}),
   }));
 }
 
@@ -247,6 +254,7 @@ export function FlowCanvas({
   onSelect,
   onOpen,
   onSuggestion,
+  onBack,
 }: FlowCanvasProps) {
   const box = useRef<HTMLDivElement>(null);
   const timer = useRef<number | undefined>(undefined);
@@ -320,11 +328,14 @@ export function FlowCanvas({
     const sizes = cardSizes.current.sizes;
     const reduced = prefersReducedMotion();
     const level = projectLevel(graph, levelId);
+    const hub = level.hub;
+    const drawn = hub ? [hub.node, ...level.nodes] : level.nodes;
     // A level too long for the canvas wraps into more rows, so every card
     // shows. The entrance order keeps the unwrapped layout (VID-10, 23).
     const { width, height } = size;
     let order: Map<NodeId, Position>;
     let bands: Bands;
+    let gridLanes: Map<string, number> | null = null;
     if (level.rows) {
       const rows = level.rows;
       order = layoutRows(rows);
@@ -336,8 +347,25 @@ export function FlowCanvas({
         height,
       );
       bands = rowBands(wrapRows(rows, n ?? longest));
+    } else if (
+      hub &&
+      level.nodes.length > HUB_FAN &&
+      level.edges.every((e) => e.kind === "contains")
+    ) {
+      // Many children and no wire between them: a grid, not one tall column.
+      const cols = hubGridColumns(level.nodes.length, width, height);
+      const grid = layoutHubGrid(
+        hub.node.id,
+        level.nodes.map((n) => n.id),
+        cols,
+      );
+      order = grid.positions;
+      bands = { positions: grid.positions, band: new Map(), gapAbove: [0] };
+      gridLanes = new Map(
+        [...grid.lanes].map(([id, x]) => [`contains:${hub.node.id}->${id}`, x]),
+      );
     } else {
-      order = layoutLR(level.nodes, level.edges, levelId);
+      order = layoutLR(drawn, level.edges, levelId);
       const lr = order;
       const columns = new Set([...lr.values()].map((p) => p.x)).size;
       const n = chooseWrap(
@@ -352,7 +380,7 @@ export function FlowCanvas({
     for (const [id, p] of levelMoved ?? []) {
       if (positions.has(id)) positions.set(id, p);
     }
-    const times = schedule(level.nodes, level.edges, order, reduced);
+    const times = schedule(drawn, level.edges, order, reduced);
     const turnY = new Map<string, number>();
     for (const e of level.edges) {
       const from = bands.band.get(e.source) ?? 0;
@@ -360,16 +388,20 @@ export function FlowCanvas({
       const y = bands.gapAbove[to];
       if (to > from && y !== undefined && !levelMoved) turnY.set(e.id, y);
     }
-    const lanes = wireLanes(level.edges, positions, new Set(turnY.keys()));
+    const lanes =
+      gridLanes && !levelMoved
+        ? gridLanes
+        : wireLanes(level.edges, positions, new Set(turnY.keys()));
     const cards = suggestionCards(level, explanations, levelId, panelNodeOf);
     const lit = highlighted(cards);
     const sources = new Set(level.edges.map((e) => e.source));
     const targets = new Set(level.edges.map((e) => e.target));
-    const nodes: StepFlowNode[] = level.nodes.map((n) => {
+    const nodes: StepFlowNode[] = drawn.map((n) => {
       const measured = sizes.get(n.id);
       return {
         id: n.id,
         type: "step",
+        ...(n === hub?.node ? { className: "hub-node" } : {}),
         position: positions.get(n.id) ?? { x: 0, y: 0 },
         ...(measured ? { measured } : {}),
         data: {
@@ -383,6 +415,9 @@ export function FlowCanvas({
           selected: n.id === selected || lit.has(n.id),
           dimmed: cards.length > 0 && !lit.has(n.id) && n.id !== selected,
           suggestionCount: suggestionCounts.get(n.id),
+          ...(n === hub?.node
+            ? { isHub: true, onBack: levelId === null ? undefined : onBack }
+            : {}),
         },
       };
     });
@@ -404,6 +439,7 @@ export function FlowCanvas({
     suggestionCounts,
     size,
     levelMoved,
+    onBack,
   ]);
 
   function open(node: FlowNode, card: Element) {
@@ -442,6 +478,11 @@ export function FlowCanvas({
   function click(event: MouseEvent, n: StepFlowNode) {
     if (expanding) return;
     const node = n.data.node;
+    // The hub is already open: a click shows its panel, when it has one.
+    if (n.data.isHub) {
+      if (levelId !== null) onSelect(node.id);
+      return;
+    }
     if (isOpenable(node)) open(node, event.currentTarget);
     else onSelect(node.id);
   }

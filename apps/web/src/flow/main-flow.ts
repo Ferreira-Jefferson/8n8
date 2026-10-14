@@ -46,6 +46,11 @@ function commandsWithCall(graph: Graph, owner: NodeId): FlowNode[] {
   });
 }
 
+/** Whether the loose code `owner` runs a call: a module without one only sets names. */
+export function hasCommands(graph: Graph, owner: NodeId): boolean {
+  return commandsWithCall(graph, owner).length > 0;
+}
+
 /**
  * The rows of the main flow of a snippet (VID-10, 11, 12): one per entry
  * (rule 3), plus one per top node with a syntax error that is no entry

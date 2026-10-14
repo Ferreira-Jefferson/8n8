@@ -411,6 +411,43 @@ body {
   opacity: 0.55;
 }
 
+/* The open node, drawn as the parent of its level. */
+.node.hub {
+  border-style: dashed;
+}
+
+.node .hub-back {
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--main);
+  background: var(--ground);
+  color: var(--main);
+  cursor: pointer;
+}
+
+.node .hub-back:hover {
+  background: var(--main);
+  color: var(--ground);
+}
+
+.node .hub-back svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .node .step-error {
   position: absolute;
   left: 0;
@@ -482,8 +519,21 @@ body {
   animation: none;
 }
 
+/* A hub wire only says "contains": dotted and faint, never mistaken for a flow. */
+.edge-contains .wire {
+  stroke: var(--dim);
+  stroke-width: 2;
+  stroke-dasharray: 0.004 0.012;
+  animation: none;
+}
+
 .pulse {
   fill: var(--main);
+}
+
+/* A hub wire carries no data: no pulse. */
+.edge-contains .pulse {
+  display: none;
 }
 
 .branch-label {

@@ -20,11 +20,15 @@ export interface StepNodeData extends Record<string, unknown> {
   /** Another node has a suggestion card, and this one is not selected (VID-32). */
   dimmed: boolean;
   suggestionCount?: number | undefined;
+  /** The open node, drawn as the parent of its level: it never opens again. */
+  isHub?: boolean;
+  /** Only on the hub of an inner level: the round button that goes back one level. */
+  onBack?: (() => void) | undefined;
 }
 
 export type StepFlowNode = Node<StepNodeData, "step">;
 
-/** One card: tag, title with › when it opens, and a code line (VID-03, 04, 15, 22, 26, 32; CORE-06, 23). */
+/** One card: tag, title with › when it opens, and a code line (VID-03, 04, 15, 22, 26, 32; CORE-06, 23). The hub of an inner level carries the back button. */
 export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
   const { node, suggestionCount } = data;
   const tag = tagOf(node, data.isTrigger);
@@ -33,7 +37,9 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
     "node",
     data.selected ? "on" : "",
     data.dimmed ? "dim" : "",
+    data.isHub ? "hub" : "",
   ].filter(Boolean);
+  const { onBack } = data;
   return (
     <div
       className={classes.join(" ")}
@@ -47,10 +53,27 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
         className="port port-in"
         style={{ visibility: data.hasIn ? "visible" : "hidden" }}
       />
+      {onBack && (
+        <button
+          type="button"
+          className="hub-back nodrag nopan"
+          aria-label="Nível anterior"
+          title="Voltar"
+          onClick={(e) => {
+            e.stopPropagation();
+            onBack();
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 14 4 9l5-5" />
+            <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+          </svg>
+        </button>
+      )}
       <span className="tag">{tag}</span>
       <b className="name" title={name}>
         {name}
-        {isOpenable(node) && (
+        {isOpenable(node) && !data.isHub && (
           <span className="open-mark" aria-hidden="true">
             ›
           </span>

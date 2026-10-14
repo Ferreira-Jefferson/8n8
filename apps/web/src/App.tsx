@@ -221,14 +221,23 @@ export function App() {
 
   const graph = mapped ? graphOf(mapped) : null;
   const levelId = nav.path.at(-1)?.id ?? null;
-  const levelNodes = useMemo(
-    () => (graph && !graph.empty ? projectLevel(graph, levelId).nodes : []),
+  const level = useMemo(
+    () => (graph && !graph.empty ? projectLevel(graph, levelId) : null),
     [graph, levelId],
+  );
+  const levelNodes = level?.nodes ?? [];
+  // The hub of an inner level is a node of the graph: it gets a title too.
+  const titled = useMemo(
+    () =>
+      level?.hub?.inGraph
+        ? [level.hub.node, ...level.nodes]
+        : (level?.nodes ?? []),
+    [level],
   );
   const titles = useTitles(
     mapped ? originOf(mapped) : null,
     mapVersion,
-    levelNodes,
+    titled,
   );
   const cardCode = useCallback(
     (n: FlowNode) => codeLineOf(n, mapped ? panelInput(mapped, n).source : ""),
@@ -367,6 +376,7 @@ export function App() {
             setMark((m) => ({ line, nonce: (m?.nonce ?? 0) + 1 }));
             dispatch({ type: "select", id });
           }}
+          onBack={back}
         />
       </div>
       {historyOpen && (

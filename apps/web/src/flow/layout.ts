@@ -220,3 +220,56 @@ export function orderBranches(
   }
   return out;
 }
+
+/** Over this many children and no wire but the hub's, a level lays out as a grid. */
+export const HUB_FAN = 4;
+
+/** The left x of grid column `c`: the hub's column comes first. */
+const gridX = (c: number) => (c + 1) * (NODE_WIDTH + NODE_GAP);
+/** The top y of grid row `r`: the grid starts below the hub. */
+const gridY = (r: number) => (r + 1) * (NODE_HEIGHT + NODE_GAP);
+
+/**
+ * The hub at the top left and its `leaves` below it, in code order down each
+ * of `cols` columns, like an org chart. Each leaf's wire runs on its column's
+ * lane, in the gap left of the column, above every card it passes.
+ */
+export function layoutHubGrid(
+  hubId: NodeId,
+  leaves: NodeId[],
+  cols: number,
+): { positions: Map<NodeId, Position>; lanes: Map<NodeId, number> } {
+  const n = Math.max(1, Math.min(Math.floor(cols), leaves.length));
+  const rows = Math.ceil(leaves.length / n);
+  const positions = new Map<NodeId, Position>([[hubId, { x: 0, y: 0 }]]);
+  const lanes = new Map<NodeId, number>();
+  leaves.forEach((id, i) => {
+    const c = Math.floor(i / rows);
+    positions.set(id, { x: gridX(c), y: gridY(i % rows) });
+    lanes.set(id, gridX(c) - NODE_GAP / 2);
+  });
+  return { positions, lanes };
+}
+
+/** The column count that shows the grid of `count` leaves biggest in a `width` × `height` canvas. */
+export function hubGridColumns(
+  count: number,
+  width: number,
+  height: number,
+): number {
+  if (width <= 0 || height <= 0) return Math.ceil(Math.sqrt(count));
+  let best = 1;
+  let bestZoom = 0;
+  for (let cols = 1; cols <= count; cols++) {
+    const rows = Math.ceil(count / cols);
+    const zoom = Math.min(
+      width / (gridX(cols - 1) + NODE_WIDTH),
+      height / (gridY(rows - 1) + NODE_HEIGHT),
+    );
+    if (zoom > bestZoom) {
+      best = cols;
+      bestZoom = zoom;
+    }
+  }
+  return best;
+}

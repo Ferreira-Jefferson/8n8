@@ -1,7 +1,7 @@
 import type { FlowNode, NodeKind } from "@code2n8n/model";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ReactFlowProvider } from "@xyflow/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { StepNode, type StepNodeData } from "../StepNode";
 
 afterEach(cleanup);
@@ -230,4 +230,27 @@ describe("StepNode, folder and file nodes (PROJ-02)", () => {
       expect(others).not.toContain(own);
     },
   );
+});
+
+describe("the hub card", () => {
+  const file = node({
+    id: "file:app/acesso.py",
+    kind: "file",
+    label: "acesso.py",
+    path: "app/acesso.py",
+  });
+
+  it("has a round back button that calls onBack and no › mark", () => {
+    const onBack = vi.fn();
+    const { container } = renderStep(file, { isHub: true, onBack });
+    expect(container.querySelector(".open-mark")).toBeNull();
+    expect(card(container).classList.contains("hub")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Nível anterior" }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("has no back button without onBack (the top level)", () => {
+    renderStep(file, { isHub: true });
+    expect(screen.queryByRole("button", { name: "Nível anterior" })).toBeNull();
+  });
 });

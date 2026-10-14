@@ -19,6 +19,8 @@ import {
 import { codeLineOf } from "../card";
 import { FlowCanvas, type FlowCanvasProps, toFlowEdges } from "../FlowCanvas";
 import type { Schedule } from "../motion";
+import { ROOT_HUB } from "../project-level";
+import { lojaGraph } from "./loja-graph";
 import { videoGraph } from "./video-graph";
 
 const P = "fn:processar_pedido";
@@ -197,6 +199,7 @@ function props(overrides: Partial<FlowCanvasProps> = {}): FlowCanvasProps {
     onSelect: vi.fn(),
     onOpen: vi.fn(),
     onSuggestion: vi.fn(),
+    onBack: vi.fn(),
     ...overrides,
   };
 }
@@ -393,7 +396,8 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
   it("draws the wires of the level with the wire edge (VID-05)", async () => {
     const { container } = render(<FlowCanvas {...props({ levelId: C })} />);
     await waitFor(() =>
-      expect(container.querySelectorAll("path.wire")).toHaveLength(4),
+      // Four wires of the code and the hub's contains wire.
+      expect(container.querySelectorAll("path.wire")).toHaveLength(5),
     );
     expect(
       [...container.querySelectorAll(".branch-label")].map(
@@ -493,5 +497,40 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
       screen.getByRole("button", { name: "Envie o e-mail fora da requisição" }),
     );
     expect(p.onSuggestion).toHaveBeenCalledWith(P, 13);
+  });
+});
+
+describe("FlowCanvas, the hub of a level", () => {
+  it("draws the open node as a hub wired with edge-contains, with a back button", async () => {
+    const p = props({ levelId: C, depth: 1 });
+    const { container } = render(<FlowCanvas {...p} />);
+    expect(card(container, C).classList.contains("hub")).toBe(true);
+    await waitFor(() =>
+      expect(
+        container.querySelectorAll(".react-flow__edge.edge-contains"),
+      ).toHaveLength(1),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Nível anterior" }));
+    expect(p.onBack).toHaveBeenCalledTimes(1);
+    expect(p.onOpen).not.toHaveBeenCalled();
+    expect(p.onSelect).not.toHaveBeenCalled();
+  });
+
+  it("a click on the hub selects it and never opens it again", () => {
+    const p = props({ levelId: C, depth: 1 });
+    const { container } = render(<FlowCanvas {...p} />);
+    fireEvent.click(nodeEl(container, C));
+    expect(p.onSelect).toHaveBeenCalledWith(C);
+    expect(p.onOpen).not.toHaveBeenCalled();
+    expect(canvasEl(container).getAttribute("data-phase")).toBe("open");
+  });
+
+  it("the top of a project has a hub with no back button", () => {
+    const p = props({ graph: lojaGraph });
+    const { container } = render(<FlowCanvas {...p} />);
+    expect(card(container, ROOT_HUB).classList.contains("hub")).toBe(true);
+    expect(screen.queryByRole("button", { name: "Nível anterior" })).toBeNull();
+    fireEvent.click(nodeEl(container, ROOT_HUB));
+    expect(p.onSelect).not.toHaveBeenCalled();
   });
 });
