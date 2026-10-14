@@ -71,11 +71,7 @@ describe("graphProblems", () => {
   });
 
   it("finds a child that comes after its parent's subtree has closed", () => {
-    const g = graph([
-      node("a"),
-      node("b"),
-      node("a/late", { parentId: "a" }),
-    ]);
+    const g = graph([node("a"), node("b"), node("a/late", { parentId: "a" })]);
 
     expect(graphProblems(g, SOURCE)).toEqual([
       "node a/late is not in pre-order",
@@ -84,7 +80,10 @@ describe("graphProblems", () => {
 
   it("finds lines that are not 1-based or not whole numbers", () => {
     expect(
-      graphProblems(graph([node("a", { range: { start: 0, end: 1 } })]), SOURCE),
+      graphProblems(
+        graph([node("a", { range: { start: 0, end: 1 } })]),
+        SOURCE,
+      ),
     ).toContain("node a has lines 0-1, not 1-based");
     expect(
       graphProblems(
@@ -102,10 +101,16 @@ describe("graphProblems", () => {
 
   it("finds lines that end before they start or past the source", () => {
     expect(
-      graphProblems(graph([node("a", { range: { start: 3, end: 2 } })]), SOURCE),
+      graphProblems(
+        graph([node("a", { range: { start: 3, end: 2 } })]),
+        SOURCE,
+      ),
     ).toContain("node a has lines 3-2, outside 1-3");
     expect(
-      graphProblems(graph([node("a", { range: { start: 1, end: 4 } })]), SOURCE),
+      graphProblems(
+        graph([node("a", { range: { start: 1, end: 4 } })]),
+        SOURCE,
+      ),
     ).toContain("node a has lines 1-4, outside 1-3");
   });
 
@@ -173,9 +178,7 @@ describe("analysisProblems", () => {
           target: "file:b/c.x",
         },
       ],
-      offers: [
-        { channel: "name", key: "f", nodeId: "file:a.x/fn:f", line: 1 },
-      ],
+      offers: [{ channel: "name", key: "f", nodeId: "file:a.x/fn:f", line: 1 }],
       requests: [{ channel: "name", key: "g", nodeId: "file:a.x", line: 2 }],
     });
 

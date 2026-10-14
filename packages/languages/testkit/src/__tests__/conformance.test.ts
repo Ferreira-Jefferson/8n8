@@ -45,14 +45,19 @@ const mini: LanguagePlugin = {
     const g = graphOf("snippet", source);
     return {
       ...g,
-      nodes: g.nodes
-        .slice(1)
-        .map((n) => ({ ...n, id: n.id.replace("file:snippet/", ""), parentId: null })),
+      nodes: g.nodes.slice(1).map((n) => ({
+        ...n,
+        id: n.id.replace("file:snippet/", ""),
+        parentId: null,
+      })),
       empty: g.nodes.length === 1,
     };
   },
   analyze: (files) => ({
-    files: files.map((f) => ({ path: f.path, graph: graphOf(f.path, f.source) })),
+    files: files.map((f) => ({
+      path: f.path,
+      graph: graphOf(f.path, f.source),
+    })),
     imports: [],
     offers: [],
     requests: [],
