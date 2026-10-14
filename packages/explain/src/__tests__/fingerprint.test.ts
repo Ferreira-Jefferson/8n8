@@ -111,3 +111,22 @@ describe("diffReasons (CACHE-03, CACHE-04)", () => {
     ]);
   });
 });
+
+describe("fingerprintOf with a docstring", () => {
+  it("changes when only the docstring text changes", () => {
+    const base = {
+      code: "def f():\n# docstring omitida",
+      calls: [],
+      calledBy: [],
+    };
+    const d = {
+      model: "m",
+      reviewModel: "r",
+      prompt: { version: "p" },
+      reviewer: { version: "v" },
+    };
+    const a = fingerprintOf({ ...base, docstring: { text: "a", line: 2 } }, d);
+    const b = fingerprintOf({ ...base, docstring: { text: "b", line: 2 } }, d);
+    expect(a.code).not.toBe(b.code);
+  });
+});

@@ -46,11 +46,19 @@ export function neighbourKey(calls: string[], calledBy: string[]): string {
 }
 
 export function fingerprintOf(
-  req: Pick<ExplainRequest, "code" | "calls" | "calledBy">,
+  req: Pick<ExplainRequest, "code" | "calls" | "calledBy"> & {
+    docstring?: ExplainRequest["docstring"] | undefined;
+  },
   deps: FingerprintDeps,
 ): Fingerprint {
   return {
-    code: sha256(normalizeCode(req.code)),
+    // The code is masked, so the docstring joins the hash: editing it must invalidate.
+    code: sha256(
+      req.docstring
+        ? `${normalizeCode(req.code)}
+${normalizeCode(req.docstring.text)}`
+        : normalizeCode(req.code),
+    ),
     neighbours: neighbourKey(req.calls, req.calledBy),
     model: deps.model,
     reviewModel: deps.reviewModel,

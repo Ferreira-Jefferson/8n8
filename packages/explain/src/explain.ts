@@ -94,7 +94,10 @@ export async function explainNode(
   const code = normalizeCode(req.code);
   const calls = sorted(req.calls);
   const calledBy = sorted(req.calledBy);
-  const fp = fingerprintOf({ code, calls, calledBy }, { ...deps, prompt });
+  const fp = fingerprintOf(
+    { code, calls, calledBy, docstring: req.docstring },
+    { ...deps, prompt },
+  );
 
   const prev = await cache.get(req.nodeId);
   if (prev && diffReasons(prev.fingerprint, fp).length === 0) {

@@ -49,6 +49,19 @@ const okReply: ExplainResponse = {
 };
 
 describe("POST /api/explain", () => {
+  it("masks the docstring and sends its text apart", async () => {
+    const { received, post } = setup(okReply);
+    const source = 'def f():\n    """Doc."""\n    return 1\n';
+    await post({ source, nodeId: "fn:f" });
+    expect(received[0]?.code).toBe(
+      "def f():\n# docstring omitida\n    return 1",
+    );
+    expect(received[0]?.docstring).toEqual({
+      text: '    """Doc."""',
+      line: 2,
+    });
+  });
+
   it("builds the request from the server graph (CORE-17)", async () => {
     const { received, post } = setup(okReply);
     await post({ source: videoFixture, nodeId: "fn:calcular_frete" });

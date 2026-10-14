@@ -6,13 +6,13 @@ import {
   fileNodeOf,
   type Graph,
   type ProjectResponse,
-  sliceLines,
   type TitleItem,
   type TitleRequest,
   type TitlesResponse,
 } from "@code2n8n/model";
 import { Hono } from "hono";
 import { z } from "zod";
+import { maskDocstring } from "./docstring";
 
 export type ProjectRead =
   | { kind: "ok"; root: string; response: ProjectResponse }
@@ -41,7 +41,8 @@ const titlesBody = z.object({ source: z.string(), nodeIds });
 /** The graph a request talks about, re-extracted on the server (AD-015). */
 interface Origin {
   graph: Graph;
-  codeOf: (node: FlowNode) => string;
+  /** The code of `node`, with its docstring masked when it has one. */
+  codeOf: (node: FlowNode) => Pick<ExplainRequest, "code" | "docstring">;
   /** The name of `node` as seen from `home`. */
   nameOf: (node: FlowNode, home: FlowNode) => string;
   /** `<POSIX root>|` in a project, empty in a snippet. */
@@ -57,7 +58,8 @@ async function loadOrigin(
     const { source } = body;
     return {
       graph: deps.extractor.extract(source),
-      codeOf: (node) => sliceLines(source, node.range),
+      codeOf: (node) =>
+        maskDocstring(node.range, node.docstring, source.split(/\r?\n/)),
       nameOf: (node) => node.label,
       idPrefix: "",
     };
@@ -72,7 +74,11 @@ async function loadOrigin(
     codeOf: (node) => {
       const path = filePath(node);
       const file = response.files.find((f) => f.path === path);
-      return sliceLines(file?.source ?? "", node.range);
+      return maskDocstring(
+        node.range,
+        node.docstring,
+        (file?.source ?? "").split(/\r?\n/),
+      );
     },
     // A neighbour from another file is named `<path>:<label>`.
     nameOf: (node, home) =>
@@ -172,7 +178,7 @@ export function createApp(deps: AppDeps): Hono {
       nodeId: `${idPrefix}${node.id}`,
       nodeName: node.label,
       nodeKind: node.kind,
-      code: codeOf(node),
+      ...codeOf(node),
       range: node.range,
       ...neighboursOf(graph, node, (other) => nameOf(other, node)),
     };
@@ -209,7 +215,7 @@ export function createApp(deps: AppDeps): Hono {
           cacheKey: `${idPrefix}${node.id}`,
           kind: node.kind,
           name: node.label,
-          code: codeOf(node),
+          code: codeOf(node).code,
           range: node.range,
           ...neighboursOf(graph, node, (other) => nameOf(other, node)),
         },
