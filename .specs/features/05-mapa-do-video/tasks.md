@@ -1192,13 +1192,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `snapshotPathTemplate` é `{testDir}/__baselines__/{platform}/{arg}{ext}`. Os padrões são `animations: "disabled"`, `caret: "hide"` e `maxDiffPixelRatio: 0.002`.
-- [ ] Os quatro servidores sobem como antes (`pnpm exec playwright test --list` lista os testes sem erro).
+- [x] `snapshotPathTemplate` é `{testDir}/__baselines__/{platform}/{arg}{ext}`. Os padrões são `animations: "disabled"`, `caret: "hide"` e `maxDiffPixelRatio: 0.002`.
+- [x] Os quatro servidores sobem como antes (`pnpm exec playwright test --list` lista os testes sem erro).
 
 **Tests**: e2e (regressão)
 **Gate**: e2e · `pnpm exec playwright test --list`
 
 **Commit**: `test(e2e): configure screenshot baselines`
+**Status**: ✅ Complete
 
 ---
 

@@ -14,6 +14,15 @@ export default defineConfig({
   workers: 1,
   forbidOnly: !!process.env.CI,
   reporter: "list",
+  // Screenshot baselines are committed under e2e/__baselines__/<platform>/ (D3).
+  snapshotPathTemplate: "{testDir}/__baselines__/{platform}/{arg}{ext}",
+  expect: {
+    toHaveScreenshot: {
+      animations: "disabled",
+      caret: "hide",
+      maxDiffPixelRatio: 0.002,
+    },
+  },
   use: {
     baseURL: URL,
     trace: "retain-on-failure",
