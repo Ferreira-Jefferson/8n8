@@ -1373,7 +1373,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 - [x] VID-14: no código do vídeo, um pedido `title` com os 8 nós e um `title-review` acontecem depois de "Gerar mapa", e os cartões mostram "Pedido recebido", "Calcular frete", "Salvar no banco" e "Enviar e-mail". Abrir "Calcular frete" faz mais um pedido `title` com os 5 nós. "Registrar a mensagem no log do sistema" (7 palavras) não aparece, e o cartão mostra "Registrar log".
 - [x] VID-15: no 4317 (sem chave), os cartões mostram "Processar pedido", "Calcular frete", "Salvar" e "Enviar email". Com `def falha_titulo`, o cartão mostra "Falha titulo" e o mapa continua.
 - [x] VID-16: "Aplicar desconto no total" não aparece, e o cartão mostra "Aplicar desconto".
-- [x] VID-17: gerar o mapa de novo faz 0 pedidos `title`. O arquivo em `.cache/e2e-real/titles/` tem os 6 componentes da impressão digital. Mudar o código de `enviar_email` gera um pedido `title` só com esse nó. Desvio: o pedido traz esse nó e o GATILHO `processar_pedido`, porque o código do GATILHO (linhas 6 a 14) contém a linha 13 e, pela VID-17, a impressão digital dele também muda. Os outros 6 nós vêm do cache.
+- [x] VID-17: gerar o mapa de novo faz 0 pedidos `title`. O arquivo em `.cache/e2e-real/titles/` tem os 6 componentes da impressão digital. Mudar o código de `enviar_email` (linha 13) gera um pedido `title` com esse nó e o GATILHO `processar_pedido`: o código do GATILHO (linhas 6 a 14) contém a linha 13 e, pela VID-17, a impressão digital dele também muda. Os outros 6 nós vêm do cache.
 - [x] Gate passa.
 
 **Tests**: e2e

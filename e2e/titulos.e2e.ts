@@ -177,9 +177,9 @@ test.describe("Títulos", () => {
     const calls = titleCalls(await fakeLog());
     expect(calls).toHaveLength(1);
     const asked = blocks(calls[0] as FakeCall);
-    // SPEC_DEVIATION: tasks.md T45 says the request holds only the e-mail node.
-    // Reason: the entry's code (lines 6-14) holds the changed line 13, so by
-    // VID-17 its fingerprint changes too. The other 6 nodes come from the cache.
+    // The e-mail node and the entry: the entry's code (lines 6-14) holds the
+    // changed line 13, and by VID-17 a title's fingerprint holds the node's
+    // own code, as a summary's does. The other 6 nodes come from the cache.
     expect(asked.map((b) => /Nome: (\S+)/.exec(b)?.[1])).toEqual([
       "processar_pedido",
       "enviar_email",
