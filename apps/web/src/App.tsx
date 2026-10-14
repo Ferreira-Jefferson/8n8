@@ -3,6 +3,7 @@ import {
   type FlowNode,
   fileNodeOf,
   type Graph,
+  type HistoryEntry,
   type NodeId,
   type ProjectResponse,
 } from "@code2n8n/model";
@@ -24,6 +25,8 @@ import { codeLineOf } from "./flow/card";
 import { FlowCanvas } from "./flow/FlowCanvas";
 import { projectLevel } from "./flow/project-level";
 import { useTitles } from "./flow/use-titles";
+import { HistoryButton } from "./history/HistoryButton";
+import { HistoryDrawer } from "./history/HistoryDrawer";
 import { Breadcrumb } from "./nav/Breadcrumb";
 import {
   ancestry,
@@ -125,6 +128,7 @@ export function App() {
   const [mark, setMark] = useState<{ line: number; nonce: number }>();
   const [focusId, setFocusId] = useState<NodeId | null>(null);
   const [panelWidth, setPanelWidth] = useState(savedPanelWidth);
+  const [historyOpen, setHistoryOpen] = useState(false);
   // Explanations already fetched in this map: re-opening a node asks no more.
   const explainCache = useRef(new Map<NodeId, ExplainResult>());
 
@@ -171,6 +175,14 @@ export function App() {
     } catch {
       fail(null);
     }
+  }
+
+  /** A saved map opens as a fresh one would, with no call to the parser. */
+  function openEntry(entry: HistoryEntry) {
+    setFailed(false);
+    setNotFound(null);
+    setHistoryOpen(false);
+    show(entry);
   }
 
   function newCode() {
@@ -245,6 +257,10 @@ export function App() {
             />
           </section>
         </div>
+        <HistoryButton
+          open={historyOpen}
+          onToggle={() => setHistoryOpen((o) => !o)}
+        />
         <div className="editor-actions">
           <button type="button" className="btn" onClick={generate}>
             Gerar mapa
@@ -261,6 +277,12 @@ export function App() {
             Abrir pasta
           </button>
         </div>
+        {historyOpen && (
+          <HistoryDrawer
+            onClose={() => setHistoryOpen(false)}
+            onOpenEntry={openEntry}
+          />
+        )}
         {failed && <p role="alert">Não foi possível gerar o mapa.</p>}
         {notFound !== null && (
           <p role="alert">{`Pasta não encontrada: ${notFound}`}</p>
@@ -312,6 +334,10 @@ export function App() {
         <button type="button" className="btn-ghost new-code" onClick={newCode}>
           Novo código
         </button>
+        <HistoryButton
+          open={historyOpen}
+          onToggle={() => setHistoryOpen((o) => !o)}
+        />
         {mapped.kind === "project" && (
           <IgnoredFiles ignored={mapped.response.ignored} />
         )}
@@ -343,6 +369,12 @@ export function App() {
           }}
         />
       </div>
+      {historyOpen && (
+        <HistoryDrawer
+          onClose={() => setHistoryOpen(false)}
+          onOpenEntry={openEntry}
+        />
+      )}
       {panelNode && (
         <PanelResizer
           width={panelWidth}

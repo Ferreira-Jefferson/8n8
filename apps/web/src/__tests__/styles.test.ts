@@ -105,3 +105,19 @@ describe("styles: branch labels (VID-21)", () => {
     );
   });
 });
+
+describe("styles: history button", () => {
+  const right = (selector: string) =>
+    Number(rule(selector).match(/right: (\d+)px;/)?.[1]);
+
+  it("sits at the far right, with Novo código just left of it and the breadcrumb clear of both", () => {
+    expect(right(".history-btn")).toBe(24);
+    expect(rule(".history-btn")).toContain("top: 24px;");
+    expect(right(".map-area > .new-code")).toBeGreaterThan(
+      right(".history-btn"),
+    );
+    expect(right(".breadcrumb")).toBeGreaterThan(
+      right(".map-area > .new-code"),
+    );
+  });
+});

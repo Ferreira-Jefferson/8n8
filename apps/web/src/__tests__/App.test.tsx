@@ -18,6 +18,8 @@ import { App } from "../App";
 import {
   fetchExplanation,
   fetchGraph,
+  fetchHistory,
+  fetchHistoryEntry,
   fetchProject,
   fetchTitles,
 } from "../api";
@@ -32,6 +34,9 @@ vi.mock("../api", () => ({
   fetchExplanation: vi.fn(),
   fetchProject: vi.fn(),
   fetchTitles: vi.fn(),
+  fetchHistory: vi.fn(),
+  fetchHistoryEntry: vi.fn(),
+  deleteHistory: vi.fn(),
 }));
 
 let canvas: FlowCanvasProps | null = null;
@@ -46,6 +51,8 @@ const graphMock = vi.mocked(fetchGraph);
 const explainMock = vi.mocked(fetchExplanation);
 const projectMock = vi.mocked(fetchProject);
 const titlesMock = vi.mocked(fetchTitles);
+const historyMock = vi.mocked(fetchHistory);
+const historyEntryMock = vi.mocked(fetchHistoryEntry);
 
 beforeEach(() => {
   canvas = null;
@@ -53,6 +60,8 @@ beforeEach(() => {
   explainMock.mockReset();
   projectMock.mockReset();
   titlesMock.mockReset();
+  historyMock.mockReset();
+  historyEntryMock.mockReset();
   titlesMock.mockResolvedValue([]);
 });
 afterEach(cleanup);
@@ -743,5 +752,56 @@ describe("App, explanations kept per map", () => {
     await waitFor(() => expect(asked(`${P}/s2`)).toBe(1));
     act(() => currentCanvas().onSelect(`${P}/s1`));
     await waitFor(() => expect(asked(`${P}/s1`)).toBe(2));
+  });
+});
+
+describe("App: history", () => {
+  const item = {
+    id: 9,
+    kind: "snippet" as const,
+    title: "def calcular_frete(peso):",
+    createdAt: 0,
+    openedAt: Date.now(),
+    openCount: 1,
+    lines: 2,
+    bytes: 40,
+    files: 1,
+    nodes: 2,
+    edges: 1,
+  };
+
+  it("opens a saved snippet as a fresh map, without asking the parser", async () => {
+    historyMock.mockResolvedValue([item]);
+    historyEntryMock.mockResolvedValue({ kind: "snippet", source, graph });
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Histórico" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: /^def calcular_frete/ }),
+    );
+    await waitFor(() => expect(breadcrumbItems()).toEqual(["Fluxo principal"]));
+    expect(historyEntryMock).toHaveBeenCalledWith(9);
+    expect(currentCanvas().graph).toEqual(graph);
+    expect(graphMock).not.toHaveBeenCalled();
+    expect(projectMock).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("complementary", { name: "Histórico" }),
+    ).toBeNull();
+  });
+
+  it("opens a saved project, and the hamburger stays on the map", async () => {
+    historyMock.mockResolvedValue([
+      { ...item, kind: "project", title: "loja" },
+    ]);
+    historyEntryMock.mockResolvedValue({
+      kind: "project",
+      root: "C:/codigo/loja",
+      response: { ...loja, ignored: [{ path: "g.py", reason: "too-large" }] },
+    });
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Histórico" }));
+    fireEvent.click(await screen.findByRole("button", { name: /^loja/ }));
+    await screen.findByRole("region", { name: "Arquivos ignorados" });
+    expect(projectMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Histórico" })).toBeTruthy();
   });
 });

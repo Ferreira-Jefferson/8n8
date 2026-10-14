@@ -1,6 +1,8 @@
 import type {
   ExplainResponse,
   Graph,
+  HistoryEntry,
+  HistoryItem,
   NodeTitle,
   ProjectResponse,
   TitlesResponse,
@@ -76,4 +78,27 @@ export async function fetchTitles(
   } catch {
     return [];
   }
+}
+
+/** The saved searches, most recently opened first. */
+export async function fetchHistory(): Promise<HistoryItem[]> {
+  const res = await fetch("/api/history");
+  if (!res.ok) throw new Error(`Falha ao ler o histórico (HTTP ${res.status})`);
+  const body = (await res.json()) as { items: HistoryItem[] };
+  return body.items;
+}
+
+/** One saved map, whole: opening it asks no parser. */
+export async function fetchHistoryEntry(id: number): Promise<HistoryEntry> {
+  const res = await fetch(`/api/history/${id}`);
+  if (!res.ok)
+    throw new Error(`Falha ao abrir a pesquisa (HTTP ${res.status})`);
+  const body = (await res.json()) as { entry: HistoryEntry };
+  return body.entry;
+}
+
+export async function deleteHistory(id: number): Promise<void> {
+  const res = await fetch(`/api/history/${id}`, { method: "DELETE" });
+  if (!res.ok)
+    throw new Error(`Falha ao apagar a pesquisa (HTTP ${res.status})`);
 }

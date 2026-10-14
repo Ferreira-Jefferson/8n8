@@ -212,9 +212,21 @@ body {
   z-index: 10;
 }
 
-.map-area > .new-code {
+.history-btn {
   position: absolute;
   right: 24px;
+  top: 24px;
+  z-index: 10;
+  box-sizing: border-box;
+  width: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.map-area > .new-code {
+  position: absolute;
+  right: 96px;
   top: 24px;
   z-index: 10;
 }
@@ -225,7 +237,7 @@ body {
   position: absolute;
   left: 160px;
   top: 34px;
-  right: 240px;
+  right: 320px;
   z-index: 10;
   display: flex;
   align-items: baseline;
@@ -670,4 +682,120 @@ body {
     animation: none;
     transition: none;
   }
+}
+
+/* ---- History drawer ---- */
+
+.history-drawer {
+  position: fixed;
+  top: 88px;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  box-sizing: border-box;
+  width: min(460px, 100vw);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--panel-bg);
+  border-left: 2px solid var(--panel-border);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+}
+
+.history-drawer input {
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 2px solid var(--panel-border);
+  background: transparent;
+  color: var(--second);
+  font: 400 20px var(--font-sans);
+}
+
+.history-drawer p {
+  margin: 0;
+  color: var(--accent);
+  font: 400 18px var(--font-sans);
+}
+
+.history-drawer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-drawer li {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.history-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 2px solid var(--panel-border);
+  background: transparent;
+  color: var(--second);
+  text-align: left;
+  cursor: pointer;
+}
+
+.history-open:hover,
+.history-open:focus-visible {
+  border-color: var(--accent);
+}
+
+.history-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 500 20px var(--font-mono);
+}
+
+.history-meta {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  color: var(--accent);
+  font: 400 16px var(--font-sans);
+}
+
+.history-tag {
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+.history-tag[data-tag="PASTA"] {
+  color: var(--main);
+}
+
+.history-sizes {
+  color: var(--accent);
+  font: 400 16px var(--font-sans);
+}
+
+.history-delete {
+  padding: 0 14px;
+  border-radius: 6px;
+  border: 2px solid var(--panel-border);
+  background: transparent;
+  color: var(--accent);
+  font: 500 24px var(--font-sans);
+  cursor: pointer;
+}
+
+.history-delete:hover,
+.history-delete:focus-visible {
+  color: var(--second);
+  border-color: var(--accent);
 }
