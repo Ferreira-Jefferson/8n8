@@ -16,6 +16,7 @@ import {
   expectLevel,
   FRETE,
   FRETE_LEVEL,
+  freshReal,
   generate,
   LIME,
   MAIN_FLOW,
@@ -25,6 +26,7 @@ import {
   openMarks,
   PEDIDO,
   panel,
+  REAL,
   VIDEO,
 } from "./mapa";
 
@@ -111,6 +113,22 @@ async function expectSelectedNearCentre(page: Page, id: string) {
 }
 
 test.describe("Navegação", () => {
+  test("VID-23: on the keyed server, opening Calcular frete after the titles came draws its 5 cards, every time", async ({
+    page,
+  }) => {
+    // The blank canvas: the level's titles rebuilt the cards while React Flow
+    // measured them, and the cards stayed hidden for good.
+    test.setTimeout(120_000);
+    for (let i = 0; i < 8; i++) {
+      await freshReal();
+      await generate(page, REAL, VIDEO);
+      await expectLevel(page, MAIN_FLOW);
+      await expect.poll(() => cardNames(page)).toContain("Pedido recebido");
+      await clickCard(page, `${PEDIDO}/s3`);
+      await expectLevel(page, FRETE_LEVEL);
+    }
+  });
+
   test("VID-23, IT P1: one click on Calcular frete opens HTTP, EXTERNO, SE and two RETORNO and shows the panel", async ({
     page,
   }) => {
