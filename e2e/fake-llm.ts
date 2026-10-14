@@ -109,6 +109,25 @@ const SCENARIOS: Scenario[] = [
       "soma dos itens": [2],
     },
   },
+  {
+    // FID-07: two sentences the reviewer calls supported, one with a line
+    // outside the node (3 lines) and one with no line at all.
+    marker: "def contar_partes",
+    draft: {
+      summary:
+        "Divide o texto em partes. Devolve o total de partes. Ignora as partes vazias.",
+      inputs: ["`texto`"],
+      outputs: ["total de partes"],
+      suggestions: [],
+    },
+    evidence: {
+      "Divide o texto em partes.": [2],
+      "Devolve o total de partes.": [99],
+      "Ignora as partes vazias.": [],
+      "`texto`": [1],
+      "total de partes": [3],
+    },
+  },
 ];
 
 /** Verdicts for each `- <id>: <text>` line of the reviewer request. */

@@ -109,6 +109,23 @@ test.describe("Fidelidade", () => {
     await expect(view).not.toContainText("calcular_imposto");
   });
 
+  test("FID-07: supported sentences with an evidence line outside the node, or none, are cut", async ({
+    page,
+  }) => {
+    await generate(
+      page,
+      REAL,
+      "def contar_partes(texto):\n    partes = texto.split()\n    return len(partes)\n",
+    );
+    await nodeById(page, "fn:contar_partes").click();
+
+    const view = panel(page);
+    await expect(badge(view)).toHaveText("Revisado com cortes");
+    await expect(summaryItems(view)).toHaveText(["Divide o texto em partes."]);
+    await expect(view).not.toContainText("Devolve o total de partes.");
+    await expect(view).not.toContainText("Ignora as partes vazias.");
+  });
+
   test("FID-11/12/13/15/06/14: a faithful draft is fully reviewed, with evidence lines and effects", async ({
     page,
   }) => {
