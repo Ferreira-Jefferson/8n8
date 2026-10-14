@@ -213,6 +213,7 @@ export function App() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               spellCheck={false}
+              wrap="off"
             />
           </section>
         </div>
@@ -223,6 +224,7 @@ export function App() {
           <input
             type="text"
             aria-label="Caminho da pasta"
+            placeholder="Caminho de uma pasta Python"
             value={folder}
             onChange={(e) => setFolder(e.target.value)}
             spellCheck={false}

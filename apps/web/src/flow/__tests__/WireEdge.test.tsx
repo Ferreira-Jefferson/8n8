@@ -2,7 +2,7 @@ import { cleanup, render } from "@testing-library/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { type WireData, WireEdge } from "../WireEdge";
+import { branchLabelAt, turnPath, type WireData, WireEdge } from "../WireEdge";
 
 // The label portal needs a mounted React Flow; here it renders in place.
 vi.mock("@xyflow/react", async (importOriginal) => ({
@@ -72,21 +72,85 @@ describe("WireEdge (VID-05, VID-06)", () => {
 
 describe("WireEdge branch labels (VID-21)", () => {
   it.each(["sim", "não"])(
-    "shows %s as .branch-label near the start of the wire",
+    "shows %s as .branch-label beside the target card",
     (text) => {
       const { container } = renderWire(timed, text);
       const label = container.querySelector<HTMLElement>(".branch-label");
       expect(label?.textContent).toBe(text);
       expect(label?.getAttribute("data-branch-label")).toBe(text);
-      // t = 0.25 on the curve is (79.375, 31.25); the label sits 14 px above.
-      expect(label?.style.transform).toBe(
-        "translate(-50%, -50%) translate(79.375px, 17.25px)",
-      );
+      // The wire goes down to (400, 200): the label sits under the target
+      // card, 70 + 8 px below the port, at the card's left edge.
+      expect(label?.style.transform).toBe("translate(400px, 278px)");
     },
   );
+
+  it("puts the label of a wire that goes up above the target card", () => {
+    expect(branchLabelAt(200, 400, 0)).toEqual({ x: 400, y: -78, above: true });
+  });
+
+  it("puts the label of a wire that goes down or straight below the target card", () => {
+    expect(branchLabelAt(0, 400, 200)).toEqual({
+      x: 400,
+      y: 278,
+      above: false,
+    });
+    expect(branchLabelAt(100, 400, 100)).toEqual({
+      x: 400,
+      y: 178,
+      above: false,
+    });
+  });
+
+  it("keeps the label clear of the wire: it starts at the target's left edge, outside the wire's vertical span", () => {
+    // Sim goes up from 300 to 100, não goes down from 300 to 500.
+    const yes = branchLabelAt(300, 760, 100);
+    const no = branchLabelAt(300, 760, 500);
+    expect(yes.y).toBeLessThan(100 - 70);
+    expect(no.y).toBeGreaterThan(500 + 70);
+    expect(yes.x).toBe(760);
+    expect(no.x).toBe(760);
+  });
 
   it("shows no label on a wire without one", () => {
     const { container } = renderWire(timed);
     expect(container.querySelector(".branch-label")).toBeNull();
+  });
+});
+
+describe("WireEdge turning to the next row (VID-10)", () => {
+  it("goes out right, down into the row gap, back left and down into the port", () => {
+    // From the end of a row (port at 1500, 70) to the start of the next one
+    // (port at 0, 380), turning in the gap at y = 180.
+    expect(turnPath(1500, 70, 0, 380, 180)).toBe(
+      "M 1500 70 H 1504 Q 1524 70, 1524 90 V 160 Q 1524 180, 1504 180 H -4 Q -24 180, -24 200 V 360 Q -24 380, -4 380 H 0",
+    );
+  });
+
+  it("runs right in the gap when the target sits further right", () => {
+    expect(turnPath(300, 70, 760, 380, 180)).toBe(
+      "M 300 70 H 304 Q 324 70, 324 90 V 160 Q 324 180, 344 180 H 716 Q 736 180, 736 200 V 360 Q 736 380, 756 380 H 760",
+    );
+  });
+
+  it("draws the turn path, and the pulse follows it, when data.turnY is set", () => {
+    const { container } = render(
+      <ReactFlowProvider>
+        <svg>
+          <title>fio</title>
+          <WireEdge
+            sourceX={1500}
+            sourceY={70}
+            targetX={0}
+            targetY={380}
+            data={{ ...timed, turnY: 180 }}
+          />
+        </svg>
+      </ReactFlowProvider>,
+    );
+    const d = turnPath(1500, 70, 0, 380, 180);
+    expect(container.querySelector("path.wire")?.getAttribute("d")).toBe(d);
+    expect(container.querySelector("animateMotion")?.getAttribute("path")).toBe(
+      d,
+    );
   });
 });

@@ -13,7 +13,12 @@ export interface BreadcrumbProps {
   onGoTo: (index: number) => void;
 }
 
-/** "Fluxo principal › Calcular frete" or "loja › frete › …": the card clicked for each level; each item goes back to its level (VID-19, CORE-15, PROJ-04). */
+/**
+ * "Fluxo principal › Calcular frete" or "loja › frete › …": the card clicked
+ * for each level; each item goes back to its level (VID-19, CORE-15, PROJ-04).
+ * The trail stays on one line: the middle items shrink with "…" first, the
+ * last one stays whole, and `title` keeps each full name.
+ */
 export function Breadcrumb({ graph, path, titles, onGoTo }: BreadcrumbProps) {
   const titleOf = (id: NodeId) => {
     const node = graph.nodes.find((n) => n.id === id);
@@ -29,7 +34,7 @@ export function Breadcrumb({ graph, path, titles, onGoTo }: BreadcrumbProps) {
         // biome-ignore lint/suspicious/noArrayIndexKey: the position is the level
         <Fragment key={i}>
           {i > 0 && <span aria-hidden="true"> › </span>}
-          <button type="button" onClick={() => onGoTo(i)}>
+          <button type="button" title={label} onClick={() => onGoTo(i)}>
             {label}
           </button>
         </Fragment>

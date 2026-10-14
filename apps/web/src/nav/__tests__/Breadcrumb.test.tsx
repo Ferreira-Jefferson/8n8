@@ -48,6 +48,25 @@ describe("Breadcrumb on a snippet (VID-19)", () => {
     );
   });
 
+  it("keeps the full name of each item in its title, for the items cut with …", () => {
+    render(
+      <Breadcrumb
+        graph={videoGraph}
+        path={path}
+        titles={
+          new Map([
+            [P, "Processa o pedido"],
+            [`${P}/s3`, "Calcula o frete"],
+          ])
+        }
+        onGoTo={() => {}}
+      />,
+    );
+    expect(
+      screen.getAllByRole("button").map((b) => b.getAttribute("title")),
+    ).toEqual(["Fluxo principal", "Processa o pedido", "Calcula o frete"]);
+  });
+
   it("uses the provisional name of the via without a title (VID-15)", () => {
     render(
       <Breadcrumb

@@ -497,6 +497,16 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
   });
 
+  it("keeps long code lines unwrapped and hints the folder field", () => {
+    render(<App />);
+    expect(screen.getByLabelText("Trecho Python").getAttribute("wrap")).toBe(
+      "off",
+    );
+    expect(
+      screen.getByLabelText("Caminho da pasta").getAttribute("placeholder"),
+    ).toBe("Caminho de uma pasta Python");
+  });
+
   it("swaps the editor for the map, and Novo código goes back with the text kept", async () => {
     await mapVideo();
     expect(screen.queryByLabelText("Trecho Python")).toBeNull();
