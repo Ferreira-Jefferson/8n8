@@ -1,4 +1,5 @@
 import type {
+  LlmClient,
   NodeTitle,
   TitleItem,
   TitleRequest,
@@ -10,8 +11,6 @@ import {
   fingerprintOf,
   normalizeCode,
 } from "./fingerprint";
-import type { LlmClient } from "./openrouter";
-import { jsonMode } from "./review";
 import { parseVerdicts } from "./reviewer";
 import type { TitleCache } from "./title-cache";
 import { parseTitles, titleMessage } from "./title-prompt";
@@ -26,6 +25,8 @@ export interface TitleDeps {
   /** Absent when OPENROUTER_API_KEY is not set. */
   llm?: LlmClient | undefined;
   cache: TitleCache;
+  /** Id of the LLM provider; joins the fingerprint. */
+  provider: string;
   model: string;
   reviewModel: string;
   prompt: { text: string; version: string };
@@ -91,7 +92,7 @@ export async function titleNodes(
           content: titleMessage(missing.map((i) => items[i] as TitleItem)),
         },
       ],
-      json: jsonMode(deps.model),
+      json: "native",
     });
     // n1..nk point into `missing`; an id that was not sent is ignored (VID-14).
     const blocks: (TitleBlock & { index: number })[] = [];
@@ -121,7 +122,7 @@ export async function titleNodes(
           { role: "system", content: deps.reviewer.text },
           { role: "user", content: titleReviewerMessage(blocks) },
         ],
-        json: jsonMode(deps.reviewModel),
+        json: "native",
       });
       for (const kept of applyTitleVerdicts(blocks, parseVerdicts(answer))) {
         const block = blocks.find(
@@ -146,7 +147,7 @@ export async function titleNodes(
     const item = items[index] as TitleItem;
     try {
       await cache.set({
-        schemaVersion: 1,
+        schemaVersion: 2,
         cacheKey: item.cacheKey,
         fingerprint: fps[index] as Fingerprint,
         createdAt: new Date().toISOString(),

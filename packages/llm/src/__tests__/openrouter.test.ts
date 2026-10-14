@@ -1,45 +1,25 @@
+import type { ChatMessage } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
-import { type ChatMessage, createOpenRouterClient } from "../openrouter";
+import { openrouter } from "../openrouter";
+import { fakeFetch } from "./fake-fetch";
 
-interface Captured {
-  url: string;
-  method: string | undefined;
-  authorization: string | null;
-  body: Record<string, unknown>;
-}
-
-function fakeFetch(status = 200, content = '{"summary":"ok"}') {
-  const calls: Captured[] = [];
-  const fetch = async (input: unknown, init?: RequestInit) => {
-    calls.push({
-      url: String(input),
-      method: init?.method,
-      authorization: new Headers(init?.headers).get("authorization"),
-      body: JSON.parse(String(init?.body)),
-    });
-    const payload =
-      status === 200
-        ? {
-            id: "gen-1",
-            object: "chat.completion",
-            created: 0,
-            model: "m",
-            choices: [
-              {
-                index: 0,
-                finish_reason: "stop",
-                message: { role: "assistant", content },
-              },
-            ],
-          }
-        : { error: { message: "boom" } };
-    return new Response(JSON.stringify(payload), {
-      status,
-      headers: { "content-type": "application/json" },
-    });
-  };
-  return { fetch: fetch as typeof globalThis.fetch, calls };
-}
+const createOpenRouterClient = (
+  apiKey: string,
+  options: {
+    fetch?: typeof globalThis.fetch;
+    baseURL?: string | undefined;
+  } = {},
+) =>
+  openrouter.create(
+    {
+      provider: "openrouter",
+      apiKey,
+      baseURL: options.baseURL,
+      model: "m",
+      reviewModel: "m",
+    },
+    { fetch: options.fetch },
+  );
 
 const messages: ChatMessage[] = [
   { role: "system", content: "sistema JSON" },
@@ -175,5 +155,32 @@ describe("createOpenRouterClient (CORE-16, CORE-21)", () => {
       json: "native",
     });
     expect(calls[0]?.body.messages).toEqual(redraft);
+  });
+
+  it("omits response_format in native mode for a model whose profile says prompt", async () => {
+    const { fetch, calls } = fakeFetch();
+    await createOpenRouterClient("k", { fetch }).complete({
+      model: "google/gemini-x",
+      messages,
+      json: "native",
+    });
+    expect(calls[0]?.body).not.toHaveProperty("response_format");
+  });
+
+  it("builds a client with the default fetch and base URL (nothing is sent)", () => {
+    expect(createOpenRouterClient("k")).toHaveProperty("complete");
+  });
+
+  it("is configured only with a key", () => {
+    const config = {
+      provider: "openrouter",
+      baseURL: undefined,
+      model: "m",
+      reviewModel: "m",
+    };
+    expect(openrouter.isConfigured({ ...config, apiKey: "k" })).toBe(true);
+    expect(openrouter.isConfigured({ ...config, apiKey: undefined })).toBe(
+      false,
+    );
   });
 });

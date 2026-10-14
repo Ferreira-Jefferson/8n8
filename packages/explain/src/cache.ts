@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { Fingerprint } from "./fingerprint";
 
 export interface CacheEntryV2 {
-  schemaVersion: 2;
+  schemaVersion: 3;
   nodeId: NodeId;
   fingerprint: Fingerprint;
   review: ReviewStatus;
@@ -28,11 +28,12 @@ const claim = z.object({
 });
 
 const entrySchema = z.object({
-  schemaVersion: z.literal(2),
+  schemaVersion: z.literal(3),
   nodeId: z.string(),
   fingerprint: z.object({
     code: z.string(),
     neighbours: z.string(),
+    provider: z.string(),
     model: z.string(),
     reviewModel: z.string(),
     promptVersion: z.string(),

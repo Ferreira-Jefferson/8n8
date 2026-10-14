@@ -9,6 +9,7 @@ import {
 } from "../fingerprint";
 
 const deps = {
+  provider: "openrouter",
   model: "m/resumo",
   reviewModel: "m/revisor",
   prompt: { version: "aaaaaaaaaaaa" },
@@ -37,11 +38,12 @@ describe("normalizeCode", () => {
 });
 
 describe("fingerprintOf (CACHE-01)", () => {
-  it("has the six components apart", () => {
+  it("has the seven components apart", () => {
     const sha = (t: string) => createHash("sha256").update(t).digest("hex");
     expect(fingerprintOf(req, deps)).toEqual({
       code: sha(req.code),
       neighbours: sha(JSON.stringify({ calls: ["a", "b"], calledBy: ["c"] })),
+      provider: "openrouter",
       model: "m/resumo",
       reviewModel: "m/revisor",
       promptVersion: "aaaaaaaaaaaa",
@@ -85,6 +87,7 @@ describe("diffReasons (CACHE-03, CACHE-04)", () => {
   });
 
   it.each([
+    "provider",
     "model",
     "reviewModel",
     "promptVersion",
@@ -99,6 +102,7 @@ describe("diffReasons (CACHE-03, CACHE-04)", () => {
     const now: Fingerprint = {
       code: "1",
       neighbours: "2",
+      provider: "7",
       model: "3",
       reviewModel: "4",
       promptVersion: "5",
@@ -120,6 +124,7 @@ describe("fingerprintOf with a docstring", () => {
       calledBy: [],
     };
     const d = {
+      provider: "p0",
       model: "m",
       reviewModel: "r",
       prompt: { version: "p" },

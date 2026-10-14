@@ -9,7 +9,11 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type ExplainRequest, sliceLines } from "@code2n8n/model";
+import {
+  type ExplainRequest,
+  type LlmClient,
+  sliceLines,
+} from "@code2n8n/model";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildReviewerPrompt,
@@ -18,7 +22,6 @@ import {
   type ExplainCache,
   type ExplainDeps,
   explainNode,
-  type LlmClient,
 } from "../index";
 import { buildStepPrompt } from "../prompt";
 
@@ -130,6 +133,7 @@ const deps = (
 ): ExplainDeps => ({
   llm,
   cache,
+  provider: "openrouter",
   model: MODEL,
   reviewModel: MODEL,
   prompt,
@@ -332,7 +336,7 @@ describe("explainNode", () => {
     const stored = JSON.parse(
       await readFile(nodeFile("fn:calcular_frete"), "utf8"),
     );
-    expect(stored.schemaVersion).toBe(2);
+    expect(stored.schemaVersion).toBe(3);
   });
 
   it("regenerates over a corrupted entry without update and overwrites it (CACHE-07)", async () => {
@@ -424,7 +428,7 @@ describe("explainNode", () => {
     ]);
   });
 
-  it("uses json 'prompt' for google/* models and 'native' for others", async () => {
+  it("asks for json 'native' whatever the model: the client's profile decides the rest", async () => {
     const { llm, requests } = fakeLlm(ANSWER);
     await explainNode(
       request(),
@@ -435,11 +439,32 @@ describe("explainNode", () => {
       deps(llm, { model: "openai/gpt-x", reviewModel: "openai/gpt-x" }),
     );
     expect(requests.map((r) => r.json)).toEqual([
-      "prompt",
-      "prompt",
+      "native",
+      "native",
       "native",
       "native",
     ]);
+  });
+
+  it("regenerates, with the reason model-or-prompt, when the provider changed (CACHE-04)", async () => {
+    const first = fakeLlm(ANSWER);
+    await explainNode(request(), deps(first.llm));
+    const same = fakeLlm(ANSWER);
+    expect(await explainNode(request(), deps(same.llm))).toMatchObject({
+      fromCache: true,
+    });
+    expect(same.requests).toHaveLength(0);
+
+    const other = fakeLlm(ANSWER);
+    const res = await explainNode(
+      request(),
+      deps(other.llm, { provider: "openai-compatible" }),
+    );
+    expect(other.requests).toHaveLength(2);
+    expect(res).toMatchObject({
+      fromCache: false,
+      update: ["model-or-prompt"],
+    });
   });
 
   it("still returns ok when writing the cache fails", async () => {

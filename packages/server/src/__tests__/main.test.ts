@@ -29,6 +29,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { createApp } from "../app";
 import {
   composeExplain,
+  composeLlm,
   composeReadProject,
   composeTitles,
   listenOptions,
@@ -97,6 +98,17 @@ function fakeFactory() {
   return { keys, baseURLs, seen, drafts, reviews, createClient };
 }
 
+type Env = Record<string, string | undefined>;
+
+/** The server's one LLM setup, with the fake client in place of the real one. */
+function llmOf(env: Env, f: ReturnType<typeof fakeFactory>) {
+  return composeLlm(env, (config) =>
+    config.apiKey === undefined
+      ? undefined
+      : f.createClient(config.apiKey, config.baseURL),
+  );
+}
+
 const titleReply = JSON.stringify({
   titles: [{ id: "n1", title: "Devolver um" }],
 });
@@ -123,7 +135,7 @@ describe("composeExplain", () => {
     const f = fakeFactory();
     const explain = composeExplain(
       {},
-      { createClient: f.createClient, ptsRules, cacheDir: dir("a") },
+      { llm: llmOf({}, f), ptsRules, cacheDir: dir("a") },
     );
     expect(await explain(req)).toEqual({ status: "no-key" });
     expect(f.keys).toEqual([]);
@@ -133,7 +145,11 @@ describe("composeExplain", () => {
     const f = fakeFactory();
     const explain = composeExplain(
       { OPENROUTER_API_KEY: "k-123" },
-      { createClient: f.createClient, ptsRules, cacheDir: dir("b") },
+      {
+        llm: llmOf({ OPENROUTER_API_KEY: "k-123" }, f),
+        ptsRules,
+        cacheDir: dir("b"),
+      },
     );
     await explain(req);
     await explain({ ...req, code: "def g():\n    return 2" });
@@ -144,14 +160,25 @@ describe("composeExplain", () => {
     const withModel = fakeFactory();
     await composeExplain(
       { OPENROUTER_API_KEY: "k", CODE2N8N_MODEL: "x/y" },
-      { createClient: withModel.createClient, ptsRules, cacheDir: dir("c") },
+      {
+        llm: llmOf(
+          { OPENROUTER_API_KEY: "k", CODE2N8N_MODEL: "x/y" },
+          withModel,
+        ),
+        ptsRules,
+        cacheDir: dir("c"),
+      },
     )(req);
     expect(withModel.drafts()[0]?.model).toBe("x/y");
 
     const withDefault = fakeFactory();
     await composeExplain(
       { OPENROUTER_API_KEY: "k" },
-      { createClient: withDefault.createClient, ptsRules, cacheDir: dir("d") },
+      {
+        llm: llmOf({ OPENROUTER_API_KEY: "k" }, withDefault),
+        ptsRules,
+        cacheDir: dir("d"),
+      },
     )(req);
     expect(withDefault.drafts()[0]?.model).toBe(
       "~deepseek/deepseek-v4-flash-latest",
@@ -162,7 +189,11 @@ describe("composeExplain", () => {
     const f = fakeFactory();
     await composeExplain(
       { OPENROUTER_API_KEY: "k" },
-      { createClient: f.createClient, ptsRules, cacheDir: dir("e") },
+      {
+        llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
+        ptsRules,
+        cacheDir: dir("e"),
+      },
     )(req);
     expect(f.drafts()[0]?.system).toContain(ptsRules);
     expect(ptsRules.length).toBeGreaterThan(100);
@@ -176,7 +207,18 @@ describe("composeExplain", () => {
         CODE2N8N_MODEL: "x/y",
         CODE2N8N_REVIEW_MODEL: "r/x",
       },
-      { createClient: f.createClient, ptsRules, cacheDir: dir("f") },
+      {
+        llm: llmOf(
+          {
+            OPENROUTER_API_KEY: "k",
+            CODE2N8N_MODEL: "x/y",
+            CODE2N8N_REVIEW_MODEL: "r/x",
+          },
+          f,
+        ),
+        ptsRules,
+        cacheDir: dir("f"),
+      },
     )(req);
     expect(res.status).toBe("ok");
     expect(f.drafts().map((s) => s.model)).toEqual(["x/y"]);
@@ -197,7 +239,7 @@ describe("composeExplain", () => {
     ] as const) {
       const f = fakeFactory();
       await composeExplain(env, {
-        createClient: f.createClient,
+        llm: llmOf(env, f),
         ptsRules,
         cacheDir: dir(name),
       })(req);
@@ -207,27 +249,27 @@ describe("composeExplain", () => {
   });
 
   it("OPENROUTER_BASE_URL reaches createClient; unset or empty gives undefined", () => {
-    const deps = (f: ReturnType<typeof fakeFactory>) => ({
-      createClient: f.createClient,
+    const deps = (env: Env, f: ReturnType<typeof fakeFactory>) => ({
+      llm: llmOf(env, f),
       ptsRules,
       cacheDir: dir("i"),
     });
     const set = fakeFactory();
-    composeExplain(
-      { OPENROUTER_API_KEY: "k", OPENROUTER_BASE_URL: "http://127.0.0.1:9/v1" },
-      deps(set),
-    );
+    const setEnv = {
+      OPENROUTER_API_KEY: "k",
+      OPENROUTER_BASE_URL: "http://127.0.0.1:9/v1",
+    };
+    composeExplain(setEnv, deps(setEnv, set));
     expect(set.baseURLs).toEqual(["http://127.0.0.1:9/v1"]);
 
     const unset = fakeFactory();
-    composeExplain({ OPENROUTER_API_KEY: "k" }, deps(unset));
+    const unsetEnv = { OPENROUTER_API_KEY: "k" };
+    composeExplain(unsetEnv, deps(unsetEnv, unset));
     expect(unset.baseURLs).toEqual([undefined]);
 
     const empty = fakeFactory();
-    composeExplain(
-      { OPENROUTER_API_KEY: "k", OPENROUTER_BASE_URL: "" },
-      deps(empty),
-    );
+    const emptyEnv = { OPENROUTER_API_KEY: "k", OPENROUTER_BASE_URL: "" };
+    composeExplain(emptyEnv, deps(emptyEnv, empty));
     expect(empty.baseURLs).toEqual([undefined]);
   });
 
@@ -236,7 +278,10 @@ describe("composeExplain", () => {
     await composeExplain(
       { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: custom },
       {
-        createClient: fakeFactory().createClient,
+        llm: llmOf(
+          { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: custom },
+          fakeFactory(),
+        ),
         ptsRules,
         cacheDir: dir("j"),
       },
@@ -249,7 +294,7 @@ describe("composeExplain", () => {
       ["l", { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: "" }],
     ] as const) {
       await composeExplain(env, {
-        createClient: fakeFactory().createClient,
+        llm: llmOf(env, fakeFactory()),
         ptsRules,
         cacheDir: dir(name),
       })(req);
@@ -263,7 +308,11 @@ describe("composeExplain for a step (VID-28)", () => {
     const f = fakeFactory();
     const explain = composeExplain(
       { OPENROUTER_API_KEY: "k" },
-      { createClient: f.createClient, ptsRules, cacheDir: dir("step") },
+      {
+        llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
+        ptsRules,
+        cacheDir: dir("step"),
+      },
     );
     await explain({
       ...req,
@@ -283,7 +332,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
     for (const env of [{}, { OPENROUTER_API_KEY: "" }]) {
       const f = fakeFactory();
       const titles = composeTitles(env, {
-        createClient: f.createClient,
+        llm: llmOf(env, f),
         ptsRules,
         cacheDir: dir("t-a"),
       });
@@ -301,7 +350,19 @@ describe("composeTitles (VID-14, VID-17)", () => {
         CODE2N8N_MODEL: "x/y",
         CODE2N8N_REVIEW_MODEL: "r/x",
       },
-      { createClient: f.createClient, ptsRules, cacheDir: dir("t-b") },
+      {
+        llm: llmOf(
+          {
+            OPENROUTER_API_KEY: "k-1",
+            OPENROUTER_BASE_URL: "http://127.0.0.1:9/v1",
+            CODE2N8N_MODEL: "x/y",
+            CODE2N8N_REVIEW_MODEL: "r/x",
+          },
+          f,
+        ),
+        ptsRules,
+        cacheDir: dir("t-b"),
+      },
     );
     expect(await titles(titleReq)).toEqual({
       status: "ok",
@@ -328,7 +389,19 @@ describe("composeTitles (VID-14, VID-17)", () => {
         CODE2N8N_MODEL: "",
         CODE2N8N_REVIEW_MODEL: "",
       },
-      { createClient: f.createClient, ptsRules, cacheDir: dir("t-c") },
+      {
+        llm: llmOf(
+          {
+            OPENROUTER_API_KEY: "k",
+            OPENROUTER_BASE_URL: "",
+            CODE2N8N_MODEL: "",
+            CODE2N8N_REVIEW_MODEL: "",
+          },
+          f,
+        ),
+        ptsRules,
+        cacheDir: dir("t-c"),
+      },
     )(titleReq);
     expect(f.baseURLs).toEqual([undefined]);
     expect(f.seen.map((s) => s.model)).toEqual([
@@ -342,7 +415,10 @@ describe("composeTitles (VID-14, VID-17)", () => {
     await composeTitles(
       { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: custom },
       {
-        createClient: fakeFactory().createClient,
+        llm: llmOf(
+          { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: custom },
+          fakeFactory(),
+        ),
         ptsRules,
         cacheDir: dir("t-d"),
       },
@@ -356,7 +432,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
     ] as const) {
       const f = fakeFactory();
       const titles = composeTitles(env, {
-        createClient: f.createClient,
+        llm: llmOf(env, f),
         ptsRules,
         cacheDir: dir(name),
       });
@@ -368,6 +444,104 @@ describe("composeTitles (VID-14, VID-17)", () => {
       });
       expect(f.seen).toHaveLength(2);
     }
+  });
+});
+
+describe("composeLlm (LLM config, one client)", () => {
+  it("resolves the config from the environment and builds the client once", () => {
+    const f = fakeFactory();
+    const setup = llmOf({ OPENROUTER_API_KEY: "k", CODE2N8N_MODEL: "x/y" }, f);
+    expect(setup.config).toEqual({
+      provider: "openrouter",
+      apiKey: "k",
+      baseURL: undefined,
+      model: "x/y",
+      reviewModel: "x/y",
+    });
+    expect(setup.client).toBeDefined();
+    expect(f.keys).toEqual(["k"]);
+  });
+
+  it("composeExplain and composeTitles share the one client: one factory call", async () => {
+    const f = fakeFactory();
+    const env = { OPENROUTER_API_KEY: "k" };
+    const llm = llmOf(env, f);
+    const explain = composeExplain(env, {
+      llm,
+      ptsRules,
+      cacheDir: dir("one-a"),
+    });
+    const titles = composeTitles(env, {
+      llm,
+      ptsRules,
+      cacheDir: dir("one-b"),
+    });
+    await explain(req);
+    await titles(titleReq);
+    expect(f.keys).toEqual(["k"]);
+    expect(f.seen.length).toBeGreaterThan(2);
+  });
+
+  it("the default factory builds the real client for a configured provider and none without a key", () => {
+    expect(composeLlm({}).client).toBeUndefined();
+    expect(composeLlm({ OPENROUTER_API_KEY: "k" }).client).toHaveProperty(
+      "complete",
+    );
+    const local = composeLlm({
+      CODE2N8N_LLM_PROVIDER: "openai-compatible",
+      CODE2N8N_LLM_BASE_URL: "http://localhost:11434/v1",
+      CODE2N8N_MODEL: "llama3",
+    });
+    expect(local.client).toHaveProperty("complete");
+    expect(local.config).toMatchObject({
+      provider: "openai-compatible",
+      apiKey: undefined,
+      baseURL: "http://localhost:11434/v1",
+      model: "llama3",
+    });
+  });
+
+  it("an unknown provider fails at startup, naming the known ones", () => {
+    expect(() => composeLlm({ CODE2N8N_LLM_PROVIDER: "nope" })).toThrow(
+      /desconhecido.*openrouter, openai-compatible/,
+    );
+  });
+
+  it("without a client both pipelines answer no-key, whatever the provider", async () => {
+    const env = { CODE2N8N_LLM_PROVIDER: "openai-compatible" };
+    const llm = llmOf(env, fakeFactory());
+    expect(llm.client).toBeUndefined();
+    expect(
+      await composeExplain(env, { llm, ptsRules, cacheDir: dir("nk-a") })(req),
+    ).toEqual({ status: "no-key" });
+    expect(
+      await composeTitles(env, { llm, ptsRules, cacheDir: dir("nk-b") })(
+        titleReq,
+      ),
+    ).toEqual({ status: "no-key", titles: [] });
+  });
+
+  it("the provider id reaches the cache: another provider regenerates the same node", async () => {
+    const same = { CODE2N8N_MODEL: "x/y", OPENROUTER_API_KEY: "k" };
+    const other = {
+      CODE2N8N_MODEL: "x/y",
+      CODE2N8N_LLM_PROVIDER: "openai-compatible",
+      CODE2N8N_LLM_API_KEY: "k",
+    };
+    const run = async (env: Env) => {
+      const f = fakeFactory();
+      const res = await composeExplain(env, {
+        llm: llmOf(env, f),
+        ptsRules,
+        cacheDir: dir("prov"),
+      })(req);
+      return { res, calls: f.seen.length };
+    };
+    expect((await run(same)).calls).toBe(2);
+    expect((await run(same)).calls).toBe(0);
+    const changed = await run(other);
+    expect(changed.calls).toBe(2);
+    expect(changed.res).toMatchObject({ update: ["model-or-prompt"] });
   });
 });
 
@@ -501,7 +675,11 @@ describe("composeReadProject", () => {
       extractor,
       explain: composeExplain(
         { OPENROUTER_API_KEY: "k" },
-        { createClient: f.createClient, ptsRules, cacheDir: cache },
+        {
+          llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
+          ptsRules,
+          cacheDir: cache,
+        },
       ),
       titles: async () => ({ status: "ok", titles: [] }),
       readProject,

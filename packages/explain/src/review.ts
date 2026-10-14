@@ -1,6 +1,10 @@
-import type { Explanation, ReviewStatus } from "@code2n8n/model";
+import type {
+  ChatMessage,
+  Explanation,
+  LlmClient,
+  ReviewStatus,
+} from "@code2n8n/model";
 import { layerOne, type Problem } from "./checks";
-import type { ChatMessage, LlmClient } from "./openrouter";
 import {
   applyVerdicts,
   parseVerdicts,
@@ -73,9 +77,6 @@ export interface ReviewDeps {
 /** The draft plus at most 2 new drafts (FID-08). */
 const ROUNDS = 3;
 
-export const jsonMode = (model: string) =>
-  model.startsWith("google/") ? "prompt" : "native";
-
 /** Builds the stored explanation from the kept claims; ids keep their gaps (FID-09). */
 function toResult(draft: Draft, kept: ReviewedClaim[]): StoredExplanation {
   const plain = (kind: ReviewedClaim["kind"]) =>
@@ -114,7 +115,8 @@ export async function reviewedDraft(
   let messages = base;
 
   for (let round = 1; ; round++) {
-    const raw = await llm.complete({ model, messages, json: jsonMode(model) });
+    // "native" asks for JSON; the client downgrades it when the model profile says so.
+    const raw = await llm.complete({ model, messages, json: "native" });
     const parsed = parseExplanation(raw, lineCount);
     const capped =
       maxSentences === undefined
@@ -146,7 +148,7 @@ export async function reviewedDraft(
             content: reviewerMessage(input.code, input.neighbours, passed),
           },
         ],
-        json: jsonMode(reviewModel),
+        json: "native",
       });
       const applied = applyVerdicts(passed, parseVerdicts(answer), lineCount);
       kept = applied.kept;

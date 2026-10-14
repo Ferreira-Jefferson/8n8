@@ -242,9 +242,6 @@ importers:
       '@code2n8n/model':
         specifier: workspace:*
         version: link:../model
-      openai:
-        specifier: 7.32.0
-        version: 7.32.0(undici@8.11.2)(zod@4.6.7)
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -285,6 +282,19 @@ importers:
         specifier: workspace:*
         version: link:../model
 
+  packages/llm:
+    dependencies:
+      '@code2n8n/model':
+        specifier: workspace:*
+        version: link:../model
+      openai:
+        specifier: 7.32.0
+        version: 7.32.0(undici@8.11.2)(zod@4.6.7)
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.5
+        version: 22.20.5
+
   packages/model: {}
 
   packages/server:
@@ -298,6 +308,9 @@ importers:
       '@code2n8n/lang-python':
         specifier: workspace:*
         version: link:../languages/python
+      '@code2n8n/llm':
+        specifier: workspace:*
+        version: link:../llm
       '@code2n8n/model':
         specifier: workspace:*
         version: link:../model

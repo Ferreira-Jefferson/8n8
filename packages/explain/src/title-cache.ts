@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { Fingerprint } from "./fingerprint";
 
 export interface TitleCacheEntry {
-  schemaVersion: 1;
+  schemaVersion: 2;
   /** The nodeId in a snippet, `<POSIX root>|<nodeId>` in a project. */
   cacheKey: string;
   fingerprint: Fingerprint;
@@ -21,11 +21,12 @@ export interface TitleCache {
 }
 
 const entrySchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   cacheKey: z.string(),
   fingerprint: z.object({
     code: z.string(),
     neighbours: z.string(),
+    provider: z.string(),
     model: z.string(),
     reviewModel: z.string(),
     promptVersion: z.string(),

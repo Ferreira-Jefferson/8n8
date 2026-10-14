@@ -1,5 +1,5 @@
+import type { LlmClient } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
-import type { LlmClient } from "../openrouter";
 import { buildSystemPrompt } from "../prompt";
 import { type ReviewDeps, reviewedDraft } from "../review";
 import { buildReviewerPrompt, type Verdict } from "../reviewer";
@@ -247,7 +247,7 @@ describe("reviewedDraft", () => {
     });
   });
 
-  it("sends the reviewer model to the reviewer and the summary model to the draft, with JSON mode for both", async () => {
+  it("sends the reviewer model to the reviewer and the summary model to the draft, both asking json 'native' (the client's profile decides the rest)", async () => {
     const fake = scripted([CLEAN]);
     await reviewedDraft(
       input,
@@ -257,7 +257,7 @@ describe("reviewedDraft", () => {
       ["openai/gpt-x", "native"],
     ]);
     expect(fake.reviews().map((r) => [r.model, r.json])).toEqual([
-      ["google/rev", "prompt"],
+      ["google/rev", "native"],
     ]);
 
     const g = scripted([CLEAN]);
@@ -266,8 +266,8 @@ describe("reviewedDraft", () => {
       deps(g.llm, { model: "google/sum", reviewModel: "google/sum" }),
     );
     expect(g.requests.map((r) => [r.model, r.json])).toEqual([
-      ["google/sum", "prompt"],
-      ["google/sum", "prompt"],
+      ["google/sum", "native"],
+      ["google/sum", "native"],
     ]);
   });
 

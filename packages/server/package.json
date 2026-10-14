@@ -14,6 +14,7 @@
     "@code2n8n/explain": "workspace:*",
     "@code2n8n/lang-python": "workspace:*",
     "@code2n8n/input": "workspace:*",
+    "@code2n8n/llm": "workspace:*",
     "@code2n8n/model": "workspace:*",
     "@hono/node-server": "2.1.5",
     "hono": "4.13.13",
