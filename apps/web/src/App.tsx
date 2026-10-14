@@ -6,8 +6,20 @@ import {
   type NodeId,
   type ProjectResponse,
 } from "@code2n8n/model";
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import { type ExplainOrigin, fetchGraph, fetchProject } from "./api";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
+import {
+  type ExplainOrigin,
+  type ExplainResult,
+  fetchGraph,
+  fetchProject,
+} from "./api";
 import { codeLineOf } from "./flow/card";
 import { FlowCanvas } from "./flow/FlowCanvas";
 import { projectLevel } from "./flow/project-level";
@@ -100,10 +112,13 @@ export function App() {
   );
   const [mark, setMark] = useState<{ line: number; nonce: number }>();
   const [focusId, setFocusId] = useState<NodeId | null>(null);
+  // Explanations already fetched in this map: re-opening a node asks no more.
+  const explainCache = useRef(new Map<NodeId, ExplainResult>());
 
   function clearMap() {
     setMapped(null);
     setExplanations(new Map());
+    explainCache.current = new Map();
     setMark(undefined);
     setFocusId(null);
     dispatch({ type: "reset" });
@@ -307,6 +322,7 @@ export function App() {
           effects={externalEffects(graph, panelNode.id)}
           mark={mark}
           onExplained={onExplained}
+          cache={explainCache.current}
         />
       )}
     </main>

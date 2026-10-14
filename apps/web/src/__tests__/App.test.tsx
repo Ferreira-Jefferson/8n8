@@ -673,3 +673,55 @@ describe("App, titles, code lines and suggestion cards (VID-14, VID-33)", () => 
     expect(marked()).toEqual(["13"]);
   });
 });
+
+describe("App, explanations kept per map", () => {
+  const summary = (text: string) => ({
+    status: "ok" as const,
+    explanation: {
+      summary: text,
+      sentences: [{ id: "s1", text, lines: [7] }],
+      inputs: [],
+      outputs: [],
+      suggestions: [],
+    },
+    fromCache: false,
+    review: "full" as const,
+  });
+  const asked = (id: string) =>
+    explainMock.mock.calls.filter(([, nodeId]) => nodeId === id).length;
+
+  it("asks for a node's explanation once per map, and again after a new map", async () => {
+    await mapVideo();
+    explainMock.mockImplementation(async (_origin, id) =>
+      summary(`Resumo ${id}.`),
+    );
+    act(() => currentCanvas().onSelect(`${P}/s1`));
+    expect(await screen.findByText(`Resumo ${P}/s1.`)).toBeTruthy();
+    act(() => currentCanvas().onSelect(`${P}/s2`));
+    expect(await screen.findByText(`Resumo ${P}/s2.`)).toBeTruthy();
+    act(() => currentCanvas().onSelect(`${P}/s1`));
+    expect(await screen.findByText(`Resumo ${P}/s1.`)).toBeTruthy();
+    expect(asked(`${P}/s1`)).toBe(1);
+    expect(asked(`${P}/s2`)).toBe(1);
+
+    // "Novo código" and "Gerar mapa": a new map asks again.
+    fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
+    fireEvent.click(screen.getByRole("button", { name: "Gerar mapa" }));
+    await screen.findByTestId("canvas");
+    await waitFor(() => expect(currentCanvas().selected).toBeNull());
+    act(() => currentCanvas().onSelect(`${P}/s1`));
+    expect(await screen.findByText(`Resumo ${P}/s1.`)).toBeTruthy();
+    expect(asked(`${P}/s1`)).toBe(2);
+  });
+
+  it("asks again after a failure", async () => {
+    await mapVideo();
+    explainMock.mockResolvedValue({ status: "error", message: "HTTP 502" });
+    act(() => currentCanvas().onSelect(`${P}/s1`));
+    expect(await screen.findByText("Resumo indisponível")).toBeTruthy();
+    act(() => currentCanvas().onSelect(`${P}/s2`));
+    await waitFor(() => expect(asked(`${P}/s2`)).toBe(1));
+    act(() => currentCanvas().onSelect(`${P}/s1`));
+    await waitFor(() => expect(asked(`${P}/s1`)).toBe(2));
+  });
+});
