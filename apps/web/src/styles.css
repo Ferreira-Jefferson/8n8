@@ -89,13 +89,23 @@ body {
 
 /* ---- Editor screen (VID-08) ---- */
 
+/* The video places the panel at 170 px on a 1080 px stage. A shorter window
+   moves it up and shortens it, so the button row always fits. */
 .editor {
-  margin: 170px 0 0 140px;
+  --editor-top: min(170px, 19vh);
+  box-sizing: border-box;
+  margin: var(--editor-top) 0 0 140px;
   width: 1020px;
+  height: calc(100vh - var(--editor-top));
+  padding-bottom: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .editor-panel {
   height: 620px;
+  flex: 0 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -122,6 +132,8 @@ body {
   padding: 28px 32px;
   font: 400 25px / 1.6 var(--font-mono);
   color: var(--code);
+  white-space: pre;
+  overflow: auto;
   border: 0;
   background: transparent;
   outline: none;
@@ -132,6 +144,10 @@ body {
   display: flex;
   gap: 16px;
   align-items: center;
+}
+
+.editor-actions input::placeholder {
+  color: var(--dim);
 }
 
 .editor-actions input {
@@ -159,8 +175,10 @@ body {
   overflow: hidden;
 }
 
+/* The video's panel is 1060 of 1920 px beside one card. Beside a whole
+   level it is scaled down, so the canvas keeps every card legible (VID-23). */
 .map.with-panel {
-  grid-template-columns: 1fr min(1060px, 50vw);
+  grid-template-columns: 1fr clamp(400px, 31vw, 520px);
 }
 
 .map-area {
@@ -183,17 +201,32 @@ body {
   z-index: 10;
 }
 
+/* One line: the middle items shrink with "…" first, then the first one; the
+   last item stays whole (VID-19). */
 .breadcrumb {
   position: absolute;
   left: 160px;
   top: 34px;
   right: 240px;
   z-index: 10;
+  display: flex;
+  align-items: baseline;
+  overflow: hidden;
+  white-space: nowrap;
   font: 400 22px var(--font-mono);
   color: var(--accent);
 }
 
+.breadcrumb span {
+  flex-shrink: 0;
+  white-space: pre;
+}
+
 .breadcrumb button {
+  flex-shrink: 1;
+  min-width: 4ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   border: 0;
   background: none;
@@ -203,7 +236,12 @@ body {
   cursor: pointer;
 }
 
+.breadcrumb button:not(:first-child):not(:last-child) {
+  flex-shrink: 1000;
+}
+
 .breadcrumb button:last-child {
+  flex-shrink: 0;
   color: var(--second);
 }
 
@@ -401,7 +439,10 @@ body {
   pointer-events: none;
   font-size: 22px;
   font-weight: 500;
+  line-height: 1;
   letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
   color: var(--accent);
 }
 
@@ -459,10 +500,10 @@ body {
 
 .detail-panel {
   margin: 24px;
-  padding: 40px 48px;
+  padding: 28px 30px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
   overflow: auto;
   min-height: 0;
 }
@@ -470,37 +511,65 @@ body {
 .detail-panel h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 40px;
+  font-size: 30px;
   font-weight: 400;
 }
 
+/* The panel eyebrows are long ("O QUE FAZ · PORTUGUÊS TÉCNICO
+   SIMPLIFICADO"): smaller than the video's 22 px, they wrap cleanly. */
 .detail-panel .eyebrow {
   color: var(--accent);
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
 }
 
 .detail-panel ol[aria-label="Resumo"] {
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 38px;
+  font-size: 24px;
   line-height: 1.35;
 }
 
 .detail-panel .rules {
   margin: 0;
-  font-size: 22px;
+  font-size: 15px;
   font-weight: 500;
   letter-spacing: 0.06em;
   color: var(--main);
 }
 
+/* The video's 26 px code on a 1060 px panel, scaled to the panel's
+   min(1060px, 50vw). A longer line scrolls inside the block: the panel never
+   squeezes the block, and an edge glows while code is hidden past it. */
 .detail-panel .code-view {
   margin: 0;
   padding: 22px 26px;
   border-radius: 6px;
-  background: var(--ground);
-  font-size: 26px;
+  flex-shrink: 0;
+  font-size: clamp(16px, 1.23vw, 26px);
   overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+  background:
+    linear-gradient(to right, var(--ground) 40%, transparent) left / 40px 100%
+    no-repeat local,
+    linear-gradient(to left, var(--ground) 40%, transparent) right / 40px 100%
+    no-repeat local,
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--main) 30%, transparent),
+      transparent
+    )
+    left / 16px 100% no-repeat scroll,
+    linear-gradient(
+      to left,
+      color-mix(in srgb, var(--main) 30%, transparent),
+      transparent
+    )
+    right / 16px 100% no-repeat scroll,
+    var(--ground);
 }
 
 .code-line {
@@ -515,12 +584,12 @@ body {
 .detail-panel .io {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 28px;
+  font-size: 20px;
   color: var(--second);
 }
 
 .detail-panel .io .arrow {
-  margin: 0 18px;
+  margin: 0 12px;
   color: var(--main);
 }
 
@@ -531,7 +600,7 @@ body {
 .detail-panel ul {
   margin: 0;
   padding-left: 24px;
-  font-size: 20px;
+  font-size: 17px;
   line-height: 1.5;
 }
 

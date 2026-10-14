@@ -459,7 +459,7 @@ body { margin: 0; background: var(--ground); color: var(--second); font-family: 
 | Porta | `.port` (Handle) | `width: 16px`; `height: 16px`; `border-radius: 50%`; `background: var(--main)`; `border: 0`; `top: 50%`; `margin-top: -8px`. A entrada usa `left: -9px` e a saída `right: -9px`. Um lado sem fio usa `visibility: hidden`. |
 | Fio | `.wire` | `fill: none`; `stroke: var(--main)`; `stroke-width: 4`; `stroke-linecap: round` |
 | Ponto | `.pulse` | `fill: var(--main)`; `r = 9` |
-| Rótulo de ramo | `.branch-label` | `font-size: 22px`; `font-weight: 500`; `letter-spacing: .18em`. "sim" em `var(--main)`; "não" e os rótulos de `elif` em `var(--accent)`. |
+| Rótulo de ramo | `.branch-label` | `font-size: 22px`; `font-weight: 500`; `letter-spacing: .18em`; `text-transform: uppercase`; `white-space: nowrap`. "sim" em `var(--main)`; "não" e os rótulos de `elif` em `var(--accent)`. |
 | Cartão de sugestão | `.alert` | `display: flex`; `gap: 14px`; `align-items: center`; `padding: 14px 22px`; `border-radius: 6px`; `background: var(--second)`; `color: var(--ground)`; `font-size: 24px`; `font-weight: 700`; `white-space: nowrap`; `box-shadow: 0 12px 26px rgba(0,0,0,.3)`. `.alert .dot`: `14px` por `14px`, `border-radius: 50%`, `background: var(--ground)`. |
 | Botão principal | `.btn` | `padding: 16px 30px`; `border-radius: 6px`; `border: 0`; `background: var(--main)`; `color: var(--ground)`; `font: 700 26px var(--font-sans)` |
 | Botão secundário | `.btn-ghost` ("Abrir pasta", "Novo código", "Voltar") | `padding: 12px 22px`; `border-radius: 6px`; `background: transparent`; `border: 2px solid var(--panel-border)`; `color: var(--second)`; `font: 500 22px var(--font-sans)`. Desabilitado: `opacity: .4`. |
@@ -474,24 +474,24 @@ body { margin: 0; background: var(--ground); color: var(--second); font-family: 
 
 **Editor** (`view: "editor"`, sem mapa):
 
-- O contêiner fica em `margin: 170px 0 0 140px`, com `width: 1020px`.
+- O contêiner fica em `margin: min(170px, 19vh) 0 0 140px`, com `width: 1020px` e a altura do resto da janela. Numa janela baixa, o painel sobe e encolhe, e a linha de botões continua visível (1600x900 e 1366x768).
 - Dentro dele, um `.panel` com `height: 620px` e `<section aria-label="Editor">`. A seção tem:
   - o cabeçalho com `<span class="eyebrow">trecho.py</span>` em `var(--main)`, em `padding: 20px 28px` e com `border-bottom: 2px solid color-mix(in srgb, var(--second) 12%, var(--ground))`;
-  - o `textarea` com `aria-label="Trecho Python"`, que mantém o seletor do E2E. Ele usa `padding: 28px 32px`, `font: 400 25px/1.6 var(--font-mono)` e `color: var(--code)`, sem borda e com fundo transparente.
+  - o `textarea` com `aria-label="Trecho Python"`, que mantém o seletor do E2E. Ele usa `padding: 28px 32px`, `font: 400 25px/1.6 var(--font-mono)` e `color: var(--code)`, sem borda e com fundo transparente. Ele não quebra linhas (`wrap="off"`, `white-space: pre`): uma linha longa rola na horizontal.
 - Abaixo do painel, a `margin-top: 40px`, fica uma linha com:
   - o botão `.btn` "Gerar mapa";
-  - o campo `aria-label="Caminho da pasta"`;
+  - o campo `aria-label="Caminho da pasta"`, com o placeholder "Caminho de uma pasta Python";
   - o botão `.btn-ghost` "Abrir pasta".
 - Os avisos "Não foi possível gerar o mapa.", "Pasta não encontrada: …", "Nenhuma função ou instrução encontrada." e "Nenhum arquivo .py encontrado na pasta." ficam no editor. Um grafo vazio não troca de tela.
 
 **Mapa** (`view: "map"`):
 
-- O mapa ocupa `100vw × 100vh`, com `display: grid`. A grade usa `grid-template-columns: 1fr` sem nó selecionado e `1fr min(1060px, 50vw)` com painel.
+- O mapa ocupa `100vw × 100vh`, com `display: grid`. A grade usa `grid-template-columns: 1fr` sem nó selecionado e `1fr clamp(400px, 31vw, 520px)` com painel. O painel do vídeo tem 1060 de 1920 px, ao lado de um cartão só. Aqui ele fica ao lado do nível inteiro e é reduzido: em 1600 px a coluna tem 496 px, e em 1366 px, 423 px. Assim o canvas mostra o nível todo com o título dos cartões acima de 16 px.
 - O canvas fica na coluna 1. Na mesma área, em `position: absolute`, ficam:
   - o botão "Voltar" (`.btn-ghost`), em `left: 24px; top: 24px` (VID-27);
   - a trilha de navegação, em `left: 160px; top: 34px`, com `font: 400 22px var(--font-mono)` e `color: var(--accent)` (VID-19);
   - o botão "Novo código" (`.btn-ghost`), em `right: 24px; top: 24px` (VID-09).
-- O painel de detalhe é um `.panel` na coluna 2, com `margin: 24px`, `padding: 40px 48px`, `display: flex`, `flex-direction: column`, `gap: 22px` e `overflow: auto`.
+- O painel de detalhe é um `.panel` na coluna 2, com `margin: 24px`, `padding: 28px 30px`, `display: flex`, `flex-direction: column`, `gap: 16px` e `overflow: auto`. As letras seguem a redução: título 30 px, resumo 24 px, regras 15 px, entrada e saída 20 px, listas 17 px. O `.eyebrow` do painel tem 14 px, `letter-spacing: .14em` e `line-height: 1.5`, e quebra em duas linhas limpas quando é longo.
 - "Novo código" volta ao editor, mantém o texto do `textarea` e o campo de pasta, e limpa o mapa, os títulos e as explicações.
 - "Arquivos ignorados" (PROJ-06) continua no mapa de projeto, abaixo da trilha.
 
@@ -567,7 +567,16 @@ O nó `mod` aparece como GATILHO "Código solto". Nenhum cartão do primeiro ní
 ### C7. Posições: `flow/layout.ts` (VID-03, VID-10, VID-11, VID-21)
 
 - `NODE_WIDTH = 320`, `NODE_HEIGHT = 140`, `NODE_GAP = 60` e `ROW_GAP = 80`.
-- `layoutRows(rows)`: o nó `i` da linha `r` fica em `x = i * (320 + 60)` e `y = r * (140 + 80)`.
+- `layoutRows(rows)`: o nó `i` da linha `r` fica em `x = i * (320 + 60)` e `y = r * (140 + 90 + 80) − (i % 2) * 90`. Os nós ímpares sobem 90 px (`ZIGZAG`), como o 470/380 do vídeo.
+- `wrapRows(rows, perRow)` corta cada linha em linhas de no máximo `perRow` nós, na ordem. O fluxo segue da esquerda para a direita, linha após linha, como um texto. Uma entrada nova sempre começa uma linha nova.
+- `wrapColumns(posições, perBand)` corta um nível de dentro (dagre) em faixas de no máximo `perBand` colunas. Cada faixa começa na esquerda, `BAND_GAP = 120` px abaixo da faixa de cima, e mantém o próprio desenho (o "sim" continua acima do "não"). `rowBands(rows)` dá a mesma forma às linhas do fluxo principal. As duas retornam `positions`, a faixa de cada nó e `gapAbove`, o `y` do meio do vão acima de cada faixa.
+- `chooseWrap(maisLonga, layoutFor, largura, altura)` (`flow/viewport.ts`) decide o corte, nesta ordem:
+  1. um nível que cabe inteiro com zoom ≥ `LEGIBLE_ZOOM` (0,6) não é cortado;
+  2. senão, vale a linha mais longa que cabe com zoom ≥ 0,8;
+  3. senão, vale a linha com o maior zoom, se ele for ≥ 0,6;
+  4. senão, o nível fica sem corte e começa em 0,8 na esquerda (`startViewport`).
+- Exemplos com o vídeo: em 1600x900 o fluxo principal de 8 cartões vira 5 + 3, como os 5 cartões por linha do vídeo; em 1366x768, 4 + 4. Os 8 passos de `processar_pedido`, ao lado do painel, viram faixas de 3, 3 e 2. `calcular_frete` cabe inteiro ao lado do painel e não é cortado.
+- A ordem de entrada (`schedule`) usa o desenho sem corte. Assim a animação segue o fluxo.
 - `layoutLR` (dagre) continua com `nodesep: 60` e `ranksep: 60`. Depois do dagre roda `orderBranches(positions, nodes, containerId)`. Em cada coluna (mesmo `x`), os nós recebem de novo as posições `y` da própria coluna, em ordem crescente de uma chave:
   - a chave é a lista de índices `j` dos segmentos `/b<j>/` do ID, depois do prefixo do nível;
   - a comparação é elemento a elemento, e um elemento ausente vale `0.5`;
@@ -642,9 +651,10 @@ export type NavAction =
   - Handles `.port` com `visibility` conforme `hasIn` e `hasOut`.
 - **`WireEdge.tsx`** (VID-05, VID-06, VID-21), tipo de aresta `wire`:
   - path `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2` com `pathLength=1` e `class="wire"`;
+  - o fio que vai para uma faixa de baixo tem `data.turnY` (o `gapAbove` da faixa do destino) e usa `turnPath`: sai 24 px à direita, desce até `turnY`, corre até 24 px antes do cartão de destino e desce até a porta dele, com cantos de raio 20;
   - animação CSS de `stroke-dashoffset` de 1 a 0, com `data-draw-at` e `animation-delay`;
   - o ponto é `<circle class="pulse" r="9" data-pulse-at>` com `<animateMotion begin="<pulseAt>ms" dur="750ms" path=… fill="remove">` e visibilidade só durante o movimento. O ponto não é renderizado com movimento reduzido;
-  - o rótulo de ramo (`.branch-label`, via `EdgeLabelRenderer`) fica no ponto `t = 0.25` da curva, deslocado 14 px para cima, com `data-branch-label` igual ao texto.
+  - o rótulo de ramo (`.branch-label`, via `EdgeLabelRenderer`) fica junto ao cartão de destino, alinhado à borda esquerda dele e a 8 px do cartão: acima quando o fio sobe ("sim"), abaixo quando o fio desce ou segue reto ("não"). Assim ele não toca fio nem cartão. Ele tem `data-branch-label` igual ao texto e aparece em maiúsculas, como o `.eyebrow` do vídeo.
 - **`SuggestionCard.tsx`** (VID-31, VID-33): um `button.alert` com `<i class="dot">`, o texto e `data-anchor-id` (ou `"frame"`).
   - Os cartões entram no `ViewportPortal` do React Flow. O de ordem `k` na mesma âncora fica em `x = âncora.x + 20` e `y = âncora.y − 64 − k * 64`.
   - Um cartão preso à moldura fica fora do viewport, em `left: 24px; top: 96px`, empilhado.
@@ -655,13 +665,20 @@ export type NavAction =
   - No fim da transição, o canvas chama `onOpen(node)` e volta a `"open"`. Com movimento reduzido, chama `onOpen` na hora.
   - O contêiner tem `data-phase` e `data-level="top" | "inner"`. Um nível de dentro ganha `.level-frame`.
   - A `key` do React Flow é `${path.length}:${levelId}`, para que a recursão anime de novo.
-  - Com `focusId` (vindo do "Voltar"), o canvas chama `fitView({ nodes: [{ id: focusId }], maxZoom: 1, duration: 0 })` depois do primeiro desenho, e o nó fica no centro. Sem `focusId`, vale `fitView` no nível todo.
+  - O canvas guarda o tamanho medido pelo React Flow (`MeasureCanvas`), por nível: um nível que acabou de abrir espera o próprio tamanho. O nível é cortado (`chooseWrap`) para esse tamanho. Um nível cortado deixa `WRAP_PAD = 48` px nas laterais, porque os fios que descem saem 24 px dos cartões.
+  - A primeira vista vem de `levelViewport` (`flow/viewport.ts`), quando o canvas já tem tamanho:
+    - se o nível todo cabe com zoom ≥ `LEGIBLE_ZOOM` (0,6, o título de 27 px fica acima de 16 px), o zoom é `min(1, ajuste)`, com 24 px (`FIT_PAD`) nas laterais e embaixo e 140 px (`TOP_PAD`) em cima (`fitViewport`). O nível fica no meio da área livre. Com `focusId` (vindo do "Voltar"), o nível se move para pôr esse cartão o mais perto possível do centro, sem tirar nenhum cartão da vista;
+    - senão, com `focusId`, o cartão fica no centro com zoom 1;
+    - senão, vale `startViewport`: o nível começa em 0,8 no primeiro cartão da esquerda, e o resto fica a um arrasto de distância.
+  - Quando o canvas estreita ou alarga porque o painel abriu ou fechou, o nível é cortado de novo e volta a aparecer inteiro (`fitViewport`), com o cartão selecionado o mais perto possível do centro.
+  - Quando só a seleção muda, ou quando o nível não cabe legível, um cartão selecionado fora da vista volta para o centro do canvas, com o mesmo zoom (`revealViewport`). O cartão conta como visível a 24 px (`FIT_PAD`) das laterais.
 
 ### C12. Trilha: `nav/Breadcrumb.tsx` (VID-19)
 
 - O primeiro item é "Fluxo principal" num trecho. Num projeto, continua o nome do projeto (PROJ-04).
 - Depois vem um item por `Opened`, com o título do cartão `via`: o título revisado ou, sem ele, o nome provisório.
 - O separador é `›`. Cada item continua sendo um botão de `goTo`.
+- A trilha fica numa linha só (`display: flex`, `white-space: nowrap`, `overflow: hidden`). Quando falta espaço, os itens do meio encolhem primeiro (`flex-shrink: 1000`) e terminam em "…" (`text-overflow: ellipsis`), até `min-width: 4ch`. Depois encolhe o primeiro item. O último item nunca encolhe. Cada botão tem `title` com o nome completo, e o texto completo continua no DOM.
 
 ### C13. Painel: `panel/DetailPanel.tsx` (VID-28, VID-29, VID-30, VID-33)
 
@@ -808,7 +825,7 @@ O clique que abre também seleciona e mostra o painel. Por isso os prints 03 e 0
 | Imagens de referência dependem do sistema e das fontes | `playwright.config.ts` | Uma imagem gerada no Windows falha em outro sistema | O caminho inclui `{platform}`. As fontes são locais (`@fontsource`). As animações ficam desligadas. |
 | A janela do E2E fica vermelha entre o fim das trilhas e a Fase 7 | todos os `e2e/*.e2e.ts` | Uma trilha não consegue rodar o E2E sozinha | O gate das trilhas é unit + typecheck + check. O E2E inteiro volta na Fase 7, depois da mescla. |
 | Testes do servidor usam o extrator real | `packages/server/src/__tests__/explain-route.test.ts:15` | Uma mudança da trilha A pode quebrar um teste da trilha B depois da mescla | Os testes novos da trilha B usam `pedido_frete.py` com os IDs `fn:calcular_frete/s0` (HTTP) e `/s1` (código), que a trilha A não muda. |
-| O painel com `min(1060px, 50vw)` encolhe o canvas | `styles.css` | Em telas pequenas, o mapa fica estreito | O canvas tem pan e zoom do React Flow. |
+| O painel com `clamp(400px, 31vw, 520px)` encolhe o canvas | `styles.css` | Em 1366x768, `calcular_frete` fica com zoom 0,61 (título de 16,5 px) | O nível corta em faixas quando passa do limite legível. O canvas tem pan e zoom do React Flow. |
 
 ---
 
