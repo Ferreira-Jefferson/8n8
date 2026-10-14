@@ -183,7 +183,7 @@ td.bad { color: var(--muted); text-decoration: line-through; text-decoration-col
 
 /* ---- Logo ---- */
 .logo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-.tile { border-radius: 6px; aspect-ratio: 16 / 10; max-width: 100%; display: grid; place-items: center; padding: 24px; border: 1px solid var(--line); }
+.tile { min-width: 0; border-radius: 6px; aspect-ratio: 16 / 10; max-width: 100%; display: grid; place-items: center; padding: 24px; border: 1px solid var(--line); }
 .tile svg { width: 58%; height: auto; }
 .tile.t-dark { background: var(--c-grafite); color: var(--c-nevoa); --logo-n: var(--c-petroleo); }
 .tile.t-light { background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo-escuro); }
@@ -530,11 +530,11 @@ html { scroll-behavior: smooth; }
       <p class="muted">A unidade <code>u</code> vale 1/80 da altura do logotipo. O logotipo tem no mínimo 40 px de largura. Abaixo disso, use o símbolo.</p>
 
       <div class="logo-grid">
-        <figure><div class="tile t-dark"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Principal, escuro.</b> Névoa e Petróleo sobre Grafite.</figcaption></figure>
-        <figure><div class="tile t-light"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Principal, claro.</b> Tinta e Petróleo escuro sobre Papel.</figcaption></figure>
-        <figure><div class="tile t-dark-mono"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Uma cor, escuro.</b> Para fundos escuros com outras cores perto.</figcaption></figure>
-        <figure><div class="tile t-light-mono"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Uma cor, claro.</b> Para impressão em uma cor.</figcaption></figure>
-        <figure><div class="tile t-accent"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark"/></svg></div><figcaption><b>Sobre Petróleo.</b> Grafite sobre Petróleo. Só em peças de destaque.</figcaption></figure>
+        <figure><div class="tile t-dark"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Principal, escuro.</b> Névoa e Petróleo sobre Grafite.</figcaption></figure>
+        <figure><div class="tile t-light"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Principal, claro.</b> Tinta e Petróleo escuro sobre Papel.</figcaption></figure>
+        <figure><div class="tile t-dark-mono"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Uma cor, escuro.</b> Para fundos escuros com outras cores perto.</figcaption></figure>
+        <figure><div class="tile t-light-mono"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Uma cor, claro.</b> Para impressão em uma cor.</figcaption></figure>
+        <figure><div class="tile t-accent"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Sobre Petróleo.</b> Grafite sobre Petróleo. Só em peças de destaque.</figcaption></figure>
       </div>
 
       <div class="split">
@@ -543,21 +543,21 @@ html { scroll-behavior: smooth; }
           <p class="muted">O símbolo guarda só o caminho: os dois blocos ligados e o fio. Use no favicon, no ícone do app e no avatar. Ele se lê até 16 px, onde o logotipo inteiro vira um borrão.</p>
         </div>
         <div class="icons">
-          <div class="icon-wrap"><div class="icon" style="width:96px;height:96px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark"/></svg></div>96</div>
-          <div class="icon-wrap"><div class="icon" style="width:48px;height:48px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark"/></svg></div>48</div>
-          <div class="icon-wrap"><div class="icon" style="width:32px;height:32px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark"/></svg></div>32</div>
-          <div class="icon-wrap"><div class="icon" style="width:16px;height:16px;border-radius:3px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark"/></svg></div>16</div>
-          <div class="icon-wrap"><div class="icon light" style="width:48px;height:48px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8, claro"><use href="#mark"/></svg></div>claro</div>
+          <div class="icon-wrap"><div class="icon" style="width:96px;height:96px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark" width="96" height="76"/></svg></div>96</div>
+          <div class="icon-wrap"><div class="icon" style="width:48px;height:48px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark" width="96" height="76"/></svg></div>48</div>
+          <div class="icon-wrap"><div class="icon" style="width:32px;height:32px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark" width="96" height="76"/></svg></div>32</div>
+          <div class="icon-wrap"><div class="icon" style="width:16px;height:16px;border-radius:3px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark" width="96" height="76"/></svg></div>16</div>
+          <div class="icon-wrap"><div class="icon light" style="width:48px;height:48px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8, claro"><use href="#mark" width="96" height="76"/></svg></div>claro</div>
         </div>
       </div>
 
       <div class="head"><h3>Usos errados</h3></div>
       <div class="dont-grid">
-        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-coral)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark"/></svg></div><figcaption>use as cores do n8n.</figcaption></figure>
-        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-limao)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark"/></svg></div><figcaption>use o verde-limão antigo nem outra cor neon.</figcaption></figure>
-        <figure class="dont"><div class="tile" style="background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark"/></svg></div><figcaption>ponha o Petróleo claro sobre Papel. O contraste é de 2,0:1.</figcaption></figure>
-        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" preserveAspectRatio="none" style="width:86%;height:40%" aria-hidden="true"><use href="#wordmark"/></svg></div><figcaption>estique nem comprima.</figcaption></figure>
-        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" aria-hidden="true"><g transform="translate(124 0) scale(-1 1)"><use href="#wordmark"/></g></svg></div><figcaption>espelhe: o fio sai sempre do bloco de cima.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-coral)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>use as cores do n8n.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-limao)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>use o verde-limão antigo nem outra cor neon.</figcaption></figure>
+        <figure class="dont"><div class="tile" style="background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>ponha o Petróleo claro sobre Papel. O contraste é de 2,0:1.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" preserveAspectRatio="none" style="width:86%;height:40%" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>estique nem comprima.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" aria-hidden="true"><g transform="translate(124 0) scale(-1 1)"><use href="#wordmark" width="124" height="80"/></g></svg></div><figcaption>espelhe: o fio sai sempre do bloco de cima.</figcaption></figure>
       </div>
     </section>
 
