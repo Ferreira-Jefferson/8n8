@@ -517,9 +517,10 @@ test.describe("Descida até as folhas", () => {
     await page.goto(`${REAL}/`);
     await page.getByLabel("Caminho da pasta").fill(LOJA);
     await page.getByRole("button", { name: "Abrir pasta" }).click();
-    await expect(nodes(page)).toHaveCount(4);
+    // Three subfolders and the two root files (PROJ-02).
+    await expect(nodes(page)).toHaveCount(5);
     await expect(nodes(page).first()).toBeVisible();
-    expect(await openMarks(page)).toEqual([true, true, true, true]);
+    expect(await openMarks(page)).toEqual([true, true, true, true, true]);
     await clickCard(page, "dir:pedidos");
     await expect(nodes(page)).toHaveCount(3);
     expect(await cardTags(page)).toEqual(["ARQUIVO", "ARQUIVO", "ARQUIVO"]);

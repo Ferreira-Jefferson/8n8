@@ -237,7 +237,8 @@ test.describe("O visual do vídeo", () => {
     await page.getByLabel("Caminho da pasta").fill(FIXTURE);
     await page.getByRole("button", { name: "Abrir pasta" }).click();
     const folders = await levelTags(page);
-    expect(new Set(folders)).toEqual(new Set(["PASTA"]));
+    // The top level holds the subfolders and the root files (PROJ-02).
+    expect(folders).toEqual(["PASTA", "PASTA", "PASTA", "ARQUIVO", "ARQUIVO"]);
     for (const t of folders) seen.add(t);
     await clickCard(page, "dir:pedidos");
     await expect(nodes(page)).toHaveCount(3);
