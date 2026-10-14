@@ -9,89 +9,6 @@ export const lojaGraph: Graph = {
   empty: false,
   nodes: [
     {
-      id: "dir:.",
-      kind: "folder",
-      label: "raiz",
-      parentId: null,
-      range: {
-        start: 1,
-        end: 1,
-      },
-      openable: true,
-      path: "",
-    },
-    {
-      id: "file:main.py",
-      kind: "file",
-      label: "main.py",
-      parentId: "dir:.",
-      range: {
-        start: 1,
-        end: 5,
-      },
-      openable: true,
-      path: "main.py",
-    },
-    {
-      id: "file:main.py/fn:main",
-      kind: "function",
-      label: "main",
-      parentId: "file:main.py",
-      range: {
-        start: 4,
-        end: 5,
-      },
-      openable: true,
-    },
-    {
-      id: "file:main.py/fn:main/s0",
-      kind: "call",
-      label: "pedidos.pedidos.processar_pedido",
-      parentId: "file:main.py/fn:main",
-      range: {
-        start: 5,
-        end: 5,
-      },
-      openable: true,
-      target: "file:pedidos/pedidos.py/fn:processar_pedido",
-    },
-    {
-      id: "file:relatorio.py",
-      kind: "file",
-      label: "relatorio.py",
-      parentId: "dir:.",
-      range: {
-        start: 1,
-        end: 2,
-      },
-      openable: true,
-      path: "relatorio.py",
-    },
-    {
-      id: "file:relatorio.py/fn:gerar",
-      kind: "function",
-      label: "gerar",
-      parentId: "file:relatorio.py",
-      range: {
-        start: 1,
-        end: 2,
-      },
-      openable: true,
-    },
-    {
-      id: "file:relatorio.py/fn:gerar/s0",
-      kind: "external",
-      label: "calcular_frete",
-      parentId: "file:relatorio.py/fn:gerar",
-      range: {
-        start: 2,
-        end: 2,
-      },
-      openable: false,
-      callee: "calcular_frete",
-      category: "EXTERNO",
-    },
-    {
       id: "dir:frete",
       kind: "folder",
       label: "frete",
@@ -151,8 +68,8 @@ export const lojaGraph: Graph = {
     },
     {
       id: "file:frete/calculo.py/fn:calcular_frete/s0/b0/s0",
-      kind: "code",
-      label: "Código",
+      kind: "return",
+      label: "50",
       parentId: "file:frete/calculo.py/fn:calcular_frete",
       range: {
         start: 3,
@@ -162,8 +79,8 @@ export const lojaGraph: Graph = {
     },
     {
       id: "file:frete/calculo.py/fn:calcular_frete/s1",
-      kind: "code",
-      label: "Código",
+      kind: "return",
+      label: "20",
       parentId: "file:frete/calculo.py/fn:calcular_frete",
       range: {
         start: 4,
@@ -208,8 +125,8 @@ export const lojaGraph: Graph = {
     },
     {
       id: "file:legado/frete_antigo.py/fn:calcular_frete/s0",
-      kind: "code",
-      label: "Código",
+      kind: "return",
+      label: "peso * 2",
       parentId: "file:legado/frete_antigo.py/fn:calcular_frete",
       range: {
         start: 2,
@@ -266,14 +183,16 @@ export const lojaGraph: Graph = {
     },
     {
       id: "file:pedidos/itens.py/fn:somar_itens/s0",
-      kind: "code",
-      label: "Código",
+      kind: "return",
+      label: "sum(itens)",
       parentId: "file:pedidos/itens.py/fn:somar_itens",
       range: {
         start: 2,
         end: 2,
       },
       openable: false,
+      callee: "sum",
+      category: "EXTERNO",
     },
     {
       id: "file:pedidos/pedidos.py",
@@ -324,14 +243,85 @@ export const lojaGraph: Graph = {
     },
     {
       id: "file:pedidos/pedidos.py/fn:processar_pedido/s2",
-      kind: "code",
-      label: "Código",
+      kind: "return",
+      label: "total + frete",
       parentId: "file:pedidos/pedidos.py/fn:processar_pedido",
       range: {
         start: 8,
         end: 8,
       },
       openable: false,
+    },
+    {
+      id: "file:main.py",
+      kind: "file",
+      label: "main.py",
+      parentId: null,
+      range: {
+        start: 1,
+        end: 5,
+      },
+      openable: true,
+      path: "main.py",
+    },
+    {
+      id: "file:main.py/fn:main",
+      kind: "function",
+      label: "main",
+      parentId: "file:main.py",
+      range: {
+        start: 4,
+        end: 5,
+      },
+      openable: true,
+    },
+    {
+      id: "file:main.py/fn:main/s0",
+      kind: "call",
+      label: "pedidos.pedidos.processar_pedido",
+      parentId: "file:main.py/fn:main",
+      range: {
+        start: 5,
+        end: 5,
+      },
+      openable: true,
+      target: "file:pedidos/pedidos.py/fn:processar_pedido",
+    },
+    {
+      id: "file:relatorio.py",
+      kind: "file",
+      label: "relatorio.py",
+      parentId: null,
+      range: {
+        start: 1,
+        end: 2,
+      },
+      openable: true,
+      path: "relatorio.py",
+    },
+    {
+      id: "file:relatorio.py/fn:gerar",
+      kind: "function",
+      label: "gerar",
+      parentId: "file:relatorio.py",
+      range: {
+        start: 1,
+        end: 2,
+      },
+      openable: true,
+    },
+    {
+      id: "file:relatorio.py/fn:gerar/s0",
+      kind: "return",
+      label: "calcular_frete(10)",
+      parentId: "file:relatorio.py/fn:gerar",
+      range: {
+        start: 2,
+        end: 2,
+      },
+      openable: false,
+      callee: "calcular_frete",
+      category: "EXTERNO",
     },
   ],
   edges: [
@@ -341,12 +331,6 @@ export const lojaGraph: Graph = {
       source: "file:frete/calculo.py/fn:calcular_frete/s0",
       target: "file:frete/calculo.py/fn:calcular_frete/s0/b0/s0",
       label: "sim",
-    },
-    {
-      id: "next:file:frete/calculo.py/fn:calcular_frete/s0/b0/s0->file:frete/calculo.py/fn:calcular_frete/s1",
-      kind: "next",
-      source: "file:frete/calculo.py/fn:calcular_frete/s0/b0/s0",
-      target: "file:frete/calculo.py/fn:calcular_frete/s1",
     },
     {
       id: "branch:file:frete/calculo.py/fn:calcular_frete/s0->file:frete/calculo.py/fn:calcular_frete/s1",

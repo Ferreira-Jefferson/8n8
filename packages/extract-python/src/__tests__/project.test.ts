@@ -11,7 +11,7 @@ async function projectOf(files: SourceFile[]): Promise<Graph> {
 const STRUCTURE = new Set(["folder", "file"]);
 
 describe("extractProject: folders and files (PROJ-02)", () => {
-  it("lays out folder and file nodes in pre-order, folders before files", async () => {
+  it("lays out folder and file nodes in pre-order, folders before the files of the root", async () => {
     const graph = await projectOf(lojaFiles());
 
     expect(
@@ -19,9 +19,6 @@ describe("extractProject: folders and files (PROJ-02)", () => {
         .filter((n) => STRUCTURE.has(n.kind))
         .map((n) => [n.id, n.kind, n.label, n.path, n.parentId]),
     ).toEqual([
-      ["dir:.", "folder", "raiz", "", null],
-      ["file:main.py", "file", "main.py", "main.py", "dir:."],
-      ["file:relatorio.py", "file", "relatorio.py", "relatorio.py", "dir:."],
       ["dir:frete", "folder", "frete", "frete", null],
       [
         "file:frete/__init__.py",
@@ -67,6 +64,8 @@ describe("extractProject: folders and files (PROJ-02)", () => {
         "pedidos/pedidos.py",
         "dir:pedidos",
       ],
+      ["file:main.py", "file", "main.py", "main.py", null],
+      ["file:relatorio.py", "file", "relatorio.py", "relatorio.py", null],
     ]);
   });
 
@@ -188,7 +187,6 @@ describe("extractProject: determinism and edge cases", () => {
     const graph = await projectOf([{ path: "b.py", source: "import (\n" }]);
 
     expect(graph.nodes.map((n) => [n.id, n.syntaxError ?? null])).toEqual([
-      ["dir:.", null],
       ["file:b.py", { line: 1 }],
     ]);
   });

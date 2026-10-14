@@ -45,7 +45,7 @@ function folderNode(rel: string, parentId: NodeId | null): FlowNode {
   return {
     id: folderId(rel),
     kind: "folder",
-    label: rel === "" ? "raiz" : baseName(rel),
+    label: baseName(rel),
     parentId,
     range: { start: 1, end: 1 },
     openable: true,
@@ -69,7 +69,8 @@ function fileGraph(
     id,
     kind: "file",
     label: baseName(file.path),
-    parentId: folderId(dirOf(file.path)),
+    // A file in the root has no folder: it sits at the top, beside the folders.
+    parentId: dirOf(file.path) === "" ? null : folderId(dirOf(file.path)),
     // Covers every line while marking, so an error outside the inner
     // nodes lands on the file node instead of a new module node.
     range: { start: 1, end: Number.MAX_SAFE_INTEGER },
@@ -118,13 +119,10 @@ function layoutProject(graphs: Map<string, Graph>): FlowNode[] {
     emitFiles(dir);
   };
 
-  if (paths.some((p) => dirOf(p) === "")) {
-    nodes.push(folderNode("", null));
-    emitFiles("");
-  }
   for (const dir of sortedDirs) {
     if (dirOf(dir) === "") emitFolder(dir, null);
   }
+  emitFiles("");
   return nodes;
 }
 

@@ -64,7 +64,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 ### C1. Contrato em `model` (`graph.ts`, `ids.ts`, `project.ts` novo) (PROJ-02, 03)
 
 - `NodeKind` ganha `"folder"` e `"file"`. `EdgeKind` ganha `"imports"`.
-- `FlowNode.path?: string`: caminho POSIX relativo à raiz, só em nós `folder` e `file` (`""` no nó "raiz").
+- `FlowNode.path?: string`: caminho POSIX relativo à raiz, só em nós `folder` e `file` (só em pastas e arquivos; não há nó "raiz").
 - `Graph.project?: { name: string }`: presente só no grafo de projeto. `name` é o nome da pasta raiz.
 - `ids.ts`: `folderId(rel)` → `dir:<rel>` (raiz: `dir:.`); `fileId(rel)` → `file:<rel>`. Os nós internos usam `childId(fileId, <id do trecho>)`, por exemplo `file:pedidos/pedidos.py/fn:processar_pedido/s2`.
 - `project.ts`:
@@ -111,7 +111,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 - `projectNames` (PROJ-09): um nome sem definição local e sem import, que existe como definição de topo em outro arquivo, vira passo `external` com `category: "EXTERNO"`. Hoje ele não vira passo. Chamadas a nomes fora do projeto (`print`, `len`) continuam sem passo.
 - `from x import *` não é resolvido: os nomes caem na regra acima.
 
-**Nós de pasta e arquivo.** Pré-ordem: o nó "raiz" (`dir:.`, rótulo `raiz`, só se houver `.py` direto na raiz), depois as pastas em ordem. Dentro de uma pasta: subpastas, depois arquivos, cada arquivo seguido dos seus nós internos. Só entra pasta que tem `.py` em algum nível abaixo. O nó de arquivo tem `range` de 1 até a última linha. O nó de pasta tem `range {1, 1}` e o painel não mostra linhas para ele.
+**Nós de pasta e arquivo.** Pré-ordem: as pastas do topo em ordem, depois os arquivos da raiz, com `parentId` nulo (não existe nó "raiz"). Dentro de uma pasta: subpastas, depois arquivos, cada arquivo seguido dos seus nós internos. Só entra pasta que tem `.py` em algum nível abaixo. O nó de arquivo tem `range` de 1 até a última linha. O nó de pasta tem `range {1, 1}` e o painel não mostra linhas para ele.
 
 **Fios de importação (PROJ-03).** Um fio `imports` por par (arquivo, arquivo), id `imports:<origem>-><destino>`. `import a.b` liga ao módulo mais profundo resolvido (`a.b`). `from a import b` liga a `a.b` quando `b` é submódulo, senão a `a`. Import do próprio arquivo e de fora da raiz não geram fio. Os fios `calls` saem de `callsEdges` como hoje, agora entre arquivos.
 

@@ -105,21 +105,22 @@ const PEDIDO = "file:pedidos/pedidos.py/fn:processar_pedido";
 const FRETE = "file:frete/calculo.py/fn:calcular_frete";
 
 test.describe("Pasta local", () => {
-  test("PROJ-01/02: the top level is the four folders and pedidos holds its three files", async ({
+  test("PROJ-01/02: the top level is the three folders and the two root files, and pedidos holds its three files", async ({
     page,
   }) => {
     await openFolder(page, LOJA);
 
-    await expect(nodes(page)).toHaveCount(4);
+    await expect(nodes(page)).toHaveCount(5);
     expect(await levelIds(page)).toEqual([
-      "dir:.",
       "dir:frete",
       "dir:legado",
       "dir:pedidos",
+      "file:main.py",
+      "file:relatorio.py",
     ]);
     await expect
       .poll(() => cardNames(page))
-      .toEqual(["raiz", "frete", "legado", "pedidos"]);
+      .toEqual(["frete", "legado", "pedidos", "main.py", "relatorio.py"]);
     await expect(breadcrumb(page).getByRole("button")).toHaveText(["loja"]);
 
     await clickCard(page, "dir:pedidos");
@@ -134,9 +135,7 @@ test.describe("Pasta local", () => {
       .toEqual(["__init__.py", "itens.py", "pedidos.py"]);
 
     await breadcrumb(page).getByRole("button", { name: "loja" }).click();
-    await clickCard(page, "dir:.");
-    await expect(nodes(page)).toHaveCount(2);
-    expect(await levelIds(page)).toEqual(["file:main.py", "file:relatorio.py"]);
+    await expect(nodes(page)).toHaveCount(5);
   });
 
   test("PROJ-03, Independent Test: import wires join the folders and, inside pedidos, the files", async ({
@@ -144,14 +143,14 @@ test.describe("Pasta local", () => {
   }) => {
     await openFolder(page, LOJA);
 
-    await expect(nodes(page)).toHaveCount(4);
+    await expect(nodes(page)).toHaveCount(5);
     await expect(edges(page)).toHaveCount(2);
     await expect(edge(page, "dir:pedidos", "dir:frete")).toHaveCount(1);
-    await expect(edge(page, "dir:.", "dir:pedidos")).toHaveCount(1);
+    await expect(edge(page, "file:main.py", "dir:pedidos")).toHaveCount(1);
     await expect(edge(page, "dir:pedidos", "dir:frete")).toHaveClass(
       /\bedge-imports\b/,
     );
-    await expect(edge(page, "dir:.", "dir:pedidos")).toHaveClass(
+    await expect(edge(page, "file:main.py", "dir:pedidos")).toHaveClass(
       /\bedge-imports\b/,
     );
 
@@ -212,12 +211,10 @@ test.describe("Pasta local", () => {
     const project = page.waitForResponse("**/api/project");
     await openFolder(page, LOJA);
     const { graph } = (await (await project).json()) as ProjectResponse;
-    await clickCard(page, "dir:.");
     await clickCard(page, "file:relatorio.py");
     await clickCard(page, "file:relatorio.py/fn:gerar");
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "loja",
-      "raiz",
       "relatorio.py",
       "Gerar",
     ]);
@@ -273,7 +270,7 @@ test.describe("Pasta local", () => {
     page,
   }) => {
     await openFolder(page, LOJA);
-    await expect(nodes(page)).toHaveCount(4);
+    await expect(nodes(page)).toHaveCount(5);
 
     const section = page.getByRole("region", { name: "Arquivos ignorados" });
     await expect(section.getByRole("listitem")).toHaveText([

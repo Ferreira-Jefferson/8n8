@@ -247,17 +247,18 @@ describe("projectLevel inside a container", () => {
 });
 
 describe("projectLevel on a project graph (PROJ-02, 03, 04)", () => {
-  it("top level shows the folders and the lifted imports wires only", () => {
+  it("top level shows the folders, the files of the root and the lifted imports wires only", () => {
     const level = projectLevel(lojaGraph, null);
     expect(level.nodes.map((n) => n.id)).toEqual([
-      "dir:.",
       "dir:frete",
       "dir:legado",
       "dir:pedidos",
+      "file:main.py",
+      "file:relatorio.py",
     ]);
     expect(level.edges.map((e) => e.id).sort()).toEqual([
-      "imports:dir:.->dir:pedidos",
       "imports:dir:pedidos->dir:frete",
+      "imports:file:main.py->dir:pedidos",
     ]);
     expect(level.edges.some((e) => e.kind === "calls")).toBe(false);
   });

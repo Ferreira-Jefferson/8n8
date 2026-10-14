@@ -34,7 +34,7 @@ Depende de: 01-fatia-central.
 | Pastas ignoradas | `.git`, `.venv`, `venv`, `node_modules`, `__pycache__`, `site-packages`, `build`, `dist` | Não são código do projeto. | n |
 | Arquivo grande | Arquivos acima de 1 048 576 bytes entram em "Arquivos ignorados" | Costumam ser gerados, não escritos à mão. | y |
 | Leitura de qualquer caminho local | A API local lê qualquer pasta que o usuário informar, sem limite de tamanho total | App local de um usuário. Navegadores ficam bloqueados pela guarda de `Host` e pelo 415. Outros processos locais conseguem ler, e esse risco é aceito. | y |
-| Nível superior | Uma pasta (pacote) por nó. Arquivos na raiz ficam num nó "raiz". | Espelha a estrutura do projeto. | n |
+| Nível superior | Uma subpasta (pacote) por nó, mais os arquivos da raiz, cada um como nó. | Espelha a estrutura do projeto. | n |
 
 **Open questions:** none. Todas foram resolvidas ou registradas acima.
 
@@ -51,7 +51,7 @@ Depende de: 01-fatia-central.
 **Acceptance Criteria** (each line is one EARS pattern):
 
 1. WHEN o usuário informa o caminho de uma pasta THEN o sistema SHALL ler todos os arquivos `.py` da pasta e das subpastas, exceto as pastas ignoradas.  <!-- PROJ-01 -->
-2. WHEN a leitura termina THEN o sistema SHALL mostrar um nó por pasta no nível superior e um nó por arquivo dentro de cada pasta.  <!-- PROJ-02 -->
+2. WHEN a leitura termina THEN o sistema SHALL mostrar um nó por subpasta e um nó por arquivo da raiz no nível superior, e um nó por arquivo dentro de cada subpasta.  <!-- PROJ-02 -->
 3. WHEN um arquivo importa outro arquivo da mesma raiz THEN o sistema SHALL desenhar um fio de importação entre eles.  <!-- PROJ-03 -->
 4. WHEN uma função chama uma função de outro arquivo da raiz por um import resolvido THEN o sistema SHALL desenhar o fio de chamada entre as duas funções.  <!-- PROJ-04 -->
 5. IF o caminho não existe ou não é uma pasta THEN o sistema SHALL mostrar "Pasta não encontrada: <caminho>".  <!-- PROJ-05 -->

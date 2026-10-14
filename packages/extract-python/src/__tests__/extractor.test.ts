@@ -31,7 +31,7 @@ describe("createPythonExtractor", () => {
     );
   });
 
-  it("extracts the projeto-loja fixture as a project: 12 folder and file nodes, 4 imports wires", async () => {
+  it("extracts the projeto-loja fixture as a project: 11 folder and file nodes, 4 imports wires", async () => {
     const graph = (await createPythonExtractor()).extractProject(lojaFiles());
 
     expect(
@@ -39,9 +39,6 @@ describe("createPythonExtractor", () => {
         .filter((n) => n.kind === "folder" || n.kind === "file")
         .map((n) => n.id),
     ).toEqual([
-      "dir:.",
-      "file:main.py",
-      "file:relatorio.py",
       "dir:frete",
       "file:frete/__init__.py",
       "file:frete/calculo.py",
@@ -51,6 +48,8 @@ describe("createPythonExtractor", () => {
       "file:pedidos/__init__.py",
       "file:pedidos/itens.py",
       "file:pedidos/pedidos.py",
+      "file:main.py",
+      "file:relatorio.py",
     ]);
     expect(
       graph.edges

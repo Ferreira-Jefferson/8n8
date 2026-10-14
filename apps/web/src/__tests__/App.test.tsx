@@ -230,7 +230,7 @@ function breadcrumbItems() {
 }
 
 describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
-  it("maps the folder: 4 nodes at the top and the breadcrumb starts with loja", async () => {
+  it("maps the folder: 5 nodes at the top and the breadcrumb starts with loja", async () => {
     projectMock.mockResolvedValue(loja);
     render(<App />);
     openFolder();
@@ -238,10 +238,11 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     expect(projectMock).toHaveBeenCalledWith(lojaRoot);
     const { graph, levelId } = currentCanvas();
     expect(projectLevel(graph, levelId).nodes.map((n) => n.id)).toEqual([
-      "dir:.",
       "dir:frete",
       "dir:legado",
       "dir:pedidos",
+      "file:main.py",
+      "file:relatorio.py",
     ]);
     expect(breadcrumbItems()).toEqual(["loja"]);
   });
