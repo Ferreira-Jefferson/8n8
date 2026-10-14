@@ -23,7 +23,7 @@
 
 ### AD-004 — Stack
 - **Date:** 2026-10-13
-- **Decision:** TypeScript, monorepo pnpm, Biome e Vitest, igual ao roadmap. Parser: Tree-sitter (`web-tree-sitter` com a gramática Python). Interface: React com React Flow (modo fluxo) e um grafo de forças (modo grafo). App web local.
+- **Decision:** TypeScript, monorepo pnpm, Biome e Vitest, igual ao roadmap. Parser: Tree-sitter (`web-tree-sitter` com a gramática Python). Interface: React com React Flow. App web local. (O modo grafo saiu pela AD-019.)
 - **Consequence:** A design phase confirma as versões exatas das bibliotecas.
 
 ### AD-005 — Fronteiras de pacote garantidas no build
@@ -67,12 +67,14 @@
 - **Context:** A feature 03 (GRAPH-05) precisa saber se uma função tem decorador, para tratá-la como ponto de entrada. Na feature 02 a web não tem o fonte de cada arquivo.
 - **Decision:** `FlowNode` ganha o campo `decorators?: string[]`, com o texto de cada decorador sem `@` e sem argumentos (ex.: `"app.route"`). O extrator preenche o campo em funções, métodos e classes decorados.
 - **Consequence:** O campo é aditivo e opcional, e outro `Extractor` preenche o mesmo campo. A web detecta pontos de entrada sem ler o texto do código.
+- **Status:** cancelada pela AD-019. O campo nunca foi implementado.
 
 ### AD-012 — Modo grafo: layout determinístico com d3-force, desenho com React Flow
 - **Date:** 2026-10-13
 - **Context:** Feature 03. Os testes E2E precisam de posições estáveis e de seletores no DOM.
 - **Decision:** O layout de forças é uma função pura em `apps/web` (`d3-force` 3.0.0, `.stop().tick(300)`, posições inteiras). O desenho usa o React Flow, que já está instalado. O modo (`flow`/`graph`) fica no `navReducer`, e trocar de modo nunca muda `nav.selected`.
 - **Consequence:** A mesma entrada gera o mesmo grafo, e os seletores do E2E servem para os dois modos. A escala para milhares de nós fica adiada.
+- **Status:** cancelada pela AD-019.
 
 ### AD-013 — IDs de projeto
 - **Date:** 2026-10-13
@@ -120,19 +122,25 @@
 - **Decision:** As cores, medidas e fontes do vídeo são tokens CSS em `apps/web/src/styles.css` (fundo `#121110`, destaque `#D4FF3F`, texto `#F5F2EC`, secundário `#A8A399`). As fontes Archivo Black, Space Grotesk e DM Mono vêm de pacotes `@fontsource` empacotados no build, sem pedido a outro host.
 - **Consequence:** Uma tela nova usa os mesmos tokens. Uma mudança de aparência é aprovada por imagens de referência do Playwright.
 
+### AD-019 — Sem modo grafo
+- **Date:** 2026-10-14
+- **Context:** O modo grafo desenharia os mesmos nós e fios do fluxo, nível a nível. O nó pai do fluxo já liga o nó aberto ao nível.
+- **Decision:** O produto não tem modo grafo. O mapa é só o fluxo de nós e fios. A feature 03-modo-grafo foi removida, com spec, design e tasks.
+- **Consequence:** Cancela a AD-011 e a AD-012. Não há `d3-force` nem alternância de modo.
+
 ## Handoff
 
 *Pausado pelo usuário em 2026-10-14, durante a verificação da feature 05. Nada foi enviado ao remoto.*
 
 - **Ordem das features:** 01-fatia-central ✅ → 04-fidelidade-e-cache ✅ → 02-pasta-local ✅ → 05-mapa-do-video (implementada, falta verificar).
-- **Features futuras (decisão do usuário em 2026-10-13):** 03-modo-grafo e o tour em vídeo (degrau 4). A spec, o design e as tasks da 03 ficam guardados, mas não serão implementados agora.
+- **Features futuras:** o tour em vídeo (degrau 4). O modo grafo (03) foi removido em 2026-10-14 (AD-019).
 - **01, 04 e 02:** verificadas (PASS). Detalhes no `validation.md` de cada uma.
 - **05-mapa-do-video:**
   - T1–T48 feitas e mescladas no master (merge e7ed837). T49–T50 (imagens de referência) canceladas pelo usuário em 2026-10-14. O usuário também cancelou a página de comparação com o vídeo.
   - Gate no master em e7ed837: typecheck, check, 830 unitários e 83 E2E verdes. O E2E passou 3 vezes seguidas na feat/05d. O projeto `performance` (`CODE2N8N_PERF=1 pnpm exec playwright test --project performance`) passa 9/9.
   - Medidas de desempenho: o mapa aparece em cerca de 45 ms, a animação termina em cerca de 3 s, abrir um nó leva cerca de 1,2 s (0,13 s sem animação), Voltar leva cerca de 20–80 ms e uma pasta de 300 arquivos leva cerca de 0,2 s.
   - O bug do canvas em branco foi corrigido em 089e3a6. O "em branco" que restou na porta 4319 era erro de medição do teste de desempenho, corrigido em f75feb6, com teste de guarda em 632b943.
-  - **Próximo passo:** rodar de novo o Verifier independente (validate.md, sensor de mutantes num worktree temporário), escrever o `validation.md` e rodar `validate_state.py`. A primeira tentativa foi interrompida pela pausa, sem resultado. O worktree temporário dela foi apagado.
+  - **Aprovada pelo usuário em 2026-10-14** (UAT: "parecido ao vídeo de referência"). O Verifier independente não foi rodado e o `validation.md` não foi escrito.
 - **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 e bf90eb8 (T36) da 05 entraram com testes vermelhos. O histórico não foi reescrito.
 - **Ambiente:**
   - O pnpm 12.6.0 global foi reinstalado em 2026-10-13 com os scripts de instalação ligados e agora roda o binário nativo (`pnpm.exe`). Se ele voltar a dizer "pnpm is running through Node.js", reinstale com `npm install -g pnpm@12.6.0 --foreground-scripts`.

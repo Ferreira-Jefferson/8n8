@@ -20,7 +20,7 @@ Esta feature entrega a menor fatia demonstrável do code2n8n:
 | Feature | Reason |
 | ------- | ------ |
 | Pasta local / projeto inteiro | Feature 02-pasta-local. |
-| Modo grafo (estilo Obsidian) | Feature 03-modo-grafo. |
+| Modo grafo (estilo Obsidian) | Removido do produto (AD-019). |
 | Linguagens além de Python | O extrator fica plugável (AD-003), mas o MVP é só Python. |
 | Tour em vídeo (degrau 4) | Fase futura. |
 | Edição ou execução do código analisado | O produto serve para entender o código. Só faz análise estática. |
