@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage } from "node:http";
 import { pathToFileURL } from "node:url";
 
-// OpenAI-compatible fake LLM for the E2E of feature 04. The keyed server points
+// OpenAI-compatible fake LLM for the E2E of features 04 and 05. The keyed server points
 // OPENROUTER_BASE_URL here, so the real review pipeline runs without the network.
 // Answers are scripted by request content; any other content gets 500 so an
 // unexpected call fails loudly.
@@ -17,7 +17,7 @@ interface Message {
 }
 
 export interface FakeCall {
-  role: "draft" | "review";
+  role: "draft" | "review" | "title" | "title-review";
   model: string;
   messages: Message[];
 }
@@ -49,7 +49,122 @@ const FRETE_SUGGESTION: Suggestion = {
   severity: "media",
 };
 
+const PEDIDO_SUGGESTIONS: Suggestion[] = [
+  {
+    command: "Grave o pedido numa transação",
+    reason: "A chamada `db.salvar` grava sem transação.",
+    line: 7,
+    severity: "alta",
+  },
+  {
+    command: "Envie o e-mail por uma fila",
+    reason: "A chamada `enviar_email` bloqueia o pedido.",
+    line: 8,
+    severity: "media",
+  },
+];
+
+const VIDEO_FRETE_SUGGESTION: Suggestion = {
+  command: "Trate o erro da chamada HTTP",
+  reason: "A chamada `requests.get` falha sem resposta da API.",
+  line: 2,
+  severity: "alta",
+};
+
+/** Key of a suggestion in `evidence`: command and reason, as the reviewer gets them. */
+const said = (s: Suggestion) => `${s.command} ${s.reason}`;
+
 const SCENARIOS: Scenario[] = [
+  // Feature 05, the video code (pedido_video.py). They come first: the old marker
+  // "def calcular_frete" also appears in the video code. Functions come before
+  // steps, because a function's code holds its steps' markers.
+  {
+    // SPEC_DEVIATION: "def processar_pedido(req)", not "def processar_pedido" (D1).
+    // Reason: pedido_frete.py also has "def processar_pedido(itens)", and its
+    // existing E2E (CACHE-02) expects the fake to fail that node.
+    marker: "def processar_pedido(req)",
+    draft: {
+      summary:
+        "A função lê o pedido e calcula o frete. A função grava o pedido e envia um e-mail.",
+      inputs: ["`req`"],
+      outputs: ["total do pedido"],
+      suggestions: PEDIDO_SUGGESTIONS,
+    },
+    evidence: {
+      "A função lê o pedido e calcula o frete.": [2, 5],
+      "A função grava o pedido e envia um e-mail.": [7, 8],
+      "`req`": [1],
+      "total do pedido": [9],
+      [said(PEDIDO_SUGGESTIONS[0] as Suggestion)]: [7],
+      [said(PEDIDO_SUGGESTIONS[1] as Suggestion)]: [8],
+    },
+  },
+  {
+    marker: "def calcular_frete(pedido, cep)",
+    draft: {
+      summary:
+        "A função busca a UF com `requests.get`. A função escolhe a tabela pelo `peso`.",
+      inputs: ["`pedido`", "`cep`"],
+      outputs: ["valor do frete"],
+      suggestions: [VIDEO_FRETE_SUGGESTION],
+    },
+    evidence: {
+      "A função busca a UF com `requests.get`.": [2],
+      "A função escolhe a tabela pelo `peso`.": [4, 5],
+      "`pedido`": [1],
+      "`cep`": [1],
+      "valor do frete": [5, 7],
+      [said(VIDEO_FRETE_SUGGESTION)]: [2],
+    },
+  },
+  {
+    // The HTTP step of calcular_frete (VID-28, Independent Test P2).
+    marker: "viacep",
+    draft: {
+      summary:
+        "A função consulta uma API externa com o CEP. A função retorna a UF.",
+      inputs: ["`cep`"],
+      outputs: ["`uf`"],
+      suggestions: [],
+    },
+    evidence: {
+      "A função consulta uma API externa com o CEP.": [1],
+      "A função retorna a UF.": [1],
+      "`cep`": [1],
+      "`uf`": [1],
+    },
+  },
+  {
+    // The EXTERNO step: the 3rd sentence is cut before the review (VID-28).
+    marker: "sum(item",
+    draft: {
+      summary:
+        "Soma o peso dos itens. Guarda a soma em `peso`. Usa a função `sum`.",
+      inputs: ["`pedido`"],
+      outputs: ["`peso`"],
+      suggestions: [],
+    },
+    evidence: {
+      "Soma o peso dos itens.": [1],
+      "Guarda a soma em `peso`.": [1],
+      "Usa a função `sum`.": [1],
+      "`pedido`": [1],
+      "`peso`": [1],
+    },
+  },
+  {
+    // A RETORNO step with no input and no output (VID-30).
+    marker: "return TABELA_PESADA",
+    draft: {
+      summary: "Retorna o valor da tabela pesada para a `uf`.",
+      inputs: [],
+      outputs: [],
+      suggestions: [],
+    },
+    evidence: {
+      "Retorna o valor da tabela pesada para a `uf`.": [1],
+    },
+  },
   {
     marker: "def calcular_frete",
     draft: {
@@ -161,6 +276,71 @@ const SCENARIOS: Scenario[] = [
   },
 ];
 
+/** Titles (VID-14): the first marker of this table found in a node block wins. */
+const TITLES: [marker: string, title: string][] = [
+  ["def processar_pedido", "Pedido recebido"],
+  ["if peso > 30", "Peso acima de 30?"],
+  ["json.loads", "Ler o pedido"],
+  ["validar_pedido(pedido)", "Validar pedido"],
+  ["db.buscar_cliente", "Buscar o cliente"],
+  ["calcular_frete(pedido, cliente.cep)", "Calcular frete"],
+  ["soma_itens(pedido)", "Somar os itens"],
+  ["db.salvar", "Salvar no banco"],
+  ["enviar_email", "Enviar e-mail"],
+  ["viacep", "Buscar UF pelo CEP"],
+  ["sum(item", "Somar peso"],
+  ["return TABELA_PESADA", "Tabela pesada"],
+  ["return TABELA_PADRAO", "Tabela padrão"],
+  ["def aplicar_desconto", "Aplicar desconto no total"],
+  // 7 words: layer one drops it before the reviewer (VID-14).
+  ["def registrar_log", "Registrar a mensagem no log do sistema"],
+  ["def contar", "Contar até zero"],
+];
+/** A block with this marker makes the whole title request fail (VID-15). */
+const FAILING_TITLE = "def falha_titulo";
+/** The title reviewer rejects this one (VID-16). */
+const REJECTED_TITLE = "Aplicar desconto no total";
+
+/** Blocks `[nX] ...` of the title request. */
+function titleBlocks(user: string): { id: string; text: string }[] {
+  return user.split(/\n(?=\[n\d+\] )/).flatMap((block) => {
+    const m = /^\[(n\d+)\] /.exec(block);
+    return m ? [{ id: m[1] as string, text: block }] : [];
+  });
+}
+
+/** Title answer, or undefined (500) when a block asks for the failing title. */
+function titles(user: string): string | undefined {
+  const blocks = titleBlocks(user);
+  if (blocks.some((b) => b.text.includes(FAILING_TITLE))) return undefined;
+  return JSON.stringify({
+    titles: blocks.flatMap(({ id, text }) => {
+      const hit = TITLES.find(([marker]) => text.includes(marker));
+      return hit ? [{ id, title: hit[1] }] : [];
+    }),
+  });
+}
+
+/** Each `- nX: <title>` is supported by line 1, except the rejected title. */
+function titleVerdicts(user: string): string {
+  const items = user.split("\n").flatMap((line) => {
+    const m = /^- (n\d+): (.*)$/.exec(line);
+    return m ? [{ id: m[1] as string, text: m[2] as string }] : [];
+  });
+  return JSON.stringify({
+    verdicts: items.map(({ id, text }) =>
+      text === REJECTED_TITLE
+        ? {
+            id,
+            supported: false,
+            evidence: [],
+            problem: "o código não mostra o total com desconto",
+          }
+        : { id, supported: true, evidence: [1] },
+    ),
+  });
+}
+
 /** Verdicts for each `- <id>: <text>` line of the reviewer request. */
 function verdicts(user: string, scenario: Scenario): string {
   const items = user.split("\n").flatMap((line) => {
@@ -180,12 +360,24 @@ function verdicts(user: string, scenario: Scenario): string {
 /** Scripted answer, or undefined for content the script does not know. */
 function answer(call: FakeCall): string | undefined {
   const users = call.messages.filter((m) => m.role === "user");
+  const last = users.at(-1)?.content ?? "";
+  if (call.role === "title") return titles(last);
+  if (call.role === "title-review") return titleVerdicts(last);
   const scenario = SCENARIOS.find((s) =>
     users.some((m) => m.content.includes(s.marker)),
   );
   if (!scenario) return undefined;
   if (call.role === "draft") return JSON.stringify(scenario.draft);
   return verdicts(users.at(-1)?.content ?? "", scenario);
+}
+
+/** The role comes from the system message, in this order (D1). */
+function roleOf(system: string | undefined): FakeCall["role"] {
+  const text = system ?? "";
+  if (text.startsWith("Você revisa títulos de nós")) return "title-review";
+  if (text.startsWith("Você escreve títulos de nós")) return "title";
+  if (text.includes('"verdicts"')) return "review";
+  return "draft";
 }
 
 function completion(model: string, content: string) {
@@ -233,9 +425,8 @@ function startFake(): void {
       model: string;
       messages: Message[];
     };
-    const system = body.messages.find((m) => m.role === "system");
     const call: FakeCall = {
-      role: system?.content.includes('"verdicts"') ? "review" : "draft",
+      role: roleOf(body.messages.find((m) => m.role === "system")?.content),
       model: body.model,
       messages: body.messages,
     };

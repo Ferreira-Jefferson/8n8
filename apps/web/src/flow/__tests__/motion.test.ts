@@ -37,6 +37,31 @@ describe("VID-06: schedule", () => {
     expect(Object.fromEntries(s.enterAt)).toEqual({ a: 0, b: 350, c: 700 });
   });
 
+  it("keeps 350 ms between the 8 cards of the video row", () => {
+    const ids = Array.from({ length: 8 }, (_, i) => `n${i}`);
+    const s = schedule(
+      ids.map(node),
+      [],
+      at(ids.map((id, i) => [id, i * 380, 0])),
+      false,
+    );
+    expect(s.enterAt.get("n7")).toBe(7 * 350);
+  });
+
+  it("compresses the stagger of a long level so its last card enters at 2500 ms and settles by 3 s", () => {
+    const ids = Array.from({ length: 41 }, (_, i) => `n${i}`);
+    const s = schedule(
+      ids.map(node),
+      [],
+      at(ids.map((id, i) => [id, i * 380, 0])),
+      false,
+    );
+    expect(s.enterAt.get("n0")).toBe(0);
+    expect(s.enterAt.get("n1")).toBe(62.5);
+    // The card fades in for 500 ms (styles.css, node-in).
+    expect(s.enterAt.get("n40")).toBe(2500);
+  });
+
   it("a tie in x goes by y", () => {
     const s = schedule(
       ["low", "high"].map(node),

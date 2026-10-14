@@ -244,11 +244,12 @@ describe("levelViewport (VID-03, VID-27)", () => {
     );
   });
 
-  it("centers the focus card at zoom 1 when the level is too big", () => {
+  it("centers the focus card at zoom 1 in the free area below Voltar when the level is too big", () => {
     const pos = layoutRows(eight);
+    // The free area runs from TOP_PAD (140) to FIT_PAD (24) above the bottom.
     expect(levelViewport(pos, 1600, 900, { x: 760, y: 0 })).toEqual({
       x: (1600 - 320) / 2 - 760,
-      y: (900 - 140) / 2,
+      y: 140 + (900 - 140 - 24 - 140) / 2,
       zoom: 1,
     });
   });

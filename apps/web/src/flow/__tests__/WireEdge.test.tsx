@@ -72,43 +72,37 @@ describe("WireEdge (VID-05, VID-06)", () => {
 
 describe("WireEdge branch labels (VID-21)", () => {
   it.each(["sim", "não"])(
-    "shows %s as .branch-label beside the target card",
+    "shows %s as .branch-label next to the start of the wire",
     (text) => {
       const { container } = renderWire(timed, text);
       const label = container.querySelector<HTMLElement>(".branch-label");
       expect(label?.textContent).toBe(text);
       expect(label?.getAttribute("data-branch-label")).toBe(text);
-      // The wire goes down to (400, 200): the label sits under the target
-      // card, 70 + 8 px below the port, at the card's left edge.
-      expect(label?.style.transform).toBe("translate(400px, 278px)");
+      // The wire leaves the port at (0, 0) and goes down: the label starts
+      // 30 px right of the port, 4 px below its line.
+      expect(label?.style.transform).toBe("translate(30px, 4px)");
     },
   );
 
-  it("puts the label of a wire that goes up above the target card", () => {
-    expect(branchLabelAt(200, 400, 0)).toEqual({ x: 400, y: -78, above: true });
+  it("puts the label of a wire that goes up above the port line", () => {
+    expect(branchLabelAt(100, 200, 0)).toEqual({ x: 130, y: 196, above: true });
   });
 
-  it("puts the label of a wire that goes down or straight below the target card", () => {
-    expect(branchLabelAt(0, 400, 200)).toEqual({
-      x: 400,
-      y: 278,
-      above: false,
-    });
-    expect(branchLabelAt(100, 400, 100)).toEqual({
-      x: 400,
-      y: 178,
+  it("puts the label of a wire that goes down or straight below the port line", () => {
+    expect(branchLabelAt(0, 0, 200)).toEqual({ x: 30, y: 4, above: false });
+    expect(branchLabelAt(0, 100, 100)).toEqual({
+      x: 30,
+      y: 104,
       above: false,
     });
   });
 
-  it("keeps the label clear of the wire: it starts at the target's left edge, outside the wire's vertical span", () => {
+  it("keeps the two labels of a condition next to the start, one on each side of the port line", () => {
     // Sim goes up from 300 to 100, não goes down from 300 to 500.
-    const yes = branchLabelAt(300, 760, 100);
-    const no = branchLabelAt(300, 760, 500);
-    expect(yes.y).toBeLessThan(100 - 70);
-    expect(no.y).toBeGreaterThan(500 + 70);
-    expect(yes.x).toBe(760);
-    expect(no.x).toBe(760);
+    const yes = branchLabelAt(700, 300, 100);
+    const no = branchLabelAt(700, 300, 500);
+    expect(yes).toEqual({ x: 730, y: 296, above: true });
+    expect(no).toEqual({ x: 730, y: 304, above: false });
   });
 
   it("shows no label on a wire without one", () => {

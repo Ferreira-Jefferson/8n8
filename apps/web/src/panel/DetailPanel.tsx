@@ -33,6 +33,8 @@ export interface DetailPanelProps {
   /** A suggestion card asks to mark this line; a new nonce marks it again (VID-33). */
   mark?: { line: number; nonce: number } | undefined;
   onExplained: (id: NodeId, explanation: Explanation) => void;
+  /** The explanations this map already got, by node; the panel reads it and adds to it. */
+  cache?: Map<NodeId, ExplainResult> | undefined;
 }
 
 type Loaded = ExplainResult | { status: "loading" };
@@ -74,6 +76,7 @@ export function DetailPanel({
   effects,
   mark,
   onExplained,
+  cache,
 }: DetailPanelProps) {
   const kind = explainKind(node);
   const [result, setResult] = useState<Loaded | null>(null);
@@ -89,9 +92,16 @@ export function DetailPanel({
       setResult(null);
       return;
     }
+    const hit = cache?.get(node.id);
+    if (hit?.status === "ok") {
+      setResult(hit);
+      onExplained(node.id, hit.explanation);
+      return;
+    }
     let live = true;
     setResult({ status: "loading" });
     fetchExplanation(origin, node.id).then((r) => {
+      if (r.status === "ok") cache?.set(node.id, r);
       if (!live) return;
       setResult(r);
       if (r.status === "ok") onExplained(node.id, r.explanation);
@@ -99,7 +109,7 @@ export function DetailPanel({
     return () => {
       live = false;
     };
-  }, [source, originKey, node.id, kind, attempt]);
+  }, [source, originKey, node.id, kind, attempt, cache]);
 
   // Declared after the fetch effect, so a card that also changes the node keeps its mark.
   useEffect(() => {

@@ -1168,14 +1168,15 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `FakeCall.role` aceita `"title"` e `"title-review"`, e o log registra os dois.
-- [ ] As tabelas de D1 estão no arquivo, na ordem do design.
-- [ ] `tsc -p e2e` passa.
+- [x] `FakeCall.role` aceita `"title"` e `"title-review"`, e o log registra os dois.
+- [x] As tabelas de D1 estão no arquivo, na ordem do design.
+- [x] `tsc -p e2e` passa.
 
 **Tests**: none (falso do E2E; exercitado por T40, T41 e T43 a T50)
 **Gate**: build · `pnpm typecheck`
 
 **Commit**: `test(e2e): teach the fake llm titles and the video scenarios`
+**Status**: ✅ Complete
 
 ---
 
@@ -1191,13 +1192,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `snapshotPathTemplate` é `{testDir}/__baselines__/{platform}/{arg}{ext}`. Os padrões são `animations: "disabled"`, `caret: "hide"` e `maxDiffPixelRatio: 0.002`.
-- [ ] Os quatro servidores sobem como antes (`pnpm exec playwright test --list` lista os testes sem erro).
+- [x] `snapshotPathTemplate` é `{testDir}/__baselines__/{platform}/{arg}{ext}`. Os padrões são `animations: "disabled"`, `caret: "hide"` e `maxDiffPixelRatio: 0.002`.
+- [x] Os quatro servidores sobem como antes (`pnpm exec playwright test --list` lista os testes sem erro).
 
 **Tests**: e2e (regressão)
 **Gate**: e2e · `pnpm exec playwright test --list`
 
 **Commit**: `test(e2e): configure screenshot baselines`
+**Status**: ✅ Complete
 
 ---
 
@@ -1213,15 +1215,16 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Os 14 testes continuam existindo, com o mesmo ID de AC no nome, e passam.
-- [ ] O fio `calls` de CORE-02 é conferido na resposta de `/api/graph`, porque o fluxo principal não desenha `calls`.
-- [ ] Nenhuma asserção fica mais fraca: cada contagem e cada texto exato continuam exatos, com os valores novos.
-- [ ] Gate passa.
+- [x] Os 14 testes continuam existindo, com o mesmo ID de AC no nome, e passam.
+- [x] O fio `calls` de CORE-02 é conferido na resposta de `/api/graph`, porque o fluxo principal não desenha `calls`.
+- [x] Nenhuma asserção fica mais fraca: cada contagem e cada texto exato continuam exatos, com os valores novos.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/fatia-central.e2e.ts`
 
 **Commit**: `test(e2e): move the core e2e to the main flow and single click`
+**Status**: ✅ Complete
 
 ---
 
@@ -1237,13 +1240,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Os 9 testes continuam, com as mesmas contagens de rascunho e revisão, e passam.
-- [ ] Gate passa.
+- [x] Os 9 testes continuam, com as mesmas contagens de rascunho e revisão, e passam.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/fidelidade.e2e.ts`
 
 **Commit**: `test(e2e): keep the fidelity e2e on the new panel`
+**Status**: ✅ Complete
 
 ---
 
@@ -1259,13 +1263,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Os 8 testes continuam e passam. As listagens de `nodes/` ignoram a pasta nova `titles/`.
-- [ ] Gate passa.
+- [x] Os 8 testes continuam e passam. As listagens de `nodes/` ignoram a pasta nova `titles/`.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/cache.e2e.ts`
 
 **Commit**: `test(e2e): keep the cache e2e on the new map`
+**Status**: ✅ Complete
 
 ---
 
@@ -1281,13 +1286,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Os 9 testes continuam e passam.
-- [ ] O gate final passa (fecha a fase): typecheck, check, unit e a suíte E2E atualizada inteira.
+- [x] Os 9 testes continuam e passam.
+- [ ] O gate final passa (fecha a fase): typecheck, check, unit e a suíte E2E atualizada inteira. Typecheck, check e unit passam. O E2E inteiro falha de forma intermitente: em cerca de 1 a cada 15 mapas gerados, os cartões ficam com `visibility: hidden` para sempre (bug do canvas, fora da trilha D).
 
 **Tests**: e2e
 **Gate**: build · Build final
 
 **Commit**: `test(e2e): keep the folder e2e on single click`
+**Status**: ⚠️ Partial (gate do E2E bloqueado pelo bug do canvas em branco)
 
 ---
 
@@ -1307,19 +1313,20 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-01: `.canvas` tem `background-color` `rgb(18, 17, 16)` e `background-size` `40px 40px`. Um título de cartão tem cor `rgb(245, 242, 236)`, um `.fn` tem `rgb(168, 163, 153)` e um `.open-mark` tem `rgb(212, 255, 63)`.
-- [ ] VID-02: `document.fonts.check` é verdadeiro para `"Archivo Black"`, `"Space Grotesk"` e `"DM Mono"`. O `h2` do painel usa Archivo Black, o cartão usa Space Grotesk e o `.fn` usa DM Mono. Todo pedido `.woff2` vai para `127.0.0.1:4317`.
-- [ ] VID-03: cada cartão tem `.tag`, `.name` e `.fn` nessa ordem. O GATILHO tem só a porta de saída, o último só a de entrada, e as portas são círculos `rgb(212, 255, 63)`.
-- [ ] VID-04: o código de etiquetas do design (GATILHO, FUNÇÃO, HTTP, BANCO, DISCO, E-MAIL, EXTERNO, SE, LAÇO, BLOCO, CÓDIGO, RETORNO), mais o projeto `projeto-loja` (PASTA, ARQUIVO), mostra cada uma das 14 etiquetas. Nenhum cartão mostra outra.
-- [ ] VID-05: cada `.wire` tem `stroke` `rgb(212, 255, 63)` e `stroke-width` `4px`, com um path curvo (`C`).
-- [ ] VID-08: o editor mostra "trecho.py" em `rgb(212, 255, 63)`, o `textarea` em DM Mono, "Gerar mapa" com fundo `rgb(212, 255, 63)`, o campo de pasta e "Abrir pasta".
-- [ ] VID-09: depois de "Gerar mapa", o `textarea` some e "Novo código" aparece. "Novo código" volta ao editor com o mesmo texto.
-- [ ] Gate passa.
+- [x] VID-01: `.canvas` tem `background-color` `rgb(18, 17, 16)` e `background-size` `40px 40px`. Um título de cartão tem cor `rgb(245, 242, 236)`, um `.fn` tem `rgb(168, 163, 153)` e um `.open-mark` tem `rgb(212, 255, 63)`.
+- [x] VID-02: `document.fonts.check` é verdadeiro para `"Archivo Black"`, `"Space Grotesk"` e `"DM Mono"`. O `h2` do painel usa Archivo Black, o cartão usa Space Grotesk e o `.fn` usa DM Mono. Todo pedido `.woff2` vai para `127.0.0.1:4317`.
+- [x] VID-03: cada cartão tem `.tag`, `.name` e `.fn` nessa ordem. O GATILHO tem só a porta de saída, o último só a de entrada, e as portas são círculos `rgb(212, 255, 63)`.
+- [x] VID-04: o código de etiquetas do design (GATILHO, FUNÇÃO, HTTP, BANCO, DISCO, E-MAIL, EXTERNO, SE, LAÇO, BLOCO, CÓDIGO, RETORNO), mais o projeto `projeto-loja` (PASTA, ARQUIVO), mostra cada uma das 14 etiquetas. Nenhum cartão mostra outra.
+- [x] VID-05: cada `.wire` tem `stroke` `rgb(212, 255, 63)` e `stroke-width` `4px`, com um path curvo (`C`).
+- [x] VID-08: o editor mostra "trecho.py" em `rgb(212, 255, 63)`, o `textarea` em DM Mono, "Gerar mapa" com fundo `rgb(212, 255, 63)`, o campo de pasta e "Abrir pasta".
+- [x] VID-09: depois de "Gerar mapa", o `textarea` some e "Novo código" aparece. "Novo código" volta ao editor com o mesmo texto.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/mapa-video.e2e.ts`
 
 **Commit**: `test(e2e): check the video look and the editor`
+**Status**: ✅ Complete (helpers comuns em `e2e/mapa.ts`)
 
 ---
 
@@ -1335,18 +1342,19 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-10 (Independent Test P1): o código do vídeo mostra no primeiro nível os 8 cartões da linha `processar_pedido`, na ordem do código, com 7 fios. Aparecem GATILHO, FUNÇÃO, BANCO e E-MAIL. Uma entrada sem chamada mostra só o GATILHO (borda).
-- [ ] VID-11: duas funções que ninguém chama dão duas linhas, a primeira acima. Código solto que chama `a()` mais uma função `b` que ninguém chama dão duas linhas (código solto e `b`). Constantes no topo não viram linha e não escondem as funções.
-- [ ] VID-12: um trecho com código solto não mostra nenhum cartão com o texto "Módulo". O código solto aparece como GATILHO "Código solto".
-- [ ] VID-13: `validar_pedido` → EXTERNO, `db.buscar_cliente` e `db.salvar` → BANCO, `enviar_email` → E-MAIL. Nenhum desses cartões tem fio `calls` (o grafo de `/api/graph` só tem o `calls` para `calcular_frete`).
-- [ ] VID-06: os `data-enter-at` crescem da esquerda para a direita. Cada `.wire` tem `data-draw-at` ≥ `data-enter-at` da origem + 400. Os pontos estão na ordem do fluxo, um por fio, e a animação de um cartão tem o `delay` do seu `data-enter-at`.
-- [ ] VID-07: com `reducedMotion: "reduce"`, `document.getAnimations()` fica vazio, não há `circle.pulse`, e todos os cartões têm `opacity` 1 logo depois de "Gerar mapa".
-- [ ] Gate passa.
+- [x] VID-10 (Independent Test P1): o código do vídeo mostra no primeiro nível os 8 cartões da linha `processar_pedido`, na ordem do código, com 7 fios. Aparecem GATILHO, FUNÇÃO, BANCO e E-MAIL. Uma entrada sem chamada mostra só o GATILHO (borda).
+- [x] VID-11: duas funções que ninguém chama dão duas linhas, a primeira acima. Código solto que chama `a()` mais uma função `b` que ninguém chama dão duas linhas (código solto e `b`). Constantes no topo não viram linha e não escondem as funções.
+- [x] VID-12: um trecho com código solto não mostra nenhum cartão com o texto "Módulo". O código solto aparece como GATILHO "Código solto".
+- [x] VID-13: `validar_pedido` → EXTERNO, `db.buscar_cliente` e `db.salvar` → BANCO, `enviar_email` → E-MAIL. Nenhum desses cartões tem fio `calls` (o grafo de `/api/graph` só tem o `calls` para `calcular_frete`).
+- [x] VID-06: os `data-enter-at` crescem da esquerda para a direita. Cada `.wire` tem `data-draw-at` ≥ `data-enter-at` da origem + 400. Os pontos estão na ordem do fluxo, um por fio, e a animação de um cartão tem o `delay` do seu `data-enter-at`.
+- [x] VID-07: com `reducedMotion: "reduce"`, `document.getAnimations()` fica vazio, não há `circle.pulse`, e todos os cartões têm `opacity` 1 logo depois de "Gerar mapa".
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/mapa-video.e2e.ts`
 
 **Commit**: `test(e2e): check the main flow, categories and motion`
+**Status**: ✅ Complete
 
 ---
 
@@ -1362,22 +1370,23 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-14: no código do vídeo, um pedido `title` com os 8 nós e um `title-review` acontecem depois de "Gerar mapa", e os cartões mostram "Pedido recebido", "Calcular frete", "Salvar no banco" e "Enviar e-mail". Abrir "Calcular frete" faz mais um pedido `title` com os 5 nós. "Registrar a mensagem no log do sistema" (7 palavras) não aparece, e o cartão mostra "Registrar log".
-- [ ] VID-15: no 4317 (sem chave), os cartões mostram "Processar pedido", "Calcular frete", "Salvar" e "Enviar email". Com `def falha_titulo`, o cartão mostra "Falha titulo" e o mapa continua.
-- [ ] VID-16: "Aplicar desconto no total" não aparece, e o cartão mostra "Aplicar desconto".
-- [ ] VID-17: gerar o mapa de novo faz 0 pedidos `title`. O arquivo em `.cache/e2e-real/titles/` tem os 6 componentes da impressão digital. Mudar o código de `enviar_email` gera um pedido `title` só com esse nó.
-- [ ] Gate passa.
+- [x] VID-14: no código do vídeo, um pedido `title` com os 8 nós e um `title-review` acontecem depois de "Gerar mapa", e os cartões mostram "Pedido recebido", "Calcular frete", "Salvar no banco" e "Enviar e-mail". Abrir "Calcular frete" faz mais um pedido `title` com os 5 nós. "Registrar a mensagem no log do sistema" (7 palavras) não aparece, e o cartão mostra "Registrar log".
+- [x] VID-15: no 4317 (sem chave), os cartões mostram "Processar pedido", "Calcular frete", "Salvar" e "Enviar email". Com `def falha_titulo`, o cartão mostra "Falha titulo" e o mapa continua.
+- [x] VID-16: "Aplicar desconto no total" não aparece, e o cartão mostra "Aplicar desconto".
+- [x] VID-17: gerar o mapa de novo faz 0 pedidos `title`. O arquivo em `.cache/e2e-real/titles/` tem os 6 componentes da impressão digital. Mudar o código de `enviar_email` (linha 13) gera um pedido `title` com esse nó e o GATILHO `processar_pedido`: o código do GATILHO (linhas 6 a 14) contém a linha 13 e, pela VID-17, a impressão digital dele também muda. Os outros 6 nós vêm do cache.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/titulos.e2e.ts`
 
 **Commit**: `test(e2e): check titles, provisional names, review and cache`
+**Status**: ✅ Complete (com o desvio da VID-17 acima)
 
 ---
 
 ### T46: E2E da navegação
 
-**What**: Criar `e2e/navegacao.e2e.ts` com os testes de VID-18 a 27 e a borda da recursão, no servidor com o LLM falso.
+**What**: Criar `e2e/navegacao.e2e.ts` com os testes de VID-18 a 27 e a borda da recursão, no servidor com o LLM falso (4319). Os testes rodaram no servidor sem chave (4317) até a correção do bug do canvas em branco e voltaram ao 4319 depois dela.
 **Where**: `e2e/navegacao.e2e.ts` (novo)
 **Depends on**: None
 **Reuses**: os helpers de T43
@@ -1387,21 +1396,23 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-23 e Independent Test P1: um clique em "Calcular frete" abre o nível com HTTP, EXTERNO, SE e dois RETORNO e mostra o painel.
-- [ ] VID-18: logo depois do clique, `data-phase="expanding"`, `.open-frame` com borda `rgb(212, 255, 63)` e 0 cartões novos. Depois, `data-phase="open"` e os 5 cartões.
-- [ ] VID-19: a trilha mostra "Fluxo principal › Calcular frete". Num segundo nível, ela ganha o segundo título.
-- [ ] VID-20: os dois RETORNO não têm fio de saída, e o GATILHO de `processar_pedido`, aberto, mostra o RETORNO da linha 14 sem fio de saída.
-- [ ] VID-21: o primeiro passo do "sim" fica acima do primeiro do "não", e os rótulos "sim" e "não" ficam mais perto da origem que do destino.
-- [ ] VID-22: clicar numa folha deixa a borda do cartão em `rgb(212, 255, 63)`.
-- [ ] VID-24 e VID-26: cada cartão com "›" abre e cada cartão sem "›" não abre. Descer por todo "›" a partir do primeiro nível termina num nível só de folhas. Na recursão (`def contar`), abrir a chamada empilha o mesmo nível de novo.
-- [ ] VID-25: clicar no HTTP mostra o painel e mantém os mesmos 5 cartões.
-- [ ] VID-27: "Voltar" está desabilitado no topo e Esc não faz nada. Depois de descer 2 níveis, Esc e "Voltar" sobem um nível por vez. O cartão de onde se veio fica com borda `rgb(212, 255, 63)` e com o centro a até 2 px do centro do canvas.
-- [ ] Gate passa.
+- [x] VID-23 e Independent Test P1: um clique em "Calcular frete" abre o nível com HTTP, EXTERNO, SE e dois RETORNO e mostra o painel.
+- [x] VID-18: logo depois do clique, `data-phase="expanding"`, `.open-frame` com borda `rgb(212, 255, 63)` e 0 cartões novos. Depois, `data-phase="open"` e os 5 cartões.
+- [x] VID-19: a trilha mostra "Fluxo principal › Calcular frete". Num segundo nível, ela ganha o segundo título.
+- [x] VID-20: os dois RETORNO não têm fio de saída, e o GATILHO de `processar_pedido`, aberto, mostra o RETORNO da linha 14 sem fio de saída.
+- [x] VID-21: o primeiro passo do "sim" fica acima do primeiro do "não".
+- [ ] VID-21: os rótulos "sim" e "não" ficam mais perto da origem que do destino. Não vale: o rótulo fica junto ao cartão de destino (SPEC_DEVIATION em `WireEdge.tsx`); o "sim" fica a 188 px do início do fio e a 84 px do fim.
+- [x] VID-22: clicar numa folha deixa a borda do cartão em `rgb(212, 255, 63)`.
+- [x] VID-24 e VID-26: cada cartão com "›" abre e cada cartão sem "›" não abre. Descer por todo "›" a partir do primeiro nível termina num nível só de folhas. Na recursão (`def contar`), abrir a chamada empilha o mesmo nível de novo.
+- [x] VID-25: clicar no HTTP mostra o painel e mantém os mesmos 5 cartões.
+- [x] VID-27: "Voltar" está desabilitado no topo e Esc não faz nada. Depois de descer 2 níveis, Esc e "Voltar" sobem um nível por vez. O cartão de onde se veio fica com borda `rgb(212, 255, 63)` e com o centro a até 2 px do centro da área livre do canvas (abaixo de "Voltar"), ou fora dele só do lado em que o nível já encosta na borda da área livre (design C11 depois da mescla do master).
+- [ ] Gate passa. Os testes passam, mas o bug do canvas em branco faz um teste falhar de vez em quando (cerca de 1 mapa em 20 fica em branco).
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/navegacao.e2e.ts`
 
 **Commit**: `test(e2e): check click to open, frame, breadcrumb and back`
+**Status**: ⚠️ Partial (rótulos da VID-21 fora da spec; servidor sem chave por causa do bug do canvas). Inclui a descida completa até as folhas e a volta, em 1280x720, 1366x768 e 1600x900, com todo cartão dentro do canvas.
 
 ---
 
@@ -1417,15 +1428,16 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-28 (Independent Test P2): o passo HTTP mostra "A função consulta uma API externa com o CEP." e "A função retorna a UF.". O passo `sum` mostra só 2 frases, e a 3ª não aparece no log do revisor. Reabrir o passo faz 0 chamadas `draft`.
-- [ ] VID-29: a ordem das seções é a do design, com os textos exatos. A linha das regras aparece no passo e não aparece na função `processar_pedido`. O cabeçalho é "CÓDIGO · trecho.py, linha 18", seguido da linha 18 numerada.
-- [ ] VID-30: a seção mostra "cep → uf" em DM Mono. No RETORNO da linha 21, a seção não aparece.
-- [ ] Gate passa.
+- [x] VID-28 (Independent Test P2): o passo HTTP mostra "A função consulta uma API externa com o CEP." e "A função retorna a UF.". O passo `sum` mostra só 2 frases, e a 3ª não aparece no log do revisor. Reabrir o passo faz 0 chamadas `draft`.
+- [x] VID-29: a ordem das seções é a do design, com os textos exatos. A linha das regras aparece no passo e não aparece na função `processar_pedido`. O cabeçalho é "CÓDIGO · trecho.py, linha 18", seguido da linha 18 numerada.
+- [x] VID-30: a seção mostra "cep → uf" em DM Mono. No RETORNO da linha 21, a seção não aparece.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/detalhe.e2e.ts`
 
 **Commit**: `test(e2e): check the step detail panel`
+**Status**: ✅ Complete
 
 ---
 
@@ -1441,15 +1453,16 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-31 (Independent Test P3): ao abrir o GATILHO, os cartões "Grave o pedido numa transação" e "Envie o e-mail por uma fila" aparecem com `data-anchor-id` `…/s5` e `…/s6`. Eles têm fundo `rgb(245, 242, 236)` e texto `rgb(18, 17, 16)`. Depois de "Voltar", os mesmos cartões ficam presos aos nós BANCO e E-MAIL do fluxo principal.
-- [ ] VID-32: os nós com cartão têm borda `rgb(212, 255, 63)`, e os outros têm `opacity` 0.55.
-- [ ] VID-33: clicar em "Envie o e-mail por uma fila" mostra o painel de `processar_pedido` com a linha 13 marcada (`aria-current="true"`).
-- [ ] Gate passa.
+- [x] VID-31 (Independent Test P3): ao abrir o GATILHO, os cartões "Grave o pedido numa transação" e "Envie o e-mail por uma fila" aparecem com `data-anchor-id` `…/s5` e `…/s6`. Eles têm fundo `rgb(245, 242, 236)` e texto `rgb(18, 17, 16)`. Depois de "Voltar", os mesmos cartões ficam presos aos nós BANCO e E-MAIL do fluxo principal.
+- [x] VID-32: os nós com cartão têm borda `rgb(212, 255, 63)`, e os outros têm `opacity` 0.55.
+- [x] VID-33: clicar em "Envie o e-mail por uma fila" mostra o painel de `processar_pedido` com a linha 13 marcada (`aria-current="true"`).
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/sugestoes.e2e.ts`
 
 **Commit**: `test(e2e): check suggestion cards on the canvas`
+**Status**: ✅ Complete
 
 ---
 
@@ -1476,6 +1489,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 **Gate**: build · Build final
 
 **Commit**: `test(e2e): add candidate screenshots of the five video screens`
+**Status**: Cancelado pelo usuário em 2026-10-14. Não há imagens de referência; a configuração de T38 continua e não falha sem elas, porque nenhum teste chama `toHaveScreenshot`.
 
 ---
 
@@ -1499,6 +1513,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 **Gate**: build · Build final
 
 **Commit**: `test(e2e): approve the screenshot baselines`
+**Status**: Cancelado pelo usuário em 2026-10-14. Não há imagens de referência; a configuração de T38 continua e não falha sem elas, porque nenhum teste chama `toHaveScreenshot`.
 
 ---
 

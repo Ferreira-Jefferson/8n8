@@ -119,13 +119,16 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
   });
 });
 
+// Delivers a first size; a test may drop it, as when it gets lost in a race.
+let measureNow: (fire: () => void) => unknown = (fire) => setTimeout(fire);
+
 // React Flow in jsdom: the testing setup from the React Flow docs.
 beforeAll(() => {
   class ResizeObserver {
     constructor(private cb: ResizeObserverCallback) {}
     observe(target: Element) {
       // Like the browser, the first size arrives after the effects ran.
-      setTimeout(() =>
+      measureNow(() =>
         this.cb(
           [
             {
@@ -177,6 +180,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  measureNow = (fire) => setTimeout(fire);
 });
 
 function props(overrides: Partial<FlowCanvasProps> = {}): FlowCanvasProps {
@@ -343,6 +347,30 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
     );
   });
 
+  it("keeps every card drawn when the nodes are rebuilt (titles, selection) and no new measurement comes", async () => {
+    // The blank canvas: a rebuilt node lost its measured size, React Flow hid
+    // the card, and when the new measurement got lost in a race with the
+    // rebuild, the card stayed hidden for good.
+    const { container, rerender } = render(<FlowCanvas {...props()} />);
+    const hidden = () =>
+      [...container.querySelectorAll<HTMLElement>(".react-flow__node")]
+        .filter((n) => n.style.visibility === "hidden")
+        .map((n) => n.getAttribute("data-id"));
+    await waitFor(() => expect(hidden()).toEqual([]));
+    measureNow = () => {};
+    rerender(
+      <FlowCanvas
+        {...props({
+          titles: new Map([[`${P}/s5`, "Grava o pedido"]]),
+          selected: `${P}/s5`,
+        })}
+      />,
+    );
+    await new Promise((r) => setTimeout(r, 50));
+    expect(hidden()).toEqual([]);
+    expect(container.querySelectorAll("path.wire").length).toBeGreaterThan(0);
+  });
+
   it("hides the input port of the entry and the output port of the last step (VID-03)", () => {
     const { container } = render(<FlowCanvas {...props()} />);
     const port = (id: NodeId, side: string) =>
@@ -414,6 +442,20 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
       expect(card(container, id).classList.contains("dim")).toBe(true);
       expect(card(container, id).classList.contains("on")).toBe(false);
     }
+  });
+
+  it("never dims the selected node while suggestion cards show", () => {
+    const { container } = render(
+      <FlowCanvas
+        {...props({
+          selected: `${P}/s1`,
+          explanations: new Map([[P, explanation]]),
+        })}
+      />,
+    );
+    expect(card(container, `${P}/s1`).classList.contains("on")).toBe(true);
+    expect(card(container, `${P}/s1`).classList.contains("dim")).toBe(false);
+    expect(card(container, `${P}/s2`).classList.contains("dim")).toBe(true);
   });
 
   it("places a card 20 px right of and 64 px above its anchor", () => {

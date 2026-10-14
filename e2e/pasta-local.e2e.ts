@@ -13,11 +13,13 @@ import { connect } from "node:net";
 import { networkInterfaces, tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { ProjectResponse } from "@code2n8n/model";
 import { expect, type Page, test } from "@playwright/test";
 
 // Feature 02-pasta-local, end to end: real build, real server on 4317 with no key,
 // real disk. The committed projeto-loja fixture is copied to a temp folder, plus
 // what git does not keep: ignored folders, a file over 1 MB and a latin-1 file.
+// Feature 05: one click opens a node, and cards show a tag and a provisional name.
 
 const FIXTURE = fileURLToPath(
   new URL(
@@ -69,6 +71,18 @@ const breadcrumb = (page: Page) =>
   page.getByRole("navigation", { name: "Caminho de navegação" });
 const panel = (page: Page) =>
   page.getByRole("complementary", { name: "Detalhe do nó" });
+/** The card titles of the level, without the "›" open mark, in DOM order (VID-15). */
+const cardNames = (page: Page) =>
+  nodes(page).evaluateAll((els) =>
+    els.map((el) => el.querySelector(".name")?.firstChild?.textContent ?? null),
+  );
+
+/** Clicks a card even when the zoom leaves it off-screen; it must be visible first. */
+async function clickCard(page: Page, id: string): Promise<void> {
+  const card = nodeById(page, id);
+  await expect(card).toBeVisible();
+  await card.dispatchEvent("click");
+}
 
 async function openFolder(page: Page, path: string): Promise<void> {
   await page.goto("/");
@@ -103,29 +117,24 @@ test.describe("Pasta local", () => {
       "dir:legado",
       "dir:pedidos",
     ]);
-    await expect(nodes(page).locator(".step-label")).toHaveText([
-      "raiz",
-      "frete",
-      "legado",
-      "pedidos",
-    ]);
+    await expect
+      .poll(() => cardNames(page))
+      .toEqual(["raiz", "frete", "legado", "pedidos"]);
     await expect(breadcrumb(page).getByRole("button")).toHaveText(["loja"]);
 
-    await nodeById(page, "dir:pedidos").dblclick();
+    await clickCard(page, "dir:pedidos");
     await expect(nodes(page)).toHaveCount(3);
     expect(await levelIds(page)).toEqual([
       "file:pedidos/__init__.py",
       "file:pedidos/itens.py",
       "file:pedidos/pedidos.py",
     ]);
-    await expect(nodes(page).locator(".step-label")).toHaveText([
-      "__init__.py",
-      "itens.py",
-      "pedidos.py",
-    ]);
+    await expect
+      .poll(() => cardNames(page))
+      .toEqual(["__init__.py", "itens.py", "pedidos.py"]);
 
     await breadcrumb(page).getByRole("button", { name: "loja" }).click();
-    await nodeById(page, "dir:.").dblclick();
+    await clickCard(page, "dir:.");
     await expect(nodes(page)).toHaveCount(2);
     expect(await levelIds(page)).toEqual(["file:main.py", "file:relatorio.py"]);
   });
@@ -146,7 +155,7 @@ test.describe("Pasta local", () => {
       /\bedge-imports\b/,
     );
 
-    await nodeById(page, "dir:pedidos").dblclick();
+    await clickCard(page, "dir:pedidos");
     await expect(nodes(page)).toHaveCount(3);
     await levelIds(page);
     await expect(edges(page)).toHaveCount(1);
@@ -159,28 +168,35 @@ test.describe("Pasta local", () => {
     page,
   }) => {
     await openFolder(page, LOJA);
-    await nodeById(page, "dir:pedidos").dblclick();
-    await nodeById(page, "file:pedidos/pedidos.py").dblclick();
+    await clickCard(page, "dir:pedidos");
+    await clickCard(page, "file:pedidos/pedidos.py");
     await expect(nodes(page)).toHaveCount(1);
     await levelIds(page);
-    await nodeById(page, PEDIDO).dblclick();
+    await clickCard(page, PEDIDO);
 
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "loja",
       "pedidos",
       "pedidos.py",
-      "processar_pedido",
+      "Processar pedido",
     ]);
     await levelIds(page);
     const step = nodeById(page, `${PEDIDO}/s1`);
-    await expect(step.locator(".step-label")).toHaveText("calcular_frete");
+    await expect(step.locator(".name")).toHaveAttribute(
+      "title",
+      "Calcular frete",
+    );
+    await expect(step.locator("[data-tag]")).toHaveAttribute(
+      "data-tag",
+      "FUNÇÃO",
+    );
 
-    await step.dblclick();
+    await clickCard(page, `${PEDIDO}/s1`);
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "loja",
       "frete",
       "calculo.py",
-      "calcular_frete",
+      "Calcular frete",
     ]);
     await expect(nodes(page)).toHaveCount(3);
     expect(await levelIds(page)).toEqual([
@@ -193,24 +209,42 @@ test.describe("Pasta local", () => {
   test("PROJ-09: calcular_frete without an import is EXTERNO and the same name in legado gets no wire", async ({
     page,
   }) => {
+    const project = page.waitForResponse("**/api/project");
     await openFolder(page, LOJA);
-    await nodeById(page, "dir:.").dblclick();
-    await nodeById(page, "file:relatorio.py").dblclick();
-    await nodeById(page, "file:relatorio.py/fn:gerar").dblclick();
+    const { graph } = (await (await project).json()) as ProjectResponse;
+    await clickCard(page, "dir:.");
+    await clickCard(page, "file:relatorio.py");
+    await clickCard(page, "file:relatorio.py/fn:gerar");
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "loja",
       "raiz",
       "relatorio.py",
-      "gerar",
+      "Gerar",
     ]);
     await levelIds(page);
-    const step = nodeById(page, "file:relatorio.py/fn:gerar/s0");
-    await expect(step.locator(".step-label")).toHaveText("calcular_frete");
-    await expect(step.locator(".step-category")).toHaveText("EXTERNO");
+    // `return calcular_frete(10)` is a RETORNO step (VID-20); the call it holds
+    // is EXTERNO, with no target and no calls wire (PROJ-09).
+    const STEP = "file:relatorio.py/fn:gerar/s0";
+    const node = graph.nodes.find((n) => n.id === STEP);
+    expect(node?.kind).toBe("return");
+    expect(node?.callee).toBe("calcular_frete");
+    expect(node?.category).toBe("EXTERNO");
+    expect(node?.target).toBeUndefined();
+    expect(
+      graph.edges.filter(
+        (e) => e.kind === "calls" && e.source.startsWith("file:relatorio.py"),
+      ),
+    ).toEqual([]);
+    const step = nodeById(page, STEP);
+    await expect(step.locator("[data-tag]")).toHaveAttribute(
+      "data-tag",
+      "RETORNO",
+    );
+    await expect(step.locator(".fn")).toHaveText("return calcular_frete(10)");
 
     await breadcrumb(page).getByRole("button", { name: "loja" }).click();
-    await nodeById(page, "dir:legado").dblclick();
-    await nodeById(page, "file:legado/frete_antigo.py").dblclick();
+    await clickCard(page, "dir:legado");
+    await clickCard(page, "file:legado/frete_antigo.py");
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "loja",
       "legado",
@@ -273,18 +307,18 @@ test.describe("Pasta local", () => {
     ]);
 
     await openFolder(page, loja);
-    await nodeById(page, "dir:pedidos").dblclick();
-    await nodeById(page, "file:pedidos/pedidos.py").dblclick();
-    await nodeById(page, PEDIDO).dblclick();
-    await nodeById(page, `${PEDIDO}/s1`).dblclick();
+    await clickCard(page, "dir:pedidos");
+    await clickCard(page, "file:pedidos/pedidos.py");
+    await clickCard(page, PEDIDO);
+    await clickCard(page, `${PEDIDO}/s1`);
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "loja",
       "frete",
       "calculo.py",
-      "calcular_frete",
+      "Calcular frete",
     ]);
     await breadcrumb(page).getByRole("button", { name: "calculo.py" }).click();
-    await nodeById(page, FRETE).click();
+    await clickCard(page, FRETE);
     await expect(
       panel(page).getByText("Configure OPENROUTER_API_KEY para ver resumos"),
     ).toHaveCount(1);
@@ -319,9 +353,9 @@ test.describe("Pasta local", () => {
     });
 
     await openFolder(page, LOJA);
-    await nodeById(page, "dir:frete").dblclick();
-    await nodeById(page, "file:frete/calculo.py").dblclick();
-    await nodeById(page, FRETE).click();
+    await clickCard(page, "dir:frete");
+    await clickCard(page, "file:frete/calculo.py");
+    await clickCard(page, FRETE);
 
     const view = panel(page);
     await expect(
@@ -331,7 +365,9 @@ test.describe("Pasta local", () => {
     ).toHaveCount(1);
     expect(bodies).toEqual([{ root: LOJA, nodeId: FRETE }]);
     await expect(
-      view.getByText("frete/calculo.py", { exact: true }),
+      view.getByText("CÓDIGO · frete/calculo.py, linhas 1 a 4", {
+        exact: true,
+      }),
     ).toHaveCount(1);
     expect(
       await view

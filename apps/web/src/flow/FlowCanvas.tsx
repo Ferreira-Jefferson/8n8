@@ -6,9 +6,11 @@ import type {
   NodeId,
 } from "@code2n8n/model";
 import {
+  type NodeChange,
   ReactFlow,
   useReactFlow,
   useStore,
+  useUpdateNodeInternals,
   ViewportPortal,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -111,6 +113,27 @@ function MeasureCanvas({
   useEffect(() => {
     onSize(level, { width, height });
   }, [level, width, height, onSize]);
+  return null;
+}
+
+/**
+ * Measures again every card React Flow holds without a size. A node rebuilt
+ * before its first measurement can land after it and erase it; React Flow
+ * then hides the card and never measures it again (the blank canvas).
+ */
+function MeasureCards() {
+  const unmeasured = useStore((s) =>
+    [...s.nodeLookup.values()]
+      .filter(
+        (n) => n.measured.width === undefined || !n.internals.handleBounds,
+      )
+      .map((n) => n.id)
+      .join("\n"),
+  );
+  const update = useUpdateNodeInternals();
+  useEffect(() => {
+    if (unmeasured !== "") update(unmeasured.split("\n"));
+  }, [unmeasured, update]);
   return null;
 }
 
@@ -245,10 +268,29 @@ export function FlowCanvas({
   );
   const size = measured.level === levelKey ? measured.size : NO_SIZE;
   const expanding = frame !== null;
+  // The card sizes React Flow measured on this level. Each rebuilt node
+  // carries its size back: without it React Flow forgets the size, hides the
+  // card, and a measurement lost in a race leaves it hidden for good.
+  const cardSizes = useRef({ level: "", sizes: new Map<string, Size>() });
+  const onNodesChange = useCallback(
+    (changes: NodeChange<StepFlowNode>[]) => {
+      if (cardSizes.current.level !== levelKey) return;
+      for (const c of changes) {
+        if (c.type === "dimensions" && c.dimensions) {
+          cardSizes.current.sizes.set(c.id, c.dimensions);
+        }
+      }
+    },
+    [levelKey],
+  );
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const { nodes, edges, cards, positions, padX } = useMemo(() => {
+    if (cardSizes.current.level !== levelKey) {
+      cardSizes.current = { level: levelKey, sizes: new Map() };
+    }
+    const sizes = cardSizes.current.sizes;
     const reduced = prefersReducedMotion();
     const level = projectLevel(graph, levelId);
     // A level too long for the canvas wraps into more rows, so every card
@@ -292,23 +334,27 @@ export function FlowCanvas({
     const lit = highlighted(cards);
     const sources = new Set(level.edges.map((e) => e.source));
     const targets = new Set(level.edges.map((e) => e.target));
-    const nodes: StepFlowNode[] = level.nodes.map((n) => ({
-      id: n.id,
-      type: "step",
-      position: positions.get(n.id) ?? { x: 0, y: 0 },
-      data: {
-        node: n,
-        title: titles.get(n.id),
-        isTrigger: level.triggers.has(n.id),
-        codeLine: codeLineOf(n),
-        hasIn: targets.has(n.id),
-        hasOut: sources.has(n.id),
-        enterAt: times.enterAt.get(n.id) ?? 0,
-        selected: n.id === selected || lit.has(n.id),
-        dimmed: cards.length > 0 && !lit.has(n.id),
-        suggestionCount: suggestionCounts.get(n.id),
-      },
-    }));
+    const nodes: StepFlowNode[] = level.nodes.map((n) => {
+      const measured = sizes.get(n.id);
+      return {
+        id: n.id,
+        type: "step",
+        position: positions.get(n.id) ?? { x: 0, y: 0 },
+        ...(measured ? { measured } : {}),
+        data: {
+          node: n,
+          title: titles.get(n.id),
+          isTrigger: level.triggers.has(n.id),
+          codeLine: codeLineOf(n),
+          hasIn: targets.has(n.id),
+          hasOut: sources.has(n.id),
+          enterAt: times.enterAt.get(n.id) ?? 0,
+          selected: n.id === selected || lit.has(n.id),
+          dimmed: cards.length > 0 && !lit.has(n.id) && n.id !== selected,
+          suggestionCount: suggestionCounts.get(n.id),
+        },
+      };
+    });
     return {
       nodes,
       edges: toFlowEdges(level.edges, times, reduced, turnY),
@@ -319,6 +365,7 @@ export function FlowCanvas({
   }, [
     graph,
     levelId,
+    levelKey,
     selected,
     titles,
     codeLineOf,
@@ -395,6 +442,7 @@ export function FlowCanvas({
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        onNodesChange={onNodesChange}
         onNodeClick={click}
         nodesDraggable={false}
         nodesConnectable={false}
@@ -403,6 +451,7 @@ export function FlowCanvas({
         proOptions={{ hideAttribution: true }}
       >
         <MeasureCanvas level={levelKey} onSize={onSize} />
+        <MeasureCards />
         <StartView
           positions={positions}
           size={size}

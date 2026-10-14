@@ -1,0 +1,601 @@
+import { fileURLToPath } from "node:url";
+import { expect, type Page, test } from "@playwright/test";
+import {
+  ACCENT,
+  backButton,
+  box,
+  breadcrumb,
+  canvas,
+  cardNames,
+  cardOf,
+  cardTags,
+  clickCard,
+  css,
+  edges,
+  expectLevel,
+  FRETE,
+  FRETE_LEVEL,
+  GROUND,
+  generate,
+  LIME,
+  levelIds,
+  MAIN_FLOW,
+  nodes,
+  OFFLINE,
+  PEDIDO,
+  panel,
+  SECOND,
+  VIDEO,
+} from "./mapa";
+
+// Feature 05, the look of the video and the editor (VID-01..05, 08, 09), on
+// the server with no key (4317): cards show provisional names.
+
+const FIXTURE = fileURLToPath(
+  new URL(
+    "../packages/extract-python/src/__tests__/fixtures/projeto-loja",
+    import.meta.url,
+  ),
+);
+
+/**
+ * One snippet whose main flow and entry level show every snippet tag (VID-04):
+ * the main flow has GATILHO, HTTP, BANCO, E-MAIL, DISCO, FUNÇÃO, LAÇO, BLOCO
+ * and SE; inside the entry come CÓDIGO, EXTERNO and RETORNO.
+ */
+const ALL_TAGS = `import requests
+
+
+def ajudar(x):
+    print(x)
+
+
+def principal(caminho, itens):
+    total = 0
+    requests.get("https://exemplo.com")
+    db.salvar(total)
+    enviar_email("a@b.c")
+    open(caminho)
+    ajudar(total)
+    for item in itens:
+        print(item)
+    with open(caminho) as f:
+        f.read()
+    if total > 1:
+        print(total)
+    return total
+`;
+
+/** The 14 tags of VID-04. */
+const TAGS = [
+  "GATILHO",
+  "FUNÇÃO",
+  "HTTP",
+  "BANCO",
+  "DISCO",
+  "E-MAIL",
+  "EXTERNO",
+  "SE",
+  "LAÇO",
+  "BLOCO",
+  "CÓDIGO",
+  "RETORNO",
+  "PASTA",
+  "ARQUIVO",
+];
+
+/** Tags of the level once every card is drawn. */
+async function levelTags(page: Page): Promise<string[]> {
+  await levelIds(page);
+  return (await cardTags(page)).map((t) => t ?? "");
+}
+
+test.describe("O visual do vídeo", () => {
+  test("VID-01: dark canvas with a 40 px dot grid, light titles, grey code, lime open mark", async ({
+    page,
+  }) => {
+    await generate(page, OFFLINE, VIDEO);
+    await expectLevel(page, MAIN_FLOW);
+
+    expect(await css(canvas(page), "background-color")).toBe(GROUND);
+    expect(await css(canvas(page), "background-size")).toBe("40px 40px");
+    expect(await css(canvas(page), "background-image")).toMatch(
+      /^radial-gradient\(/,
+    );
+    const trigger = cardOf(page, PEDIDO);
+    expect(await css(trigger.locator(".name"), "color")).toBe(SECOND);
+    expect(await css(trigger.locator(".fn"), "color")).toBe(ACCENT);
+    expect(await css(trigger.locator(".open-mark"), "color")).toBe(LIME);
+    expect(await css(page.locator("body"), "background-color")).toBe(GROUND);
+  });
+
+  test("VID-02: Archivo Black, Space Grotesk and DM Mono load, each where the spec puts it, and only from the app", async ({
+    page,
+  }) => {
+    const fontHosts: string[] = [];
+    page.on("request", (r) => {
+      if (r.url().endsWith(".woff2")) fontHosts.push(new URL(r.url()).host);
+    });
+    await generate(page, OFFLINE, VIDEO);
+    await expectLevel(page, MAIN_FLOW);
+    // A leaf opens the panel, whose title uses the display font (VID-25).
+    await clickCard(page, `${PEDIDO}/s1`);
+    await expect(panel(page).locator("h2")).toHaveText("Validar pedido");
+    await page.evaluate(() => document.fonts.ready);
+
+    for (const family of ["Archivo Black", "Space Grotesk", "DM Mono"]) {
+      expect(
+        await page.evaluate((f) => document.fonts.check(`16px "${f}"`), family),
+      ).toBe(true);
+      // check() is also true for a font the page never declared: the face must be loaded.
+      expect(
+        await page.evaluate(
+          (f) =>
+            [...document.fonts].some(
+              (face) =>
+                face.family.replaceAll('"', "") === f &&
+                face.status === "loaded",
+            ),
+          family,
+        ),
+      ).toBe(true);
+    }
+    expect(await css(panel(page).locator("h2"), "font-family")).toMatch(
+      /^"Archivo Black"/,
+    );
+    expect(await css(cardOf(page, PEDIDO), "font-family")).toMatch(
+      /^"Space Grotesk"/,
+    );
+    expect(
+      await css(cardOf(page, PEDIDO).locator(".fn"), "font-family"),
+    ).toMatch(/^"DM Mono"/);
+    expect(fontHosts.length).toBeGreaterThan(0);
+    expect(new Set(fontHosts)).toEqual(new Set(["127.0.0.1:4317"]));
+  });
+
+  test("VID-03: each card has tag, title and code line in that order, with lime round ports only where a wire is", async ({
+    page,
+  }) => {
+    await generate(page, OFFLINE, VIDEO);
+    await expectLevel(page, MAIN_FLOW);
+
+    const order = await nodes(page).evaluateAll((els) =>
+      els.map((el) =>
+        [...(el.querySelector(".node")?.children ?? [])]
+          .map((c) => c.className)
+          .filter((c) => ["tag", "name", "fn"].includes(c)),
+      ),
+    );
+    expect(order).toEqual(MAIN_FLOW.map(() => ["tag", "name", "fn"]));
+    // Three lines: the tag in capitals, the title in bold, the code in mono.
+    const first = cardOf(page, PEDIDO);
+    await expect(first.locator(".tag")).toHaveText("GATILHO");
+    expect(Number(await css(first.locator(".name"), "font-weight"))).toBe(700);
+    await expect(first.locator(".fn")).toHaveText("processar_pedido()");
+    await expect(cardOf(page, `${PEDIDO}/s5`).locator(".fn")).toHaveText(
+      "db.salvar()",
+    );
+
+    const ports = (id: string) =>
+      cardOf(page, id).evaluate((el) => {
+        const side = (cls: string) =>
+          getComputedStyle(el.querySelector(cls) as Element).visibility;
+        return { in: side(".port-in"), out: side(".port-out") };
+      });
+    expect(await ports(PEDIDO)).toEqual({ in: "hidden", out: "visible" });
+    expect(await ports(`${PEDIDO}/s3`)).toEqual({
+      in: "visible",
+      out: "visible",
+    });
+    expect(await ports(`${PEDIDO}/s6`)).toEqual({
+      in: "visible",
+      out: "hidden",
+    });
+    const port = cardOf(page, `${PEDIDO}/s3`).locator(".port-out");
+    expect(await css(port, "background-color")).toBe(LIME);
+    expect(await css(port, "border-radius")).toBe("50%");
+    expect(await css(port, "width")).toBe(await css(port, "height"));
+  });
+
+  test("VID-04: the 14 tags all show, and no card shows another", async ({
+    page,
+  }) => {
+    const seen = new Set<string>();
+    await generate(page, OFFLINE, ALL_TAGS);
+    const top = await levelTags(page);
+    expect(top).toEqual([
+      "GATILHO",
+      "HTTP",
+      "BANCO",
+      "E-MAIL",
+      "DISCO",
+      "FUNÇÃO",
+      "LAÇO",
+      "BLOCO",
+      "SE",
+    ]);
+    for (const t of top) seen.add(t);
+    await clickCard(page, "fn:principal");
+    await expect(nodes(page)).toHaveCount(11);
+    const inner = await levelTags(page);
+    expect(inner).toEqual([
+      "CÓDIGO",
+      "HTTP",
+      "BANCO",
+      "E-MAIL",
+      "DISCO",
+      "FUNÇÃO",
+      "LAÇO",
+      "BLOCO",
+      "SE",
+      "EXTERNO",
+      "RETORNO",
+    ]);
+    for (const t of inner) seen.add(t);
+
+    await page.goto(`${OFFLINE}/`);
+    await page.getByLabel("Caminho da pasta").fill(FIXTURE);
+    await page.getByRole("button", { name: "Abrir pasta" }).click();
+    const folders = await levelTags(page);
+    expect(new Set(folders)).toEqual(new Set(["PASTA"]));
+    for (const t of folders) seen.add(t);
+    await clickCard(page, "dir:pedidos");
+    await expect(nodes(page)).toHaveCount(3);
+    const files = await levelTags(page);
+    expect(files).toEqual(["ARQUIVO", "ARQUIVO", "ARQUIVO"]);
+    for (const t of files) seen.add(t);
+
+    expect([...seen].sort()).toEqual([...TAGS].sort());
+  });
+
+  test("VID-05: wires are lime 4 px curves", async ({ page }) => {
+    // The video stage: the main flow fits on one row, so every wire is the plain curve.
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await generate(page, OFFLINE, VIDEO);
+    await expectLevel(page, MAIN_FLOW);
+    await expect(edges(page)).toHaveCount(7);
+
+    const wires = await page.locator("path.wire").evaluateAll((els) =>
+      els.map((el) => {
+        const s = getComputedStyle(el);
+        return {
+          stroke: s.stroke,
+          width: s.strokeWidth,
+          fill: s.fill,
+          d: el.getAttribute("d") ?? "",
+        };
+      }),
+    );
+    expect(wires).toHaveLength(7);
+    for (const w of wires) {
+      expect(w.stroke).toBe(LIME);
+      expect(w.width).toBe("4px");
+      expect(w.fill).toBe("none");
+      expect(w.d).toMatch(/^M [-\d.]+ [-\d.]+ C [-\d.]+ [-\d.]+, /);
+    }
+  });
+});
+
+test.describe("O editor", () => {
+  test("VID-08: the editor panel has trecho.py in lime, mono code, a lime Gerar mapa and the folder field", async ({
+    page,
+  }) => {
+    await page.goto(`${OFFLINE}/`);
+    const editor = page.getByRole("region", { name: "Editor" });
+    const file = editor.getByText("trecho.py", { exact: true });
+    await expect(file).toBeVisible();
+    expect(await css(file, "color")).toBe(LIME);
+    const code = page.getByLabel("Trecho Python");
+    await expect(code).toBeVisible();
+    expect(await css(code, "font-family")).toMatch(/^"DM Mono"/);
+    const button = page.getByRole("button", { name: "Gerar mapa" });
+    await expect(button).toBeVisible();
+    expect(await css(button, "background-color")).toBe(LIME);
+    await expect(page.getByLabel("Caminho da pasta")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Abrir pasta" }),
+    ).toBeVisible();
+    // No map yet: no canvas and no "Novo código".
+    await expect(canvas(page)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Novo código" })).toHaveCount(
+      0,
+    );
+  });
+
+  test("VID-09: Gerar mapa swaps the editor for a full-screen map; Novo código brings the same text back", async ({
+    page,
+  }) => {
+    await generate(page, OFFLINE, VIDEO);
+    await expectLevel(page, MAIN_FLOW);
+    await expect(page.getByLabel("Trecho Python")).toHaveCount(0);
+    const newCode = page.getByRole("button", { name: "Novo código" });
+    await expect(newCode).toBeVisible();
+    const view = page.viewportSize();
+    const map = await page.locator("main").boundingBox();
+    expect(map).toEqual({
+      x: 0,
+      y: 0,
+      width: view?.width,
+      height: view?.height,
+    });
+    await expect(backButton(page)).toBeVisible();
+
+    await newCode.click();
+    await expect(page.getByLabel("Trecho Python")).toHaveValue(VIDEO);
+    await expect(canvas(page)).toHaveCount(0);
+    await expect(newCode).toHaveCount(0);
+  });
+});
+
+/** "source->target" of each drawn wire, in DOM order. */
+const wirePairs = (page: Page) =>
+  edges(page).evaluateAll((els) =>
+    els.map((el) =>
+      (el.getAttribute("aria-label") ?? "")
+        .replace(/^Edge from /, "")
+        .replace(" to ", "->"),
+    ),
+  );
+
+/** Two top functions that nobody calls: two entries (VID-11). */
+const TWO_ENTRIES = "def a():\n    print(1)\n\n\ndef b():\n    print(2)\n";
+/** Loose code that calls a(), plus b that nobody calls; the constant is no entry (VID-11, 12). */
+const LOOSE = `LIMITE = 10
+
+
+def a():
+    print(1)
+
+
+def b():
+    print(2)
+
+
+a()
+`;
+/** Only constants at the top: the function is still the entry (VID-11). */
+const CONSTANTS = "LIMITE = 10\nTAXA = 0.5\n\n\ndef a():\n    print(LIMITE)\n";
+
+test.describe("O fluxo principal", () => {
+  test("VID-10, IT P1: the video code shows its 8 cards in code order, joined by 7 wires", async ({
+    page,
+  }) => {
+    await generate(page, OFFLINE, VIDEO);
+    await expectLevel(page, MAIN_FLOW);
+    expect(await cardTags(page)).toEqual([
+      "GATILHO",
+      "EXTERNO",
+      "EXTERNO",
+      "BANCO",
+      "FUNÇÃO",
+      "EXTERNO",
+      "BANCO",
+      "E-MAIL",
+    ]);
+    await expect
+      .poll(() => cardNames(page))
+      .toEqual([
+        "Processar pedido",
+        "Loads",
+        "Validar pedido",
+        "Buscar cliente",
+        "Calcular frete",
+        "Soma itens",
+        "Salvar",
+        "Enviar email",
+      ]);
+    await expect(edges(page)).toHaveCount(7);
+    expect(await wirePairs(page)).toEqual(
+      MAIN_FLOW.slice(1).map((id, i) => `${MAIN_FLOW[i]}->${id}`),
+    );
+    await expect(breadcrumb(page).getByRole("button")).toHaveText([
+      "Fluxo principal",
+    ]);
+  });
+
+  test("VID-10 edge: an entry with no call shows only its GATILHO", async ({
+    page,
+  }) => {
+    await generate(page, OFFLINE, "def vazio():\n    x = 1\n");
+    await expectLevel(page, ["fn:vazio"]);
+    expect(await cardTags(page)).toEqual(["GATILHO"]);
+    await expect(edges(page)).toHaveCount(0);
+  });
+
+  test("VID-11: each entry gets its own row, top to bottom in code order; constants are no entry", async ({
+    page,
+  }) => {
+    await generate(page, OFFLINE, TWO_ENTRIES);
+    await expectLevel(page, ["fn:a", "fn:a/s0", "fn:b", "fn:b/s0"]);
+    expect(await cardTags(page)).toEqual([
+      "GATILHO",
+      "EXTERNO",
+      "GATILHO",
+      "EXTERNO",
+    ]);
+    expect(await wirePairs(page)).toEqual(["fn:a->fn:a/s0", "fn:b->fn:b/s0"]);
+    const a = await box(cardOf(page, "fn:a"));
+    const b = await box(cardOf(page, "fn:b"));
+    expect(a.y + a.height).toBeLessThan(b.y);
+
+    const graph = await generate(page, OFFLINE, LOOSE);
+    const mod = graph.nodes.find((n) => n.kind === "module")?.id as string;
+    expect(mod).toBeDefined();
+    const call = graph.nodes.find(
+      (n) => n.parentId === mod && n.kind === "call",
+    )?.id as string;
+    await expectLevel(page, [mod, call, "fn:b", "fn:b/s0"]);
+    expect(await cardTags(page)).toEqual([
+      "GATILHO",
+      "FUNÇÃO",
+      "GATILHO",
+      "EXTERNO",
+    ]);
+    await expect
+      .poll(() => cardNames(page))
+      .toEqual(["Código solto", "A", "B", "Print"]);
+    const loose = await box(cardOf(page, mod));
+    const second = await box(cardOf(page, "fn:b"));
+    expect(loose.y + loose.height).toBeLessThan(second.y);
+
+    await generate(page, OFFLINE, CONSTANTS);
+    await expectLevel(page, ["fn:a", "fn:a/s0"]);
+    expect(await cardNames(page)).toEqual(["A", "Print"]);
+  });
+
+  test("VID-12: no card on the first level says Módulo; loose code is the GATILHO Código solto", async ({
+    page,
+  }) => {
+    const graph = await generate(page, OFFLINE, LOOSE);
+    const mod = graph.nodes.find((n) => n.kind === "module")?.id as string;
+    await expect(nodes(page)).toHaveCount(4);
+    await levelIds(page);
+    const texts = await nodes(page).allTextContents();
+    expect(texts.filter((t) => t.includes("Módulo"))).toEqual([]);
+    await expect(cardOf(page, mod).locator(".tag")).toHaveText("GATILHO");
+    await expect(cardOf(page, mod).locator(".name")).toHaveAttribute(
+      "title",
+      "Código solto",
+    );
+  });
+
+  test("VID-13: undefined names get BANCO, E-MAIL or EXTERNO and no calls wire; only calcular_frete is called", async ({
+    page,
+  }) => {
+    const graph = await generate(page, OFFLINE, VIDEO);
+    await expectLevel(page, MAIN_FLOW);
+    const tagOf = (id: string) => cardOf(page, id).getAttribute("data-tag");
+    expect(await tagOf(`${PEDIDO}/s1`)).toBe("EXTERNO");
+    expect(await tagOf(`${PEDIDO}/s2`)).toBe("BANCO");
+    expect(await tagOf(`${PEDIDO}/s5`)).toBe("BANCO");
+    expect(await tagOf(`${PEDIDO}/s6`)).toBe("E-MAIL");
+    await expect(cardOf(page, `${PEDIDO}/s1`).locator(".fn")).toHaveText(
+      "validar_pedido()",
+    );
+    await expect(cardOf(page, `${PEDIDO}/s2`).locator(".fn")).toHaveText(
+      "db.buscar_cliente()",
+    );
+    await expect(cardOf(page, `${PEDIDO}/s6`).locator(".fn")).toHaveText(
+      "enviar_email()",
+    );
+
+    const byId = (id: string) => graph.nodes.find((n) => n.id === id);
+    expect(byId(`${PEDIDO}/s1`)).toMatchObject({
+      kind: "external",
+      callee: "validar_pedido",
+      category: "EXTERNO",
+    });
+    expect(byId(`${PEDIDO}/s2`)).toMatchObject({
+      kind: "external",
+      callee: "db.buscar_cliente",
+      category: "BANCO",
+    });
+    expect(byId(`${PEDIDO}/s5`)).toMatchObject({
+      kind: "external",
+      callee: "db.salvar",
+      category: "BANCO",
+    });
+    expect(byId(`${PEDIDO}/s6`)).toMatchObject({
+      kind: "external",
+      callee: "enviar_email",
+      category: "EMAIL",
+    });
+    const calls = graph.edges.filter((e) => e.kind === "calls");
+    expect(calls.map((e) => e.target)).toEqual([FRETE]);
+  });
+});
+
+test.describe("O movimento", () => {
+  test("VID-06: cards enter left to right, each wire draws after its source, one pulse per wire in flow order", async ({
+    page,
+  }) => {
+    // The video stage: the main flow fits on one row.
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await generate(page, OFFLINE, VIDEO);
+    await expectLevel(page, MAIN_FLOW);
+
+    const cards = await nodes(page).evaluateAll((els) =>
+      els.map((el) => {
+        const card = el.querySelector(".node") as HTMLElement;
+        const s = getComputedStyle(card);
+        return {
+          id: el.getAttribute("data-id") ?? "",
+          x: el.getBoundingClientRect().x,
+          enterAt: Number(card.getAttribute("data-enter-at")),
+          delay: s.animationDelay,
+          name: s.animationName,
+        };
+      }),
+    );
+    const byX = [...cards].sort((a, b) => a.x - b.x);
+    expect(byX.map((c) => c.id)).toEqual(MAIN_FLOW);
+    for (let i = 1; i < byX.length; i++) {
+      expect(byX[i]?.enterAt).toBeGreaterThan(byX[i - 1]?.enterAt as number);
+    }
+    for (const c of cards) {
+      expect(c.name).toBe("node-in");
+      expect(Math.round(Number.parseFloat(c.delay) * 1000)).toBe(c.enterAt);
+    }
+
+    const enterAt = new Map(cards.map((c) => [c.id, c.enterAt]));
+    const wires = await edges(page).evaluateAll((els) =>
+      els.map((el) => ({
+        pair: (el.getAttribute("aria-label") ?? "")
+          .replace(/^Edge from /, "")
+          .split(" to "),
+        drawAt: Number(el.querySelector(".wire")?.getAttribute("data-draw-at")),
+        pulses: [...el.querySelectorAll("circle.pulse")].map((p) =>
+          Number(p.getAttribute("data-pulse-at")),
+        ),
+      })),
+    );
+    expect(wires).toHaveLength(7);
+    for (const w of wires) {
+      const [source] = w.pair as [string, string];
+      expect(w.drawAt).toBeGreaterThanOrEqual(
+        (enterAt.get(source) as number) + 400,
+      );
+      expect(w.pulses).toHaveLength(1);
+    }
+    const inFlow = [...wires].sort(
+      (a, b) =>
+        (enterAt.get(a.pair[0] as string) as number) -
+        (enterAt.get(b.pair[0] as string) as number),
+    );
+    for (let i = 1; i < inFlow.length; i++) {
+      expect(inFlow[i]?.pulses[0]).toBeGreaterThan(
+        inFlow[i - 1]?.pulses[0] as number,
+      );
+    }
+    // Every pulse starts after the last wire is drawn: one dot runs at a time.
+    const lastDraw = Math.max(...wires.map((w) => w.drawAt));
+    expect(inFlow[0]?.pulses[0]).toBeGreaterThan(lastDraw);
+  });
+
+  test("VID-07: with reduced motion the level shows complete, with no animation and no pulse", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await generate(page, OFFLINE, VIDEO);
+    await expect(nodes(page)).toHaveCount(8);
+    await expect(nodes(page).first()).toBeVisible();
+    const right = await page.evaluate(() => ({
+      animations: document.getAnimations().length,
+      opacities: [...document.querySelectorAll(".node")].map(
+        (el) => getComputedStyle(el).opacity,
+      ),
+    }));
+    expect(right).toEqual({
+      animations: 0,
+      opacities: MAIN_FLOW.map(() => "1"),
+    });
+    await expect(page.locator("circle.pulse")).toHaveCount(0);
+
+    // Opening a node shows the inner level at once, with no growing frame.
+    await clickCard(page, `${PEDIDO}/s3`);
+    await expect(canvas(page)).toHaveAttribute("data-phase", "open");
+    await expect(page.locator(".open-frame")).toHaveCount(0);
+    await expectLevel(page, FRETE_LEVEL);
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+  });
+});

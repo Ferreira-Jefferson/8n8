@@ -17,7 +17,7 @@ export interface StepNodeData extends Record<string, unknown> {
   enterAt: number;
   /** Selected or anchoring a suggestion card (VID-22, 32). */
   selected: boolean;
-  /** Another node has a suggestion card (VID-32). */
+  /** Another node has a suggestion card, and this one is not selected (VID-32). */
   dimmed: boolean;
   suggestionCount?: number | undefined;
 }

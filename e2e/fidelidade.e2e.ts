@@ -6,6 +6,9 @@ import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 // Feature 04, story P1 (fidelity), end to end through the REAL review pipeline:
 // the keyed server (4319) drafts, checks, reviews, redrafts and cuts against the
 // scripted fake LLM (e2e/fake-llm.ts). /api/explain is never intercepted.
+// Feature 05: one click opens a node, and title requests (roles "title" and
+// "title-review") come with each level; the call counts here look only at
+// drafts and reviews (D2).
 
 const REAL = "http://127.0.0.1:4319";
 const OFFLINE = "http://127.0.0.1:4317";
@@ -43,6 +46,35 @@ const markedLines = (view: Locator) =>
     .locator('[aria-current="true"]')
     .evaluateAll((els) => els.map((el) => el.getAttribute("data-line")));
 
+/** Clicks a card even when the zoom leaves it off-screen; it must be visible first. */
+async function clickCard(page: Page, id: string): Promise<void> {
+  const card = nodeById(page, id);
+  await expect(card).toBeVisible();
+  await card.dispatchEvent("click");
+}
+
+/**
+ * Opens calcular_frete through the loop of processar_pedido and its call; the
+ * call card shows the panel of calcular_frete (VID-24). The loop's own summary
+ * request is unscripted and fails (with no key: no request); the fake log is cleared after it, so the
+ * counts below see only calcular_frete.
+ */
+async function openFrete(
+  page: Page,
+  loopState = "Resumo indisponível",
+  clearLog = true,
+): Promise<void> {
+  await clickCard(page, "fn:processar_pedido/s1");
+  await expect(panel(page).getByText(loopState, { exact: true })).toHaveCount(
+    1,
+  );
+  if (clearLog) await resetFake();
+  await clickCard(page, "fn:processar_pedido/s1/s0");
+  await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
+    "Calcular frete",
+  );
+}
+
 async function generate(page: Page, base: string, source: string) {
   await page.goto(`${base}/`);
   await page.getByLabel("Trecho Python").fill(source);
@@ -76,7 +108,7 @@ test.describe("Fidelidade", () => {
       REAL,
       "def pesar_caixa(caixa):\n    return caixa.peso\n",
     );
-    await nodeById(page, "fn:pesar_caixa").click();
+    await clickCard(page, "fn:pesar_caixa");
 
     const view = panel(page);
     await expect(badge(view)).toHaveText("Revisado com cortes");
@@ -108,7 +140,7 @@ test.describe("Fidelidade", () => {
       REAL,
       "def somar_itens(itens):\n    return sum(itens)\n",
     );
-    await nodeById(page, "fn:somar_itens").click();
+    await clickCard(page, "fn:somar_itens");
 
     const view = panel(page);
     await expect(badge(view)).toHaveText("Revisado com cortes");
@@ -124,7 +156,7 @@ test.describe("Fidelidade", () => {
       REAL,
       "def contar_partes(texto):\n    partes = texto.split()\n    return len(partes)\n",
     );
-    await nodeById(page, "fn:contar_partes").click();
+    await clickCard(page, "fn:contar_partes");
 
     const view = panel(page);
     await expect(badge(view)).toHaveText("Revisado com cortes");
@@ -141,7 +173,7 @@ test.describe("Fidelidade", () => {
       REAL,
       "def media_notas(notas):\n    total = sum(notas)\n    return total / len(notas)\n",
     );
-    await nodeById(page, "fn:media_notas").click();
+    await clickCard(page, "fn:media_notas");
 
     const view = panel(page);
     await expect(badge(view)).toHaveText("Revisado");
@@ -152,6 +184,8 @@ test.describe("Fidelidade", () => {
         .getByRole("button", { name: /\(linha \d+, / }),
     ).toHaveText(["Tratar a lista vazia (linha 3, alta)"]);
     await expect(view).not.toContainText("Remover o laço repetido");
+    // The open level is the inside of media_notas; its card is one level up.
+    await page.getByRole("button", { name: "Voltar" }).click();
     await expect(
       nodeById(page, "fn:media_notas").getByTitle("Sugestões"),
     ).toHaveText("1");
@@ -161,7 +195,7 @@ test.describe("Fidelidade", () => {
     page,
   }) => {
     await generate(page, REAL, VIDEO);
-    await nodeById(page, "fn:calcular_frete").click();
+    await openFrete(page);
 
     const view = panel(page);
     await expect(badge(view)).toHaveText("Revisado");
@@ -194,7 +228,11 @@ test.describe("Fidelidade", () => {
     expect(review).not.toContain("Nó:");
     expect(review).not.toContain(PTS_FIRST_LINE);
 
-    await nodeById(page, "fn:processar_pedido").click();
+    await page
+      .getByRole("navigation", { name: "Caminho de navegação" })
+      .getByRole("button", { name: "Fluxo principal" })
+      .click();
+    await clickCard(page, "fn:processar_pedido");
     await expect(
       panel(page).getByText("Nenhum efeito externo.", { exact: true }),
     ).toHaveCount(1);
@@ -205,7 +243,7 @@ test.describe("Fidelidade", () => {
   }) => {
     const other = "def registrar_log(msg):\n    print(msg)\n";
     await generate(page, REAL, `${VIDEO}\n\n${other}`);
-    await nodeById(page, "fn:calcular_frete").click();
+    await openFrete(page);
     const view = panel(page);
     // Any reviewed answer, so the requests are all in; the exact badge is checked last.
     await expect(badge(view)).toHaveText(/^Revisado/);
@@ -263,7 +301,7 @@ test.describe("Fidelidade", () => {
   }) => {
     rmSync(DEFAULT_CACHE, { recursive: true, force: true });
     await generate(page, DEFAULT_MODEL_SERVER, VIDEO);
-    await nodeById(page, "fn:calcular_frete").click();
+    await openFrete(page);
     await expect(badge(panel(page))).toHaveText("Revisado");
 
     const log = await fakeLog();
@@ -279,7 +317,12 @@ test.describe("Fidelidade", () => {
     page,
   }) => {
     await generate(page, OFFLINE, VIDEO);
-    await nodeById(page, "fn:calcular_frete").click();
+    // The log is never cleared here: the whole test makes no LLM call.
+    await openFrete(
+      page,
+      "Configure OPENROUTER_API_KEY para ver resumos",
+      false,
+    );
 
     const view = panel(page);
     await expect(
@@ -299,7 +342,7 @@ test.describe("Fidelidade", () => {
     page,
   }) => {
     await generate(page, REAL, "def esperar(fila):\n    return fila.pop()\n");
-    await nodeById(page, "fn:esperar").click();
+    await clickCard(page, "fn:esperar");
 
     const view = panel(page);
     await expect(
