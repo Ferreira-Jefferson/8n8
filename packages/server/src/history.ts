@@ -17,12 +17,14 @@ export interface History {
   get(id: number): HistoryEntry | undefined;
   /** Marks the entry as opened now. */
   touch(id: number): void;
+  /** Marks or unmarks the entry as a favourite; false when the id is unknown. */
+  star(id: number, starred: boolean): boolean;
   remove(id: number): boolean;
   close(): void;
 }
 
 const KEEP = 100;
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 const SCHEMA = `
 CREATE TABLE search (
@@ -48,6 +50,10 @@ CREATE TABLE search_data (
 );
 `;
 
+// v2: favourites. A starred row escapes the KEEP limit.
+const SCHEMA_V2 =
+  "ALTER TABLE search ADD COLUMN starred INTEGER NOT NULL DEFAULT 0";
+
 interface Row {
   id: number;
   kind: "snippet" | "project";
@@ -61,6 +67,7 @@ interface Row {
   files: number;
   nodes: number;
   edges: number;
+  starred: number;
 }
 
 const gz = (value: unknown) => gzipSync(JSON.stringify(value));
@@ -106,6 +113,7 @@ function toItem(r: Row): HistoryItem {
     files: r.files,
     nodes: r.nodes,
     edges: r.edges,
+    starred: r.starred === 1,
   };
 }
 
@@ -119,10 +127,11 @@ export function openHistory(path: string): History {
   const version = (
     db.prepare("PRAGMA user_version").get() as { user_version: number }
   ).user_version;
-  if (version < 1) {
+  if (version < SCHEMA_VERSION) {
     db.exec("BEGIN");
     try {
-      db.exec(SCHEMA);
+      if (version < 1) db.exec(SCHEMA);
+      db.exec(SCHEMA_V2);
       db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
       db.exec("COMMIT");
     } catch (err) {
@@ -140,10 +149,10 @@ export function openHistory(path: string): History {
     "INSERT OR IGNORE INTO search_data (search_id, graph, files) VALUES (?, ?, ?)",
   );
   const prune = db.prepare(
-    "DELETE FROM search WHERE id NOT IN (SELECT id FROM search ORDER BY opened_at DESC, id DESC LIMIT ?)",
+    "DELETE FROM search WHERE starred = 0 AND id NOT IN (SELECT id FROM search WHERE starred = 0 ORDER BY opened_at DESC, id DESC LIMIT ?)",
   );
   const listAll = db.prepare(
-    "SELECT id, kind, title, root, created_at, opened_at, open_count, lines, bytes, files, nodes, edges FROM search ORDER BY opened_at DESC, id DESC",
+    "SELECT id, kind, title, root, created_at, opened_at, open_count, lines, bytes, files, nodes, edges, starred FROM search ORDER BY opened_at DESC, id DESC",
   );
   const kindOf = db.prepare("SELECT kind, root FROM search WHERE id = ?");
   const dataOf = db.prepare(
@@ -152,6 +161,7 @@ export function openHistory(path: string): History {
   const touchRow = db.prepare(
     "UPDATE search SET opened_at = ?, open_count = open_count + 1 WHERE id = ?",
   );
+  const starRow = db.prepare("UPDATE search SET starred = ? WHERE id = ?");
   const del = db.prepare("DELETE FROM search WHERE id = ?");
 
   // Strictly increasing, so two saves in the same millisecond still keep their order.
@@ -237,6 +247,9 @@ export function openHistory(path: string): History {
     },
     touch(id) {
       touchRow.run(tick(), id);
+    },
+    star(id, starred) {
+      return Number(starRow.run(starred ? 1 : 0, id).changes) > 0;
     },
     remove(id) {
       return Number(del.run(id).changes) > 0;

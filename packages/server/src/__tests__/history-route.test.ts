@@ -101,6 +101,32 @@ describe("history routes", () => {
     expect(h.list()).toEqual([]);
   });
 
+  it("PUT /api/history/:id/star marks the row; bad ids, bodies and unknown ids are refused", async () => {
+    const h = openHistory(":memory:");
+    const call = setup(h);
+    await call("/api/graph", "POST", { source: "a = 1" });
+    await saved(h, 1);
+    const id = h.list()[0]?.id;
+    const star = (path: string, body: unknown) => call(path, "PUT", body);
+    expect(
+      (await star(`/api/history/${id}/star`, { starred: true })).status,
+    ).toBe(204);
+    expect(h.list()[0]?.starred).toBe(true);
+    const { items } = (await (await call("/api/history")).json()) as {
+      items: { starred: boolean }[];
+    };
+    expect(items[0]?.starred).toBe(true);
+    expect(
+      (await star("/api/history/abc/star", { starred: true })).status,
+    ).toBe(400);
+    expect(
+      (await star(`/api/history/${id}/star`, { starred: "sim" })).status,
+    ).toBe(400);
+    expect((await star("/api/history/42/star", { starred: true })).status).toBe(
+      404,
+    );
+  });
+
   it("a throwing history never breaks POST /api/graph", async () => {
     const boom = () => {
       throw new Error("disk full");

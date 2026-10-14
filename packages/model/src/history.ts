@@ -14,6 +14,8 @@ export interface HistoryItem {
   /** Epoch ms of the last time it was searched or opened. */
   openedAt: number;
   openCount: number;
+  /** Marked with a star: shown under Favoritos and never pruned. */
+  starred: boolean;
   /** Sizes of what was read: lines and bytes of all the code, number of .py files, nodes and wires of the graph. */
   lines: number;
   bytes: number;

@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import type { Graph, HistoryEntry, ProjectResponse } from "@code2n8n/model";
 import { describe, expect, it } from "vitest";
 import { openHistory } from "../history";
@@ -97,6 +101,64 @@ describe("history", () => {
     expect(items[0]?.title).toBe("v = 104");
     expect(items.at(-1)?.title).toBe("v = 5");
     expect(h.get(items[0]?.id ?? 0)).toBeDefined();
+  });
+
+  it("star marks and unmarks a row; an unknown id gives false", () => {
+    const h = openHistory(":memory:");
+    h.save(snippet("a = 1"));
+    const id = h.list()[0]?.id ?? 0;
+    expect(h.list()[0]?.starred).toBe(false);
+    expect(h.star(id, true)).toBe(true);
+    expect(h.list()[0]?.starred).toBe(true);
+    expect(h.star(id, false)).toBe(true);
+    expect(h.list()[0]?.starred).toBe(false);
+    expect(h.star(999, true)).toBe(false);
+  });
+
+  it("keeps a starred row past the 100 limit, and still keeps 100 others", () => {
+    const h = openHistory(":memory:");
+    h.save(snippet("favorito = 1"));
+    h.star(h.list()[0]?.id ?? 0, true);
+    for (let i = 0; i < 105; i++) h.save(snippet(`v = ${i}`));
+    const items = h.list();
+    expect(items).toHaveLength(101);
+    expect(items.find((i) => i.title === "favorito = 1")?.starred).toBe(true);
+    expect(items.filter((i) => !i.starred).at(-1)?.title).toBe("v = 5");
+  });
+
+  it("migrates a v1 file: the saved rows stay and start unstarred", () => {
+    const dir = mkdtempSync(join(tmpdir(), "code2n8n-history-v1-"));
+    const path = join(dir, "history.db");
+    try {
+      const old = new DatabaseSync(path);
+      old.exec(`
+        CREATE TABLE search (
+          id INTEGER PRIMARY KEY, kind TEXT NOT NULL, title TEXT NOT NULL, root TEXT,
+          content_hash TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL,
+          opened_at INTEGER NOT NULL, open_count INTEGER NOT NULL DEFAULT 1,
+          lines INTEGER NOT NULL, bytes INTEGER NOT NULL, files INTEGER NOT NULL,
+          nodes INTEGER NOT NULL, edges INTEGER NOT NULL
+        );
+        CREATE TABLE search_data (
+          search_id INTEGER PRIMARY KEY REFERENCES search (id) ON DELETE CASCADE,
+          graph BLOB NOT NULL, files BLOB NOT NULL
+        );
+        INSERT INTO search VALUES (7, 'snippet', 'a = 1', NULL, 'h', 1, 1, 1, 1, 5, 1, 2, 1);
+        PRAGMA user_version = 1;
+      `);
+      old.close();
+      const h = openHistory(path);
+      expect(h.list()).toEqual([
+        expect.objectContaining({ id: 7, title: "a = 1", starred: false }),
+      ]);
+      expect(h.star(7, true)).toBe(true);
+      h.close();
+      const again = openHistory(path);
+      expect(again.list()[0]?.starred).toBe(true);
+      again.close();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("remove deletes the row and its data", () => {

@@ -32,6 +32,7 @@ export interface AppDeps {
 
 const projectBody = z.object({ path: z.string().min(1) });
 const graphBody = z.object({ source: z.string() });
+const starBody = z.object({ starred: z.boolean() });
 // Extra fields from the client (code, calls...) are dropped: the server builds the request (CORE-17).
 const projectExplainBody = z.object({
   root: z.string().min(1),
@@ -198,6 +199,17 @@ export function createApp(deps: AppDeps): Hono {
     if (!entry) return c.json({ error: "not-found" }, 404);
     deps.history?.touch(id);
     return c.json({ entry });
+  });
+
+  app.put("/api/history/:id/star", async (c) => {
+    const id = historyId(c.req.param("id"));
+    if (id === null) return c.json({ error: "invalid id" }, 400);
+    const body = starBody.safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json({ error: "invalid body" }, 400);
+    if (!deps.history?.star(id, body.data.starred)) {
+      return c.json({ error: "not-found" }, 404);
+    }
+    return c.body(null, 204);
   });
 
   app.delete("/api/history/:id", (c) => {
