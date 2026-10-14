@@ -330,7 +330,7 @@ html { scroll-behavior: smooth; }
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <!-- Logotipo: dois 8 de blocos; os blocos ligados e o fio na cor de destaque. -->
+    <!-- Logotipo: dois 8 de blocos; os blocos ligados e a aresta na cor de destaque. -->
     <symbol id="wordmark" viewBox="0 0 124 80">
       <g fill="none" stroke-width="6">
         <rect x="3" y="43" width="38" height="34" rx="6" stroke="currentColor"/>
@@ -399,8 +399,8 @@ html { scroll-behavior: smooth; }
         <p class="eyebrow">Essência</p>
         <h2 id="h-essencia">O que o 8n8 é</h2>
       </div>
-      <p class="lead">O 8n8 lê um código e desenha esse código como nós e fios. Você começa na vista ampla. Depois, abre um nó para ver o fluxo interno dele e desce até as linhas reais.</p>
-      <p>O 8n8 é para quem precisa supervisionar código, muitas vezes escrito por IA, sem ler linha por linha. A ideia de nós ligados por fios veio do n8n, que serviu de inspiração.</p>
+      <p class="lead">O 8n8 lê um código e desenha esse código como um grafo: nós ligados por arestas. Você começa na vista ampla. Depois, abre um nó para ver o fluxo interno dele e desce até as linhas reais.</p>
+      <p>O 8n8 é para quem precisa supervisionar código, muitas vezes escrito por IA, sem ler linha por linha. A ideia de nós ligados por arestas veio do n8n, que serviu de inspiração.</p>
 
       <p class="promise">Todo nó leva de volta à linha.</p>
 
@@ -427,7 +427,7 @@ html { scroll-behavior: smooth; }
         <div><dt>A estrutura vem do parser</dt><dd>O Tree-sitter monta o mapa. O LLM só escreve resumos e sugestões, e cada texto aponta o nó e a linha de origem.</dd></div>
         <div><dt>Amplo primeiro, fundo depois</dt><dd>A tela abre no nível mais alto. Você escolhe onde descer.</dd></div>
         <div><dt>Sempre volta ao código</dt><dd>Todo nó mostra o arquivo e as linhas. Nenhum nó fica sem origem.</dd></div>
-        <div><dt>Uma palavra, um sentido</dt><dd>Nó é etapa. Fio é conexão. A interface e os textos usam os mesmos termos.</dd></div>
+        <div><dt>Uma palavra, um sentido</dt><dd>Nó é etapa. Aresta é conexão. A interface e os textos usam os mesmos termos.</dd></div>
       </dl>
 
       <div class="table-wrap">
@@ -464,7 +464,7 @@ html { scroll-behavior: smooth; }
             <thead><tr><th>Termo</th><th>Sentido</th><th>Não use</th></tr></thead>
             <tbody>
               <tr><td>nó</td><td>uma etapa do fluxo no mapa</td><td class="bad">bloco, caixa</td></tr>
-              <tr><td>fio</td><td>a conexão entre dois nós</td><td class="bad">linha, seta, link</td></tr>
+              <tr><td>aresta</td><td>a conexão entre dois nós</td><td class="bad">fio, linha, seta, link</td></tr>
               <tr><td>entrada / saída</td><td>o dado que o nó recebe / produz</td><td class="bad">input, output</td></tr>
               <tr><td>chama</td><td>uma função executa outra</td><td class="bad">invoca, dispara</td></tr>
               <tr><td>falha</td><td>um erro acontece</td><td class="bad">quebra, estoura</td></tr>
@@ -491,12 +491,12 @@ html { scroll-behavior: smooth; }
     <section id="logo" aria-labelledby="h-logo">
       <div class="head">
         <p class="eyebrow">Logo</p>
-        <h2 id="h-logo">Dois 8 e um fio</h2>
+        <h2 id="h-logo">Dois 8 e uma aresta</h2>
       </div>
-      <p class="lead">Cada 8 é feito de dois blocos empilhados, como os nós do canvas. O fio liga a saída de um bloco à entrada do outro e desenha o n. Os dois blocos ligados ficam na cor de destaque; os outros dois ficam na cor do texto.</p>
+      <p class="lead">Cada 8 é feito de dois blocos empilhados, como os nós do canvas. A aresta liga a saída de um bloco à entrada do outro e desenha o n. Os dois blocos ligados ficam na cor de destaque; os outros dois ficam na cor do texto.</p>
 
       <div class="stage construct scroll-x">
-        <svg viewBox="-30 -26 236 136" role="img" aria-label="Construção do logotipo: blocos de 44 por 40, traço 6, fio 5, portas de diâmetro 10, distância de 36 entre os dois 8">
+        <svg viewBox="-30 -26 236 136" role="img" aria-label="Construção do logotipo: blocos de 44 por 40, traço 6, aresta 5, portas de diâmetro 10, distância de 36 entre os dois 8">
           <g stroke="var(--c-pedra)" stroke-width="0.5" fill="none">
             <rect x="-20" y="-20" width="164" height="120" stroke-dasharray="2 2"/>
             <line x1="-12" y1="0" x2="140" y2="0"/>
@@ -511,7 +511,7 @@ html { scroll-behavior: smooth; }
             <text x="148" y="3.5">topo</text>
             <text x="148" y="42">meio</text>
             <text x="148" y="82">base</text>
-            <text x="54" y="95">36 = espaço do fio</text>
+            <text x="54" y="95">36 = espaço da aresta</text>
             <text x="-20" y="106">respiro mínimo: 20 u em toda a volta (metade da altura de um bloco)</text>
           </g>
         </svg>
@@ -520,7 +520,7 @@ html { scroll-behavior: smooth; }
         <div><dt>Bloco</dt><dd>44 × 40 u</dd></div>
         <div><dt>Traço</dt><dd>6 u</dd></div>
         <div><dt>Raio</dt><dd>6 u</dd></div>
-        <div><dt>Fio</dt><dd>5 u</dd></div>
+        <div><dt>Aresta</dt><dd>5 u</dd></div>
         <div><dt>Porta</dt><dd>Ø 10 u</dd></div>
         <div><dt>Respiro</dt><dd>20 u</dd></div>
       </dl>
@@ -537,7 +537,7 @@ html { scroll-behavior: smooth; }
       <div class="split">
         <div class="head">
           <h3>Símbolo</h3>
-          <p class="muted">O símbolo guarda só o caminho: os dois blocos ligados e o fio. Use no favicon, no ícone do app e no avatar. Ele se lê até 16 px, onde o logotipo inteiro vira um borrão.</p>
+          <p class="muted">O símbolo guarda só o caminho: os dois blocos ligados e a aresta. Use no favicon, no ícone do app e no avatar. Ele se lê até 16 px, onde o logotipo inteiro vira um borrão.</p>
         </div>
         <div class="icons">
           <div class="icon-wrap"><div class="icon" style="width:96px;height:96px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark" width="96" height="76"/></svg></div>96</div>
@@ -554,7 +554,7 @@ html { scroll-behavior: smooth; }
         <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-limao)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>use o verde-limão antigo nem outra cor neon.</figcaption></figure>
         <figure class="dont"><div class="tile" style="background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>ponha o Petróleo claro sobre Papel. O contraste é de 2,0:1.</figcaption></figure>
         <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" preserveAspectRatio="none" style="width:86%;height:40%" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>estique nem comprima.</figcaption></figure>
-        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" aria-hidden="true"><g transform="translate(124 0) scale(-1 1)"><use href="#wordmark" width="124" height="80"/></g></svg></div><figcaption>espelhe: o fio sai sempre do bloco de cima.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" aria-hidden="true"><g transform="translate(124 0) scale(-1 1)"><use href="#wordmark" width="124" height="80"/></g></svg></div><figcaption>espelhe: a aresta sai sempre do bloco de cima.</figcaption></figure>
       </div>
     </section>
 
@@ -591,7 +591,7 @@ html { scroll-behavior: smooth; }
             <div class="chip" style="background: var(--c-petroleo); color: var(--c-grafite)">--main</div>
             <h4>Petróleo</h4>
             <dl><dt>HEX</dt><dd>#3dbfa8</dd><dt>Grafite</dt><dd>7,8:1</dd></dl>
-            <p>Fios, portas, nó selecionado, linha atual, botão principal.</p>
+            <p>Arestas, portas, nó selecionado, linha atual, botão principal.</p>
           </div>
         </div>
       </div>
@@ -688,9 +688,9 @@ html { scroll-behavior: smooth; }
     <section id="componentes" aria-labelledby="h-comp">
       <div class="head">
         <p class="eyebrow">Componentes</p>
-        <h2 id="h-comp">Nós, fios e sugestões</h2>
+        <h2 id="h-comp">Nós, arestas e sugestões</h2>
       </div>
-      <p class="lead">O canvas é Grafite com uma grade de pontos. Os nós são cartões. Os fios são traços em Petróleo que se desenham da saída para a entrada.</p>
+      <p class="lead">O canvas é Grafite com uma grade de pontos. Os nós são cartões. As arestas são traços em Petróleo que se desenham da saída para a entrada.</p>
 
       <div class="scroll-x">
         <div class="stage flow" role="img" aria-label="Exemplo de mapa: a pasta pedidos liga a frete.py e importa validar_pedido; frete.py, selecionado, liga a calcular_frete pelo ramo sim">
@@ -716,8 +716,8 @@ html { scroll-behavior: smooth; }
       <ul class="legend">
         <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect x="2" y="2" width="40" height="18" rx="3" fill="#202323" stroke="#363b3a" stroke-width="2"/></svg><div><b>Nó</b><span>Cartão de 320 × 140 px, borda de 2 px, raio de 6 px.</span></div></li>
         <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect x="2" y="2" width="40" height="18" rx="3" fill="#202323" stroke="#3dbfa8" stroke-width="2"/></svg><div><b>Nó selecionado</b><span>A borda vira Petróleo. O resto continua igual.</span></div></li>
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><path d="M4 11 H40" stroke="#3dbfa8" stroke-width="3" stroke-linecap="round"/></svg><div><b>Fio cheio</b><span>Chama. Traço de 4 px com ponta redonda.</span></div></li>
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><path d="M4 11 H40" stroke="#3dbfa8" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 7"/></svg><div><b>Fio tracejado</b><span>Importa. Liga pastas e arquivos.</span></div></li>
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><path d="M4 11 H40" stroke="#3dbfa8" stroke-width="3" stroke-linecap="round"/></svg><div><b>Aresta cheia</b><span>Chama. Traço de 4 px com ponta redonda.</span></div></li>
+        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><path d="M4 11 H40" stroke="#3dbfa8" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 7"/></svg><div><b>Aresta tracejada</b><span>Importa. Liga pastas e arquivos.</span></div></li>
         <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><circle cx="22" cy="11" r="6" fill="#3dbfa8"/></svg><div><b>Porta</b><span>Círculo de 16 px. A entrada fica à esquerda e a saída, à direita.</span></div></li>
         <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><circle cx="22" cy="11" r="8" fill="#3dbfa8"/><text x="22" y="15" font-size="11" font-weight="700" text-anchor="middle" fill="#161818" font-family="Space Grotesk, sans-serif">2</text></svg><div><b>Contador de passo</b><span>A ordem do nó no fluxo aberto.</span></div></li>
         <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect x="1" y="2" width="42" height="18" rx="3" fill="#e9ebea"/><circle cx="9" cy="11" r="3" fill="#161818"/><rect x="15" y="9" width="22" height="4" rx="1" fill="#161818"/></svg><div><b>Cartão de sugestão</b><span>Névoa com texto em Grafite. Começa pelo comando.</span></div></li>
@@ -750,7 +750,7 @@ html { scroll-behavior: smooth; }
         <div><dt>Grade do canvas</dt><dd>40 px</dd></div>
         <div><dt>Entrada do nó</dt><dd>500 ms</dd></div>
       </dl>
-      <p class="muted">Movimento: os nós entram com <code>ease-out</code> em 500 ms e os fios se desenham da saída para a entrada. Com "reduzir movimento" ligado, o nível aparece completo, sem animação.</p>
+      <p class="muted">Movimento: os nós entram com <code>ease-out</code> em 500 ms e as arestas se desenham da saída para a entrada. Com "reduzir movimento" ligado, o nível aparece completo, sem animação.</p>
     </section>
 
     <!-- ===================== TOKENS ===================== -->
