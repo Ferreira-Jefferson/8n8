@@ -3,10 +3,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
-import { css, generate, LIME, nodes, OFFLINE } from "./mapa";
+import { css, generate, LIME, nodes } from "./mapa";
 
-// The search history, end to end: real server on 4317 with no key, a persistent SQLite
-// file. Every test starts by wiping it through the DELETE API.
+// The search history, end to end: a keyless server of its own on 4321 (playwright.config.ts),
+// a persistent SQLite file. Every test starts by wiping it through the DELETE API.
+const HISTORY = "http://127.0.0.1:4321";
+test.use({ baseURL: HISTORY });
 
 const FIXTURE = fileURLToPath(
   new URL(
@@ -36,7 +38,7 @@ interface Item {
 }
 
 async function list(page: Page): Promise<Item[]> {
-  const res = await page.request.get(`${OFFLINE}/api/history`);
+  const res = await page.request.get(`${HISTORY}/api/history`);
   return ((await res.json()) as { items: Item[] }).items;
 }
 
@@ -48,7 +50,7 @@ async function saved(page: Page, count: number): Promise<Item[]> {
 
 test.beforeEach(async ({ page }) => {
   for (const item of await list(page)) {
-    await page.request.delete(`${OFFLINE}/api/history/${item.id}`);
+    await page.request.delete(`${HISTORY}/api/history/${item.id}`);
   }
   expect(await list(page)).toEqual([]);
 });
@@ -88,7 +90,7 @@ test.describe("Histórico", () => {
   test("a snippet appears in the drawer on the map and on the editor screen, with title, tag and sizes", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, snippet("alfa_unico"));
+    await generate(page, HISTORY, snippet("alfa_unico"));
     const [item] = await saved(page, 1);
     if (!item) throw new Error("no row");
     expect(item.kind).toBe("snippet");
@@ -111,7 +113,7 @@ test.describe("Histórico", () => {
   });
 
   test("the saved row survives a page reload", async ({ page }) => {
-    await generate(page, OFFLINE, snippet("beta_unico"));
+    await generate(page, HISTORY, snippet("beta_unico"));
     const [item] = await saved(page, 1);
     await page.reload();
     await toggle(page).click();
@@ -122,7 +124,7 @@ test.describe("Histórico", () => {
   test("reopening a row shows the same cards and calls neither /api/graph nor /api/project", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, snippet("gama_unico"));
+    await generate(page, HISTORY, snippet("gama_unico"));
     await expect(nodes(page).first()).toBeVisible();
     const before = await levelIds(page);
     expect(before.length).toBeGreaterThan(0);
@@ -146,9 +148,9 @@ test.describe("Histórico", () => {
 
   test("the same code generated twice leaves one row", async ({ page }) => {
     const code = snippet("delta_unico");
-    await generate(page, OFFLINE, code);
+    await generate(page, HISTORY, code);
     const [first] = await saved(page, 1);
-    await generate(page, OFFLINE, code);
+    await generate(page, HISTORY, code);
     await expect
       .poll(async () => (await list(page))[0]?.openCount)
       .toBeGreaterThan(first?.openCount ?? 0);
@@ -173,9 +175,9 @@ test.describe("Histórico", () => {
   test("the search filters the rows and says when nothing matches", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, snippet("pesquisa_um"));
+    await generate(page, HISTORY, snippet("pesquisa_um"));
     await saved(page, 1);
-    await generate(page, OFFLINE, snippet("pesquisa_dois"));
+    await generate(page, HISTORY, snippet("pesquisa_dois"));
     const items = await saved(page, 2);
 
     await toggle(page).click();
@@ -197,9 +199,9 @@ test.describe("Histórico", () => {
   test("delete removes the row and it stays gone after a reload", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, snippet("apagar_um"));
+    await generate(page, HISTORY, snippet("apagar_um"));
     await saved(page, 1);
-    await generate(page, OFFLINE, snippet("apagar_dois"));
+    await generate(page, HISTORY, snippet("apagar_dois"));
     const items = await saved(page, 2);
     const gone = items[0];
     if (!gone) throw new Error("no row");
@@ -227,7 +229,7 @@ test.describe("Histórico", () => {
   });
 
   test("Esc and a click outside close the drawer", async ({ page }) => {
-    await generate(page, OFFLINE, snippet("fecha_unico"));
+    await generate(page, HISTORY, snippet("fecha_unico"));
     await saved(page, 1);
 
     await toggle(page).click();
@@ -280,7 +282,7 @@ test.describe("Histórico", () => {
   test("a star set in the drawer shows on the launcher when the drawer closes", async ({
     page,
   }) => {
-    await generate(page, OFFLINE, snippet("gama_unico"));
+    await generate(page, HISTORY, snippet("gama_unico"));
     const [item] = await saved(page, 1);
     if (!item) throw new Error("no row");
     await page.goto("/");

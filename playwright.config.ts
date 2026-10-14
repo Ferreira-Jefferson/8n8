@@ -6,12 +6,24 @@ const URL = "http://127.0.0.1:4317";
 const repoRoot = dirname(fileURLToPath(import.meta.url));
 const cacheDir = (name: string) => join(repoRoot, ".cache", name);
 
+// These specs share the fake LLM's request log and the e2e-real cache (4319): they wipe
+// and count them, so they run one at a time. Every other spec runs in parallel.
+const SHARED_STATE = [
+  "**/cache.e2e.ts",
+  "**/detalhe.e2e.ts",
+  "**/docstring.e2e.ts",
+  "**/fidelidade.e2e.ts",
+  "**/navegacao.e2e.ts",
+  "**/sugestoes.e2e.ts",
+  "**/titulos.e2e.ts",
+];
+
 export default defineConfig({
   testDir: "e2e",
   // *.e2e.ts, never *.test.ts or *.spec.ts: Vitest does not pick these up.
   testMatch: "**/*.e2e.ts",
+  // Files run in parallel; the tests of one file keep their order.
   fullyParallel: false,
-  workers: 1,
   forbidOnly: !!process.env.CI,
   reporter: "list",
   // Screenshot baselines are committed under e2e/__baselines__/<platform>/ (D3).
@@ -31,7 +43,13 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      testIgnore: "**/performance.e2e.ts",
+      testIgnore: ["**/performance.e2e.ts", ...SHARED_STATE],
+    },
+    {
+      name: "shared-state",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: SHARED_STATE,
+      workers: 1,
     },
     // Measurements, not checks: kept out of `pnpm e2e`. Run them with
     // CODE2N8N_PERF=1 pnpm exec playwright test --project performance
@@ -107,6 +125,21 @@ export default defineConfig({
         CODE2N8N_REVIEW_MODEL: "",
         CODE2N8N_CACHE_DIR: cacheDir("e2e-default-model"),
         CODE2N8N_HISTORY_DIR: cacheDir("e2e-default-model-history"),
+      },
+    },
+    {
+      // A keyless server of its own for historico.e2e.ts: that spec wipes and counts the
+      // history, so the maps other specs open on 4317 at the same time stay out of it.
+      command: "tsx packages/server/src/main.ts start",
+      url: "http://127.0.0.1:4321",
+      reuseExistingServer: false,
+      timeout: 180_000,
+      env: {
+        CODE2N8N_PORT: "4321",
+        OPENROUTER_API_KEY: "",
+        CODE2N8N_CACHE_DIR: cacheDir("e2e-history-offline"),
+        CODE2N8N_HISTORY_DIR: cacheDir("e2e-history"),
+        CODE2N8N_MODEL: "e2e/offline",
       },
     },
   ],
