@@ -3,6 +3,11 @@ import type { Position } from "./layout";
 
 /** Milliseconds from the moment a level appears (values from the video). */
 const ENTER_STEP = 350;
+/**
+ * The last card of a level enters by this time, so with its 500 ms fade a
+ * whole level settles in about 3 s. A long level shortens the 350 ms step.
+ */
+const ENTER_SPAN = 2500;
 const DRAW_DELAY = 400;
 const DRAW_DURATION = 500;
 const PULSE_PAUSE = 300;
@@ -17,8 +22,9 @@ export interface Schedule {
 }
 
 /**
- * When each node enters, each wire draws and each pulse runs (VID-06). With
- * `reduced`, every value is 0 (VID-07).
+ * When each node enters, each wire draws and each pulse runs (VID-06). Nodes
+ * enter 350 ms apart, or closer when the level is long, so the last one
+ * enters by 2500 ms. With `reduced`, every value is 0 (VID-07).
  */
 export function schedule(
   nodes: FlowNode[],
@@ -30,8 +36,9 @@ export function schedule(
   const order = [...nodes].sort(
     (a, b) => pos(a.id).x - pos(b.id).x || pos(a.id).y - pos(b.id).y,
   );
+  const step = Math.min(ENTER_STEP, ENTER_SPAN / Math.max(1, order.length - 1));
   const enterAt = new Map<NodeId, number>(
-    order.map((n, k) => [n.id, reduced ? 0 : k * ENTER_STEP]),
+    order.map((n, k) => [n.id, reduced ? 0 : k * step]),
   );
   const enter = (id: NodeId) => enterAt.get(id) ?? 0;
   const drawAt = new Map<string, number>(
