@@ -2,6 +2,7 @@ import type { Graph, ProjectResponse } from "@code2n8n/model";
 import { describe, expect, it, vi } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 import { type History, openHistory } from "../history";
+import { fakeLang } from "./fake-lang";
 
 const graph: Graph = {
   language: "python",
@@ -19,7 +20,7 @@ const response: ProjectResponse = {
 
 function setup(history: History, g: Graph = graph, read?: ProjectRead) {
   const app = createApp({
-    extractor: { language: "python", extract: () => g },
+    plugins: [fakeLang(() => g)],
     explain: async () => ({ status: "no-key" }),
     titles: async () => ({ status: "ok", titles: [] }),
     readProject: async () => read ?? { kind: "ok", root: "/r/loja", response },

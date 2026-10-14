@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { createPythonExtractor, pythonPlugin } from "@code2n8n/lang-python";
+import { pythonPlugin } from "@code2n8n/lang-python";
 import type { ExplainRequest, ExplainResponse } from "@code2n8n/model";
 import { buildProject } from "@code2n8n/project";
 import { describe, expect, it } from "vitest";
@@ -13,12 +13,10 @@ const videoFixture = readFileSync(
   "utf8",
 );
 
-const extractor = await createPythonExtractor();
-
 function setup(reply: ExplainResponse) {
   const received: ExplainRequest[] = [];
   const app = createApp({
-    extractor,
+    plugins: [pythonPlugin],
     explain: async (req) => {
       received.push(req);
       return reply;
@@ -68,7 +66,8 @@ describe("POST /api/explain", () => {
     await post({ source: videoFixture, nodeId: "fn:calcular_frete" });
     expect(received).toHaveLength(1);
     expect(received[0]).toEqual({
-      nodeId: "fn:calcular_frete",
+      nodeId: "python|fn:calcular_frete",
+      language: "python",
       nodeName: "calcular_frete",
       nodeKind: "function",
       code: videoFixture.split("\n").slice(3, 11).join("\n"),
@@ -139,7 +138,7 @@ describe("POST /api/explain", () => {
 
   it("returns 200 for a step node (external, code) (VID-28)", async () => {
     const { received, post } = setup(okReply);
-    const graph = extractor.extract(videoFixture);
+    const graph = pythonPlugin.extract(videoFixture);
     const steps = graph.nodes.filter(
       (n) => n.kind === "external" || n.kind === "code",
     );
@@ -148,7 +147,9 @@ describe("POST /api/explain", () => {
       const res = await post({ source: videoFixture, nodeId: step.id });
       expect(res.status).toBe(200);
     }
-    expect(received.map((r) => r.nodeId)).toEqual(steps.map((s) => s.id));
+    expect(received.map((r) => r.nodeId)).toEqual(
+      steps.map((s) => `python|${s.id}`),
+    );
   });
 
   it("builds the request of an external step from the server graph (VID-28)", async () => {
@@ -160,7 +161,8 @@ describe("POST /api/explain", () => {
     expect(res.status).toBe(200);
     expect(received).toEqual([
       {
-        nodeId: "fn:calcular_frete/s0",
+        nodeId: "python|fn:calcular_frete/s0",
+        language: "python",
         nodeName: "requests.get",
         nodeKind: "external",
         code: videoFixture.split("\n")[4],
@@ -183,7 +185,7 @@ describe("POST /api/explain", () => {
   it("puts the target name of a call step in calls (VID-28)", async () => {
     const { received, post } = setup(okReply);
     const source = "def g():\n    return 1\n\ndef f():\n    g()\n";
-    const graph = extractor.extract(source);
+    const graph = pythonPlugin.extract(source);
     const call = graph.nodes.find((n) => n.kind === "call");
     expect(call?.target).toBe("fn:g");
     await post({ source, nodeId: call?.id });
@@ -199,7 +201,7 @@ describe("POST /api/explain", () => {
     const files = [{ path: "pkg/a.py", source: "def f():\n    pass\n" }];
     const received: ExplainRequest[] = [];
     const app = createApp({
-      extractor,
+      plugins: [pythonPlugin],
       explain: async (req) => {
         received.push(req);
         return okReply;

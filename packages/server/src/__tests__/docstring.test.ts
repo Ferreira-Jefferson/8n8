@@ -13,13 +13,28 @@ const src = [
 
 describe("maskDocstring", () => {
   it("keeps the code as is when there is no docstring", () => {
-    const out = maskDocstring({ start: 2, end: 6 }, undefined, src);
+    const out = maskDocstring({ start: 2, end: 6 }, undefined, src, "#");
     expect(out).toEqual({ code: src.slice(1, 6).join("\n") });
     expect("docstring" in out).toBe(false);
   });
 
+  it("keeps the code as is when the docstring is outside the range", () => {
+    const out = maskDocstring(
+      { start: 6, end: 7 },
+      { start: 3, end: 5 },
+      src,
+      "#",
+    );
+    expect(out).toEqual({ code: src.slice(5, 7).join("\n") });
+  });
+
   it("blanks the docstring lines and keeps the line count", () => {
-    const out = maskDocstring({ start: 2, end: 6 }, { start: 3, end: 5 }, src);
+    const out = maskDocstring(
+      { start: 2, end: 6 },
+      { start: 3, end: 5 },
+      src,
+      "#",
+    );
     expect(out.code).toBe(
       ["def f():", "# docstring omitida", "", "", "    return 1"].join("\n"),
     );
@@ -30,12 +45,28 @@ describe("maskDocstring", () => {
   });
 
   it("handles a one-line docstring at the start of the range", () => {
-    const out = maskDocstring({ start: 1, end: 3 }, { start: 1, end: 1 }, [
-      '"""Mod."""',
-      "a = 1",
-      "b = 2",
-    ]);
+    const out = maskDocstring(
+      { start: 1, end: 3 },
+      { start: 1, end: 1 },
+      ['"""Mod."""', "a = 1", "b = 2"],
+      "#",
+    );
     expect(out.code).toBe("# docstring omitida\na = 1\nb = 2");
     expect(out.docstring).toEqual({ text: '"""Mod."""', line: 1 });
+  });
+
+  it.each([
+    ["#", "# docstring omitida"],
+    ["//", "// docstring omitida"],
+    ["--", "-- docstring omitida"],
+  ])("writes the marker with the comment prefix %s", (prefix, marker) => {
+    const out = maskDocstring(
+      { start: 1, end: 3 },
+      { start: 2, end: 2 },
+      ["fn f() {", "  /** Doc. */", "}"],
+      prefix,
+    );
+    expect(out.code).toBe(`fn f() {\n${marker}\n}`);
+    expect(out.docstring).toEqual({ text: "  /** Doc. */", line: 2 });
   });
 });

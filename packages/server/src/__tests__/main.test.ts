@@ -19,7 +19,7 @@ import {
   buildTitleReviewerPrompt,
 } from "@code2n8n/explain";
 import { type ReadFilter, readSourceFolder } from "@code2n8n/input";
-import { createPythonExtractor, pythonPlugin } from "@code2n8n/lang-python";
+import { pythonPlugin } from "@code2n8n/lang-python";
 import type {
   ExplainRequest,
   LanguagePlugin,
@@ -49,7 +49,8 @@ const cacheDir = mkdtempSync(join(tmpdir(), "code2n8n-main-"));
 afterAll(() => rmSync(cacheDir, { recursive: true, force: true }));
 
 const req: ExplainRequest = {
-  nodeId: "fn:f",
+  nodeId: "python|fn:f",
+  language: "python",
   nodeName: "f",
   nodeKind: "function",
   code: "def f():\n    return 1",
@@ -111,6 +112,8 @@ function llmOf(env: Env, f: ReturnType<typeof fakeFactory>) {
   );
 }
 
+const PY = { label: "Python", commentPrefix: "#" };
+
 const titleReply = JSON.stringify({
   titles: [{ id: "n1", title: "Devolver um" }],
 });
@@ -119,7 +122,8 @@ const titleReq: TitleRequest = {
   items: [
     {
       nodeId: "fn:f",
-      cacheKey: "fn:f",
+      cacheKey: "python|fn:f",
+      language: "python",
       kind: "function",
       name: "f",
       code: "def f():\n    return 1",
@@ -137,7 +141,12 @@ describe("composeExplain", () => {
     const f = fakeFactory();
     const explain = composeExplain(
       {},
-      { llm: llmOf({}, f), ptsRules, cacheDir: dir("a") },
+      {
+        llm: llmOf({}, f),
+        ptsRules,
+        plugins: [pythonPlugin],
+        cacheDir: dir("a"),
+      },
     );
     expect(await explain(req)).toEqual({ status: "no-key" });
     expect(f.keys).toEqual([]);
@@ -150,6 +159,7 @@ describe("composeExplain", () => {
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k-123" }, f),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("b"),
       },
     );
@@ -168,6 +178,7 @@ describe("composeExplain", () => {
           withModel,
         ),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("c"),
       },
     )(req);
@@ -179,6 +190,7 @@ describe("composeExplain", () => {
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k" }, withDefault),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("d"),
       },
     )(req);
@@ -194,6 +206,7 @@ describe("composeExplain", () => {
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("e"),
       },
     )(req);
@@ -219,6 +232,7 @@ describe("composeExplain", () => {
           f,
         ),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("f"),
       },
     )(req);
@@ -243,6 +257,7 @@ describe("composeExplain", () => {
       await composeExplain(env, {
         llm: llmOf(env, f),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir(name),
       })(req);
       expect(f.drafts().map((s) => s.model)).toEqual(["x/y"]);
@@ -254,6 +269,7 @@ describe("composeExplain", () => {
     const deps = (env: Env, f: ReturnType<typeof fakeFactory>) => ({
       llm: llmOf(env, f),
       ptsRules,
+      plugins: [pythonPlugin],
       cacheDir: dir("i"),
     });
     const set = fakeFactory();
@@ -285,6 +301,7 @@ describe("composeExplain", () => {
           fakeFactory(),
         ),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("j"),
       },
     )(req);
@@ -298,6 +315,7 @@ describe("composeExplain", () => {
       await composeExplain(env, {
         llm: llmOf(env, fakeFactory()),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir(name),
       })(req);
       expect(readdirSync(join(dir(name), "nodes"))).toHaveLength(1);
@@ -313,6 +331,7 @@ describe("composeExplain for a step (VID-28)", () => {
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("step"),
       },
     );
@@ -324,8 +343,8 @@ describe("composeExplain for a step (VID-28)", () => {
     });
     await explain(req);
     const [step, full] = f.drafts();
-    expect(step?.system).toBe(buildStepPrompt(ptsRules).text);
-    expect(full?.system).toBe(buildSystemPrompt(ptsRules).text);
+    expect(step?.system).toBe(buildStepPrompt(ptsRules, PY).text);
+    expect(full?.system).toBe(buildSystemPrompt(ptsRules, PY).text);
   });
 });
 
@@ -336,6 +355,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
       const titles = composeTitles(env, {
         llm: llmOf(env, f),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("t-a"),
       });
       expect(await titles(titleReq)).toEqual({ status: "no-key", titles: [] });
@@ -363,6 +383,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
           f,
         ),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("t-b"),
       },
     );
@@ -375,10 +396,10 @@ describe("composeTitles (VID-14, VID-17)", () => {
     expect(f.keys).toEqual(["k-1"]);
     expect(f.baseURLs).toEqual(["http://127.0.0.1:9/v1"]);
     expect(f.drafts().map((s) => [s.model, s.system])).toEqual([
-      ["x/y", buildTitlePrompt(ptsRules).text],
+      ["x/y", buildTitlePrompt(ptsRules, PY).text],
     ]);
     expect(f.reviews().map((s) => [s.model, s.system])).toEqual([
-      ["r/x", buildTitleReviewerPrompt().text],
+      ["r/x", buildTitleReviewerPrompt(PY).text],
     ]);
   });
 
@@ -402,6 +423,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
           f,
         ),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("t-c"),
       },
     )(titleReq);
@@ -422,6 +444,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
           fakeFactory(),
         ),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("t-d"),
       },
     )(titleReq);
@@ -436,6 +459,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
       const titles = composeTitles(env, {
         llm: llmOf(env, f),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir(name),
       });
       await titles(titleReq);
@@ -471,11 +495,13 @@ describe("composeLlm (LLM config, one client)", () => {
     const explain = composeExplain(env, {
       llm,
       ptsRules,
+      plugins: [pythonPlugin],
       cacheDir: dir("one-a"),
     });
     const titles = composeTitles(env, {
       llm,
       ptsRules,
+      plugins: [pythonPlugin],
       cacheDir: dir("one-b"),
     });
     await explain(req);
@@ -514,12 +540,20 @@ describe("composeLlm (LLM config, one client)", () => {
     const llm = llmOf(env, fakeFactory());
     expect(llm.client).toBeUndefined();
     expect(
-      await composeExplain(env, { llm, ptsRules, cacheDir: dir("nk-a") })(req),
+      await composeExplain(env, {
+        llm,
+        ptsRules,
+        plugins: [pythonPlugin],
+        cacheDir: dir("nk-a"),
+      })(req),
     ).toEqual({ status: "no-key" });
     expect(
-      await composeTitles(env, { llm, ptsRules, cacheDir: dir("nk-b") })(
-        titleReq,
-      ),
+      await composeTitles(env, {
+        llm,
+        ptsRules,
+        plugins: [pythonPlugin],
+        cacheDir: dir("nk-b"),
+      })(titleReq),
     ).toEqual({ status: "no-key", titles: [] });
   });
 
@@ -535,6 +569,7 @@ describe("composeLlm (LLM config, one client)", () => {
       const res = await composeExplain(env, {
         llm: llmOf(env, f),
         ptsRules,
+        plugins: [pythonPlugin],
         cacheDir: dir("prov"),
       })(req);
       return { res, calls: f.seen.length };
@@ -592,8 +627,6 @@ function snapshot(dir: string, rel = ""): string[] {
     });
 }
 
-const extractor = await createPythonExtractor();
-
 describe("composeReadProject", () => {
   const readProject = composeReadProject(readSourceFolder, [pythonPlugin]);
 
@@ -625,7 +658,7 @@ describe("composeReadProject", () => {
     const loja = makeLoja();
     const received: ExplainRequest[] = [];
     const app = createApp({
-      extractor,
+      plugins: [pythonPlugin],
       explain: async (r) => {
         received.push(r);
         return { status: "no-key" };
@@ -674,12 +707,13 @@ describe("composeReadProject", () => {
     const f = fakeFactory();
     const cache = dir("m");
     const app = createApp({
-      extractor,
+      plugins: [pythonPlugin],
       explain: composeExplain(
         { OPENROUTER_API_KEY: "k" },
         {
           llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
           ptsRules,
+          plugins: [pythonPlugin],
           cacheDir: cache,
         },
       ),

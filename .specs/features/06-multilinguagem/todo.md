@@ -55,20 +55,20 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 ## Fase 5 — Servidor
 
 - [x] 5.1 **[1ª]** Registro de plugins em `main.ts`: escolhe o plugin pela extensão. Remove o `".py"` fixo (`main.ts:95`) e o `createPythonExtractor()` fixo (`main.ts:132`).
-- [ ] 5.2 **[D5]** O servidor detecta a linguagem do trecho colado. Hoje o corpo é só `{ source }`, e o servidor não sabe a linguagem. Cada plugin dá uma nota ao texto (palavras reservadas, forma de função, de import e de export, erros de sintaxe). Ganha a maior nota. A resposta devolve `language`, e a tela mostra a linguagem escolhida.
-- [ ] 5.2a **[D5]** Empate ou nota baixa: o sistema usa a maior nota e a tela avisa "linguagem incerta". Testes com trechos curtos e ambíguos (uma linha `x = 1`, uma função só).
-- [ ] 5.3 **[2ª]** Rota nova `GET /api/languages`: devolve `id`, `label` e `extensions` de cada plugin. A tela monta os textos a partir dela.
-- [ ] 5.4 **[1ª]** `maskDocstring` usa o `commentPrefix` do plugin. Hoje o texto `# docstring omitida` está fixo. Arquivo: `packages/server/src/docstring.ts:3`.
-- [ ] 5.5 **[2ª]** Histórico: o trecho guarda a linguagem. Hoje o `content_hash` vem só do texto. O mesmo texto em duas linguagens vira uma entrada só. A linguagem entra no hash.
-- [ ] 5.6 **[2ª]** Histórico antigo: as entradas já salvas não têm linguagem. Na leitura, elas contam como `python`. Teste com um banco antigo.
-- [ ] 5.7 **[2ª]** `/api/graph` sem `try/catch`: um erro do extrator vira 500 sem mensagem. Responder com erro claro.
+- [x] 5.2 **[D5]** O servidor detecta a linguagem do trecho colado. Hoje o corpo é só `{ source }`, e o servidor não sabe a linguagem. Cada plugin dá uma nota ao texto (palavras reservadas, forma de função, de import e de export, erros de sintaxe). Ganha a maior nota. A resposta devolve `language`, e a tela mostra a linguagem escolhida.
+- [x] 5.2a **[D5]** Empate ou nota baixa: o sistema usa a maior nota e a tela avisa "linguagem incerta". Testes com trechos curtos e ambíguos (uma linha `x = 1`, uma função só).
+- [x] 5.3 **[2ª]** Rota nova `GET /api/languages`: devolve `id`, `label` e `extensions` de cada plugin. A tela monta os textos a partir dela.
+- [x] 5.4 **[1ª]** `maskDocstring` usa o `commentPrefix` do plugin. Hoje o texto `# docstring omitida` está fixo. Arquivo: `packages/server/src/docstring.ts:3`.
+- [x] 5.5 **[2ª]** Histórico: o trecho guarda a linguagem. Hoje o `content_hash` vem só do texto. O mesmo texto em duas linguagens vira uma entrada só. A linguagem entra no hash.
+- [x] 5.6 **[2ª]** Histórico antigo: as entradas já salvas não têm linguagem. Na leitura, elas contam como `python`. Teste com um banco antigo.
+- [x] 5.7 **[2ª]** `/api/graph` sem `try/catch`: um erro do extrator vira 500 sem mensagem. Responder com erro claro.
 
 ## Fase 6 — Explicação (`explain`)
 
-- [ ] 6.1 **[1ª]** Os quatro prompts recebem o nome da linguagem: `prompt.ts:3`, `prompt.ts:30`, `reviewer.ts:10`, `title-prompt.ts:6`, `title-reviewer.ts:15`.
-- [ ] 6.2 **[1ª]** Os prompts usam o marcador de docstring omitida da linguagem (`prompt.ts:6`, `prompt.ts:33`).
-- [ ] 6.3 **[2ª]** Cache: a linguagem entra na chave. Hoje a chave do trecho é só o `nodeId` (`fn:x`). O mesmo nome e código em duas linguagens leria a explicação errada. Com o prompt por linguagem, a versão do prompt também troca a cada linguagem e invalida o cache sem motivo real.
-- [ ] 6.4 **[2ª]** A troca de prompt muda a versão. As explicações em cache do Python serão geradas de novo uma vez. Avisar no commit.
+- [x] 6.1 **[1ª]** Os quatro prompts recebem o nome da linguagem: `prompt.ts:3`, `prompt.ts:30`, `reviewer.ts:10`, `title-prompt.ts:6`, `title-reviewer.ts:15`.
+- [x] 6.2 **[1ª]** Os prompts usam o marcador de docstring omitida da linguagem (`prompt.ts:6`, `prompt.ts:33`).
+- [x] 6.3 **[2ª]** Cache: a linguagem entra na chave. Hoje a chave do trecho é só o `nodeId` (`fn:x`). O mesmo nome e código em duas linguagens leria a explicação errada. Com o prompt por linguagem, a versão do prompt também troca a cada linguagem e invalida o cache sem motivo real.
+- [x] 6.4 **[2ª]** A troca de prompt muda a versão. As explicações em cache do Python serão geradas de novo uma vez. Avisar no commit. Nota: o texto do prompt do Python não mudou, então a versão dele ficou igual; só as explicações de trecho são geradas de novo, porque a chave passou a levar a linguagem (`<languageId>|<nodeId>`).
 
 ## Fase 7 — Tela (`apps/web`)
 

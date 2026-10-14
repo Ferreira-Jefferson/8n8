@@ -82,6 +82,16 @@ function sourcesOf(entry: HistoryEntry): string[] {
     .map((f) => f.source);
 }
 
+/**
+ * What a snippet adds to its content hash: its language, so the same text in two languages
+ * is two entries. Python adds nothing: rows saved before multi-language have the hash of
+ * a Python snippet, so they count as `python` and the same snippet finds them (5.5, 5.6).
+ */
+function snippetTag(entry: HistoryEntry): string {
+  if (entry.kind !== "snippet" || entry.graph.language === "python") return "";
+  return `language:${entry.graph.language}`;
+}
+
 /** What goes in `search_data.files`: everything but the graph, in its original order. */
 function filesBlobOf(entry: HistoryEntry): unknown {
   if (entry.kind === "snippet") return { source: entry.source };
@@ -174,7 +184,7 @@ export function openHistory(path: string): History {
   return {
     save(entry) {
       const sources = sourcesOf(entry);
-      const root = entry.kind === "project" ? entry.root : "";
+      const root = entry.kind === "project" ? entry.root : snippetTag(entry);
       const hash = createHash("sha256")
         .update(entry.kind)
         .update("\0")

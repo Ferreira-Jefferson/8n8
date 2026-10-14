@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
+import { fakeLang } from "./fake-lang";
 
 function setup() {
   const calls = { explain: 0, readProject: 0 };
   const app = createApp({
-    extractor: {
-      language: "python",
-      extract: () => ({
+    plugins: [
+      fakeLang(() => ({
         language: "python",
         empty: true,
         nodes: [],
         edges: [],
-      }),
-    },
+      })),
+    ],
     explain: async () => {
       calls.explain++;
       return { status: "no-key" };
