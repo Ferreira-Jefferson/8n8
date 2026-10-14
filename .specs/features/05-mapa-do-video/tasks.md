@@ -1088,9 +1088,9 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O POST vai para `/api/titles` com `{ source, nodeIds }` ou `{ root, nodeIds }` e JSON.
-- [ ] `ok` → os títulos. `no-key` e `error` → os `titles` que vierem. Um status diferente de 200 ou uma falha de rede → `[]`.
-- [ ] Gate passa.
+- [x] O POST vai para `/api/titles` com `{ source, nodeIds }` ou `{ root, nodeIds }` e JSON.
+- [x] `ok` → os títulos. `no-key` e `error` → os `titles` que vierem. Um status diferente de 200 ou uma falha de rede → `[]`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`

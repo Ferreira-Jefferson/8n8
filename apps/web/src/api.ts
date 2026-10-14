@@ -1,4 +1,10 @@
-import type { ExplainResponse, Graph, ProjectResponse } from "@code2n8n/model";
+import type {
+  ExplainResponse,
+  Graph,
+  NodeTitle,
+  ProjectResponse,
+  TitlesResponse,
+} from "@code2n8n/model";
 
 export type ExplainResult = ExplainResponse | { status: "stale" };
 
@@ -54,5 +60,20 @@ export async function fetchExplanation(
       status: "error",
       message: err instanceof Error ? err.message : "Falha de rede",
     };
+  }
+}
+
+/** The reviewed titles of a level, in one request; any failure gives `[]`, and the cards keep their provisional names (VID-14, 15). */
+export async function fetchTitles(
+  origin: ExplainOrigin,
+  nodeIds: string[],
+): Promise<NodeTitle[]> {
+  try {
+    const res = await post("/api/titles", { ...origin, nodeIds });
+    if (res.status !== 200) return [];
+    const body = (await res.json()) as TitlesResponse;
+    return body.titles ?? [];
+  } catch {
+    return [];
   }
 }
