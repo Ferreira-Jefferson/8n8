@@ -1,6 +1,6 @@
 import type { ExternalCategory, NodeId } from "@code2n8n/model";
 import type { Node } from "web-tree-sitter";
-import { classify } from "./classify";
+import { classify, classifyUnknown } from "./classify";
 
 export interface CallContext {
   /** Top-level `def` and `class` names to their node ids. */
@@ -13,6 +13,15 @@ export interface CallContext {
   resolveImport?: (fullName: string) => NodeId | null;
   /** Top-level names defined anywhere in the project (PROJ-09). */
   projectNames?: Set<string>;
+  /**
+   * Names the file binds (see `boundNames`). A call whose first segment is
+   * not here is classified with `classifyUnknown` (VID-13). When absent,
+   * every name counts as bound.
+   */
+  // SPEC_DEVIATION: optional here; the design has `bound: Set<string>`.
+  // Reason: tasks.md T6 requires project-calls.test.ts to pass unchanged, and
+  // it builds a context without `bound`. `buildGraph` always fills it.
+  bound?: Set<string>;
 }
 
 export type CallResolution =
@@ -61,6 +70,18 @@ function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
   if (imported !== undefined) {
     const target = ctx.resolveImport?.(callee) ?? null;
     if (target !== null) return { kind: "call", target, label: name };
+  }
+  // The receiver of a chained method, as `foo()` in `foo().append(x)`, keeps
+  // only the table (design A2), so the chain stays judged by `chainedMethod`.
+  const receiver = call.parent?.type === "attribute";
+  if (
+    !receiver &&
+    imported === undefined &&
+    ctx.bound &&
+    !ctx.bound.has(head)
+  ) {
+    // A name the snippet neither defines nor imports (VID-13).
+    return { kind: "external", callee, category: classifyUnknown(callee) };
   }
   const category = classify(callee);
   if (imported === undefined && category === "EXTERNO") {

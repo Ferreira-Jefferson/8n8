@@ -339,17 +339,18 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `validar_pedido(p)` → external `EXTERNO`; `db.salvar(p)` → `BANCO`; `enviar_email(x)` → `EMAIL`; `print(x)` e `len(x)` → `EXTERNO`. Nenhum desses nós gera fio `calls`.
-- [ ] `r = f()` seguido de `r.json()` → `null` (receptor ligado). `self.x()` sem método `x` → `null`.
-- [ ] Nome definido no trecho continua `call` (CORE-02). Nome importado continua com a tabela (CORE-12). PROJ-09 continua: o nome de projeto sem import vira `EXTERNO`, sem fio.
-- [ ] `foo().append(x)` continua `null` (receptor encadeado fora da tabela).
-- [ ] `project-calls.test.ts` passa sem mudança.
-- [ ] Gate passa.
+- [x] `validar_pedido(p)` → external `EXTERNO`; `db.salvar(p)` → `BANCO`; `enviar_email(x)` → `EMAIL`; `print(x)` e `len(x)` → `EXTERNO`. Nenhum desses nós gera fio `calls`.
+- [x] `r = f()` seguido de `r.json()` → `null` (receptor ligado). `self.x()` sem método `x` → `null`.
+- [x] Nome definido no trecho continua `call` (CORE-02). Nome importado continua com a tabela (CORE-12). PROJ-09 continua: o nome de projeto sem import vira `EXTERNO`, sem fio.
+- [x] `foo().append(x)` continua `null` (receptor encadeado fora da tabela).
+- [x] `project-calls.test.ts` passa sem mudança.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): turn calls to undefined names into categorized steps`
+**Status**: ✅ Complete (191 unit = 180 + 11)
 
 ---
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { boundNames } from "../bound";
 import { type CallContext, resolveCall } from "../calls";
 import { importAliases } from "../imports";
 import { loadPythonParser } from "../parse";
@@ -25,6 +26,7 @@ async function resolveAt(
     topLevel: TOP_LEVEL,
     methods,
     aliases: importAliases(root),
+    bound: boundNames(root),
   };
   return resolveCall(statement, ctx);
 }
@@ -120,17 +122,69 @@ describe("resolveCall: external calls", () => {
   });
 });
 
+describe("resolveCall: names the snippet does not define (VID-13)", () => {
+  it("makes len an EXTERNO external", async () => {
+    expect(await resolveAt("n = len(x)\n", 1)).toEqual({
+      kind: "external",
+      callee: "len",
+      category: "EXTERNO",
+    });
+  });
+
+  it("makes print an EXTERNO external", async () => {
+    expect(await resolveAt("print(x)\n", 1)).toEqual({
+      kind: "external",
+      callee: "print",
+      category: "EXTERNO",
+    });
+  });
+
+  it("makes validar_pedido an EXTERNO external", async () => {
+    expect(await resolveAt("validar_pedido(p)\n", 1)).toEqual({
+      kind: "external",
+      callee: "validar_pedido",
+      category: "EXTERNO",
+    });
+  });
+
+  it("makes db.salvar a BANCO external by its receiver", async () => {
+    expect(await resolveAt("db.salvar(p)\n", 1)).toEqual({
+      kind: "external",
+      callee: "db.salvar",
+      category: "BANCO",
+    });
+  });
+
+  it("makes enviar_email an EMAIL external by its name", async () => {
+    expect(await resolveAt("enviar_email(x)\n", 1)).toEqual({
+      kind: "external",
+      callee: "enviar_email",
+      category: "EMAIL",
+    });
+  });
+
+  it("keeps the table for an imported name (CORE-12)", async () => {
+    const source = "import db\ndb.salvar(p)\n";
+    expect(await resolveAt(source, 2)).toEqual({
+      kind: "external",
+      callee: "db.salvar",
+      category: "EXTERNO",
+    });
+  });
+});
+
 describe("resolveCall: calls that do not count", () => {
-  it("ignores len", async () => {
-    expect(await resolveAt("n = len(x)\n", 1)).toBeNull();
-  });
-
-  it("ignores print", async () => {
-    expect(await resolveAt("print(x)\n", 1)).toBeNull();
-  });
-
   it("ignores a method on a local variable", async () => {
-    expect(await resolveAt("lista.append(x)\n", 1)).toBeNull();
+    expect(await resolveAt("lista = []\nlista.append(x)\n", 2)).toBeNull();
+  });
+
+  it("ignores a method on a bound receiver, as r.json() after r = f()", async () => {
+    expect(await resolveAt("r = f()\nr.json()\n", 2)).toBeNull();
+  });
+
+  it("ignores self.x() when the class has no method x", async () => {
+    const source = "class A:\n    def f(self):\n        self.x()\n";
+    expect(await resolveAt(source, 3)).toBeNull();
   });
 
   it("ignores a method outside the table on a chained receiver", async () => {

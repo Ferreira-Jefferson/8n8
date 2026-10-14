@@ -7,6 +7,7 @@ import {
   topLevelId,
 } from "@code2n8n/model";
 import type { Node, Tree } from "web-tree-sitter";
+import { boundNames } from "./bound";
 import type { CallContext } from "./calls";
 import { importAliases } from "./imports";
 import { buildSteps, IGNORED, lineRange } from "./steps";
@@ -238,6 +239,7 @@ export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
       ),
       methods: new Map(),
       aliases: importAliases(tree.rootNode),
+      bound: boundNames(tree.rootNode),
       ...resolvers,
     },
     names: new Map([...top.names].map(([id, name]) => [scoped(id), name])),
