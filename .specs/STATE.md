@@ -122,20 +122,22 @@
 
 ## Handoff
 
-*Rodada concluída em 2026-10-13. Nada foi enviado ao remoto.*
+*Pausado pelo usuário em 2026-10-14, durante a verificação da feature 05. Nada foi enviado ao remoto.*
 
-- **Ordem das features:** 01-fatia-central ✅ → 04-fidelidade-e-cache ✅ → 02-pasta-local ✅.
+- **Ordem das features:** 01-fatia-central ✅ → 04-fidelidade-e-cache ✅ → 02-pasta-local ✅ → 05-mapa-do-video (implementada, falta verificar).
 - **Features futuras (decisão do usuário em 2026-10-13):** 03-modo-grafo e o tour em vídeo (degrau 4). A spec, o design e as tasks da 03 ficam guardados, mas não serão implementados agora.
-- **01-fatia-central:** verificada (PASS, 24/24). E2E em `e2e/fatia-central.e2e.ts` (14 testes).
-- **04-fidelidade-e-cache:** verificada (PASS na iteração 2, commit 7895637). E2E em `e2e/fidelidade.e2e.ts` e `e2e/cache.e2e.ts`.
-- **02-pasta-local:** verificada (PASS na iteração 3, commit 1d691f8). Feita num worktree e mesclada sem conflito. As iterações 1 e 2 falharam só por lacunas de teste, sem bug de produção. E2E em `e2e/pasta-local.e2e.ts` (9).
-- **Gate atual:** `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` verde. Unitários 477, E2E 40. Os últimos a ganhar E2E: FID-04, FID-07, CORE-22, CORE-17, FID-05, FID-06, CORE-21, CACHE-07 e CACHE-01. O teste do CORE-21 usa um quarto servidor (porta 4320) sem modelo configurado. Teste manual com a chave real em 2026-10-13: resumos fiéis; o modelo deixa passar sugestões óbvias.
-- **Próximo passo:** nenhum agendado. O usuário escolhe a próxima feature.
-- **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 entraram com testes vermelhos. O histórico não foi reescrito.
+- **01, 04 e 02:** verificadas (PASS). Detalhes no `validation.md` de cada uma.
+- **05-mapa-do-video:**
+  - T1–T48 feitas e mescladas no master (merge e7ed837). T49–T50 (imagens de referência) canceladas pelo usuário em 2026-10-14. O usuário também cancelou a página de comparação com o vídeo.
+  - Gate no master em e7ed837: typecheck, check, 830 unitários e 83 E2E verdes. O E2E passou 3 vezes seguidas na feat/05d. O projeto `performance` (`CODE2N8N_PERF=1 pnpm exec playwright test --project performance`) passa 9/9.
+  - Medidas de desempenho: o mapa aparece em cerca de 45 ms, a animação termina em cerca de 3 s, abrir um nó leva cerca de 1,2 s (0,13 s sem animação), Voltar leva cerca de 20–80 ms e uma pasta de 300 arquivos leva cerca de 0,2 s.
+  - O bug do canvas em branco foi corrigido em 089e3a6. O "em branco" que restou na porta 4319 era erro de medição do teste de desempenho, corrigido em f75feb6, com teste de guarda em 632b943.
+  - **Próximo passo:** rodar de novo o Verifier independente (validate.md, sensor de mutantes num worktree temporário), escrever o `validation.md` e rodar `validate_state.py`. A primeira tentativa foi interrompida pela pausa, sem resultado. O worktree temporário dela foi apagado.
+- **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 e bf90eb8 (T36) da 05 entraram com testes vermelhos. O histórico não foi reescrito.
 - **Ambiente:**
   - O pnpm 12.6.0 global foi reinstalado em 2026-10-13 com os scripts de instalação ligados e agora roda o binário nativo (`pnpm.exe`). Se ele voltar a dizer "pnpm is running through Node.js", reinstale com `npm install -g pnpm@12.6.0 --foreground-scripts`.
   - O Playwright precisa de `C:\Windows\System32` no PATH para chamar o `taskkill`.
 - **Pendências não bloqueantes:**
-  - O worktree `../code2n8n-f02` e o branch `feat/02-pasta-local` continuam existindo. Não apagar sem pedido.
+  - Os worktrees `../code2n8n-f02`, `../code2n8n-05a`, `05b`, `05c` e `05d` e seus branches continuam existindo. Não apagar sem pedido.
   - Preencher a seção "Comandos" do CLAUDE.md.
   - Lições candidatas L-015..L-017 esperam confirmação de outra feature.
