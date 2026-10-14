@@ -1342,18 +1342,19 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [ ] VID-10 (Independent Test P1): o código do vídeo mostra no primeiro nível os 8 cartões da linha `processar_pedido`, na ordem do código, com 7 fios. Aparecem GATILHO, FUNÇÃO, BANCO e E-MAIL. Uma entrada sem chamada mostra só o GATILHO (borda).
-- [ ] VID-11: duas funções que ninguém chama dão duas linhas, a primeira acima. Código solto que chama `a()` mais uma função `b` que ninguém chama dão duas linhas (código solto e `b`). Constantes no topo não viram linha e não escondem as funções.
-- [ ] VID-12: um trecho com código solto não mostra nenhum cartão com o texto "Módulo". O código solto aparece como GATILHO "Código solto".
-- [ ] VID-13: `validar_pedido` → EXTERNO, `db.buscar_cliente` e `db.salvar` → BANCO, `enviar_email` → E-MAIL. Nenhum desses cartões tem fio `calls` (o grafo de `/api/graph` só tem o `calls` para `calcular_frete`).
-- [ ] VID-06: os `data-enter-at` crescem da esquerda para a direita. Cada `.wire` tem `data-draw-at` ≥ `data-enter-at` da origem + 400. Os pontos estão na ordem do fluxo, um por fio, e a animação de um cartão tem o `delay` do seu `data-enter-at`.
-- [ ] VID-07: com `reducedMotion: "reduce"`, `document.getAnimations()` fica vazio, não há `circle.pulse`, e todos os cartões têm `opacity` 1 logo depois de "Gerar mapa".
-- [ ] Gate passa.
+- [x] VID-10 (Independent Test P1): o código do vídeo mostra no primeiro nível os 8 cartões da linha `processar_pedido`, na ordem do código, com 7 fios. Aparecem GATILHO, FUNÇÃO, BANCO e E-MAIL. Uma entrada sem chamada mostra só o GATILHO (borda).
+- [x] VID-11: duas funções que ninguém chama dão duas linhas, a primeira acima. Código solto que chama `a()` mais uma função `b` que ninguém chama dão duas linhas (código solto e `b`). Constantes no topo não viram linha e não escondem as funções.
+- [x] VID-12: um trecho com código solto não mostra nenhum cartão com o texto "Módulo". O código solto aparece como GATILHO "Código solto".
+- [x] VID-13: `validar_pedido` → EXTERNO, `db.buscar_cliente` e `db.salvar` → BANCO, `enviar_email` → E-MAIL. Nenhum desses cartões tem fio `calls` (o grafo de `/api/graph` só tem o `calls` para `calcular_frete`).
+- [x] VID-06: os `data-enter-at` crescem da esquerda para a direita. Cada `.wire` tem `data-draw-at` ≥ `data-enter-at` da origem + 400. Os pontos estão na ordem do fluxo, um por fio, e a animação de um cartão tem o `delay` do seu `data-enter-at`.
+- [x] VID-07: com `reducedMotion: "reduce"`, `document.getAnimations()` fica vazio, não há `circle.pulse`, e todos os cartões têm `opacity` 1 logo depois de "Gerar mapa".
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/mapa-video.e2e.ts`
 
 **Commit**: `test(e2e): check the main flow, categories and motion`
+**Status**: ✅ Complete
 
 ---
 
