@@ -19,6 +19,7 @@ import {
   SIDE_PAD,
   startViewport,
   TOP_PAD,
+  WRAP_PAD,
 } from "../viewport";
 import { videoGraph } from "./video-graph";
 
@@ -90,6 +91,11 @@ describe("revealViewport (VID-22, VID-25)", () => {
     });
   });
 
+  it("leaves alone a card at the edge of a fitted level, FIT_PAD from the side", () => {
+    const fitted = { x: FIT_PAD, y: 300, zoom: 0.72 };
+    expect(revealViewport(fitted, { x: 0, y: 0 }, 1104, 900)).toBeNull();
+  });
+
   it("brings back a card hidden above or below the canvas", () => {
     const next = revealViewport(v, { x: 0, y: 1000 }, 1600, 900);
     expect(next).toEqual({ x: 40, y: (900 - 112) / 2 - 800, zoom: 0.8 });
@@ -152,6 +158,19 @@ describe("chooseWrap (VID-03, VID-10, VID-23)", () => {
     expect(chooseWrap(8, cols, 1100, 900)).toBe(3);
     expect(chooseWrap(8, cols, 940, 768)).toBe(3);
     expect(fitZoom(cols(3), 940, 768)).toBeGreaterThanOrEqual(MIN_START_ZOOM);
+  });
+
+  it("measures a wrapped level with WRAP_PAD at the sides, room for the turning wires", () => {
+    // Rows of 5 fit 1540 px at 0.81 with FIT_PAD but only 0.78 with WRAP_PAD.
+    expect(fitZoom(main(5), 1540, 900)).toBeGreaterThanOrEqual(MIN_START_ZOOM);
+    expect(fitZoom(main(5), 1540, 900, WRAP_PAD)).toBeLessThan(MIN_START_ZOOM);
+    expect(chooseWrap(8, main, 1540, 900)).toBe(4);
+  });
+
+  it("fitViewport keeps a wrapped level WRAP_PAD from the sides", () => {
+    const v = fitViewport(main(5), 1600, 900, undefined, WRAP_PAD);
+    expect(v?.x).toBe(WRAP_PAD);
+    expect(v?.zoom).toBeCloseTo((1600 - 2 * WRAP_PAD) / 1840);
   });
 
   it("returns null when nothing is legible, before the canvas has a size, or for one column", () => {

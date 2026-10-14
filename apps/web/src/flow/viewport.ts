@@ -14,6 +14,8 @@ export const TOP_PAD = 140;
 export const LEGIBLE_ZOOM = 0.6;
 /** Free space at the sides and at the bottom of a level that fits whole. */
 export const FIT_PAD = 24;
+/** Free space at the sides of a wrapped level: its turning wires run 24 px out of the cards. */
+export const WRAP_PAD = 48;
 
 export interface Viewport {
   x: number;
@@ -71,15 +73,19 @@ export function startViewport(
   return { x, y, zoom };
 }
 
-/** The largest zoom, at most 1, at which every card of the level fits the canvas. */
+/**
+ * The largest zoom, at most 1, at which every card of the level fits the
+ * canvas, `padX` from each side.
+ */
 export function fitZoom(
   positions: ReadonlyMap<NodeId, Position>,
   width: number,
   height: number,
+  padX = FIT_PAD,
 ): number {
   const b = boundsOf(positions);
   if (!b) return 1;
-  const freeW = width - 2 * FIT_PAD;
+  const freeW = width - 2 * padX;
   const freeH = height - TOP_PAD - FIT_PAD;
   if (freeW <= 0 || freeH <= 0) return 0;
   return Math.min(1, freeW / b.w, freeH / b.h);
@@ -96,12 +102,13 @@ export function fitViewport(
   width: number,
   height: number,
   focus?: Position,
+  padX = FIT_PAD,
 ): Viewport | null {
   const b = boundsOf(positions);
   if (!b) return null;
-  const zoom = fitZoom(positions, width, height);
+  const zoom = fitZoom(positions, width, height, padX);
   if (zoom < LEGIBLE_ZOOM) return null;
-  const freeW = width - 2 * FIT_PAD;
+  const freeW = width - 2 * padX;
   const freeH = height - TOP_PAD - FIT_PAD;
   const place = (
     start: number,
@@ -118,7 +125,7 @@ export function fitViewport(
     return Math.min(start + slack, Math.max(start, wanted)) - min * zoom;
   };
   return {
-    x: place(FIT_PAD, freeW, b.w, b.minX, focus?.x, NODE_WIDTH),
+    x: place(padX, freeW, b.w, b.minX, focus?.x, NODE_WIDTH),
     y: place(TOP_PAD, freeH, b.h, b.minY, focus?.y, NODE_HEIGHT),
     zoom,
   };
@@ -131,6 +138,7 @@ export function fitViewport(
  * - A level that fits whole at `LEGIBLE_ZOOM` or more keeps its shape.
  * - Otherwise the longest row length that fits at `MIN_START_ZOOM` or more.
  * - Otherwise the row length with the largest zoom, when that is legible.
+ * A wrapped level is measured with `WRAP_PAD` at the sides.
  */
 export function chooseWrap(
   longest: number,
@@ -143,7 +151,7 @@ export function chooseWrap(
   let best: number | null = null;
   let zoom = 0;
   for (let n = longest - 1; n >= 1; n--) {
-    const z = fitZoom(layoutFor(n), width, height);
+    const z = fitZoom(layoutFor(n), width, height, WRAP_PAD);
     if (z >= MIN_START_ZOOM) return n;
     if (z > zoom + 1e-9) {
       best = n;
@@ -163,8 +171,9 @@ export function levelViewport(
   width: number,
   height: number,
   focus?: Position,
+  padX = FIT_PAD,
 ): Viewport {
-  const fit = fitViewport(positions, width, height, focus);
+  const fit = fitViewport(positions, width, height, focus, padX);
   if (fit) return fit;
   if (focus) {
     return {
@@ -192,7 +201,8 @@ export function revealViewport(
   const h = NODE_HEIGHT * v.zoom;
   const left = p.x * v.zoom + v.x;
   const top = p.y * v.zoom + v.y;
-  const inX = left >= SIDE_PAD && left + w <= width - SIDE_PAD;
+  // FIT_PAD, not SIDE_PAD: a card at the edge of a fitted level is in view.
+  const inX = left >= FIT_PAD && left + w <= width - FIT_PAD;
   const inY = top >= 0 && top + h <= height;
   if (inX && inY) return null;
   return {

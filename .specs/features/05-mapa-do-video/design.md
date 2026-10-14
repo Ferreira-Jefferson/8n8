@@ -486,12 +486,12 @@ body { margin: 0; background: var(--ground); color: var(--second); font-family: 
 
 **Mapa** (`view: "map"`):
 
-- O mapa ocupa `100vw × 100vh`, com `display: grid`. A grade usa `grid-template-columns: 1fr` sem nó selecionado e `1fr min(1060px, 50vw)` com painel.
+- O mapa ocupa `100vw × 100vh`, com `display: grid`. A grade usa `grid-template-columns: 1fr` sem nó selecionado e `1fr clamp(400px, 31vw, 520px)` com painel. O painel do vídeo tem 1060 de 1920 px, ao lado de um cartão só. Aqui ele fica ao lado do nível inteiro e é reduzido: em 1600 px a coluna tem 496 px, e em 1366 px, 423 px. Assim o canvas mostra o nível todo com o título dos cartões acima de 16 px.
 - O canvas fica na coluna 1. Na mesma área, em `position: absolute`, ficam:
   - o botão "Voltar" (`.btn-ghost`), em `left: 24px; top: 24px` (VID-27);
   - a trilha de navegação, em `left: 160px; top: 34px`, com `font: 400 22px var(--font-mono)` e `color: var(--accent)` (VID-19);
   - o botão "Novo código" (`.btn-ghost`), em `right: 24px; top: 24px` (VID-09).
-- O painel de detalhe é um `.panel` na coluna 2, com `margin: 24px`, `padding: 40px 48px`, `display: flex`, `flex-direction: column`, `gap: 22px` e `overflow: auto`.
+- O painel de detalhe é um `.panel` na coluna 2, com `margin: 24px`, `padding: 28px 30px`, `display: flex`, `flex-direction: column`, `gap: 16px` e `overflow: auto`. As letras seguem a redução: título 30 px, resumo 24 px, regras 15 px, entrada e saída 20 px, listas 17 px. O `.eyebrow` do painel tem 14 px, `letter-spacing: .14em` e `line-height: 1.5`, e quebra em duas linhas limpas quando é longo.
 - "Novo código" volta ao editor, mantém o texto do `textarea` e o campo de pasta, e limpa o mapa, os títulos e as explicações.
 - "Arquivos ignorados" (PROJ-06) continua no mapa de projeto, abaixo da trilha.
 
@@ -665,12 +665,13 @@ export type NavAction =
   - No fim da transição, o canvas chama `onOpen(node)` e volta a `"open"`. Com movimento reduzido, chama `onOpen` na hora.
   - O contêiner tem `data-phase` e `data-level="top" | "inner"`. Um nível de dentro ganha `.level-frame`.
   - A `key` do React Flow é `${path.length}:${levelId}`, para que a recursão anime de novo.
-  - O canvas guarda o tamanho medido pelo React Flow (`MeasureCanvas`). O nível é cortado (`chooseWrap`) para esse tamanho.
+  - O canvas guarda o tamanho medido pelo React Flow (`MeasureCanvas`), por nível: um nível que acabou de abrir espera o próprio tamanho. O nível é cortado (`chooseWrap`) para esse tamanho. Um nível cortado deixa `WRAP_PAD = 48` px nas laterais, porque os fios que descem saem 24 px dos cartões.
   - A primeira vista vem de `levelViewport` (`flow/viewport.ts`), quando o canvas já tem tamanho:
     - se o nível todo cabe com zoom ≥ `LEGIBLE_ZOOM` (0,6, o título de 27 px fica acima de 16 px), o zoom é `min(1, ajuste)`, com 24 px (`FIT_PAD`) nas laterais e embaixo e 140 px (`TOP_PAD`) em cima (`fitViewport`). O nível fica no meio da área livre. Com `focusId` (vindo do "Voltar"), o nível se move para pôr esse cartão o mais perto possível do centro, sem tirar nenhum cartão da vista;
     - senão, com `focusId`, o cartão fica no centro com zoom 1;
     - senão, vale `startViewport`: o nível começa em 0,8 no primeiro cartão da esquerda, e o resto fica a um arrasto de distância.
-  - Quando a seleção muda ou o canvas estreita porque o painel abriu, um cartão selecionado fora da vista volta para o centro do canvas, com o mesmo zoom (`revealViewport`).
+  - Quando o canvas estreita ou alarga porque o painel abriu ou fechou, o nível é cortado de novo e volta a aparecer inteiro (`fitViewport`), com o cartão selecionado o mais perto possível do centro.
+  - Quando só a seleção muda, ou quando o nível não cabe legível, um cartão selecionado fora da vista volta para o centro do canvas, com o mesmo zoom (`revealViewport`). O cartão conta como visível a 24 px (`FIT_PAD`) das laterais.
 
 ### C12. Trilha: `nav/Breadcrumb.tsx` (VID-19)
 
@@ -823,7 +824,7 @@ O clique que abre também seleciona e mostra o painel. Por isso os prints 03 e 0
 | Imagens de referência dependem do sistema e das fontes | `playwright.config.ts` | Uma imagem gerada no Windows falha em outro sistema | O caminho inclui `{platform}`. As fontes são locais (`@fontsource`). As animações ficam desligadas. |
 | A janela do E2E fica vermelha entre o fim das trilhas e a Fase 7 | todos os `e2e/*.e2e.ts` | Uma trilha não consegue rodar o E2E sozinha | O gate das trilhas é unit + typecheck + check. O E2E inteiro volta na Fase 7, depois da mescla. |
 | Testes do servidor usam o extrator real | `packages/server/src/__tests__/explain-route.test.ts:15` | Uma mudança da trilha A pode quebrar um teste da trilha B depois da mescla | Os testes novos da trilha B usam `pedido_frete.py` com os IDs `fn:calcular_frete/s0` (HTTP) e `/s1` (código), que a trilha A não muda. |
-| O painel com `min(1060px, 50vw)` encolhe o canvas | `styles.css` | Em telas pequenas, o mapa fica estreito | O canvas tem pan e zoom do React Flow. |
+| O painel com `clamp(400px, 31vw, 520px)` encolhe o canvas | `styles.css` | Em 1366x768, `calcular_frete` fica com zoom 0,61 (título de 16,5 px) | O nível corta em faixas quando passa do limite legível. O canvas tem pan e zoom do React Flow. |
 
 ---
 

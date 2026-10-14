@@ -37,7 +37,14 @@ import { projectLevel } from "./project-level";
 import { type StepFlowNode, StepNode } from "./StepNode";
 import { SuggestionCard } from "./SuggestionCard";
 import { highlighted, suggestionCards } from "./suggestion-cards";
-import { chooseWrap, levelViewport, revealViewport } from "./viewport";
+import {
+  chooseWrap,
+  FIT_PAD,
+  fitViewport,
+  levelViewport,
+  revealViewport,
+  WRAP_PAD,
+} from "./viewport";
 import { WireEdge, type WireFlowEdge } from "./WireEdge";
 
 export interface FlowCanvasProps {
@@ -89,13 +96,21 @@ interface Size {
   height: number;
 }
 
-/** Hands the canvas size that React Flow measured up to `FlowCanvas`. */
-function MeasureCanvas({ onSize }: { onSize: (size: Size) => void }) {
+const NO_SIZE: Size = { width: 0, height: 0 };
+
+/** Hands the canvas size that React Flow measured for level `level` up to `FlowCanvas`. */
+function MeasureCanvas({
+  level,
+  onSize,
+}: {
+  level: string;
+  onSize: (level: string, size: Size) => void;
+}) {
   const width = useStore((s) => s.width);
   const height = useStore((s) => s.height);
   useEffect(() => {
-    onSize({ width, height });
-  }, [width, height, onSize]);
+    onSize(level, { width, height });
+  }, [level, width, height, onSize]);
   return null;
 }
 
@@ -108,10 +123,12 @@ function StartView({
   positions,
   size,
   focus,
+  padX,
 }: {
   positions: Map<NodeId, Position>;
   size: Size;
   focus: NodeId | null;
+  padX: number;
 }) {
   const { setViewport } = useReactFlow();
   const done = useRef(false);
@@ -119,24 +136,28 @@ function StartView({
     if (done.current || size.width === 0 || size.height === 0) return;
     done.current = true;
     const p = focus === null ? undefined : positions.get(focus);
-    setViewport(levelViewport(positions, size.width, size.height, p));
-  }, [positions, size, focus, setViewport]);
+    setViewport(levelViewport(positions, size.width, size.height, p, padX));
+  }, [positions, size, focus, padX, setViewport]);
   return null;
 }
 
 /**
- * Brings the selected card back into view when the selection changes or the
- * canvas narrows for the panel, at the same zoom (VID-22, 25). The first view
- * of a level stays with `StartView`.
+ * When the canvas narrows or widens for the panel, shows the whole level
+ * again, with the selected card as near the middle as it can be (VID-23, 25).
+ * When the selection changes, or the level is too big to show whole, brings
+ * the selected card back into view at the same zoom (VID-22, 25). The first
+ * view of a level stays with `StartView`.
  */
 function KeepInView({
   selected,
   positions,
   size,
+  padX,
 }: {
   selected: NodeId | null;
   positions: Map<NodeId, Position>;
   size: Size;
+  padX: number;
 }) {
   const { getViewport, setViewport } = useReactFlow();
   const { width, height } = size;
@@ -148,10 +169,18 @@ function KeepInView({
     if (prev === null) return;
     if (prev.selected === selected && prev.width === width) return;
     const p = selected === null ? undefined : positions.get(selected);
+    const fit =
+      prev.width === width
+        ? null
+        : fitViewport(positions, width, height, p, padX);
+    if (fit) {
+      setViewport(fit);
+      return;
+    }
     if (!p) return;
     const next = revealViewport(getViewport(), p, width, height);
     if (next) setViewport(next);
-  }, [selected, positions, width, height, getViewport, setViewport]);
+  }, [selected, positions, width, height, padX, getViewport, setViewport]);
   return null;
 }
 
@@ -196,19 +225,30 @@ export function FlowCanvas({
   const box = useRef<HTMLDivElement>(null);
   const timer = useRef<number | undefined>(undefined);
   const [frame, setFrame] = useState<Rect | null>(null);
-  const [size, setSize] = useState<Size>({ width: 0, height: 0 });
+  // The size is kept per level: a level that just opened waits for its own
+  // canvas size before it chooses its rows and its first view.
+  const levelKey = `${depth}:${levelId}`;
+  const [measured, setMeasured] = useState<{ level: string; size: Size }>({
+    level: "",
+    size: NO_SIZE,
+  });
   const onSize = useCallback(
-    (next: Size) =>
-      setSize((prev) =>
-        prev.width === next.width && prev.height === next.height ? prev : next,
+    (level: string, next: Size) =>
+      setMeasured((prev) =>
+        prev.level === level &&
+        prev.size.width === next.width &&
+        prev.size.height === next.height
+          ? prev
+          : { level, size: next },
       ),
     [],
   );
+  const size = measured.level === levelKey ? measured.size : NO_SIZE;
   const expanding = frame !== null;
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const { nodes, edges, cards, positions } = useMemo(() => {
+  const { nodes, edges, cards, positions, padX } = useMemo(() => {
     const reduced = prefersReducedMotion();
     const level = projectLevel(graph, levelId);
     // A level too long for the canvas wraps into more rows, so every card
@@ -274,6 +314,7 @@ export function FlowCanvas({
       edges: toFlowEdges(level.edges, times, reduced, turnY),
       cards,
       positions,
+      padX: bands.gapAbove.length > 1 ? WRAP_PAD : FIT_PAD,
     };
   }, [
     graph,
@@ -349,7 +390,7 @@ export function FlowCanvas({
       data-level={levelId === null ? "top" : "inner"}
     >
       <ReactFlow
-        key={`${depth}:${levelId}`}
+        key={levelKey}
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
@@ -361,9 +402,19 @@ export function FlowCanvas({
         minZoom={0.2}
         proOptions={{ hideAttribution: true }}
       >
-        <MeasureCanvas onSize={onSize} />
-        <StartView positions={positions} size={size} focus={focusId} />
-        <KeepInView selected={selected} positions={positions} size={size} />
+        <MeasureCanvas level={levelKey} onSize={onSize} />
+        <StartView
+          positions={positions}
+          size={size}
+          focus={focusId}
+          padX={padX}
+        />
+        <KeepInView
+          selected={selected}
+          positions={positions}
+          size={size}
+          padX={padX}
+        />
         <ViewportPortal>
           {anchored.map(({ card, style }) => (
             <SuggestionCard

@@ -50,6 +50,20 @@ describe("styles: panel code (VID-29)", () => {
   });
 });
 
+describe("styles: panel beside the level (VID-23, VID-25)", () => {
+  it("scales the video's 1060 px panel down to 400..520 px, so the canvas keeps the level legible", () => {
+    expect(rule(".map.with-panel")).toContain(
+      "grid-template-columns: 1fr clamp(400px, 31vw, 520px);",
+    );
+  });
+
+  it("gives the panel eyebrows a smaller size that wraps cleanly", () => {
+    const r = rule(".detail-panel .eyebrow");
+    expect(r).toContain("font-size: 14px;");
+    expect(r).toContain("line-height: 1.5;");
+  });
+});
+
 describe("styles: branch labels (VID-21)", () => {
   it("are 22 px eyebrow labels, uppercase and tracked, on one line", () => {
     const r = rule(".branch-label");
