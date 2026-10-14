@@ -1,0 +1,184 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`typescriptPlugin > gives the same graph for the same text, matching the snapshot 1`] = `
+"{
+  "language": "typescript",
+  "empty": false,
+  "nodes": [
+    {
+      "id": "fn:calcularFrete",
+      "kind": "function",
+      "label": "calcularFrete",
+      "parentId": null,
+      "range": {
+        "start": 4,
+        "end": 13
+      },
+      "openable": true,
+      "docstring": {
+        "start": 3,
+        "end": 3
+      }
+    },
+    {
+      "id": "fn:calcularFrete/s0",
+      "kind": "external",
+      "label": "axios.get",
+      "parentId": "fn:calcularFrete",
+      "range": {
+        "start": 5,
+        "end": 5
+      },
+      "openable": false,
+      "callee": "axios.get",
+      "category": "HTTP"
+    },
+    {
+      "id": "fn:calcularFrete/s1",
+      "kind": "code",
+      "label": "Código",
+      "parentId": "fn:calcularFrete",
+      "range": {
+        "start": 6,
+        "end": 7
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:calcularFrete/s2",
+      "kind": "condition",
+      "label": "peso > 30",
+      "parentId": "fn:calcularFrete",
+      "range": {
+        "start": 8,
+        "end": 12
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:calcularFrete/s2/b0/s0",
+      "kind": "return",
+      "label": "base + taxa * 2",
+      "parentId": "fn:calcularFrete",
+      "range": {
+        "start": 9,
+        "end": 9
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:calcularFrete/s2/b1/s0",
+      "kind": "return",
+      "label": "base + taxa",
+      "parentId": "fn:calcularFrete",
+      "range": {
+        "start": 11,
+        "end": 11
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:processarPedido",
+      "kind": "function",
+      "label": "processarPedido",
+      "parentId": null,
+      "range": {
+        "start": 15,
+        "end": 21
+      },
+      "openable": true
+    },
+    {
+      "id": "fn:processarPedido/s0",
+      "kind": "code",
+      "label": "Código",
+      "parentId": "fn:processarPedido",
+      "range": {
+        "start": 16,
+        "end": 16
+      },
+      "openable": false
+    },
+    {
+      "id": "fn:processarPedido/s1",
+      "kind": "loop",
+      "label": "for (const item of itens)",
+      "parentId": "fn:processarPedido",
+      "range": {
+        "start": 17,
+        "end": 19
+      },
+      "openable": true
+    },
+    {
+      "id": "fn:processarPedido/s1/s0",
+      "kind": "call",
+      "label": "calcularFrete",
+      "parentId": "fn:processarPedido/s1",
+      "range": {
+        "start": 18,
+        "end": 18
+      },
+      "openable": true,
+      "target": "fn:calcularFrete"
+    },
+    {
+      "id": "fn:processarPedido/s2",
+      "kind": "return",
+      "label": "total",
+      "parentId": "fn:processarPedido",
+      "range": {
+        "start": 20,
+        "end": 20
+      },
+      "openable": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "next:fn:calcularFrete/s0->fn:calcularFrete/s1",
+      "kind": "next",
+      "source": "fn:calcularFrete/s0",
+      "target": "fn:calcularFrete/s1"
+    },
+    {
+      "id": "next:fn:calcularFrete/s1->fn:calcularFrete/s2",
+      "kind": "next",
+      "source": "fn:calcularFrete/s1",
+      "target": "fn:calcularFrete/s2"
+    },
+    {
+      "id": "branch:fn:calcularFrete/s2->fn:calcularFrete/s2/b0/s0",
+      "kind": "branch",
+      "source": "fn:calcularFrete/s2",
+      "target": "fn:calcularFrete/s2/b0/s0",
+      "label": "sim"
+    },
+    {
+      "id": "branch:fn:calcularFrete/s2->fn:calcularFrete/s2/b1/s0",
+      "kind": "branch",
+      "source": "fn:calcularFrete/s2",
+      "target": "fn:calcularFrete/s2/b1/s0",
+      "label": "não"
+    },
+    {
+      "id": "next:fn:processarPedido/s0->fn:processarPedido/s1",
+      "kind": "next",
+      "source": "fn:processarPedido/s0",
+      "target": "fn:processarPedido/s1"
+    },
+    {
+      "id": "next:fn:processarPedido/s1->fn:processarPedido/s2",
+      "kind": "next",
+      "source": "fn:processarPedido/s1",
+      "target": "fn:processarPedido/s2"
+    },
+    {
+      "id": "calls:fn:processarPedido->fn:calcularFrete",
+      "kind": "calls",
+      "source": "fn:processarPedido",
+      "target": "fn:calcularFrete"
+    }
+  ]
+}"
+`;

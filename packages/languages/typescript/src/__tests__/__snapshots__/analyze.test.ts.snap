@@ -1,0 +1,744 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`analyze: one graph per file > is the same for the same files, in any order 1`] = `
+"{
+  "files": [
+    {
+      "path": "frete/calculo.ts",
+      "graph": {
+        "language": "typescript",
+        "empty": false,
+        "nodes": [
+          {
+            "id": "file:frete/calculo.ts",
+            "kind": "file",
+            "label": "calculo.ts",
+            "parentId": "dir:frete",
+            "range": {
+              "start": 1,
+              "end": 7
+            },
+            "openable": true,
+            "path": "frete/calculo.ts"
+          },
+          {
+            "id": "file:frete/calculo.ts/fn:calcularFrete",
+            "kind": "function",
+            "label": "calcularFrete",
+            "parentId": "file:frete/calculo.ts",
+            "range": {
+              "start": 1,
+              "end": 3
+            },
+            "openable": true
+          },
+          {
+            "id": "file:frete/calculo.ts/fn:calcularFrete/s0",
+            "kind": "return",
+            "label": "peso * 0.5 + distancia",
+            "parentId": "file:frete/calculo.ts/fn:calcularFrete",
+            "range": {
+              "start": 2,
+              "end": 2
+            },
+            "openable": false
+          },
+          {
+            "id": "file:frete/calculo.ts/fn:tabela",
+            "kind": "function",
+            "label": "tabela",
+            "parentId": "file:frete/calculo.ts",
+            "range": {
+              "start": 5,
+              "end": 7
+            },
+            "openable": true
+          },
+          {
+            "id": "file:frete/calculo.ts/fn:tabela/s0",
+            "kind": "return",
+            "label": "total > 100 ? 0 : 10",
+            "parentId": "file:frete/calculo.ts/fn:tabela",
+            "range": {
+              "start": 6,
+              "end": 6
+            },
+            "openable": false
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "path": "main.ts",
+      "graph": {
+        "language": "typescript",
+        "empty": false,
+        "nodes": [
+          {
+            "id": "file:main.ts",
+            "kind": "file",
+            "label": "main.ts",
+            "parentId": null,
+            "range": {
+              "start": 1,
+              "end": 10
+            },
+            "openable": true,
+            "path": "main.ts"
+          },
+          {
+            "id": "file:main.ts/fn:main",
+            "kind": "function",
+            "label": "main",
+            "parentId": "file:main.ts",
+            "range": {
+              "start": 5,
+              "end": 10
+            },
+            "openable": true
+          },
+          {
+            "id": "file:main.ts/fn:main/s0",
+            "kind": "call",
+            "label": "criarPedido",
+            "parentId": "file:main.ts/fn:main",
+            "range": {
+              "start": 6,
+              "end": 6
+            },
+            "openable": true,
+            "target": "file:pedidos/pedidos.ts/fn:criarPedido"
+          },
+          {
+            "id": "file:main.ts/fn:main/s1",
+            "kind": "call",
+            "label": "somar",
+            "parentId": "file:main.ts/fn:main",
+            "range": {
+              "start": 7,
+              "end": 7
+            },
+            "openable": true,
+            "target": "file:pedidos/itens.ts/fn:somar"
+          },
+          {
+            "id": "file:main.ts/fn:main/s2",
+            "kind": "call",
+            "label": "frete.calcularFrete",
+            "parentId": "file:main.ts/fn:main",
+            "range": {
+              "start": 8,
+              "end": 8
+            },
+            "openable": true,
+            "target": "file:frete/calculo.ts/fn:calcularFrete"
+          },
+          {
+            "id": "file:main.ts/fn:main/s3",
+            "kind": "return",
+            "label": "tabela(total)",
+            "parentId": "file:main.ts/fn:main",
+            "range": {
+              "start": 9,
+              "end": 9
+            },
+            "openable": false,
+            "target": "file:frete/calculo.ts/fn:tabela"
+          }
+        ],
+        "edges": [
+          {
+            "id": "next:file:main.ts/fn:main/s0->file:main.ts/fn:main/s1",
+            "kind": "next",
+            "source": "file:main.ts/fn:main/s0",
+            "target": "file:main.ts/fn:main/s1"
+          },
+          {
+            "id": "next:file:main.ts/fn:main/s1->file:main.ts/fn:main/s2",
+            "kind": "next",
+            "source": "file:main.ts/fn:main/s1",
+            "target": "file:main.ts/fn:main/s2"
+          },
+          {
+            "id": "next:file:main.ts/fn:main/s2->file:main.ts/fn:main/s3",
+            "kind": "next",
+            "source": "file:main.ts/fn:main/s2",
+            "target": "file:main.ts/fn:main/s3"
+          },
+          {
+            "id": "calls:file:main.ts/fn:main->file:pedidos/pedidos.ts/fn:criarPedido",
+            "kind": "calls",
+            "source": "file:main.ts/fn:main",
+            "target": "file:pedidos/pedidos.ts/fn:criarPedido"
+          },
+          {
+            "id": "calls:file:main.ts/fn:main->file:pedidos/itens.ts/fn:somar",
+            "kind": "calls",
+            "source": "file:main.ts/fn:main",
+            "target": "file:pedidos/itens.ts/fn:somar"
+          },
+          {
+            "id": "calls:file:main.ts/fn:main->file:frete/calculo.ts/fn:calcularFrete",
+            "kind": "calls",
+            "source": "file:main.ts/fn:main",
+            "target": "file:frete/calculo.ts/fn:calcularFrete"
+          },
+          {
+            "id": "calls:file:main.ts/fn:main->file:frete/calculo.ts/fn:tabela",
+            "kind": "calls",
+            "source": "file:main.ts/fn:main",
+            "target": "file:frete/calculo.ts/fn:tabela"
+          }
+        ]
+      }
+    },
+    {
+      "path": "pedidos/index.ts",
+      "graph": {
+        "language": "typescript",
+        "empty": false,
+        "nodes": [
+          {
+            "id": "file:pedidos/index.ts",
+            "kind": "file",
+            "label": "index.ts",
+            "parentId": "dir:pedidos",
+            "range": {
+              "start": 1,
+              "end": 2
+            },
+            "openable": true,
+            "path": "pedidos/index.ts"
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "path": "pedidos/itens.ts",
+      "graph": {
+        "language": "typescript",
+        "empty": false,
+        "nodes": [
+          {
+            "id": "file:pedidos/itens.ts",
+            "kind": "file",
+            "label": "itens.ts",
+            "parentId": "dir:pedidos",
+            "range": {
+              "start": 1,
+              "end": 3
+            },
+            "openable": true,
+            "path": "pedidos/itens.ts"
+          },
+          {
+            "id": "file:pedidos/itens.ts/fn:somar",
+            "kind": "function",
+            "label": "somar",
+            "parentId": "file:pedidos/itens.ts",
+            "range": {
+              "start": 1,
+              "end": 3
+            },
+            "openable": true
+          },
+          {
+            "id": "file:pedidos/itens.ts/fn:somar/s0",
+            "kind": "return",
+            "label": "pedido.total",
+            "parentId": "file:pedidos/itens.ts/fn:somar",
+            "range": {
+              "start": 2,
+              "end": 2
+            },
+            "openable": false
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "path": "pedidos/pedidos.ts",
+      "graph": {
+        "language": "typescript",
+        "empty": false,
+        "nodes": [
+          {
+            "id": "file:pedidos/pedidos.ts",
+            "kind": "file",
+            "label": "pedidos.ts",
+            "parentId": "dir:pedidos",
+            "range": {
+              "start": 1,
+              "end": 15
+            },
+            "openable": true,
+            "path": "pedidos/pedidos.ts"
+          },
+          {
+            "id": "file:pedidos/pedidos.ts/fn:criarPedido",
+            "kind": "function",
+            "label": "criarPedido",
+            "parentId": "file:pedidos/pedidos.ts",
+            "range": {
+              "start": 8,
+              "end": 15
+            },
+            "openable": true
+          },
+          {
+            "id": "file:pedidos/pedidos.ts/fn:criarPedido/s0",
+            "kind": "code",
+            "label": "Código",
+            "parentId": "file:pedidos/pedidos.ts/fn:criarPedido",
+            "range": {
+              "start": 9,
+              "end": 9
+            },
+            "openable": false
+          },
+          {
+            "id": "file:pedidos/pedidos.ts/fn:criarPedido/s1",
+            "kind": "loop",
+            "label": "for (const item of itens)",
+            "parentId": "file:pedidos/pedidos.ts/fn:criarPedido",
+            "range": {
+              "start": 10,
+              "end": 12
+            },
+            "openable": true
+          },
+          {
+            "id": "file:pedidos/pedidos.ts/fn:criarPedido/s1/s0",
+            "kind": "call",
+            "label": "calcularFrete",
+            "parentId": "file:pedidos/pedidos.ts/fn:criarPedido/s1",
+            "range": {
+              "start": 11,
+              "end": 11
+            },
+            "openable": true,
+            "target": "file:frete/calculo.ts/fn:calcularFrete"
+          },
+          {
+            "id": "file:pedidos/pedidos.ts/fn:criarPedido/s2",
+            "kind": "external",
+            "label": "fetch",
+            "parentId": "file:pedidos/pedidos.ts/fn:criarPedido",
+            "range": {
+              "start": 13,
+              "end": 13
+            },
+            "openable": false,
+            "callee": "fetch",
+            "category": "HTTP"
+          },
+          {
+            "id": "file:pedidos/pedidos.ts/fn:criarPedido/s3",
+            "kind": "return",
+            "label": "{ total }",
+            "parentId": "file:pedidos/pedidos.ts/fn:criarPedido",
+            "range": {
+              "start": 14,
+              "end": 14
+            },
+            "openable": false
+          }
+        ],
+        "edges": [
+          {
+            "id": "next:file:pedidos/pedidos.ts/fn:criarPedido/s0->file:pedidos/pedidos.ts/fn:criarPedido/s1",
+            "kind": "next",
+            "source": "file:pedidos/pedidos.ts/fn:criarPedido/s0",
+            "target": "file:pedidos/pedidos.ts/fn:criarPedido/s1"
+          },
+          {
+            "id": "next:file:pedidos/pedidos.ts/fn:criarPedido/s1->file:pedidos/pedidos.ts/fn:criarPedido/s2",
+            "kind": "next",
+            "source": "file:pedidos/pedidos.ts/fn:criarPedido/s1",
+            "target": "file:pedidos/pedidos.ts/fn:criarPedido/s2"
+          },
+          {
+            "id": "next:file:pedidos/pedidos.ts/fn:criarPedido/s2->file:pedidos/pedidos.ts/fn:criarPedido/s3",
+            "kind": "next",
+            "source": "file:pedidos/pedidos.ts/fn:criarPedido/s2",
+            "target": "file:pedidos/pedidos.ts/fn:criarPedido/s3"
+          },
+          {
+            "id": "calls:file:pedidos/pedidos.ts/fn:criarPedido->file:frete/calculo.ts/fn:calcularFrete",
+            "kind": "calls",
+            "source": "file:pedidos/pedidos.ts/fn:criarPedido",
+            "target": "file:frete/calculo.ts/fn:calcularFrete"
+          }
+        ]
+      }
+    },
+    {
+      "path": "server.ts",
+      "graph": {
+        "language": "typescript",
+        "empty": false,
+        "nodes": [
+          {
+            "id": "file:server.ts",
+            "kind": "file",
+            "label": "server.ts",
+            "parentId": null,
+            "range": {
+              "start": 1,
+              "end": 17
+            },
+            "openable": true,
+            "path": "server.ts"
+          },
+          {
+            "id": "file:server.ts/mod",
+            "kind": "module",
+            "label": "Módulo",
+            "parentId": "file:server.ts",
+            "range": {
+              "start": 5,
+              "end": 17
+            },
+            "openable": true
+          },
+          {
+            "id": "file:server.ts/mod/s0",
+            "kind": "external",
+            "label": "express",
+            "parentId": "file:server.ts/mod",
+            "range": {
+              "start": 5,
+              "end": 5
+            },
+            "openable": false,
+            "callee": "express",
+            "category": "EXTERNO"
+          },
+          {
+            "id": "file:server.ts/mod/s1",
+            "kind": "code",
+            "label": "Código",
+            "parentId": "file:server.ts/mod",
+            "range": {
+              "start": 11,
+              "end": 11
+            },
+            "openable": false
+          },
+          {
+            "id": "file:server.ts/mod/s2",
+            "kind": "external",
+            "label": "notificar",
+            "parentId": "file:server.ts/mod",
+            "range": {
+              "start": 12,
+              "end": 15
+            },
+            "openable": false,
+            "callee": "notificar",
+            "category": "EXTERNO"
+          },
+          {
+            "id": "file:server.ts/mod/s3",
+            "kind": "external",
+            "label": "exec",
+            "parentId": "file:server.ts/mod",
+            "range": {
+              "start": 17,
+              "end": 17
+            },
+            "openable": false,
+            "callee": "exec",
+            "category": "EXTERNO"
+          },
+          {
+            "id": "file:server.ts/fn:handler",
+            "kind": "function",
+            "label": "handler",
+            "parentId": "file:server.ts",
+            "range": {
+              "start": 7,
+              "end": 9
+            },
+            "openable": true
+          },
+          {
+            "id": "file:server.ts/fn:handler/s0",
+            "kind": "call",
+            "label": "main",
+            "parentId": "file:server.ts/fn:handler",
+            "range": {
+              "start": 8,
+              "end": 8
+            },
+            "openable": true,
+            "target": "file:main.ts/fn:main"
+          }
+        ],
+        "edges": [
+          {
+            "id": "next:file:server.ts/mod/s0->file:server.ts/mod/s1",
+            "kind": "next",
+            "source": "file:server.ts/mod/s0",
+            "target": "file:server.ts/mod/s1"
+          },
+          {
+            "id": "next:file:server.ts/mod/s1->file:server.ts/mod/s2",
+            "kind": "next",
+            "source": "file:server.ts/mod/s1",
+            "target": "file:server.ts/mod/s2"
+          },
+          {
+            "id": "next:file:server.ts/mod/s2->file:server.ts/mod/s3",
+            "kind": "next",
+            "source": "file:server.ts/mod/s2",
+            "target": "file:server.ts/mod/s3"
+          },
+          {
+            "id": "calls:file:server.ts/fn:handler->file:main.ts/fn:main",
+            "kind": "calls",
+            "source": "file:server.ts/fn:handler",
+            "target": "file:main.ts/fn:main"
+          }
+        ]
+      }
+    },
+    {
+      "path": "ui.tsx",
+      "graph": {
+        "language": "typescript",
+        "empty": false,
+        "nodes": [
+          {
+            "id": "file:ui.tsx",
+            "kind": "file",
+            "label": "ui.tsx",
+            "parentId": null,
+            "range": {
+              "start": 1,
+              "end": 7
+            },
+            "openable": true,
+            "path": "ui.tsx"
+          },
+          {
+            "id": "file:ui.tsx/fn:Tela",
+            "kind": "function",
+            "label": "Tela",
+            "parentId": "file:ui.tsx",
+            "range": {
+              "start": 4,
+              "end": 7
+            },
+            "openable": true
+          },
+          {
+            "id": "file:ui.tsx/fn:Tela/s0",
+            "kind": "external",
+            "label": "axios.get",
+            "parentId": "file:ui.tsx/fn:Tela",
+            "range": {
+              "start": 5,
+              "end": 5
+            },
+            "openable": false,
+            "callee": "axios.get",
+            "category": "HTTP"
+          },
+          {
+            "id": "file:ui.tsx/fn:Tela/s1",
+            "kind": "return",
+            "label": "<div>{main()}</div>",
+            "parentId": "file:ui.tsx/fn:Tela",
+            "range": {
+              "start": 6,
+              "end": 6
+            },
+            "openable": false,
+            "target": "file:main.ts/fn:main"
+          }
+        ],
+        "edges": [
+          {
+            "id": "next:file:ui.tsx/fn:Tela/s0->file:ui.tsx/fn:Tela/s1",
+            "kind": "next",
+            "source": "file:ui.tsx/fn:Tela/s0",
+            "target": "file:ui.tsx/fn:Tela/s1"
+          },
+          {
+            "id": "calls:file:ui.tsx/fn:Tela->file:main.ts/fn:main",
+            "kind": "calls",
+            "source": "file:ui.tsx/fn:Tela",
+            "target": "file:main.ts/fn:main"
+          }
+        ]
+      }
+    }
+  ],
+  "imports": [
+    {
+      "id": "imports:file:main.ts->file:frete/calculo.ts",
+      "kind": "imports",
+      "source": "file:main.ts",
+      "target": "file:frete/calculo.ts"
+    },
+    {
+      "id": "imports:file:main.ts->file:pedidos/index.ts",
+      "kind": "imports",
+      "source": "file:main.ts",
+      "target": "file:pedidos/index.ts"
+    },
+    {
+      "id": "imports:file:pedidos/index.ts->file:pedidos/itens.ts",
+      "kind": "imports",
+      "source": "file:pedidos/index.ts",
+      "target": "file:pedidos/itens.ts"
+    },
+    {
+      "id": "imports:file:pedidos/index.ts->file:pedidos/pedidos.ts",
+      "kind": "imports",
+      "source": "file:pedidos/index.ts",
+      "target": "file:pedidos/pedidos.ts"
+    },
+    {
+      "id": "imports:file:pedidos/pedidos.ts->file:frete/calculo.ts",
+      "kind": "imports",
+      "source": "file:pedidos/pedidos.ts",
+      "target": "file:frete/calculo.ts"
+    },
+    {
+      "id": "imports:file:server.ts->file:main.ts",
+      "kind": "imports",
+      "source": "file:server.ts",
+      "target": "file:main.ts"
+    },
+    {
+      "id": "imports:file:ui.tsx->file:main.ts",
+      "kind": "imports",
+      "source": "file:ui.tsx",
+      "target": "file:main.ts"
+    }
+  ],
+  "offers": [
+    {
+      "channel": "process",
+      "key": "frete/calculo.ts",
+      "nodeId": "file:frete/calculo.ts",
+      "line": 1
+    },
+    {
+      "channel": "name",
+      "key": "calcularFrete",
+      "nodeId": "file:frete/calculo.ts/fn:calcularFrete",
+      "line": 1
+    },
+    {
+      "channel": "name",
+      "key": "tabela",
+      "nodeId": "file:frete/calculo.ts/fn:tabela",
+      "line": 5
+    },
+    {
+      "channel": "process",
+      "key": "main.ts",
+      "nodeId": "file:main.ts",
+      "line": 1
+    },
+    {
+      "channel": "name",
+      "key": "main",
+      "nodeId": "file:main.ts/fn:main",
+      "line": 5
+    },
+    {
+      "channel": "process",
+      "key": "pedidos/index.ts",
+      "nodeId": "file:pedidos/index.ts",
+      "line": 1
+    },
+    {
+      "channel": "process",
+      "key": "pedidos/itens.ts",
+      "nodeId": "file:pedidos/itens.ts",
+      "line": 1
+    },
+    {
+      "channel": "name",
+      "key": "somar",
+      "nodeId": "file:pedidos/itens.ts/fn:somar",
+      "line": 1
+    },
+    {
+      "channel": "process",
+      "key": "pedidos/pedidos.ts",
+      "nodeId": "file:pedidos/pedidos.ts",
+      "line": 1
+    },
+    {
+      "channel": "name",
+      "key": "criarPedido",
+      "nodeId": "file:pedidos/pedidos.ts/fn:criarPedido",
+      "line": 8
+    },
+    {
+      "channel": "http",
+      "key": "GET /api/frete",
+      "nodeId": "file:server.ts/fn:handler",
+      "line": 11
+    },
+    {
+      "channel": "http",
+      "key": "POST /api/pedidos",
+      "nodeId": "file:server.ts/mod/s2",
+      "line": 12
+    },
+    {
+      "channel": "process",
+      "key": "server.ts",
+      "nodeId": "file:server.ts",
+      "line": 1
+    },
+    {
+      "channel": "process",
+      "key": "ui.tsx",
+      "nodeId": "file:ui.tsx",
+      "line": 1
+    },
+    {
+      "channel": "name",
+      "key": "Tela",
+      "nodeId": "file:ui.tsx/fn:Tela",
+      "line": 4
+    }
+  ],
+  "requests": [
+    {
+      "channel": "http",
+      "key": "POST /api/frete",
+      "nodeId": "file:pedidos/pedidos.ts/fn:criarPedido/s2",
+      "line": 13
+    },
+    {
+      "channel": "name",
+      "key": "notificar",
+      "nodeId": "file:server.ts/mod/s2",
+      "line": 13
+    },
+    {
+      "channel": "process",
+      "key": "relatorio.py",
+      "nodeId": "file:server.ts/mod/s3",
+      "line": 17
+    },
+    {
+      "channel": "http",
+      "key": "GET /api/frete",
+      "nodeId": "file:ui.tsx/fn:Tela/s0",
+      "line": 5
+    }
+  ]
+}"
+`;
