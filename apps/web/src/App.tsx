@@ -279,6 +279,12 @@ export function App() {
           path={nav.path}
           titles={titles}
           onGoTo={(index) => {
+            // The last item is the open level: it shows that node's code.
+            if (index === nav.path.length && levelId !== null) {
+              setMark(undefined);
+              dispatch({ type: "select", id: levelId });
+              return;
+            }
             setFocusId(nav.path[index]?.via ?? null);
             dispatch({ type: "goTo", index });
           }}

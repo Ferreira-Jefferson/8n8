@@ -609,6 +609,20 @@ describe("App, Voltar and Esc (VID-19, VID-23, VID-27)", () => {
     expect(currentCanvas().levelId).toBe(P);
   });
 
+  it("shows the code of the open level when its breadcrumb item is clicked after a leaf was selected", async () => {
+    await mapVideo();
+    act(() => currentCanvas().onOpen(videoNode(P)));
+    act(() => currentCanvas().onSelect(`${P}/s0`));
+    expect(currentCanvas().selected).toBe(`${P}/s0`);
+    const crumbs = within(
+      screen.getByRole("navigation", { name: "Caminho de navegação" }),
+    ).getAllByRole("button");
+    fireEvent.click(crumbs[crumbs.length - 1] as HTMLElement);
+    expect(currentCanvas().levelId).toBe(P);
+    expect(currentCanvas().selected).toBe(P);
+    expect(explainMock).toHaveBeenLastCalledWith({ source: videoSource }, P);
+  });
+
   it("shows the panel of the called function when a call card is open (VID-23, VID-24)", async () => {
     await mapVideo();
     act(() => currentCanvas().onOpen(videoNode(P)));
