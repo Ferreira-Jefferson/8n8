@@ -42,7 +42,7 @@ async function drag(page: Page, dx: number): Promise<void> {
 }
 
 test.describe("panel width", () => {
-  test("dragging the bar to the left widens the panel, to the right narrows it", async ({
+  test("dragging the bar to the left widens the panel, back to the right narrows it", async ({
     page,
   }) => {
     await selectStep(page);
@@ -53,10 +53,10 @@ test.describe("panel width", () => {
       .poll(async () => (await box(panel(page))).width)
       .toBeCloseTo(before + 200, -1);
 
-    await drag(page, 300);
+    await drag(page, 100);
     await expect
       .poll(async () => (await box(panel(page))).width)
-      .toBeCloseTo(before - 100, -1);
+      .toBeCloseTo(before + 100, -1);
   });
 
   test("never narrows the panel below 320 px or past 70% of the window", async ({
@@ -110,6 +110,5 @@ test.describe("panel width", () => {
     const code = panel(page).locator(".code-view");
     const fits = await code.evaluate((el) => el.scrollWidth <= el.clientWidth);
     expect(fits).toBe(true);
-    await page.screenshot({ path: "test-results/painel-estreito.png" });
   });
 });
