@@ -32,8 +32,8 @@ export type {
   NodeId,
   NodeKind,
 } from "./graph";
-export { childId, fileId, folderId, topLevelId } from "./ids";
 export type { HistoryEntry, HistoryItem } from "./history";
+export { childId, fileId, folderId, topLevelId } from "./ids";
 export { sliceLines, syntaxErrorLabel } from "./lines";
 export type {
   IgnoredFile,

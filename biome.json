@@ -11,6 +11,7 @@
       "**",
       "!.specs",
       "!.cache",
+      "!docs/marca",
       "!dist",
       "!node_modules",
       "!pnpm-lock.yaml"
