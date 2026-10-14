@@ -143,11 +143,11 @@ Depende de: 01-fatia-central, 04-fidelidade-e-cache e 02-pasta-local.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| VID-01..27 | P1: O mapa do vídeo | Design | Pending |
-| VID-28..30 | P2: O detalhe de um passo | Design | Pending |
-| VID-31..33 | P3: Sugestões no canvas | Design | Pending |
+| VID-01..27 | P1: O mapa do vídeo | Tasks | In Tasks |
+| VID-28..30 | P2: O detalhe de um passo | Tasks | In Tasks |
+| VID-31..33 | P3: Sugestões no canvas | Tasks | In Tasks |
 
-**Coverage:** 33 total, 0 mapped to tasks.
+**Coverage:** 33 total, 33 mapped to tasks (tasks.md, Requirement Coverage).
 
 ---
 

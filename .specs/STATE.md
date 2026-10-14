@@ -7,6 +7,7 @@
 - **Context:** O mapa precisa ser confiável e reproduzível.
 - **Decision:** A estrutura (nós, fios, hierarquia) vem só de parsing determinístico. O LLM só escreve resumos e sugestões e nunca cria nem remove nós ou fios.
 - **Consequence:** A mesma entrada gera o mesmo grafo. O app funciona sem chave de LLM, só sem textos.
+- **Status:** substituída pela AD-017.
 
 ### AD-002 — OpenRouter como gateway de LLM
 - **Date:** 2026-10-13
@@ -106,6 +107,18 @@
 - **Context:** Um POST "simples" de outra página escapa da preflight do CORS, e a guarda de `Host` não cobre esse caso.
 - **Decision:** A API local recusa com 415 qualquer `content-type` diferente de `application/json`.
 - **Consequence:** Outras páginas não conseguem disparar a API sem preflight.
+
+### AD-017 — Títulos de nó pelo LLM, com nome provisório
+- **Date:** 2026-10-13
+- **Context:** Feature 05. O mapa do vídeo mostra títulos em PTS em todos os nós. O usuário confirmou que o LLM escreve esses títulos.
+- **Decision:** A estrutura (nós, fios, hierarquia) vem só de parsing determinístico. O LLM escreve resumos, sugestões e títulos de nó, e nunca cria nem remove nós ou fios. Um título passa pela revisão em duas camadas (AD-008), tem no máximo 6 palavras e fica no cache por nó (AD-009). Sem título revisado, a web mostra um nome provisório determinístico.
+- **Consequence:** O mapa continua completo sem chave de LLM. Substitui a AD-001.
+
+### AD-018 — Tema visual do vídeo
+- **Date:** 2026-10-13
+- **Context:** Feature 05. O usuário aprovou o vídeo como a régua de aparência.
+- **Decision:** As cores, medidas e fontes do vídeo são tokens CSS em `apps/web/src/styles.css` (fundo `#121110`, destaque `#D4FF3F`, texto `#F5F2EC`, secundário `#A8A399`). As fontes Archivo Black, Space Grotesk e DM Mono vêm de pacotes `@fontsource` empacotados no build, sem pedido a outro host.
+- **Consequence:** Uma tela nova usa os mesmos tokens. Uma mudança de aparência é aprovada por imagens de referência do Playwright.
 
 ## Handoff
 
