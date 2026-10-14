@@ -15,6 +15,7 @@
     "@code2n8n/lang-python": "workspace:*",
     "@code2n8n/input": "workspace:*",
     "@code2n8n/model": "workspace:*",
+    "@code2n8n/project": "workspace:*",
     "@hono/node-server": "2.1.5",
     "hono": "4.13.13",
     "zod": "4.6.7"

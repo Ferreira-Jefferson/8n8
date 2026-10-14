@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
-import { createPythonExtractor } from "@code2n8n/lang-python";
+import { createPythonExtractor, pythonPlugin } from "@code2n8n/lang-python";
 import type { ExplainRequest, ExplainResponse } from "@code2n8n/model";
+import { buildProject } from "@code2n8n/project";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
 
@@ -209,14 +210,14 @@ describe("POST /api/explain", () => {
         root: path,
         response: {
           name: "p",
-          graph: extractor.extractProject(files),
+          graph: buildProject(files, [pythonPlugin]),
           files,
           ignored: [],
         },
       }),
       port: 4317,
     });
-    const graph = extractor.extractProject(files);
+    const graph = buildProject(files, [pythonPlugin]);
     const ids = graph.nodes
       .filter((n) => n.kind === "folder" || n.kind === "file")
       .map((n) => n.id);
