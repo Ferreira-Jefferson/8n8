@@ -396,16 +396,17 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O teste confere a lista de nós em pré-ordem com `id`, `kind`, `range`, `category`, `callee` e `target` de cada linha da tabela.
-- [ ] O teste confere `openable` de cada nó contra a regra da VID-24.
-- [ ] O teste confere os fios: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); os fios de `calcular_frete` (2 `next`, "sim" e "não"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhum fio sai de um nó `return`.
-- [ ] O teste confere que extrair duas vezes dá o mesmo grafo (CORE-04).
-- [ ] O gate Build A passa (fecha a fase).
+- [x] O teste confere a lista de nós em pré-ordem com `id`, `kind`, `range`, `category`, `callee` e `target` de cada linha da tabela.
+- [x] O teste confere `openable` de cada nó contra a regra da VID-24.
+- [x] O teste confere os fios: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); os fios de `calcular_frete` (2 `next`, "sim" e "não"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhum fio sai de um nó `return`.
+- [x] O teste confere que extrair duas vezes dá o mesmo grafo (CORE-04).
+- [x] O gate Build A passa (fecha a fase).
 
 **Tests**: unit
 **Gate**: build · Build A
 
 **Commit**: `test(extract-python): check the graph of the video snippet`
+**Status**: ✅ Complete (206 unit = 200 + 6; Build A verde: model 34, extract-python 206)
 
 ---
 
