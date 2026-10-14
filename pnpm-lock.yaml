@@ -279,6 +279,12 @@ importers:
         specifier: 22.20.5
         version: 22.20.5
 
+  packages/links:
+    dependencies:
+      '@code2n8n/model':
+        specifier: workspace:*
+        version: link:../model
+
   packages/model: {}
 
   packages/server:
