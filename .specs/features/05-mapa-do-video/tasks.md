@@ -1112,12 +1112,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um nível com 8 IDs faz **um** pedido com os 8. O mesmo nível de novo não faz pedido.
-- [ ] Um nível com 3 IDs conhecidos e 2 novos pede só os 2.
-- [ ] IDs `dir:` e `file:` não entram no pedido.
-- [ ] Um título com `nodeId` fora do pedido é ignorado (borda da VID-14).
-- [ ] Uma resposta de `mapVersion` antiga é descartada. Uma `mapVersion` nova esvazia o mapa de títulos.
-- [ ] Gate passa.
+- [x] Um nível com 8 IDs faz **um** pedido com os 8. O mesmo nível de novo não faz pedido.
+- [x] Um nível com 3 IDs conhecidos e 2 novos pede só os 2.
+- [x] IDs `dir:` e `file:` não entram no pedido.
+- [x] Um título com `nodeId` fora do pedido é ignorado (borda da VID-14).
+- [x] Uma resposta de `mapVersion` antiga é descartada. Uma `mapVersion` nova esvazia o mapa de títulos.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
