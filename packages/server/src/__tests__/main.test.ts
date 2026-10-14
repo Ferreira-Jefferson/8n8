@@ -18,10 +18,11 @@ import {
   buildTitlePrompt,
   buildTitleReviewerPrompt,
 } from "@code2n8n/explain";
-import { readSourceFolder } from "@code2n8n/input";
-import { createPythonExtractor } from "@code2n8n/lang-python";
+import { type ReadFilter, readSourceFolder } from "@code2n8n/input";
+import { createPythonExtractor, pythonPlugin } from "@code2n8n/lang-python";
 import type {
   ExplainRequest,
+  LanguagePlugin,
   ProjectResponse,
   TitleRequest,
 } from "@code2n8n/model";
@@ -32,6 +33,7 @@ import {
   composeLlm,
   composeReadProject,
   composeTitles,
+  languagePlugins,
   listenOptions,
   resolvePort,
 } from "../main";
@@ -593,7 +595,7 @@ function snapshot(dir: string, rel = ""): string[] {
 const extractor = await createPythonExtractor();
 
 describe("composeReadProject", () => {
-  const readProject = composeReadProject(readSourceFolder, extractor);
+  const readProject = composeReadProject(readSourceFolder, [pythonPlugin]);
 
   it("maps the folder: name, project name, 8 files, ignored files (PROJ-01, PROJ-06)", async () => {
     const loja = makeLoja();
@@ -717,6 +719,65 @@ describe("composeReadProject", () => {
     expect(linked).toEqual(cached);
     expect(f.drafts()).toHaveLength(1);
     expect(entries).toHaveLength(1);
+  });
+});
+
+describe("composeReadProject: the plugin registry", () => {
+  const plugin = (
+    id: string,
+    extensions: string[],
+    ignoredDirs: string[],
+  ): LanguagePlugin => ({
+    ...pythonPlugin,
+    id,
+    extensions,
+    ignoredDirs,
+  });
+
+  it("asks the reader for the extensions and ignored folders of every plugin", async () => {
+    const asked: ReadFilter[] = [];
+    const readProject = composeReadProject(
+      async (_path, filter) => {
+        asked.push(filter);
+        return { kind: "not-found" };
+      },
+      [plugin("a", [".a", ".b"], ["x"]), plugin("c", [".c"], ["y", "z"])],
+    );
+
+    expect(await readProject("/qualquer")).toEqual({ kind: "not-found" });
+    expect(asked).toEqual([
+      { extensions: [".a", ".b", ".c"], ignoredDirs: ["x", "y", "z"] },
+    ]);
+  });
+
+  it("registers the Python plugin", () => {
+    expect(languagePlugins).toEqual([pythonPlugin]);
+  });
+
+  it("maps the files the reader returns with the plugins, naming the project", async () => {
+    const readProject = composeReadProject(
+      async () => ({
+        kind: "ok",
+        name: "mista",
+        root: "/mista",
+        files: [
+          { path: "a.py", source: "def f():\n    pass\n" },
+          { path: "b.txt", source: "oi" },
+        ],
+        ignored: [],
+      }),
+      [pythonPlugin],
+    );
+    const read = await readProject("/mista");
+    if (read.kind !== "ok") throw new Error("expected ok");
+
+    expect(read.response.graph.project).toEqual({ name: "mista" });
+    expect(read.response.graph.language).toBe("python");
+    expect(read.response.graph.nodes.map((n) => n.id)).toEqual([
+      "file:a.py",
+      "file:a.py/fn:f",
+      "file:a.py/fn:f/s0",
+    ]);
   });
 });
 

@@ -1,12 +1,13 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPythonExtractor } from "@code2n8n/lang-python";
+import { createPythonExtractor, pythonPlugin } from "@code2n8n/lang-python";
 import type {
   ExplainRequest,
   ProjectResponse,
   SourceFile,
 } from "@code2n8n/model";
+import { buildProject } from "@code2n8n/project";
 import { describe, expect, it } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 
@@ -115,7 +116,7 @@ function explainSetup(files: SourceFile[], root = WIN_ROOT) {
             root,
             response: {
               name: "loja",
-              graph: extractor.extractProject(files),
+              graph: buildProject(files, [pythonPlugin]),
               files,
               ignored: [],
             },

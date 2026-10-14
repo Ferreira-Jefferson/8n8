@@ -32,29 +32,29 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 
 ## Fase 2 — Montagem do projeto vira genérica
 
-- [ ] 2.1 **[1ª]** Criar o pacote `@code2n8n/project`. Ele recebe os arquivos e os plugins e monta o `Graph` do projeto.
-- [ ] 2.2 **[1ª]** Mover do `extract-python/src/project.ts` para o pacote novo: `layoutProject`, `folderNode`, a montagem do nó `file`, `lastLine`, a checagem de id duplicado e a deduplicação das arestas `imports`.
-- [ ] 2.3 **[2ª]** Falha isolada por arquivo. Hoje um arquivo que o parser não lê lança erro e derruba o projeto inteiro (`project.ts`: `throw new Error(\`tree-sitter could not parse ...\`)`). O arquivo com falha vira um nó `file` com erro, e o resto do mapa aparece.
-- [ ] 2.4 **[2ª]** Validar a saída de todo plugin antes de montar: id único, `parentId` existente, arestas com origem e destino existentes, linhas dentro do arquivo. Um plugin com bug gera erro claro, não uma tela quebrada.
-- [ ] 2.5 **[2ª]** Suíte de conformidade reutilizável (`describe` exportado). Todo plugin roda a mesma suíte: determinismo, ids, pré-ordem, regra `openable` (VID-24), linhas 1-based. O contribuidor ganha um teste pronto.
+- [x] 2.1 **[1ª]** Criar o pacote `@code2n8n/project`. Ele recebe os arquivos e os plugins e monta o `Graph` do projeto.
+- [x] 2.2 **[1ª]** Mover do `extract-python/src/project.ts` para o pacote novo: `layoutProject`, `folderNode`, a montagem do nó `file`, `lastLine`, a checagem de id duplicado e a deduplicação das arestas `imports`.
+- [x] 2.3 **[2ª]** Falha isolada por arquivo. Hoje um arquivo que o parser não lê lança erro e derruba o projeto inteiro (`project.ts`: `throw new Error(\`tree-sitter could not parse ...\`)`). O arquivo com falha vira um nó `file` com erro, e o resto do mapa aparece.
+- [x] 2.4 **[2ª]** Validar a saída de todo plugin antes de montar: id único, `parentId` existente, arestas com origem e destino existentes, linhas dentro do arquivo. Um plugin com bug gera erro claro, não uma tela quebrada.
+- [x] 2.5 **[2ª]** Suíte de conformidade reutilizável (`describe` exportado). Todo plugin roda a mesma suíte: determinismo, ids, pré-ordem, regra `openable` (VID-24), linhas 1-based. O contribuidor ganha um teste pronto.
 
 ## Fase 3 — Python vira um plugin
 
 - [x] 3.0 **[D2]** Mover `packages/extract-python` para `packages/languages/python` (pacote `@code2n8n/lang-python`). Acrescentar `packages/languages/*` ao `pnpm-workspace.yaml`. Fazer o move num commit só, sem mudar código, para o histórico do Git seguir os arquivos.
-- [ ] 3.1 **[1ª]** O plugin exporta `pythonPlugin` e fica só com o que é de Python: `steps`, `build-graph`, `calls`, `bound`, `imports`, `modules`, `classify`.
-- [ ] 3.2 **[2ª]** A tabela de `classify.ts` (requests, sqlite3, smtplib) fica no plugin. O enum `ExternalCategory` fica no `model`, porque vale para qualquer linguagem.
+- [x] 3.1 **[1ª]** O plugin exporta `pythonPlugin` e fica só com o que é de Python: `steps`, `build-graph`, `calls`, `bound`, `imports`, `modules`, `classify`.
+- [x] 3.2 **[2ª]** A tabela de `classify.ts` (requests, sqlite3, smtplib) fica no plugin. O enum `ExternalCategory` fica no `model`, porque vale para qualquer linguagem.
 - [ ] 3.3 **[2ª]** `markSyntaxErrors` e `Parser.init()` vão para um pacote auxiliar de Tree-sitter, opcional (`@code2n8n/treesitter`). Hoje `Parser.init()` roda por gramática. Com dois plugins, o init roda uma vez só, e a versão do `web-tree-sitter` fica uma só.
-- [ ] 3.4 **[2ª]** Mudar a regra do dependency-cruiser de `extract-python` para `packages/languages/*`: um plugin importa só `model` (e o auxiliar de Tree-sitter), nunca outro plugin.
-- [ ] 3.5 **[1ª]** Os snapshots e testes do Python passam sem mudança.
+- [x] 3.4 **[2ª]** Mudar a regra do dependency-cruiser de `extract-python` para `packages/languages/*`: um plugin importa só `model` (e o auxiliar de Tree-sitter), nunca outro plugin.
+- [x] 3.5 **[1ª]** Os snapshots e testes do Python passam sem mudança.
 
 ## Fase 4 — Leitura da pasta (`input`)
 
-- [ ] 4.1 **[1ª]** `readSourceFolder` recebe uma lista de extensões, não uma só. Arquivo: `packages/input/src/read-folder.ts`.
-- [ ] 4.2 **[1ª]** `IGNORED_DIRS` fica só com pastas gerais (`.git`, `node_modules`, `build`, `dist`). As pastas de Python (`.venv`, `venv`, `__pycache__`, `site-packages`) vêm do plugin.
+- [x] 4.1 **[1ª]** `readSourceFolder` recebe uma lista de extensões, não uma só. Arquivo: `packages/input/src/read-folder.ts`.
+- [x] 4.2 **[1ª]** `IGNORED_DIRS` fica só com pastas gerais (`.git`, `node_modules`, `build`, `dist`). As pastas de Python (`.venv`, `venv`, `__pycache__`, `site-packages`) vêm do plugin.
 
 ## Fase 5 — Servidor
 
-- [ ] 5.1 **[1ª]** Registro de plugins em `main.ts`: escolhe o plugin pela extensão. Remove o `".py"` fixo (`main.ts:95`) e o `createPythonExtractor()` fixo (`main.ts:132`).
+- [x] 5.1 **[1ª]** Registro de plugins em `main.ts`: escolhe o plugin pela extensão. Remove o `".py"` fixo (`main.ts:95`) e o `createPythonExtractor()` fixo (`main.ts:132`).
 - [ ] 5.2 **[D5]** O servidor detecta a linguagem do trecho colado. Hoje o corpo é só `{ source }`, e o servidor não sabe a linguagem. Cada plugin dá uma nota ao texto (palavras reservadas, forma de função, de import e de export, erros de sintaxe). Ganha a maior nota. A resposta devolve `language`, e a tela mostra a linguagem escolhida.
 - [ ] 5.2a **[D5]** Empate ou nota baixa: o sistema usa a maior nota e a tela avisa "linguagem incerta". Testes com trechos curtos e ambíguos (uma linha `x = 1`, uma função só).
 - [ ] 5.3 **[2ª]** Rota nova `GET /api/languages`: devolve `id`, `label` e `extensions` de cada plugin. A tela monta os textos a partir dela.

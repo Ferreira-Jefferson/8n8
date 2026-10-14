@@ -12,8 +12,12 @@ import {
   explainNode,
   titleNodes,
 } from "@code2n8n/explain";
-import { type FolderRead, readSourceFolder } from "@code2n8n/input";
-import { createPythonExtractor } from "@code2n8n/lang-python";
+import {
+  type FolderRead,
+  type ReadFilter,
+  readSourceFolder,
+} from "@code2n8n/input";
+import { createPythonExtractor, pythonPlugin } from "@code2n8n/lang-python";
 import {
   createLlmClient,
   type LlmConfig,
@@ -22,11 +26,12 @@ import {
 import type {
   ExplainRequest,
   ExplainResponse,
+  LanguagePlugin,
   LlmClient,
-  ProjectExtractor,
   TitleRequest,
   TitlesResponse,
 } from "@code2n8n/model";
+import { buildProject } from "@code2n8n/project";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { createApp, type ProjectRead } from "./app";
@@ -100,16 +105,23 @@ export function resolvePort(env: Record<string, string | undefined>): number {
   return /^\d+$/.test(raw) && port >= 1 && port <= 65535 ? port : DEFAULT_PORT;
 }
 
-/** Reads the folder and maps it: the extractor sets `graph.project` (PROJ-01, PROJ-05, PROJ-06, PROJ-07). */
+/** The languages the server knows; a new language is one more entry. */
+export const languagePlugins: LanguagePlugin[] = [pythonPlugin];
+
+/** Reads the files of the plugins' extensions and maps them: the project sets `graph.project` (PROJ-01, PROJ-05, PROJ-06, PROJ-07). */
 export function composeReadProject(
-  read: (path: string, extension: string) => Promise<FolderRead>,
-  extractor: ProjectExtractor,
+  read: (path: string, filter: ReadFilter) => Promise<FolderRead>,
+  plugins: LanguagePlugin[],
 ): (path: string) => Promise<ProjectRead> {
+  const filter: ReadFilter = {
+    extensions: plugins.flatMap((p) => p.extensions),
+    ignoredDirs: plugins.flatMap((p) => p.ignoredDirs),
+  };
   return async (path) => {
-    const folder = await read(path, ".py");
+    const folder = await read(path, filter);
     if (folder.kind === "not-found") return folder;
     const { name, root, files, ignored } = folder;
-    const graph = { ...extractor.extractProject(files), project: { name } };
+    const graph = { ...buildProject(files, plugins), project: { name } };
     return { kind: "ok", root, response: { name, graph, files, ignored } };
   };
 }
@@ -153,7 +165,7 @@ async function main(): Promise<void> {
     extractor,
     explain: composeExplain(process.env, compose),
     titles: composeTitles(process.env, compose),
-    readProject: composeReadProject(readSourceFolder, extractor),
+    readProject: composeReadProject(readSourceFolder, languagePlugins),
     // The history is user data, not explain cache: it has its own folder, so wiping
     // the cache never meets the open database file (Windows refuses that delete).
     history: openHistoryOrWarn(

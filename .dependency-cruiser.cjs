@@ -21,24 +21,39 @@ module.exports = {
       name: "languages-only-model",
       severity: "error",
       comment:
-        "Um plugin de linguagem importa só model (CORE-05: não alcança o explain).",
+        "Um plugin de linguagem importa só model e a suíte de conformidade lang-testkit (CORE-05: não alcança o explain).",
       from: { path: "^packages/languages/" },
       to: {
         path: [
           "^packages/(?!languages/|model/)",
           "^apps/",
-          "@code2n8n/(?!model|lang-)",
+          "@code2n8n/(?!model|lang-testkit)",
         ],
       },
     },
     {
       name: "languages-do-not-import-each-other",
       severity: "error",
-      comment: "Um plugin de linguagem não importa outro plugin.",
+      comment:
+        "Um plugin de linguagem não importa outro plugin; só a suíte lang-testkit é comum.",
       from: { path: "^packages/languages/([^/]+)/" },
       to: {
         path: "^packages/languages/",
-        pathNot: "^packages/languages/$1/",
+        pathNot: ["^packages/languages/$1/", "^packages/languages/testkit/"],
+      },
+    },
+    {
+      name: "project-only-model",
+      severity: "error",
+      comment:
+        "project importa só model (monta o grafo dos plugins que recebe, sem conhecer nenhum).",
+      from: { path: "^packages/project/" },
+      to: {
+        path: [
+          "^packages/(?!project/|model/)",
+          "^apps/",
+          "@code2n8n/(?!model|project)",
+        ],
       },
     },
     {
@@ -106,7 +121,8 @@ module.exports = {
     {
       name: "server-only-core-packages",
       severity: "error",
-      comment: "server importa model, languages, explain, input, links e llm.",
+      comment:
+        "server importa model, plugins de linguagem, project, explain, input, links e llm.",
       from: { path: "^packages/server/" },
       to: { path: ["^apps/"] },
     },
