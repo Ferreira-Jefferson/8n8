@@ -1489,6 +1489,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 **Gate**: build · Build final
 
 **Commit**: `test(e2e): add candidate screenshots of the five video screens`
+**Status**: Cancelado pelo usuário em 2026-10-14. Não há imagens de referência; a configuração de T38 continua e não falha sem elas, porque nenhum teste chama `toHaveScreenshot`.
 
 ---
 
@@ -1512,6 +1513,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 **Gate**: build · Build final
 
 **Commit**: `test(e2e): approve the screenshot baselines`
+**Status**: Cancelado pelo usuário em 2026-10-14. Não há imagens de referência; a configuração de T38 continua e não falha sem elas, porque nenhum teste chama `toHaveScreenshot`.
 
 ---
 
