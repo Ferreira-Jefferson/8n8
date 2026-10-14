@@ -9,7 +9,7 @@ export interface CodeViewProps {
 /** Numbered source of a node with optional marked lines (CORE-14, CORE-24, FID-13). */
 export function CodeView({ code, start, highlightedLines }: CodeViewProps) {
   return (
-    <pre className="code-view">
+    <pre className="code code-view">
       {code.split("\n").map((text, i) => {
         const line = start + i;
         const current = highlightedLines?.has(line) ?? false;

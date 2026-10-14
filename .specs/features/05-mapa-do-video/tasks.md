@@ -691,9 +691,9 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `package.json` lista `@fontsource/archivo-black`, `@fontsource/space-grotesk` e `@fontsource/dm-mono` na versão `5.3.0`, sem `^`.
-- [ ] `pnpm --filter @code2n8n/web build` gera arquivos `.woff2` em `apps/web/dist/assets`. O `index.html` gerado não aponta para outro host.
-- [ ] Gate passa.
+- [x] `package.json` lista `@fontsource/archivo-black`, `@fontsource/space-grotesk` e `@fontsource/dm-mono` na versão `5.3.0`, sem `^`.
+- [x] `pnpm --filter @code2n8n/web build` gera arquivos `.woff2` em `apps/web/dist/assets`. O `index.html` gerado não aponta para outro host.
+- [x] Gate passa.
 
 **Tests**: none (dependência; o E2E de T43 prova as fontes)
 **Gate**: build · Build C
@@ -715,11 +715,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `tagOf` dá cada etiqueta da tabela do design, inclusive DISCO para `ARQUIVO`, E-MAIL para `EMAIL` e GATILHO com `isTrigger`.
-- [ ] `provisionalLabel`: `calcular_frete` → "Calcular frete"; `db.salvar` → "Salvar"; `peso > 30` → "peso > 30"; code → "Código"; return → "Retorno"; module → "Código solto"; loop → o cabeçalho.
-- [ ] `codeLineOf`: `calcular_frete()`, `requests.get()`, `if peso > 30`, `for item in itens`, `return TABELA_PESADA[uf]`. Uma linha com mais de 32 caracteres termina em `…`.
-- [ ] `isOpenable` segue `node.openable` em cada kind da VID-24.
-- [ ] Gate passa.
+- [x] `tagOf` dá cada etiqueta da tabela do design, inclusive DISCO para `ARQUIVO`, E-MAIL para `EMAIL` e GATILHO com `isTrigger`.
+- [x] `provisionalLabel`: `calcular_frete` → "Calcular frete"; `db.salvar` → "Salvar"; `peso > 30` → "peso > 30"; code → "Código"; return → "Retorno"; module → "Código solto"; loop → o cabeçalho.
+- [x] `codeLineOf`: `calcular_frete()`, `requests.get()`, `if peso > 30`, `for item in itens`, `return TABELA_PESADA[uf]`. Uma linha com mais de 32 caracteres termina em `…`.
+- [x] `isOpenable` segue `node.openable` em cada kind da VID-24.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -741,16 +741,16 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Grafo do vídeo, montado à mão a partir da tabela do design: uma linha `fn:processar_pedido` com `s0..s6`. O `s7` (return sem chamada) fica fora.
-- [ ] Código solto com chamada que chama `a()`, mais a função `b` que ninguém chama: as entradas são `mod` e `b`, nessa ordem de código; `a` não é entrada.
-- [ ] Código solto só com constantes (`LIMITE = 30`) e duas funções que ninguém chama: `mod` não é entrada; as duas funções são.
-- [ ] Duas funções que ninguém chama: duas linhas na ordem do código (VID-11).
-- [ ] Função recursiva sem outro chamador: é entrada (o fio para si mesma não conta).
-- [ ] Só classes, ou duas funções que se chamam: cada definição de topo vira entrada (regra c).
-- [ ] Entrada sem chamada: a linha tem só a entrada (caso de borda da VID-10).
-- [ ] Um laço com chamada dentro entra; um laço sem chamada não; um passo de ramo (`/b0/s0`) nunca entra direto.
-- [ ] Um `mod` só com erro de sintaxe não é entrada, mas ganha linha própria.
-- [ ] Gate passa.
+- [x] Grafo do vídeo, montado à mão a partir da tabela do design: uma linha `fn:processar_pedido` com `s0..s6`. O `s7` (return sem chamada) fica fora.
+- [x] Código solto com chamada que chama `a()`, mais a função `b` que ninguém chama: as entradas são `mod` e `b`, nessa ordem de código; `a` não é entrada.
+- [x] Código solto só com constantes (`LIMITE = 30`) e duas funções que ninguém chama: `mod` não é entrada; as duas funções são.
+- [x] Duas funções que ninguém chama: duas linhas na ordem do código (VID-11).
+- [x] Função recursiva sem outro chamador: é entrada (o fio para si mesma não conta).
+- [x] Só classes, ou duas funções que se chamam: cada definição de topo vira entrada (regra c).
+- [x] Entrada sem chamada: a linha tem só a entrada (caso de borda da VID-10).
+- [x] Um laço com chamada dentro entra; um laço sem chamada não; um passo de ramo (`/b0/s0`) nunca entra direto.
+- [x] Um `mod` só com erro de sintaxe não é entrada, mas ganha linha própria.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -772,10 +772,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O topo do grafo do vídeo tem 8 nós, 7 fios `next` com IDs `main:…` e `triggers = {fn:processar_pedido}`.
-- [ ] Nenhum nó do topo tem `kind === "module"` com o rótulo "Módulo" sem ser GATILHO (VID-12). O `mod` aparece só em `triggers`.
-- [ ] Os níveis internos e de projeto não mudam (os testes de PROJ e de nível interno passam sem mudança) e têm `triggers` vazio.
-- [ ] Gate passa.
+- [x] O topo do grafo do vídeo tem 8 nós, 7 fios `next` com IDs `main:…` e `triggers = {fn:processar_pedido}`.
+- [x] Nenhum nó do topo tem `kind === "module"` com o rótulo "Módulo" sem ser GATILHO (VID-12). O `mod` aparece só em `triggers`.
+- [x] Os níveis internos e de projeto não mudam (os testes de PROJ e de nível interno passam sem mudança) e têm `triggers` vazio.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -797,10 +797,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `layoutRows([[a,b],[c]])` → a(0,0), b(380,0), c(0,220).
-- [ ] Os passos do `calcular_frete` do vídeo: `b0/s0` tem `y` menor que `b1/s0` (VID-21). O mesmo vale com `elif` (b0 < b1 < b2) e num `if` aninhado.
-- [ ] Os testes atuais de `layoutLR` passam (o determinismo e a ordem da esquerda para a direita).
-- [ ] Gate passa.
+- [x] `layoutRows([[a,b],[c]])` → a(0,0), b(380,0), c(0,220).
+- [x] Os passos do `calcular_frete` do vídeo: `b0/s0` tem `y` menor que `b1/s0` (VID-21). O mesmo vale com `elif` (b0 < b1 < b2) e num `if` aninhado.
+- [x] Os testes atuais de `layoutLR` passam (o determinismo e a ordem da esquerda para a direita).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -822,11 +822,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Três nós em `x` 0, 380 e 760 → `enterAt` 0, 350 e 700. Um empate em `x` desempata por `y`.
-- [ ] O fio a→b tem `drawAt = enterAt(a) + 400`.
-- [ ] Os pontos seguem a ordem do fluxo, com `pulseAt` de `T0 = max(drawAt) + 800` e passo de 750. Há um ponto por fio.
-- [ ] `reduced = true` → todos os valores são 0.
-- [ ] Gate passa.
+- [x] Três nós em `x` 0, 380 e 760 → `enterAt` 0, 350 e 700. Um empate em `x` desempata por `y`.
+- [x] O fio a→b tem `drawAt = enterAt(a) + 400`.
+- [x] Os pontos seguem a ordem do fluxo, com `pulseAt` de `T0 = max(drawAt) + 800` e passo de 750. Há um ponto por fio.
+- [x] `reduced = true` → todos os valores são 0.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -848,12 +848,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] No nível de `processar_pedido` com a explicação do vídeo (sugestões nas linhas 12 e 13): âncoras `…/s5` e `…/s6`, com o texto igual ao comando.
-- [ ] No fluxo principal, a mesma explicação (do GATILHO visível) prende os cartões em `s5` e `s6`.
-- [ ] Uma sugestão numa linha sem nó visível fica presa ao nó dono da explicação. Se o dono é o nó do nível, `anchorId` é `null`.
-- [ ] Empate de intervalo: vence o primeiro na ordem do nível. Uma sugestão da mesma explicação aparece uma vez só.
-- [ ] `highlighted` tem só as âncoras não nulas. Sem cartão, o conjunto fica vazio.
-- [ ] Gate passa.
+- [x] No nível de `processar_pedido` com a explicação do vídeo (sugestões nas linhas 12 e 13): âncoras `…/s5` e `…/s6`, com o texto igual ao comando.
+- [x] No fluxo principal, a mesma explicação (do GATILHO visível) prende os cartões em `s5` e `s6`.
+- [x] Uma sugestão numa linha sem nó visível fica presa ao nó dono da explicação. Se o dono é o nó do nível, `anchorId` é `null`.
+- [x] Empate de intervalo: vence o primeiro na ordem do nível. Uma sugestão da mesma explicação aparece uma vez só.
+- [x] `highlighted` tem só as âncoras não nulas. Sem cartão, o conjunto fica vazio.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -875,14 +875,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `click` em `call` empilha `{ id: target, via: <id do passo> }` e seleciona o passo. `click` em `loop`, `block`, `function`, `module`, `folder` ou `file` empilha o próprio nó.
-- [ ] `click` em `code`, `condition`, `external` ou `return` só seleciona (VID-25).
-- [ ] `back` com 2 níveis volta a 1 e seleciona o `via` do nível que saiu. `back` no topo não muda o estado (VID-27).
-- [ ] `goTo(0)` volta ao topo e seleciona o `via` do primeiro nível.
-- [ ] Recursão: `click` no passo `call` para a mesma função empilha o mesmo `id` de novo.
-- [ ] `jump` (PROJ-04) monta o caminho a partir de `ancestry`.
-- [ ] `panelNodeOf(call)` é o `target`, e os outros nós dão o próprio nó.
-- [ ] Gate Build C passa (fecha a fase).
+- [x] `click` em `call` empilha `{ id: target, via: <id do passo> }` e seleciona o passo. `click` em `loop`, `block`, `function`, `module`, `folder` ou `file` empilha o próprio nó.
+- [x] `click` em `code`, `condition`, `external` ou `return` só seleciona (VID-25).
+- [x] `back` com 2 níveis volta a 1 e seleciona o `via` do nível que saiu. `back` no topo não muda o estado (VID-27).
+- [x] `goTo(0)` volta ao topo e seleciona o `via` do primeiro nível.
+- [x] Recursão: `click` no passo `call` para a mesma função empilha o mesmo `id` de novo.
+- [x] `jump` (PROJ-04) monta o caminho a partir de `ancestry`.
+- [x] `panelNodeOf(call)` é o `target`, e os outros nós dão o próprio nó.
+- [x] Gate Build C passa (fecha a fase).
 
 **Tests**: unit
 **Gate**: build · Build C
@@ -905,9 +905,9 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Cada valor da tabela C2 aparece literalmente no arquivo (cores, `40px 40px`, `320px`, `140px`, `stroke-width: 4`, `opacity: .55`).
-- [ ] `prefers-reduced-motion: reduce` desliga `animation` e `transition` em `.canvas`, `.node`, `.wire` e `.open-frame`.
-- [ ] Gate passa.
+- [x] Cada valor da tabela C2 aparece literalmente no arquivo (cores, `40px 40px`, `320px`, `140px`, `stroke-width: 4`, `opacity: .55`).
+- [x] `prefers-reduced-motion: reduce` desliga `animation` e `transition` em `.canvas`, `.node`, `.wire` e `.open-frame`.
+- [x] Gate passa.
 
 **Tests**: none (CSS; os valores são provados em T43 e T44 com `getComputedStyle`)
 **Gate**: build · Build C
@@ -929,12 +929,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um FUNÇÃO com título "Calcular frete" mostra `.tag` "FUNÇÃO", `.name` "Calcular frete" com `.open-mark` "›" e `.fn` `calcular_frete()`.
-- [ ] Sem título, o cartão mostra o nome provisório. Uma folha (HTTP) não tem `.open-mark` (VID-26).
-- [ ] `hasIn=false` esconde a porta de entrada, e `hasOut=false` esconde a de saída.
-- [ ] `selected` → classe `on`; `dimmed` → classe `dim`.
-- [ ] Os testes atuais trocam `.step-label` pela estrutura nova com a mesma intenção (rótulo, categoria, erro, selo, sem emoji).
-- [ ] Gate passa.
+- [x] Um FUNÇÃO com título "Calcular frete" mostra `.tag` "FUNÇÃO", `.name` "Calcular frete" com `.open-mark` "›" e `.fn` `calcular_frete()`.
+- [x] Sem título, o cartão mostra o nome provisório. Uma folha (HTTP) não tem `.open-mark` (VID-26).
+- [x] `hasIn=false` esconde a porta de entrada, e `hasOut=false` esconde a de saída.
+- [x] `selected` → classe `on`; `dimmed` → classe `dim`.
+- [x] Os testes atuais trocam `.step-label` pela estrutura nova com a mesma intenção (rótulo, categoria, erro, selo, sem emoji).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -956,10 +956,10 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O path tem `d` igual a `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2`, `class="wire"` e `pathLength="1"`.
-- [ ] `data-draw-at` e `data-pulse-at` vêm da agenda. Com `reduced`, nenhum `circle.pulse` é renderizado.
-- [ ] "sim" e "não" aparecem como `.branch-label`, com `data-branch-label`, perto do início do fio.
-- [ ] Gate passa.
+- [x] O path tem `d` igual a `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2`, `class="wire"` e `pathLength="1"`.
+- [x] `data-draw-at` e `data-pulse-at` vêm da agenda. Com `reduced`, nenhum `circle.pulse` é renderizado.
+- [x] "sim" e "não" aparecem como `.branch-label`, com `data-branch-label`, perto do início do fio.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -981,9 +981,9 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O cartão mostra o comando e tem `data-anchor-id` igual à âncora, ou `"frame"`.
-- [ ] O clique chama `onSuggestion(explainedId, line)` uma vez.
-- [ ] Gate passa.
+- [x] O cartão mostra o comando e tem `data-anchor-id` igual à âncora, ou `"frame"`.
+- [x] O clique chama `onSuggestion(explainedId, line)` uma vez.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -1005,12 +1005,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um clique num nó que abre põe `data-phase="expanding"` e só chama `onOpen` depois da transição. Com movimento reduzido, chama na hora.
-- [ ] Um clique numa folha chama `onSelect` e não muda a fase (VID-25).
-- [ ] Não existe handler de duplo clique.
-- [ ] Os nós recebem `data-enter-at` da agenda. Os fios usam o tipo `wire`. Os cartões de sugestão aparecem com as âncoras de T25, e os nós ganham `on`/`dim`.
-- [ ] `toFlowEdges` mantém a classe `edge-imports` (PROJ-03).
-- [ ] O gate Build C passa (fecha a fase).
+- [x] Um clique num nó que abre põe `data-phase="expanding"` e só chama `onOpen` depois da transição. Com movimento reduzido, chama na hora.
+- [x] Um clique numa folha chama `onSelect` e não muda a fase (VID-25).
+- [x] Não existe handler de duplo clique.
+- [x] Os nós recebem `data-enter-at` da agenda. Os fios usam o tipo `wire`. Os cartões de sugestão aparecem com as âncoras de T25, e os nós ganham `on`/`dim`.
+- [x] `toFlowEdges` mantém a classe `edge-imports` (PROJ-03).
+- [x] O gate Build C passa (fecha a fase).
 
 **Tests**: unit
 **Gate**: build · Build C
@@ -1034,11 +1034,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Trecho com caminho `[{id: fn:calcular_frete, via: …/s3}]` e título "Calcular frete" → "Fluxo principal › Calcular frete".
-- [ ] Sem título, a trilha usa o nome provisório do `via`.
-- [ ] Projeto: começa com o nome do projeto (PROJ-04).
-- [ ] O clique em cada item chama `onGoTo(i)`.
-- [ ] Gate passa.
+- [x] Trecho com caminho `[{id: fn:calcular_frete, via: …/s3}]` e título "Calcular frete" → "Fluxo principal › Calcular frete".
+- [x] Sem título, a trilha usa o nome provisório do `via`.
+- [x] Projeto: começa com o nome do projeto (PROJ-04).
+- [x] O clique em cada item chama `onGoTo(i)`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -1060,13 +1060,13 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um passo `external` pede `/api/explain`. Pasta e arquivo não pedem.
-- [ ] A ordem no DOM é: `h2`, "O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO", selo, resumo, "2 frases · voz ativa · um termo por conceito" (só passo), "CÓDIGO · trecho.py, linha 18" (ou "linhas X a Y") com o código numerado, "ENTRADA E SAÍDA".
-- [ ] A IO de `cep`/`uf` mostra "cep → uf", sem crases, e cada item mantém o botão de evidência. Sem entradas nem saídas, a seção não aparece (borda da VID-30).
-- [ ] Uma função não mostra a linha das regras. Ela mostra "Efeitos externos" com DISCO/E-MAIL e a lista "Sugestões".
-- [ ] `mark` com outro `nonce` marca a linha de novo (VID-33).
-- [ ] Os testes atuais de FID-09..14, CACHE-04 e CORE-14/19/20/24 continuam com a mesma intenção. Os títulos "Entradas" e "Saídas" viram a seção "ENTRADA E SAÍDA".
-- [ ] Gate passa.
+- [x] Um passo `external` pede `/api/explain`. Pasta e arquivo não pedem.
+- [x] A ordem no DOM é: `h2`, "O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO", selo, resumo, "2 frases · voz ativa · um termo por conceito" (só passo), "CÓDIGO · trecho.py, linha 18" (ou "linhas X a Y") com o código numerado, "ENTRADA E SAÍDA".
+- [x] A IO de `cep`/`uf` mostra "cep → uf", sem crases, e cada item mantém o botão de evidência. Sem entradas nem saídas, a seção não aparece (borda da VID-30).
+- [x] Uma função não mostra a linha das regras. Ela mostra "Efeitos externos" com DISCO/E-MAIL e a lista "Sugestões".
+- [x] `mark` com outro `nonce` marca a linha de novo (VID-33).
+- [x] Os testes atuais de FID-09..14, CACHE-04 e CORE-14/19/20/24 continuam com a mesma intenção. Os títulos "Entradas" e "Saídas" viram a seção "ENTRADA E SAÍDA".
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -1088,9 +1088,9 @@ T49 → T50
 
 **Done when**:
 
-- [ ] O POST vai para `/api/titles` com `{ source, nodeIds }` ou `{ root, nodeIds }` e JSON.
-- [ ] `ok` → os títulos. `no-key` e `error` → os `titles` que vierem. Um status diferente de 200 ou uma falha de rede → `[]`.
-- [ ] Gate passa.
+- [x] O POST vai para `/api/titles` com `{ source, nodeIds }` ou `{ root, nodeIds }` e JSON.
+- [x] `ok` → os títulos. `no-key` e `error` → os `titles` que vierem. Um status diferente de 200 ou uma falha de rede → `[]`.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -1112,12 +1112,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um nível com 8 IDs faz **um** pedido com os 8. O mesmo nível de novo não faz pedido.
-- [ ] Um nível com 3 IDs conhecidos e 2 novos pede só os 2.
-- [ ] IDs `dir:` e `file:` não entram no pedido.
-- [ ] Um título com `nodeId` fora do pedido é ignorado (borda da VID-14).
-- [ ] Uma resposta de `mapVersion` antiga é descartada. Uma `mapVersion` nova esvazia o mapa de títulos.
-- [ ] Gate passa.
+- [x] Um nível com 8 IDs faz **um** pedido com os 8. O mesmo nível de novo não faz pedido.
+- [x] Um nível com 3 IDs conhecidos e 2 novos pede só os 2.
+- [x] IDs `dir:` e `file:` não entram no pedido.
+- [x] Um título com `nodeId` fora do pedido é ignorado (borda da VID-14).
+- [x] Uma resposta de `mapVersion` antiga é descartada. Uma `mapVersion` nova esvazia o mapa de títulos.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
@@ -1139,13 +1139,13 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Sem mapa, o editor mostra "trecho.py", o `textarea`, "Gerar mapa", o campo de pasta e "Abrir pasta" (VID-08).
-- [ ] Depois de "Gerar mapa" com grafo não vazio, o editor some, e "Novo código" aparece. "Novo código" volta com o texto mantido (VID-09).
-- [ ] Um grafo vazio fica no editor com a mensagem (CORE-07). Uma falha mostra o alerta no editor.
-- [ ] "Voltar" fica desabilitado no topo. Depois de abrir, "Voltar" e Esc voltam um nível. Esc dentro do `textarea` não navega.
-- [ ] Clicar num cartão de sugestão seleciona o nó explicado e passa `mark` com a linha.
-- [ ] Os testes de projeto (PROJ-04, 05, 06) mantêm a intenção.
-- [ ] O gate Build C passa (fecha a trilha C).
+- [x] Sem mapa, o editor mostra "trecho.py", o `textarea`, "Gerar mapa", o campo de pasta e "Abrir pasta" (VID-08).
+- [x] Depois de "Gerar mapa" com grafo não vazio, o editor some, e "Novo código" aparece. "Novo código" volta com o texto mantido (VID-09).
+- [x] Um grafo vazio fica no editor com a mensagem (CORE-07). Uma falha mostra o alerta no editor.
+- [x] "Voltar" fica desabilitado no topo. Depois de abrir, "Voltar" e Esc voltam um nível. Esc dentro do `textarea` não navega.
+- [x] Clicar num cartão de sugestão seleciona o nó explicado e passa `mark` com a linha.
+- [x] Os testes de projeto (PROJ-04, 05, 06) mantêm a intenção.
+- [x] O gate Build C passa (fecha a trilha C).
 
 **Tests**: unit
 **Gate**: build · Build C

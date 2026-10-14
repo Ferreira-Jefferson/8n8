@@ -8,6 +8,7 @@ import type {
 import { describe, expect, it } from "vitest";
 import { projectLevel } from "../project-level";
 import { lojaGraph } from "./loja-graph";
+import { videoGraph } from "./video-graph";
 
 function node(
   id: string,
@@ -45,31 +46,39 @@ function graph(nodes: FlowNode[], edges: FlowEdge[]): Graph {
   return { language: "python", empty: false, nodes, edges };
 }
 
-describe("projectLevel top level", () => {
-  const g = graph(
-    [
-      node("mod", "module", null),
-      node("mod/s0", "call", "mod", { target: "a" }),
-      node("a", "function", null),
-      node("a/s0", "call", "a", { target: "b" }),
-      node("b", "function", null),
-      node("K", "class", null),
-      node("K.m", "function", "K"),
-      node("K.m/s0", "call", "K.m", { target: "b" }),
-      node("K.n", "function", "K"),
-      node("K.n/s0", "call", "K.m", { target: "K.n" }),
-    ],
-    [
-      edge("calls", "mod", "a"),
-      edge("calls", "a", "b"),
-      edge("calls", "K.m", "b"),
-      edge("calls", "K.m", "K.n"),
-      edge("calls", "K.n", "b"),
-      edge("calls", "b", "K.m"),
-      edge("next", "mod/s0", "a/s0"),
-    ],
-  );
-  const level = projectLevel(g, null);
+describe("projectLevel lifts calls wires on a file level (CORE-02)", () => {
+  // The old snippet top level, moved under a project file: the top of a
+  // snippet is now the main flow (VID-10), and `lifted` keeps its rules here.
+  const F = "file:x.py";
+  const p: Graph = {
+    ...graph(
+      [
+        node("dir:.", "folder", null, { path: "" }),
+        node(F, "file", "dir:.", { path: "x.py" }),
+        node("mod", "module", F),
+        node("mod/s0", "call", "mod", { target: "a" }),
+        node("a", "function", F),
+        node("a/s0", "call", "a", { target: "b" }),
+        node("b", "function", F),
+        node("K", "class", F),
+        node("K.m", "function", "K"),
+        node("K.m/s0", "call", "K.m", { target: "b" }),
+        node("K.n", "function", "K"),
+        node("K.n/s0", "call", "K.m", { target: "K.n" }),
+      ],
+      [
+        edge("calls", "mod", "a"),
+        edge("calls", "a", "b"),
+        edge("calls", "K.m", "b"),
+        edge("calls", "K.m", "K.n"),
+        edge("calls", "K.n", "b"),
+        edge("calls", "b", "K.m"),
+        edge("next", "mod/s0", "a/s0"),
+      ],
+    ),
+    project: { name: "p" },
+  };
+  const level = projectLevel(p, F);
 
   it("shows only function, class and module nodes (CORE-01, 03)", () => {
     expect(level.nodes.map((n) => n.id)).toEqual(["mod", "a", "b", "K"]);
@@ -94,6 +103,89 @@ describe("projectLevel top level", () => {
     expect(level.edges).toHaveLength(4);
     expect(ids).toContain("calls:b->K");
     expect(ids).toContain("calls:mod->a");
+  });
+
+  it("has no rows and no triggers", () => {
+    expect(level.rows).toBeUndefined();
+    expect(level.triggers.size).toBe(0);
+  });
+});
+
+describe("VID-10, 11, 12: the top level of a snippet is the main flow", () => {
+  const P = "fn:processar_pedido";
+  const steps = [0, 1, 2, 3, 4, 5, 6].map((i) => `${P}/s${i}`);
+  const level = projectLevel(videoGraph, null);
+
+  it("shows processar_pedido and its 7 steps with a call, in order", () => {
+    expect(level.nodes.map((n) => n.id)).toEqual([P, ...steps]);
+    expect(level.rows).toEqual([[P, ...steps]]);
+  });
+
+  it("links neighbours with 7 synthetic next wires main:<a>-><b>", () => {
+    const chain = [P, ...steps];
+    expect(level.edges).toEqual(
+      chain.slice(1).map((target, i) => ({
+        id: `main:${chain[i]}->${target}`,
+        kind: "next",
+        source: chain[i],
+        target,
+      })),
+    );
+  });
+
+  it("marks only processar_pedido as trigger", () => {
+    expect([...level.triggers]).toEqual([P]);
+  });
+
+  it("shows loose code only as a trigger, never as a plain Módulo node (VID-12)", () => {
+    const g = graph(
+      [
+        node("mod", "module", null, { range: { start: 1, end: 1 } }),
+        node("mod/s0", "call", "mod", {
+          target: "a",
+          range: { start: 1, end: 1 },
+        }),
+        node("a", "function", null, { range: { start: 3, end: 4 } }),
+        node("b", "function", null, { range: { start: 6, end: 7 } }),
+        node("b/s0", "external", "b", {
+          callee: "print",
+          range: { start: 7, end: 7 },
+        }),
+      ],
+      [edge("calls", "mod", "a")],
+    );
+    const top = projectLevel(g, null);
+    expect(top.rows).toEqual([
+      ["mod", "mod/s0"],
+      ["b", "b/s0"],
+    ]);
+    expect(top.nodes.map((n) => n.id)).toEqual(["mod", "mod/s0", "b", "b/s0"]);
+    expect([...top.triggers]).toEqual(["mod", "b"]);
+    for (const n of top.nodes) {
+      if (n.kind === "module") expect(top.triggers.has(n.id)).toBe(true);
+    }
+    expect(top.edges.map((e) => e.id)).toEqual([
+      "main:mod->mod/s0",
+      "main:b->b/s0",
+    ]);
+  });
+
+  it("an inner level keeps its wires and has no triggers", () => {
+    const inner = projectLevel(videoGraph, "fn:calcular_frete");
+    expect(inner.triggers.size).toBe(0);
+    expect(inner.rows).toBeUndefined();
+    expect(inner.edges.map((e) => e.kind)).toEqual([
+      "next",
+      "next",
+      "branch",
+      "branch",
+    ]);
+  });
+
+  it("a project top level has no triggers", () => {
+    const top = projectLevel(lojaGraph, null);
+    expect(top.triggers.size).toBe(0);
+    expect(top.rows).toBeUndefined();
   });
 });
 

@@ -1,6 +1,16 @@
-import type { ExplainResponse, Graph, ProjectResponse } from "@code2n8n/model";
+import type {
+  ExplainResponse,
+  Graph,
+  NodeTitle,
+  ProjectResponse,
+} from "@code2n8n/model";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchExplanation, fetchGraph, fetchProject } from "../api";
+import {
+  fetchExplanation,
+  fetchGraph,
+  fetchProject,
+  fetchTitles,
+} from "../api";
 
 const graph: Graph = { language: "python", empty: false, nodes: [], edges: [] };
 
@@ -150,5 +160,75 @@ describe("fetchExplanation", () => {
     expect(await fetchExplanation({ source: "s" }, "gone")).toEqual({
       status: "stale",
     });
+  });
+});
+
+describe("fetchTitles (VID-14, VID-15)", () => {
+  const titles: NodeTitle[] = [
+    {
+      nodeId: "fn:calcular_frete",
+      text: "Calcular frete",
+      lines: [17],
+      fromCache: false,
+    },
+  ];
+  const ids = ["fn:calcular_frete", "fn:calcular_frete/s0"];
+
+  it("posts { source, nodeIds } as JSON to /api/titles and returns the titles on ok", async () => {
+    const fn = fakeFetch(200, { status: "ok", titles });
+    const result = await fetchTitles({ source: "x = 1" }, ids);
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/titles");
+    expect(init.method).toBe("POST");
+    expect(new Headers(init.headers).get("content-type")).toBe(
+      "application/json",
+    );
+    expect(JSON.parse(init.body as string)).toEqual({
+      source: "x = 1",
+      nodeIds: ids,
+    });
+    expect(result).toEqual(titles);
+  });
+
+  it("posts { root, nodeIds } for a project", async () => {
+    const fn = fakeFetch(200, { status: "ok", titles: [] });
+    await fetchTitles({ root: "C:/loja" }, ["file:a.py/fn:f"]);
+    const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({
+      root: "C:/loja",
+      nodeIds: ["file:a.py/fn:f"],
+    });
+  });
+
+  it("returns the cached titles of no-key", async () => {
+    fakeFetch(200, { status: "no-key", titles });
+    expect(await fetchTitles({ source: "x" }, ids)).toEqual(titles);
+  });
+
+  it("returns the cached titles of error", async () => {
+    fakeFetch(200, { status: "error", message: "falhou", titles });
+    expect(await fetchTitles({ source: "x" }, ids)).toEqual(titles);
+  });
+
+  it("returns [] for error and no-key without titles", async () => {
+    fakeFetch(200, { status: "error", message: "falhou", titles: [] });
+    expect(await fetchTitles({ source: "x" }, ids)).toEqual([]);
+    fakeFetch(200, { status: "no-key", titles: [] });
+    expect(await fetchTitles({ source: "x" }, ids)).toEqual([]);
+  });
+
+  it.each([400, 404, 500])("returns [] on HTTP %i", async (status) => {
+    fakeFetch(status, { status: "ok", titles });
+    expect(await fetchTitles({ source: "x" }, ids)).toEqual([]);
+  });
+
+  it("returns [] when the network fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("Failed to fetch");
+      }),
+    );
+    expect(await fetchTitles({ source: "x" }, ids)).toEqual([]);
   });
 });
