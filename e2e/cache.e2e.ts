@@ -71,6 +71,8 @@ const sha256 = (text: string) =>
   createHash("sha256").update(text).digest("hex");
 /** The node's entry: `<cache>/nodes/<sha256(node identity)>.json`; a snippet node's identity is its id. */
 const entryFile = (id: string) => join(CACHE, "nodes", `${sha256(id)}.json`);
+const fingerprint = (): Record<string, string> =>
+  JSON.parse(readFileSync(entryFile(FRETE), "utf8")).fingerprint;
 
 /** The rewritten entry is read back: reopening FRETE comes from the cache, with no LLM call. */
 async function expectValidEntry(page: Page) {
@@ -146,6 +148,49 @@ test.describe("Cache por nó", () => {
     await expect(panel(page).getByRole("status")).toHaveText(
       "Resumo atualizado: o código mudou",
     );
+  });
+
+  test("CACHE-01: the entry keeps each fingerprint component apart", async ({
+    page,
+  }) => {
+    await generate(page, VIDEO);
+    await open(page, FRETE);
+    await expect(badge(panel(page))).toHaveText("Revisado");
+    const first = fingerprint();
+    expect(Object.keys(first).sort()).toEqual([
+      "code",
+      "model",
+      "neighbours",
+      "promptVersion",
+      "reviewModel",
+      "reviewerVersion",
+    ]);
+    expect(first.model).toBe("e2e/drafter");
+    expect(first.reviewModel).toBe("e2e/reviewer");
+    for (const value of Object.values(first)) expect(value).not.toBe("");
+
+    // Trailing spaces only: the normalized code is the same, so is the entry.
+    await generate(page, VIDEO.replace("base = 10", "base = 10   "));
+    expect((await open(page, FRETE)).fromCache).toBe(true);
+    expect(fingerprint()).toEqual(first);
+
+    const renamed = VIDEO.replace("def processar_pedido(", "def processar(");
+    await generate(page, renamed);
+    await open(page, FRETE);
+    await expect(badge(panel(page))).toHaveText("Revisado");
+    const second = fingerprint();
+    expect(second.neighbours).not.toBe(first.neighbours);
+    expect({ ...second, neighbours: "" }).toEqual({
+      ...first,
+      neighbours: "",
+    });
+
+    await generate(page, renamed.replace("base = 10", "base = 12"));
+    await open(page, FRETE);
+    await expect(badge(panel(page))).toHaveText("Revisado");
+    const third = fingerprint();
+    expect(third.code).not.toBe(second.code);
+    expect({ ...third, code: "" }).toEqual({ ...second, code: "" });
   });
 
   test("CACHE-07: a corrupted entry counts as absent and is replaced", async ({
