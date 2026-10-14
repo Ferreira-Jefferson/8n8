@@ -686,9 +686,9 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `package.json` lista `@fontsource/archivo-black`, `@fontsource/space-grotesk` e `@fontsource/dm-mono` na versão `5.3.0`, sem `^`.
-- [ ] `pnpm --filter @code2n8n/web build` gera arquivos `.woff2` em `apps/web/dist/assets`. O `index.html` gerado não aponta para outro host.
-- [ ] Gate passa.
+- [x] `package.json` lista `@fontsource/archivo-black`, `@fontsource/space-grotesk` e `@fontsource/dm-mono` na versão `5.3.0`, sem `^`.
+- [x] `pnpm --filter @code2n8n/web build` gera arquivos `.woff2` em `apps/web/dist/assets`. O `index.html` gerado não aponta para outro host.
+- [x] Gate passa.
 
 **Tests**: none (dependência; o E2E de T43 prova as fontes)
 **Gate**: build · Build C

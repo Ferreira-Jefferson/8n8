@@ -12,6 +12,9 @@
   "dependencies": {
     "@code2n8n/model": "workspace:*",
     "@dagrejs/dagre": "3.1.1",
+    "@fontsource/archivo-black": "5.3.0",
+    "@fontsource/dm-mono": "5.3.0",
+    "@fontsource/space-grotesk": "5.3.0",
     "@xyflow/react": "12.12.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
