@@ -5,6 +5,8 @@ packages:
 allowBuilds:
   esbuild: true
   tree-sitter-python: false
+  tree-sitter-typescript: false
+  tree-sitter-javascript: false
 minimumReleaseAgeExclude:
   - zod@4.6.7
   - '@hono/node-server@2.1.5'
