@@ -36,3 +36,37 @@ Servidores presos: encerre a árvore do processo `playwright test` antigo (Stop-
 
 ### Como saber que voltou a quebrar
 `which taskkill` não acha nada no shell do Claude, ou o `pnpm e2e` mostra o resumo "N passed" e não devolve o prompt.
+
+## ERR-002 — `git worktree remove` falha com "Directory not empty" num worktree com node_modules do pnpm
+
+| Campo | Valor |
+|-------|-------|
+| **Keywords** | git, worktree remove, Directory not empty, node_modules, pnpm, junction, Windows |
+| **Status** | ATIVA (verificada em 2026-10-14) |
+| **Categoria** | tooling |
+| **Ambiente** | Windows 11, Git Bash, pnpm 12.6.0 |
+| **Severidade** | low |
+| **Primeira vez** | 2026-10-14 |
+| **Última vez** | 2026-10-14 |
+| **Vezes atingido** | 1 |
+| **Tentativas até solução** | 2 |
+
+### Sintoma
+```
+error: failed to delete '.../.claude/worktrees/agent-...': Directory not empty
+```
+O worktree já saiu de `git worktree list`, mas a pasta continua, só com `node_modules`.
+
+### Causa raiz
+O `node_modules` do pnpm tem links (junctions) que o `git worktree remove` não consegue apagar no Windows.
+
+### Solução
+O Git já desregistrou o worktree. Apague a pasta com `rmdir /s`, que remove o link sem seguir para o destino, e depois apague o branch:
+```bash
+cmd //c "rmdir /s /q .claude\worktrees\<nome>"
+git branch -d <branch>
+```
+Não use `rm -rf` nem `Remove-Item -Recurse` aqui: podem seguir o link para o armazém do pnpm.
+
+### Como saber que voltou a quebrar
+O `rmdir /s` também falha, ou `git worktree list` ainda mostra a pasta.
