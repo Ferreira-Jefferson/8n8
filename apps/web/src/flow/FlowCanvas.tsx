@@ -350,7 +350,7 @@ export function FlowCanvas({
           hasOut: sources.has(n.id),
           enterAt: times.enterAt.get(n.id) ?? 0,
           selected: n.id === selected || lit.has(n.id),
-          dimmed: cards.length > 0 && !lit.has(n.id),
+          dimmed: cards.length > 0 && !lit.has(n.id) && n.id !== selected,
           suggestionCount: suggestionCounts.get(n.id),
         },
       };

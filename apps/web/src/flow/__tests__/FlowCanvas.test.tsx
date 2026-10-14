@@ -444,6 +444,20 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
     }
   });
 
+  it("never dims the selected node while suggestion cards show", () => {
+    const { container } = render(
+      <FlowCanvas
+        {...props({
+          selected: `${P}/s1`,
+          explanations: new Map([[P, explanation]]),
+        })}
+      />,
+    );
+    expect(card(container, `${P}/s1`).classList.contains("on")).toBe(true);
+    expect(card(container, `${P}/s1`).classList.contains("dim")).toBe(false);
+    expect(card(container, `${P}/s2`).classList.contains("dim")).toBe(true);
+  });
+
   it("places a card 20 px right of and 64 px above its anchor", () => {
     const { container } = render(
       <FlowCanvas {...props({ explanations: new Map([[P, explanation]]) })} />,
