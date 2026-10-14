@@ -1,0 +1,22 @@
+{
+  "name": "@code2n8n/lang-treesitter",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@code2n8n/model": "workspace:*",
+    "web-tree-sitter": "0.27.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "tree-sitter-python": "0.25.0",
+    "tree-sitter-typescript": "0.23.2"
+  }
+}

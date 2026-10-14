@@ -21,13 +21,13 @@ module.exports = {
       name: "languages-only-model",
       severity: "error",
       comment:
-        "Um plugin de linguagem importa só model e a suíte de conformidade lang-testkit (CORE-05: não alcança o explain).",
+        "Um plugin de linguagem importa só model, a suíte de conformidade lang-testkit e o auxiliar lang-treesitter (CORE-05: não alcança o explain).",
       from: { path: "^packages/languages/" },
       to: {
         path: [
           "^packages/(?!languages/|model/)",
           "^apps/",
-          "@code2n8n/(?!model|lang-testkit)",
+          "@code2n8n/(?!model|lang-testkit|lang-treesitter)",
         ],
       },
     },
@@ -35,11 +35,15 @@ module.exports = {
       name: "languages-do-not-import-each-other",
       severity: "error",
       comment:
-        "Um plugin de linguagem não importa outro plugin; só a suíte lang-testkit é comum.",
+        "Um plugin de linguagem não importa outro plugin; só a suíte lang-testkit e o auxiliar lang-treesitter são comuns.",
       from: { path: "^packages/languages/([^/]+)/" },
       to: {
         path: "^packages/languages/",
-        pathNot: ["^packages/languages/$1/", "^packages/languages/testkit/"],
+        pathNot: [
+          "^packages/languages/$1/",
+          "^packages/languages/testkit/",
+          "^packages/languages/treesitter/",
+        ],
       },
     },
     {
