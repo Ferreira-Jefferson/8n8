@@ -69,14 +69,15 @@ describe("buildSteps: linear steps", () => {
     ]);
   });
 
-  it("puts a call-free return into the preceding code group", async () => {
+  it("keeps a call-free return out of the preceding code group (VID-20)", async () => {
     const graph = await graphOf(
       lines("def x():", "    a = 1", "    b = 2", "    return a + b"),
     );
 
     const steps = stepsOf(graph, "fn:x");
     expect(steps.map((n) => [n.kind, n.range])).toEqual([
-      ["code", { start: 2, end: 4 }],
+      ["code", { start: 2, end: 3 }],
+      ["return", { start: 4, end: 4 }],
     ]);
   });
 
@@ -403,5 +404,175 @@ describe("buildSteps: loops and blocks (CORE-10)", () => {
       category: "ARQUIVO",
       range: { start: 2, end: 2 },
     });
+  });
+});
+
+/** Every wire, as [source, target]. */
+function wires(graph: Graph): [string, string][] {
+  return graph.edges.map((e) => [e.source, e.target]);
+}
+
+describe("buildSteps: return (VID-20)", () => {
+  it("turns return into a step of its own after the code group", async () => {
+    const graph = await graphOf(lines("def x():", "    a = 1", "    return a"));
+
+    expect(stepsOf(graph, "fn:x")).toEqual([
+      {
+        id: "fn:x/s0",
+        kind: "code",
+        label: "Código",
+        parentId: "fn:x",
+        range: { start: 2, end: 2 },
+        openable: false,
+      },
+      {
+        id: "fn:x/s1",
+        kind: "return",
+        label: "a",
+        parentId: "fn:x",
+        range: { start: 3, end: 3 },
+        openable: false,
+      },
+    ]);
+    expect(edgeIds(graph, "next")).toEqual(["next:fn:x/s0->fn:x/s1"]);
+  });
+
+  it("sends no wire from a return to the statement after it", async () => {
+    const graph = await graphOf(lines("def x():", "    return 1", "    a = 2"));
+
+    expect(stepsOf(graph, "fn:x").map((n) => [n.id, n.kind])).toEqual([
+      ["fn:x/s0", "return"],
+      ["fn:x/s1", "code"],
+    ]);
+    expect(graph.edges).toEqual([]);
+  });
+
+  it("gives each branch of an if/else with returns its own return and leaves no wire after the if", async () => {
+    const graph = await graphOf(
+      lines(
+        "def f(x):",
+        "    if x:",
+        "        return 1",
+        "    else:",
+        "        return 2",
+        "    a = 3",
+      ),
+    );
+
+    expect(stepsOf(graph, "fn:f").map((n) => [n.id, n.kind])).toEqual([
+      ["fn:f/s0", "condition"],
+      ["fn:f/s0/b0/s0", "return"],
+      ["fn:f/s0/b1/s0", "return"],
+      ["fn:f/s1", "code"],
+    ]);
+    expect(wires(graph)).toEqual([
+      ["fn:f/s0", "fn:f/s0/b0/s0"],
+      ["fn:f/s0", "fn:f/s0/b1/s0"],
+    ]);
+  });
+
+  it("keeps não going to the next step when only the sim branch returns", async () => {
+    const graph = await graphOf(
+      lines("def f(x):", "    if x:", "        return 1", "    a = 2"),
+    );
+
+    expect(branchesOf(graph, "fn:f/s0")).toEqual([
+      ["fn:f/s0/b0/s0", "sim"],
+      ["fn:f/s1", "não"],
+    ]);
+    expect(wires(graph)).toEqual([
+      ["fn:f/s0", "fn:f/s0/b0/s0"],
+      ["fn:f/s0", "fn:f/s1"],
+    ]);
+  });
+
+  it("makes a return inside a loop a child of the loop", async () => {
+    const graph = await graphOf(
+      lines("def f(itens):", "    for i in itens:", "        return i"),
+    );
+
+    expect(stepsOf(graph, "fn:f/s0")).toEqual([
+      {
+        id: "fn:f/s0/s0",
+        kind: "return",
+        label: "i",
+        parentId: "fn:f/s0",
+        range: { start: 3, end: 3 },
+        openable: false,
+      },
+    ]);
+  });
+
+  it("gives a return that calls the snippet a target and keeps the calls wire", async () => {
+    const graph = await graphOf(
+      lines(
+        "def calcular(x):",
+        "    pass",
+        "def f(x):",
+        "    return calcular(x)",
+      ),
+    );
+
+    expect(node(graph, "fn:f/s0")).toEqual({
+      id: "fn:f/s0",
+      kind: "return",
+      label: "calcular(x)",
+      parentId: "fn:f",
+      range: { start: 4, end: 4 },
+      openable: false,
+      target: "fn:calcular",
+    });
+    expect(edgeIds(graph, "calls")).toEqual(["calls:fn:f->fn:calcular"]);
+  });
+
+  it("gives a return with an external call its callee and category", async () => {
+    const graph = await graphOf(
+      lines("import requests", "def f(u):", "    return requests.get(u)"),
+    );
+
+    expect(node(graph, "fn:f/s0")).toEqual({
+      id: "fn:f/s0",
+      kind: "return",
+      label: "requests.get(u)",
+      parentId: "fn:f",
+      range: { start: 3, end: 3 },
+      openable: false,
+      callee: "requests.get",
+      category: "HTTP",
+    });
+    expect(edgeIds(graph, "calls")).toEqual([]);
+  });
+
+  it("labels a bare return with an empty text", async () => {
+    const graph = await graphOf(lines("def f():", "    return"));
+
+    expect(node(graph, "fn:f/s0")).toMatchObject({ kind: "return", label: "" });
+  });
+
+  it("turns the returns of calcular_frete into return steps with the same ids", async () => {
+    const graph = await graphOf(videoFixture);
+
+    expect(
+      ["fn:calcular_frete/s2/b0/s0", "fn:calcular_frete/s2/b1/s0"].map((id) =>
+        node(graph, id),
+      ),
+    ).toEqual([
+      {
+        id: "fn:calcular_frete/s2/b0/s0",
+        kind: "return",
+        label: "base + taxa * 2",
+        parentId: "fn:calcular_frete",
+        range: { start: 9, end: 9 },
+        openable: false,
+      },
+      {
+        id: "fn:calcular_frete/s2/b1/s0",
+        kind: "return",
+        label: "base + taxa",
+        parentId: "fn:calcular_frete",
+        range: { start: 11, end: 11 },
+        openable: false,
+      },
+    ]);
   });
 });

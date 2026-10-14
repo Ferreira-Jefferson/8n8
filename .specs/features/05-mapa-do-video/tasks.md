@@ -367,19 +367,20 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `def x(): a = 1; return a` → `s0` code (linha 2) e `s1` return (linha 3) com `label` `a`, `openable: false` e um fio `next:s0->s1`.
-- [ ] Nenhum fio sai do RETORNO: num `return` seguido de outro comando, o comando seguinte não recebe fio do RETORNO.
-- [ ] `if/else` com `return` nos dois ramos: os ramos têm um RETORNO cada, e a condição não deixa fio pendente para depois do `if`.
-- [ ] `if` sem `else` com `return` no ramo "sim": o "não" continua indo ao passo seguinte.
-- [ ] `return` dentro de laço: RETORNO filho do laço.
-- [ ] `return calcular(x)` (função do trecho) → RETORNO com `target`, e o grafo mantém `calls:<dono>->fn:calcular`. `return requests.get(u)` → RETORNO com `callee` e `category: "HTTP"`. `return` sozinho → `label` `""`.
-- [ ] Em `pedido_frete.py`, `fn:calcular_frete/s2/b0/s0` e `b1/s0` são `return` com os mesmos IDs de antes.
-- [ ] Gate passa.
+- [x] `def x(): a = 1; return a` → `s0` code (linha 2) e `s1` return (linha 3) com `label` `a`, `openable: false` e um fio `next:s0->s1`.
+- [x] Nenhum fio sai do RETORNO: num `return` seguido de outro comando, o comando seguinte não recebe fio do RETORNO.
+- [x] `if/else` com `return` nos dois ramos: os ramos têm um RETORNO cada, e a condição não deixa fio pendente para depois do `if`.
+- [x] `if` sem `else` com `return` no ramo "sim": o "não" continua indo ao passo seguinte.
+- [x] `return` dentro de laço: RETORNO filho do laço.
+- [x] `return calcular(x)` (função do trecho) → RETORNO com `target`, e o grafo mantém `calls:<dono>->fn:calcular`. `return requests.get(u)` → RETORNO com `callee` e `category: "HTTP"`. `return` sozinho → `label` `""`.
+- [x] Em `pedido_frete.py`, `fn:calcular_frete/s2/b0/s0` e `b1/s0` são `return` com os mesmos IDs de antes.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
 
 **Commit**: `feat(extract-python): add a return step with no outgoing wire`
+**Status**: ✅ Complete (200 unit = 191 + 9; errors.test e project.test também mudam pela VID-20)
 
 ---
 

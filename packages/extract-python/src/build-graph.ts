@@ -165,12 +165,15 @@ function buildClass(
 
 const OWNERS = new Set(["function", "class", "module"]);
 
-/** One `calls` wire per (caller, callee) pair, from the `call` steps (CORE-02). */
+/**
+ * One `calls` wire per (caller, callee) pair, from the steps with a target:
+ * `call` steps and `return` steps that call the snippet (CORE-02, VID-20).
+ */
 function callsEdges(nodes: FlowNode[]): FlowEdge[] {
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const edges = new Map<string, FlowEdge>();
   for (const step of nodes) {
-    if (step.kind !== "call" || step.target === undefined) continue;
+    if (step.target === undefined) continue;
     let owner = step.parentId === null ? undefined : byId.get(step.parentId);
     while (owner && !OWNERS.has(owner.kind)) {
       owner = owner.parentId === null ? undefined : byId.get(owner.parentId);
