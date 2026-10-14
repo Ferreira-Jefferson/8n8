@@ -27,7 +27,24 @@ export default defineConfig({
     baseURL: URL,
     trace: "retain-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: "**/performance.e2e.ts",
+    },
+    // Measurements, not checks: kept out of `pnpm e2e`. Run them with
+    // CODE2N8N_PERF=1 pnpm exec playwright test --project performance
+    ...(process.env.CODE2N8N_PERF
+      ? [
+          {
+            name: "performance",
+            use: { ...devices["Desktop Chrome"] },
+            testMatch: "**/performance.e2e.ts",
+          },
+        ]
+      : []),
+  ],
   // Never reuse a running server: it may hold the real key from .env.
   // Every variable below is set explicitly, so process.loadEnvFile never takes it from .env.
   webServer: [
