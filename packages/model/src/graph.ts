@@ -47,7 +47,7 @@ export interface FlowNode {
   syntaxError?: { line: number };
   /** POSIX path relative to the root; only on `folder` and `file` nodes (`""` for the root). */
   path?: string;
-  /** function, class and module: the lines of its docstring, in the same absolute lines as `range`. */
+  /** function, class and module: the lines of its documentation comment (docstring, JSDoc), in the same absolute lines as `range`. */
   docstring?: LineRange;
 }
 
@@ -63,7 +63,8 @@ export interface FlowEdge {
 }
 
 export interface Graph {
-  language: "python";
+  /** O `id` do plugin que extraiu o grafo; `mixed` num projeto com mais de uma linguagem. */
+  language: string;
   empty: boolean;
   nodes: FlowNode[];
   edges: FlowEdge[];

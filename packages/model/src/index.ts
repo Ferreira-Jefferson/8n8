@@ -35,6 +35,14 @@ export type {
 export type { HistoryEntry, HistoryItem } from "./history";
 export { childId, fileId, folderId, topLevelId } from "./ids";
 export { sliceLines, syntaxErrorLabel } from "./lines";
+export type { ChatMessage, LlmClient } from "./llm";
+export type {
+  LanguageAnalysis,
+  LanguagePlugin,
+  LinkChannel,
+  LinkRequest,
+  Offer,
+} from "./plugin";
 export type {
   IgnoredFile,
   IgnoreReason,

@@ -23,12 +23,12 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 
 ## Fase 1 — Contrato no `model`
 
-- [ ] 1.1 **[1ª]** `Graph.language` deixa de ser o literal `"python"`. Vira `string` (o `id` do plugin). Arquivo: `packages/model/src/graph.ts:66`.
-- [ ] 1.2 **[1ª]** Criar o tipo `LanguagePlugin` no `model`: `id`, `label`, `extensions`, `ignoredDirs`, `commentPrefix`, `detect`, `extractFile`, `resolveImports`, `offers`, `requests`.
-- [ ] 1.3 **[2ª]** O contrato não exige Tree-sitter. O plugin recebe texto e devolve nós e arestas. Um plugin pode usar outro parser, desde que seja determinístico (AD-001).
-- [ ] 1.4 **[2ª]** Documentar o campo `docstring` como "comentário de documentação" em geral (docstring, JSDoc, `///`). O nome do campo fica.
-- [ ] 1.5 **[2ª]** Corrigir o comentário de `HistoryItem.files` ("number of .py files"). Arquivo: `packages/model/src/history.ts:19`.
-- [ ] 1.6 **[1ª]** Registrar a decisão como AD nova no `.specs/STATE.md`. Ela atualiza a AD-004 ("gramática Python") e a AD-006.
+- [x] 1.1 **[1ª]** `Graph.language` deixa de ser o literal `"python"`. Vira `string` (o `id` do plugin). Arquivo: `packages/model/src/graph.ts:66`.
+- [x] 1.2 **[1ª]** Criar o tipo `LanguagePlugin` no `model`: `id`, `label`, `extensions`, `ignoredDirs`, `commentPrefix`, `detect`, `extractFile`, `resolveImports`, `offers`, `requests`.
+- [x] 1.3 **[2ª]** O contrato não exige Tree-sitter. O plugin recebe texto e devolve nós e arestas. Um plugin pode usar outro parser, desde que seja determinístico (AD-001).
+- [x] 1.4 **[2ª]** Documentar o campo `docstring` como "comentário de documentação" em geral (docstring, JSDoc, `///`). O nome do campo fica.
+- [x] 1.5 **[2ª]** Corrigir o comentário de `HistoryItem.files` ("number of .py files"). Arquivo: `packages/model/src/history.ts:19`.
+- [x] 1.6 **[1ª]** Registrar a decisão como AD nova no `.specs/STATE.md`. Ela atualiza a AD-004 ("gramática Python") e a AD-006.
 
 ## Fase 2 — Montagem do projeto vira genérica
 
@@ -40,7 +40,7 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 
 ## Fase 3 — Python vira um plugin
 
-- [ ] 3.0 **[D2]** Mover `packages/extract-python` para `packages/languages/python` (pacote `@code2n8n/lang-python`). Acrescentar `packages/languages/*` ao `pnpm-workspace.yaml`. Fazer o move num commit só, sem mudar código, para o histórico do Git seguir os arquivos.
+- [x] 3.0 **[D2]** Mover `packages/extract-python` para `packages/languages/python` (pacote `@code2n8n/lang-python`). Acrescentar `packages/languages/*` ao `pnpm-workspace.yaml`. Fazer o move num commit só, sem mudar código, para o histórico do Git seguir os arquivos.
 - [ ] 3.1 **[1ª]** O plugin exporta `pythonPlugin` e fica só com o que é de Python: `steps`, `build-graph`, `calls`, `bound`, `imports`, `modules`, `classify`.
 - [ ] 3.2 **[2ª]** A tabela de `classify.ts` (requests, sqlite3, smtplib) fica no plugin. O enum `ExternalCategory` fica no `model`, porque vale para qualquer linguagem.
 - [ ] 3.3 **[2ª]** `markSyntaxErrors` e `Parser.init()` vão para um pacote auxiliar de Tree-sitter, opcional (`@code2n8n/treesitter`). Hoje `Parser.init()` roda por gramática. Com dois plugins, o init roda uma vez só, e a versão do `web-tree-sitter` fica uma só.

@@ -16,7 +16,7 @@ export interface HistoryItem {
   openCount: number;
   /** Marked with a star: shown under Favoritos and never pruned. */
   starred: boolean;
-  /** Sizes of what was read: lines and bytes of all the code, number of .py files, nodes and wires of the graph. */
+  /** Sizes of what was read: lines and bytes of all the code, number of source files, nodes and wires of the graph. */
   lines: number;
   bytes: number;
   files: number;

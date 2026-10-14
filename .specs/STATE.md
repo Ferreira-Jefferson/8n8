@@ -128,6 +128,20 @@
 - **Decision:** O produto não tem modo grafo. O mapa é só o fluxo de nós e fios. A feature 03-modo-grafo foi removida, com spec, design e tasks.
 - **Consequence:** Cancela a AD-011 e a AD-012. Não há `d3-force` nem alternância de modo.
 
+### AD-020 — Linguagens como plugins, um grafo só
+- **Date:** 2026-10-14
+- **Context:** O produto nasceu só com Python. Ele será aberto no GitHub, e outras pessoas vão querer acoplar outras linguagens sem reescrever a montagem da tela.
+- **Decision:** Cada linguagem é um plugin em `packages/languages/<id>` que implementa `LanguagePlugin` (`model`): parser, extensões, pastas ignoradas, comentário, detector e extração. O core monta o grafo do projeto, escolhe o plugin pela extensão e detecta a linguagem do trecho colado por nota, sem LLM (AD-001). Um plugin importa só o `model` e nunca outro plugin. As ligações entre linguagens saem de ofertas e pedidos (`Offer`, `LinkRequest`) que os plugins declaram e de um pacote `links` que os casa por canal: HTTP, processo e nome. Há um grafo só, e `Graph.language` vale `mixed` num projeto com mais de uma linguagem.
+- **Consequence:** Cobre só Python e TypeScript agora. Atualiza a AD-004 (a gramática Python é do plugin) e a AD-006 (outras linguagens implementam o contrato).
+- **Status:** ativa.
+
+### AD-021 — Provedores de LLM como módulos
+- **Date:** 2026-10-14
+- **Context:** O conhecimento do provedor e do modelo estava espalhado no `explain` e no `server`.
+- **Decision:** O contrato `LlmClient` mora no `model`. Um pacote `llm` tem um arquivo por provedor e uma tabela de perfis por modelo (modo JSON, raciocínio, roteamento). O `explain` não conhece nenhum provedor. Uma função de configuração única lê o ambiente. O id do provedor entra na impressão digital do cache.
+- **Consequence:** Atualiza a AD-002: o OpenRouter é o provedor padrão, não o único.
+- **Status:** ativa.
+
 ## Handoff
 
 *Pausado pelo usuário em 2026-10-14, durante a verificação da feature 05. Nada foi enviado ao remoto.*
