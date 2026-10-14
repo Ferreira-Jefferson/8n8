@@ -62,7 +62,10 @@ export function Home({
   onOpenEntry,
   onShowHistory,
   historyOpen,
+  reads,
 }: {
+  /** What the app reads from a folder, as a sentence (from the server's languages). */
+  reads: string;
   folder: string;
   onFolderChange: (path: string) => void;
   onOpenFolder: () => void;
@@ -166,9 +169,7 @@ export function Home({
           <button type="submit" className="home-btn">
             Mapear pasta
           </button>
-          <small>
-            O 8n8 lê todos os arquivos .py da pasta e das subpastas.
-          </small>
+          <small>{reads}</small>
         </form>
         <button
           type="button"

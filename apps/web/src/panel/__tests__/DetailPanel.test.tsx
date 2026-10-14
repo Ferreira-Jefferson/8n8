@@ -141,12 +141,47 @@ function codeLines(container: HTMLElement) {
 }
 
 describe("DetailPanel", () => {
+  it("names a snippet 'trecho' with no extension when it gets no file name", () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
+    render(
+      <DetailPanel
+        source={source}
+        origin={{ source }}
+        node={httpNode}
+        effects={[]}
+        onExplained={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "CÓDIGO · trecho, linha 5" }),
+    ).toBeTruthy();
+  });
+
+  it("shows a project node's own file path, not the snippet name", () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
+    render(
+      <DetailPanel
+        source={source}
+        origin={{ root: "C:/loja" }}
+        filePath="src/frete.ts"
+        snippetFile="trecho.py"
+        node={httpNode}
+        effects={[]}
+        onExplained={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "CÓDIGO · src/frete.ts, linha 5" }),
+    ).toBeTruthy();
+  });
+
   it("shows the code heading and exact code of an external node and asks for its summary (CORE-14, VID-28)", async () => {
     fetchMock.mockResolvedValue({ status: "no-key" });
     const { container } = render(
       <DetailPanel
         source={source}
         origin={{ source }}
+        snippetFile="trecho.py"
         node={httpNode}
         effects={[]}
         onExplained={() => {}}
@@ -575,7 +610,7 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
       screen.getByText("Revisado"),
       screen.getByRole("list", { name: "Resumo" }),
       screen.getByText("2 frases · voz ativa · um termo por conceito"),
-      screen.getByRole("heading", { name: "CÓDIGO · trecho.py, linha 5" }),
+      screen.getByRole("heading", { name: "CÓDIGO · trecho, linha 5" }),
       container.querySelector("pre"),
       screen.getByRole("heading", { name: "ENTRADA E SAÍDA" }),
       screen.getByLabelText("Entrada e saída"),
@@ -634,7 +669,7 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
     ).toBeNull();
     expect(
       screen.getByRole("heading", {
-        name: "CÓDIGO · trecho.py, linhas 4 a 11",
+        name: "CÓDIGO · trecho, linhas 4 a 11",
       }),
     ).toBeTruthy();
     expect(

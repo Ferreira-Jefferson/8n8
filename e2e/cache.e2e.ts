@@ -53,7 +53,7 @@ async function generate(page: Page, source: string) {
   }
   const newCode = page.getByRole("button", { name: "Novo código" });
   if (await newCode.isVisible()) await newCode.click();
-  await page.getByLabel("Trecho Python").fill(source);
+  await page.getByLabel("Trecho de código").fill(source);
   await page.getByRole("button", { name: "Gerar mapa" }).click();
 }
 

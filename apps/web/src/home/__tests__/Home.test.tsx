@@ -64,7 +64,15 @@ function setup(props: Partial<Parameters<typeof Home>[0]> = {}) {
     onOpenEntry: vi.fn(),
     onShowHistory: vi.fn(),
   };
-  render(<Home folder="" historyOpen={false} {...handlers} {...props} />);
+  render(
+    <Home
+      folder=""
+      historyOpen={false}
+      reads="O 8n8 lê os arquivos .py da pasta e das subpastas."
+      {...handlers}
+      {...props}
+    />,
+  );
   return handlers;
 }
 
@@ -179,6 +187,18 @@ describe("Home", () => {
     expect(onOpenFolder).toHaveBeenCalledTimes(2);
   });
 
+  it("shows the sentence it gets about what the folder reads", async () => {
+    listMock.mockResolvedValue([]);
+    setup({
+      reads: "O 8n8 lê os arquivos .py e .ts da pasta e das subpastas.",
+    });
+    expect(
+      screen.getByText(
+        "O 8n8 lê os arquivos .py e .ts da pasta e das subpastas.",
+      ),
+    ).toBeTruthy();
+  });
+
   it("Colar trecho and Ver todo o histórico call their handlers", async () => {
     listMock.mockResolvedValue([]);
     const { onPaste, onShowHistory } = setup();
@@ -200,12 +220,12 @@ describe("Home", () => {
       onShowHistory: vi.fn(),
     };
     const { rerender } = render(
-      <Home folder="" historyOpen={false} {...handlers} />,
+      <Home folder="" historyOpen={false} reads="" {...handlers} />,
     );
     await waitFor(() => expect(listMock).toHaveBeenCalledTimes(1));
-    rerender(<Home folder="" historyOpen {...handlers} />);
+    rerender(<Home folder="" historyOpen reads="" {...handlers} />);
     listMock.mockResolvedValue([loja]);
-    rerender(<Home folder="" historyOpen={false} {...handlers} />);
+    rerender(<Home folder="" historyOpen={false} reads="" {...handlers} />);
     await screen.findByRole("region", { name: "Favoritos" });
     expect(listMock).toHaveBeenCalledTimes(2);
   });

@@ -307,6 +307,16 @@ body {
   color: var(--accent);
 }
 
+.map-area > .snippet-language {
+  position: absolute;
+  left: 24px;
+  bottom: 60px;
+  z-index: 10;
+  margin: 0;
+  font: 400 20px var(--font-mono);
+  color: var(--accent);
+}
+
 .ignored-files {
   position: absolute;
   left: 160px;

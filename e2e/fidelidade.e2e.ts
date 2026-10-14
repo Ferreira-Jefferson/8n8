@@ -78,7 +78,7 @@ async function openFrete(
 async function generate(page: Page, base: string, source: string) {
   await page.goto(`${base}/`);
   await page.getByRole("button", { name: /Colar trecho/ }).click();
-  await page.getByLabel("Trecho Python").fill(source);
+  await page.getByLabel("Trecho de código").fill(source);
   await page.getByRole("button", { name: "Gerar mapa" }).click();
 }
 

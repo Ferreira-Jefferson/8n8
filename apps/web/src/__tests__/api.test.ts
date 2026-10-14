@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   fetchExplanation,
   fetchGraph,
+  fetchLanguages,
   fetchProject,
   fetchTitles,
 } from "../api";
@@ -23,19 +24,66 @@ function fakeFetch(status: number, body: unknown) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("fetchGraph", () => {
-  it("posts { source } to /api/graph and returns the graph", async () => {
-    const fn = fakeFetch(200, { graph });
+  const language = { id: "python", label: "Python", uncertain: false };
+
+  it("posts { source } to /api/graph and returns the graph with the language", async () => {
+    const fn = fakeFetch(200, { graph, language });
     const result = await fetchGraph("x = 1");
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("/api/graph");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body as string)).toEqual({ source: "x = 1" });
-    expect(result).toEqual(graph);
+    expect(result).toEqual({ graph, language });
   });
 
   it("rejects with an error on 400", async () => {
     fakeFetch(400, { error: "bad" });
     await expect(fetchGraph("x")).rejects.toThrow(Error);
+  });
+
+  it("rejects when the network fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("Failed to fetch");
+      }),
+    );
+    await expect(fetchGraph("x")).rejects.toThrow(TypeError);
+  });
+});
+
+describe("fetchLanguages", () => {
+  const languages = [
+    { id: "python", label: "Python", extensions: [".py"] },
+    { id: "typescript", label: "TypeScript", extensions: [".ts", ".tsx"] },
+  ];
+
+  it("gets /api/languages and returns the list", async () => {
+    const fn = fakeFetch(200, { languages });
+    const result = await fetchLanguages();
+    const [url] = fn.mock.calls[0] as unknown as [string];
+    expect(url).toBe("/api/languages");
+    expect(result).toEqual(languages);
+  });
+
+  it("gives [] on an HTTP error", async () => {
+    fakeFetch(500, { error: "boom" });
+    expect(await fetchLanguages()).toEqual([]);
+  });
+
+  it("gives [] when the body has no list", async () => {
+    fakeFetch(200, {});
+    expect(await fetchLanguages()).toEqual([]);
+  });
+
+  it("gives [] when the network fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("Failed to fetch");
+      }),
+    );
+    expect(await fetchLanguages()).toEqual([]);
   });
 });
 

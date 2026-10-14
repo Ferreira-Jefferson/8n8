@@ -88,7 +88,7 @@ const suggestionButtons = (view: Locator) =>
 async function generate(page: Page, source: string): Promise<Graph> {
   await page.goto("/");
   await page.getByRole("button", { name: /Colar trecho/ }).click();
-  await page.getByLabel("Trecho Python").fill(source);
+  await page.getByLabel("Trecho de código").fill(source);
   const response = page.waitForResponse("**/api/graph");
   await page.getByRole("button", { name: "Gerar mapa" }).click();
   return ((await response).json() as Promise<{ graph: Graph }>).then(
@@ -305,7 +305,7 @@ test.describe("Mapa", () => {
     ).toHaveCount(1);
     await expect(nodes(page)).toHaveCount(0);
 
-    await page.getByLabel("Trecho Python").fill("# só um comentário\n");
+    await page.getByLabel("Trecho de código").fill("# só um comentário\n");
     await page.getByRole("button", { name: "Gerar mapa" }).click();
     await expect(
       page.getByText("Nenhuma função ou instrução encontrada.", {
