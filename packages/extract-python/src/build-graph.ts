@@ -3,6 +3,7 @@ import {
   type FlowEdge,
   type FlowNode,
   type Graph,
+  type LineRange,
   type NodeId,
   topLevelId,
 } from "@code2n8n/model";
@@ -33,6 +34,16 @@ function definitionOf(node: Node): Node | null {
     return def;
   }
   return null;
+}
+
+/** The lines of the docstring: a string statement that comes first in `statements`. */
+function docstringOf(statements: Node[]): { docstring: LineRange } | object {
+  const first = statements.find((s) => s.type !== "comment");
+  const only =
+    first?.type === "expression_statement" && first.namedChildCount === 1;
+  return only && first.namedChildren[0]?.type === "string"
+    ? { docstring: lineRange(first) }
+    : {};
 }
 
 function nameOf(def: Node): string {
@@ -113,6 +124,7 @@ function definitionNode(
     parentId,
     range: lineRange(outer),
     openable: true,
+    ...docstringOf(bodyOf(def)),
   };
 }
 
@@ -271,6 +283,7 @@ export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
             end: last ? lineRange(last).end : 1,
           },
           openable: true,
+          ...docstringOf(statements),
         };
         return withSteps(head, loose, moduleId, scope);
       },
