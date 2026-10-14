@@ -2,7 +2,7 @@ import type { FlowNode, Graph } from "@code2n8n/model";
 import type { Node, Tree } from "web-tree-sitter";
 
 /** 1-based lines of every ERROR and MISSING node. */
-function errorLines(root: Node): number[] {
+export function treeErrorLines(root: Node): number[] {
   const lines: number[] = [];
   const visit = (node: Node) => {
     if (node.type === "ERROR" || node.isMissing) {
@@ -53,13 +53,12 @@ function moduleFor(
   return created;
 }
 
-/** Marks `syntaxError.line` on the innermost node of each error line. */
-export function markSyntaxErrors(
-  tree: Tree,
+/** Marks `syntaxError.line` on the innermost node of each of `lines`. */
+export function markErrorLines(
   graph: Graph,
+  lines: number[],
   moduleId = "mod",
 ): Graph {
-  const lines = errorLines(tree.rootNode);
   if (lines.length === 0) return graph;
   const nodes = graph.nodes.map((n) => ({ ...n }));
   for (const line of lines) {
@@ -67,4 +66,13 @@ export function markSyntaxErrors(
     target.syntaxError ??= { line };
   }
   return { ...graph, empty: nodes.length === 0, nodes };
+}
+
+/** Marks the ERROR and MISSING nodes of `tree` on `graph`. */
+export function markSyntaxErrors(
+  tree: Tree,
+  graph: Graph,
+  moduleId = "mod",
+): Graph {
+  return markErrorLines(graph, treeErrorLines(tree.rootNode), moduleId);
 }

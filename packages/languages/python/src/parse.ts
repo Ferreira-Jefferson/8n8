@@ -1,20 +1,12 @@
 import { createRequire } from "node:module";
-import { Language, Parser } from "web-tree-sitter";
+import { loadParser } from "@code2n8n/lang-treesitter";
+import type { Parser } from "web-tree-sitter";
 
-let python: Promise<Language> | undefined;
-
-function loadPython(): Promise<Language> {
-  const wasm = createRequire(import.meta.url).resolve(
-    "tree-sitter-python/tree-sitter-python.wasm",
-  );
-  return Parser.init().then(() => Language.load(wasm));
-}
+const wasm = createRequire(import.meta.url).resolve(
+  "tree-sitter-python/tree-sitter-python.wasm",
+);
 
 /** Initializes tree-sitter and loads the Python grammar once per process. */
-export async function loadPythonParser(): Promise<Parser> {
-  python ??= loadPython();
-  const language = await python;
-  const parser = new Parser();
-  parser.setLanguage(language);
-  return parser;
+export function loadPythonParser(): Promise<Parser> {
+  return loadParser(wasm);
 }

@@ -262,6 +262,9 @@ importers:
 
   packages/languages/python:
     dependencies:
+      '@code2n8n/lang-treesitter':
+        specifier: workspace:*
+        version: link:../treesitter
       '@code2n8n/model':
         specifier: workspace:*
         version: link:../../model
@@ -285,8 +288,30 @@ importers:
         specifier: workspace:*
         version: link:../../model
 
+  packages/languages/treesitter:
+    dependencies:
+      '@code2n8n/model':
+        specifier: workspace:*
+        version: link:../../model
+      web-tree-sitter:
+        specifier: 0.27.1
+        version: 0.27.1
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.5
+        version: 22.20.5
+      tree-sitter-python:
+        specifier: 0.25.0
+        version: 0.25.0
+      tree-sitter-typescript:
+        specifier: 0.23.2
+        version: 0.23.2
+
   packages/languages/typescript:
     dependencies:
+      '@code2n8n/lang-treesitter':
+        specifier: workspace:*
+        version: link:../treesitter
       '@code2n8n/model':
         specifier: workspace:*
         version: link:../../model
