@@ -734,7 +734,8 @@ T49 → T50
 **Done when**:
 
 - [ ] Grafo do vídeo, montado à mão a partir da tabela do design: uma linha `fn:processar_pedido` com `s0..s6`. O `s7` (return sem chamada) fica fora.
-- [ ] Código solto com passo: a única entrada é `mod`.
+- [ ] Código solto com chamada que chama `a()`, mais a função `b` que ninguém chama: as entradas são `mod` e `b`, nessa ordem de código; `a` não é entrada.
+- [ ] Código solto só com constantes (`LIMITE = 30`) e duas funções que ninguém chama: `mod` não é entrada; as duas funções são.
 - [ ] Duas funções que ninguém chama: duas linhas na ordem do código (VID-11).
 - [ ] Função recursiva sem outro chamador: é entrada (o fio para si mesma não conta).
 - [ ] Só classes, ou duas funções que se chamam: cada definição de topo vira entrada (regra c).
@@ -1327,7 +1328,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 **Done when**:
 
 - [ ] VID-10 (Independent Test P1): o código do vídeo mostra no primeiro nível os 8 cartões da linha `processar_pedido`, na ordem do código, com 7 fios. Aparecem GATILHO, FUNÇÃO, BANCO e E-MAIL. Uma entrada sem chamada mostra só o GATILHO (borda).
-- [ ] VID-11: duas funções que ninguém chama dão duas linhas, a primeira acima. Com código solto que chama, só o código solto é entrada.
+- [ ] VID-11: duas funções que ninguém chama dão duas linhas, a primeira acima. Código solto que chama `a()` mais uma função `b` que ninguém chama dão duas linhas (código solto e `b`). Constantes no topo não viram linha e não escondem as funções.
 - [ ] VID-12: um trecho com código solto não mostra nenhum cartão com o texto "Módulo". O código solto aparece como GATILHO "Código solto".
 - [ ] VID-13: `validar_pedido` → EXTERNO, `db.buscar_cliente` e `db.salvar` → BANCO, `enviar_email` → E-MAIL. Nenhum desses cartões tem fio `calls` (o grafo de `/api/graph` só tem o `calls` para `calcular_frete`).
 - [ ] VID-06: os `data-enter-at` crescem da esquerda para a direita. Cada `.wire` tem `data-draw-at` ≥ `data-enter-at` da origem + 400. Os pontos estão na ordem do fluxo, um por fio, e a animação de um cartão tem o `delay` do seu `data-enter-at`.
@@ -1671,7 +1672,7 @@ Nenhuma task depende de uma fase posterior. As dependências entre fases (cada t
 
 ## Open Points for Approval
 
-1. **Código solto com só constantes (VID-11).** A spec diz que o código solto, quando existe, é a entrada. Um arquivo com `LIMITE = 30` no topo perde as funções no primeiro nível. O design segue a spec. A alternativa é contar o código solto só quando ele tem um comando com chamada. A decisão é do usuário.
+1. **Código solto com só constantes (VID-11).** Resolvido na spec em 2026-10-13: o código solto só é entrada quando tem um comando com chamada, e as funções que ninguém chama também são entradas.
 2. **Builtins como EXTERNO (VID-13).** `print`, `len` e `sum` viram cartões. Isso segue a leitura literal da spec.
 3. **Selo de sugestões (CORE-23).** O selo continua, embora o vídeo não o mostre. O usuário decide na aprovação das imagens.
 4. **Ferramentas por task.** Nenhuma MCP é necessária. A skill `tlc-spec-driven` vale em todas. A `impeccable` pode ajudar na revisão visual de T27 e T28, se o usuário quiser.

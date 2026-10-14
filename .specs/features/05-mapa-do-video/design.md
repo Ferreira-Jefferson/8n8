@@ -546,9 +546,9 @@ Regras, em ordem:
    - é `return` com `target` ou `callee`;
    - é `loop`, `block` ou `condition` com um descendente (ID que começa com `<id>/`) de um dos tipos acima.
 3. **Entradas** (VID-11):
-   - (a) Se existe um nó de topo `module` com ao menos um passo direto, ele é a única entrada.
-   - (b) Senão, as entradas são as funções de topo (`kind === "function"`, `parentId === null`) sem fio `calls` vindo de outro nó. O fio de uma função para ela mesma não conta.
-   - (c) Se (b) não acha nada, cada função e classe de topo é uma entrada.
+   - (a) Um nó de topo `module` com ao menos um "comando com chamada" (regra 2) é entrada. Um `module` só com constantes ou atribuições sem chamada não é entrada.
+   - (b) Também são entradas as funções de topo (`kind === "function"`, `parentId === null`) sem fio `calls` vindo de outro nó, seja o `module` ou outra função. O fio de uma função para ela mesma não conta. (a) e (b) se somam.
+   - (c) Se (a) e (b) não acham nada, cada função e classe de topo é uma entrada.
 4. Um nó de topo com `syntaxError` que não é entrada ganha uma linha só com ele. Assim um erro fora das funções continua visível (CORE-06).
 5. Uma linha tem a forma `{ trigger, steps: comandos com chamada da entrada, na ordem do código }`. As linhas seguem a ordem de `range.start`.
 
@@ -799,8 +799,6 @@ O clique que abre também seleciona e mostra o painel. Por isso os prints 03 e 0
 
 | Concern | Location (file:line) | Impact | Mitigation |
 | ------- | -------------------- | ------ | ---------- |
-| VID-11 literal: um arquivo com constantes no topo (código solto sem chamada) tem o código solto como única entrada, e as funções somem do primeiro nível. | `apps/web/src/flow/main-flow.ts` (novo) | Um arquivo real comum mostra só "Código solto" | O fixture do vídeo não tem código solto. A regra segue a spec como está. O ponto vai ao usuário: a opção é contar o código solto como entrada só quando ele tem um comando com chamada. |
-| Com código solto, uma função que ele não chama fica sem caminho no fluxo principal | `main-flow.ts` | Função inalcançável pela interface num trecho | Mesmo ponto acima. Num projeto, o nível de arquivo continua mostrando todas as funções. |
 | VID-13 transforma builtins (`print`, `len`, `sum`) em passos EXTERNO | `packages/extract-python/src/calls.ts:58` | Mais nós e menos passos "Código" | É a leitura literal da spec ("nome que o trecho não define nem importa"). Os testes do extrator que mudam ficam listados em `tasks.md`. |
 | `boundNames` ignora escopo: um nome ligado numa função conta como ligado no arquivo todo | `bound.ts` (novo) | Uma chamada `x.y()` com `x` global e sem definição pode virar "Código" | Aceito pela simplicidade. O caso aparece num teste de unidade. |
 | A lista de nós vem do grafo, mas a etiqueta GATILHO depende do nível | `card.ts` | A mesma função aparece como GATILHO no topo e FUNÇÃO num arquivo de projeto | É o comportamento pedido (VID-04: GATILHO = entrada do fluxo). |
