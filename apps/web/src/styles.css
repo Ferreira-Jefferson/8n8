@@ -365,10 +365,6 @@ body {
   left: auto;
 }
 
-.react-flow__handle.port.port-off {
-  visibility: hidden;
-}
-
 @keyframes node-in {
   from {
     opacity: 0;

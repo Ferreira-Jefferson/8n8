@@ -929,12 +929,12 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um FUNÇÃO com título "Calcular frete" mostra `.tag` "FUNÇÃO", `.name` "Calcular frete" com `.open-mark` "›" e `.fn` `calcular_frete()`.
-- [ ] Sem título, o cartão mostra o nome provisório. Uma folha (HTTP) não tem `.open-mark` (VID-26).
-- [ ] `hasIn=false` esconde a porta de entrada, e `hasOut=false` esconde a de saída.
-- [ ] `selected` → classe `on`; `dimmed` → classe `dim`.
-- [ ] Os testes atuais trocam `.step-label` pela estrutura nova com a mesma intenção (rótulo, categoria, erro, selo, sem emoji).
-- [ ] Gate passa.
+- [x] Um FUNÇÃO com título "Calcular frete" mostra `.tag` "FUNÇÃO", `.name` "Calcular frete" com `.open-mark` "›" e `.fn` `calcular_frete()`.
+- [x] Sem título, o cartão mostra o nome provisório. Uma folha (HTTP) não tem `.open-mark` (VID-26).
+- [x] `hasIn=false` esconde a porta de entrada, e `hasOut=false` esconde a de saída.
+- [x] `selected` → classe `on`; `dimmed` → classe `dim`.
+- [x] Os testes atuais trocam `.step-label` pela estrutura nova com a mesma intenção (rótulo, categoria, erro, selo, sem emoji).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`

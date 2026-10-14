@@ -2,6 +2,7 @@ import type { FlowEdge, FlowNode, Graph, NodeId } from "@code2n8n/model";
 import { type Edge, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useMemo } from "react";
+import { codeLineOf } from "./card";
 import { layoutLR } from "./layout";
 import { projectLevel } from "./project-level";
 import { type StepFlowNode, StepNode } from "./StepNode";
@@ -42,7 +43,17 @@ export function FlowCanvas({
       id: n.id,
       type: "step",
       position: positions.get(n.id) ?? { x: 0, y: 0 },
-      data: { node: n, suggestionCount: suggestionCounts.get(n.id) },
+      data: {
+        node: n,
+        isTrigger: level.triggers.has(n.id),
+        codeLine: codeLineOf(n, ""),
+        hasIn: true,
+        hasOut: true,
+        enterAt: 0,
+        selected: false,
+        dimmed: false,
+        suggestionCount: suggestionCounts.get(n.id),
+      },
     }));
     return { nodes, edges: toFlowEdges(level.edges) };
   }, [graph, levelId, suggestionCounts]);
