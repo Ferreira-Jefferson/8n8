@@ -43,7 +43,7 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 - [x] 3.0 **[D2]** Mover `packages/extract-python` para `packages/languages/python` (pacote `@code2n8n/lang-python`). Acrescentar `packages/languages/*` ao `pnpm-workspace.yaml`. Fazer o move num commit só, sem mudar código, para o histórico do Git seguir os arquivos.
 - [x] 3.1 **[1ª]** O plugin exporta `pythonPlugin` e fica só com o que é de Python: `steps`, `build-graph`, `calls`, `bound`, `imports`, `modules`, `classify`.
 - [x] 3.2 **[2ª]** A tabela de `classify.ts` (requests, sqlite3, smtplib) fica no plugin. O enum `ExternalCategory` fica no `model`, porque vale para qualquer linguagem.
-- [ ] 3.3 **[2ª]** `markSyntaxErrors` e `Parser.init()` vão para um pacote auxiliar de Tree-sitter, opcional (`@code2n8n/treesitter`). Hoje `Parser.init()` roda por gramática. Com dois plugins, o init roda uma vez só, e a versão do `web-tree-sitter` fica uma só.
+- [x] 3.3 **[2ª]** `markSyntaxErrors` e `Parser.init()` vão para um pacote auxiliar de Tree-sitter, opcional (`@code2n8n/treesitter`). Hoje `Parser.init()` roda por gramática. Com dois plugins, o init roda uma vez só, e a versão do `web-tree-sitter` fica uma só.
 - [x] 3.4 **[2ª]** Mudar a regra do dependency-cruiser de `extract-python` para `packages/languages/*`: um plugin importa só `model` (e o auxiliar de Tree-sitter), nunca outro plugin.
 - [x] 3.5 **[1ª]** Os snapshots e testes do Python passam sem mudança.
 

@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@code2n8n/lang-treesitter": "workspace:*",
     "@code2n8n/model": "workspace:*",
     "tree-sitter-python": "0.25.0",
     "web-tree-sitter": "0.27.1"

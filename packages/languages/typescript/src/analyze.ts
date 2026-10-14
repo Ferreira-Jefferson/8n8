@@ -1,3 +1,4 @@
+import { lastLine, markSyntaxErrors } from "@code2n8n/lang-treesitter";
 import {
   type FlowEdge,
   type FlowNode,
@@ -9,7 +10,6 @@ import {
 } from "@code2n8n/model";
 import type { Tree } from "web-tree-sitter";
 import { buildGraph } from "./build-graph";
-import { markSyntaxErrors } from "./errors";
 import { moduleSpecifiers } from "./imports";
 import { collectLinks } from "./links";
 import {
@@ -36,11 +36,6 @@ function dirOf(path: string): string {
 
 function baseName(path: string): string {
   return path.split("/").pop() ?? path;
-}
-
-function lastLine(source: string): number {
-  const lines = source.split("\n").length - (source.endsWith("\n") ? 1 : 0);
-  return Math.max(1, lines);
 }
 
 /** The file node followed by its inner nodes; syntax errors marked per file. */

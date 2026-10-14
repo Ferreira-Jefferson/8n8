@@ -1,3 +1,4 @@
+import { lastLine } from "@code2n8n/lang-treesitter";
 import {
   type FlowEdge,
   type FlowNode,
@@ -35,11 +36,6 @@ function dirOf(path: string): string {
 
 function baseName(path: string): string {
   return path.split("/").pop() ?? path;
-}
-
-function lastLine(source: string): number {
-  const lines = source.split("\n").length - (source.endsWith("\n") ? 1 : 0);
-  return Math.max(1, lines);
 }
 
 /** The file node followed by its inner nodes; syntax errors marked per file. */

@@ -1,3 +1,4 @@
+import { innermost } from "@code2n8n/lang-treesitter";
 import {
   childId,
   fileId,
@@ -11,7 +12,6 @@ import { boundNames } from "./bound";
 import { allocateTopLevel } from "./build-graph";
 import { dottedName } from "./calls";
 import { classify, moduleRoot } from "./classify";
-import { innermost } from "./errors";
 import { argumentsOf, importBindings, stringValue } from "./imports";
 import type { ExportInfo } from "./modules";
 

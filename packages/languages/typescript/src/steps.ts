@@ -1,9 +1,9 @@
+import { lineRange } from "@code2n8n/lang-treesitter";
 import {
   childId,
   type EdgeKind,
   type FlowEdge,
   type FlowNode,
-  type LineRange,
   type NodeId,
 } from "@code2n8n/model";
 import type { Node } from "web-tree-sitter";
@@ -41,16 +41,6 @@ export function isIgnored(node: Node): boolean {
     return node.childForFieldName("value") === null;
   }
   return isRequireDeclaration(node);
-}
-
-/** 1-based, inclusive lines of a tree-sitter node. */
-export function lineRange(node: Node): LineRange {
-  const end = node.endPosition;
-  const endsAtLineStart = end.column === 0 && end.row > node.startPosition.row;
-  return {
-    start: node.startPosition.row + 1,
-    end: endsAtLineStart ? end.row : end.row + 1,
-  };
 }
 
 /** Labels are one line: a header that spans lines is joined by single spaces. */

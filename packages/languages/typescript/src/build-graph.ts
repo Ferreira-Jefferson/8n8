@@ -1,3 +1,4 @@
+import { lineRange } from "@code2n8n/lang-treesitter";
 import {
   childId,
   type FlowEdge,
@@ -11,7 +12,7 @@ import type { Node, Tree } from "web-tree-sitter";
 import { boundNames } from "./bound";
 import type { CallContext } from "./calls";
 import { importBindings } from "./imports";
-import { blockOf, buildSteps, isIgnored, lineRange } from "./steps";
+import { blockOf, buildSteps, isIgnored } from "./steps";
 
 /** A contiguous run of nodes in pre-order, with the wires created inside it. */
 interface Chunk {
