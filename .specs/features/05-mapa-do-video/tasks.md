@@ -470,11 +470,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Um pedido `external` usa o texto de `stepPrompt` como `system` e `Tipo: chamada externa` na mensagem. Um pedido `function` usa o prompt de hoje.
-- [ ] Um passo com rascunho de 3 frases retorna no máximo 2.
-- [ ] O cache grava o passo com `promptVersion = stepPrompt.version`. Reabrir sem mudança vem do cache com 0 chamadas. Trocar o `stepPrompt` gera `update: ["model-or-prompt"]`.
-- [ ] As fixtures de `ExplainDeps` nos testes atuais ganham `stepPrompt`. Nenhuma asserção muda.
-- [ ] Gate passa.
+- [x] Um pedido `external` usa o texto de `stepPrompt` como `system` e `Tipo: chamada externa` na mensagem. Um pedido `function` usa o prompt de hoje.
+- [x] Um passo com rascunho de 3 frases retorna no máximo 2.
+- [x] O cache grava o passo com `promptVersion = stepPrompt.version`. Reabrir sem mudança vem do cache com 0 chamadas. Trocar o `stepPrompt` gera `update: ["model-or-prompt"]`.
+- [x] As fixtures de `ExplainDeps` nos testes atuais ganham `stepPrompt`. Nenhuma asserção muda.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
