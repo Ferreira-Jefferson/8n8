@@ -56,6 +56,20 @@ module.exports = {
       },
     },
     {
+      name: "links-only-model",
+      severity: "error",
+      comment:
+        "links importa só model (casa ofertas e pedidos sem conhecer linguagem).",
+      from: { path: "^packages/links/" },
+      to: {
+        path: [
+          "^packages/(?!links/|model/)",
+          "^apps/",
+          "@code2n8n/(?!model|links)",
+        ],
+      },
+    },
+    {
       name: "explain-only-model",
       severity: "error",
       comment: "explain importa só model.",
@@ -71,7 +85,7 @@ module.exports = {
     {
       name: "server-only-core-packages",
       severity: "error",
-      comment: "server importa model, extract-python, explain e input.",
+      comment: "server importa model, languages, explain, input e links.",
       from: { path: "^packages/server/" },
       to: { path: ["^apps/"] },
     },

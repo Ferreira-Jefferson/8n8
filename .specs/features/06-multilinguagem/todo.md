@@ -93,15 +93,15 @@ O plugin não conhece outra linguagem. Ele só declara dois tipos de dado neutro
 - **Oferta:** o que o arquivo expõe. Exemplos: a rota `POST /api/frete` de um handler TS, o próprio caminho `b.ts`.
 - **Pedido:** o que o arquivo procura. Exemplos: `requests.post(".../api/frete")` em Python, `subprocess.run(["node", "b.ts"])`.
 
-- [ ] 9.1 Tipos `Offer` e `Request` no `model`, com o nó e a linha de origem. Mesma regra da AD-001: só parsing, sem LLM.
-- [ ] 9.2 Pacote `packages/links` (`@code2n8n/links`). Importa só o `model`. Um arquivo por canal, todos com o mesmo contrato `Linker`:
+- [x] 9.1 Tipos `Offer` e `Request` no `model`, com o nó e a linha de origem. Mesma regra da AD-001: só parsing, sem LLM.
+- [x] 9.2 Pacote `packages/links` (`@code2n8n/links`). Importa só o `model`. Um arquivo por canal, todos com o mesmo contrato `Linker`:
   - `http.ts`: um pedido a uma URL casa com a rota de mesmo método e caminho.
   - `process.ts`: um pedido que cita o caminho de um arquivo do projeto (`node b.ts`, `python a.py`) casa com esse arquivo.
   - `name.ts`: uma chamada a um nome que a própria linguagem não define casa com uma função de mesmo nome em outra linguagem.
-- [ ] 9.3 O pacote cria a aresta `calls` entre os nós. A aresta leva o canal no `label` (por exemplo, `HTTP POST /api/frete`).
-- [ ] 9.4 Um pedido sem oferta continua como nó `external`, como hoje.
-- [ ] 9.5 Um pedido com mais de uma oferta não liga nenhuma. A ligação incerta fica de fora, e o painel diz por quê. Essa regra pesa mais no canal "nome igual", que erra mais.
-- [ ] 9.6 Ordem de confiança: HTTP, depois processo, depois nome igual. Um pedido já ligado por um canal mais confiável não passa pelos outros.
+- [x] 9.3 O pacote cria a aresta `calls` entre os nós. A aresta leva o canal no `label` (por exemplo, `HTTP POST /api/frete`).
+- [x] 9.4 Um pedido sem oferta continua como nó `external`, como hoje.
+- [x] 9.5 Um pedido com mais de uma oferta não liga nenhuma. A ligação incerta fica de fora, e o painel diz por quê. Essa regra pesa mais no canal "nome igual", que erra mais.
+- [x] 9.6 Ordem de confiança: HTTP, depois processo, depois nome igual. Um pedido já ligado por um canal mais confiável não passa pelos outros.
 - [ ] 9.7 Fixture de projeto misto com os três canais: `a.py` chama uma rota de `b.ts`, roda `c.ts` por processo e chama uma função de `d.ts` pelo nome. Testes unit por canal e spec e2e com o mapa ligado.
 
 ## Fase 10 — Chamada ao modelo (LLM)
