@@ -1240,13 +1240,14 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Os 9 testes continuam, com as mesmas contagens de rascunho e revisão, e passam.
-- [ ] Gate passa.
+- [x] Os 9 testes continuam, com as mesmas contagens de rascunho e revisão, e passam.
+- [x] Gate passa.
 
 **Tests**: e2e
 **Gate**: e2e · `pnpm exec playwright test e2e/fidelidade.e2e.ts`
 
 **Commit**: `test(e2e): keep the fidelity e2e on the new panel`
+**Status**: ✅ Complete
 
 ---
 
