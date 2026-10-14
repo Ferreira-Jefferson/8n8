@@ -2,7 +2,7 @@
    video's base.css, on its 1920x1080 stage; colors come from the 8n8 brand
    manual (docs/marca/manual.html): Grafite, Névoa, Pedra and Petróleo.
    SPEC_DEVIATION: Biome writes `.55`, `.18em` and `rgba(0,0,0,.25)` as
-   `0.55`, `0.18em` and `rgba(0, 0, 0, 0.25)`.
+   `0.55`, `0.18em` and `var(--shadow)`.
    Reason: `pnpm check` formats CSS; the computed values are the same. */
 :root {
   --ground: #161818;
@@ -15,9 +15,31 @@
   --panel-border: #2f3433;
   --code: color-mix(in srgb, var(--second) 82%, var(--ground));
   --dim: #6b706f;
+  --shadow: rgba(0, 0, 0, 0.25);
+  --shadow-strong: rgba(0, 0, 0, 0.3);
   --font-display: "Archivo Black", sans-serif;
   --font-sans: "Space Grotesk", system-ui, sans-serif;
   --font-mono: "DM Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+/* The manual's light theme (Papel, Tinta, Pedra escura, Petróleo escuro),
+   when the system asks for it. Petróleo claro never sits on Papel (2.0:1). */
+@media (prefers-color-scheme: light) {
+  :root {
+    --ground: #f2f3f0;
+    --main: #0f7a6b;
+    --second: #12292a;
+    --accent: #5b6d6a;
+    --card-bg: #ffffff;
+    --card-border: #d3d8d5;
+    --panel-bg: #f8f9f7;
+    --panel-border: #d3d8d5;
+    --dim: #8f9a98;
+    --shadow: rgba(18, 41, 42, 0.1);
+    --shadow-strong: rgba(18, 41, 42, 0.14);
+    color-scheme: light;
+  }
 }
 
 body {
@@ -42,7 +64,7 @@ body {
   background: var(--panel-bg);
   border: 2px solid var(--panel-border);
   border-radius: 6px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 18px 40px var(--shadow);
 }
 
 .btn {
@@ -355,7 +377,7 @@ body {
   background: var(--card-bg);
   border: 2px solid var(--card-border);
   border-radius: 6px;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 14px 30px var(--shadow);
   position: relative;
   animation: node-in 500ms ease-out backwards;
 }
@@ -575,7 +597,7 @@ body {
   font-size: 24px;
   font-weight: 700;
   white-space: nowrap;
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 26px var(--shadow-strong);
   border: 0;
   font-family: var(--font-sans);
   cursor: pointer;
@@ -751,7 +773,7 @@ body {
   gap: 14px;
   background: var(--panel-bg);
   border-left: 2px solid var(--panel-border);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 18px 40px var(--shadow);
 }
 
 .history-drawer input {

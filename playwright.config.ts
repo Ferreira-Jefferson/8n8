@@ -37,6 +37,8 @@ export default defineConfig({
   },
   use: {
     baseURL: URL,
+    // The specs check the dark theme; marca.e2e.ts asks for the light one.
+    colorScheme: "dark",
     trace: "retain-on-failure",
   },
   projects: [
