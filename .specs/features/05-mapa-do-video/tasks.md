@@ -710,11 +710,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] `tagOf` dá cada etiqueta da tabela do design, inclusive DISCO para `ARQUIVO`, E-MAIL para `EMAIL` e GATILHO com `isTrigger`.
-- [ ] `provisionalLabel`: `calcular_frete` → "Calcular frete"; `db.salvar` → "Salvar"; `peso > 30` → "peso > 30"; code → "Código"; return → "Retorno"; module → "Código solto"; loop → o cabeçalho.
-- [ ] `codeLineOf`: `calcular_frete()`, `requests.get()`, `if peso > 30`, `for item in itens`, `return TABELA_PESADA[uf]`. Uma linha com mais de 32 caracteres termina em `…`.
-- [ ] `isOpenable` segue `node.openable` em cada kind da VID-24.
-- [ ] Gate passa.
+- [x] `tagOf` dá cada etiqueta da tabela do design, inclusive DISCO para `ARQUIVO`, E-MAIL para `EMAIL` e GATILHO com `isTrigger`.
+- [x] `provisionalLabel`: `calcular_frete` → "Calcular frete"; `db.salvar` → "Salvar"; `peso > 30` → "peso > 30"; code → "Código"; return → "Retorno"; module → "Código solto"; loop → o cabeçalho.
+- [x] `codeLineOf`: `calcular_frete()`, `requests.get()`, `if peso > 30`, `for item in itens`, `return TABELA_PESADA[uf]`. Uma linha com mais de 32 caracteres termina em `…`.
+- [x] `isOpenable` segue `node.openable` em cada kind da VID-24.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
