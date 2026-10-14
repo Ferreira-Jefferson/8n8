@@ -521,11 +521,11 @@ T49 → T50
 
 **Done when**:
 
-- [ ] A primeira linha do prompt é exatamente `Você revisa títulos de nós de um fluxo de código Python.`. A versão muda quando o texto muda.
-- [ ] `titleLayerOne`: 6 palavras passam e 7 caem. "Peso acima de 30 kg?" cai num código sem `kg`. "Peso acima de 40?" cai num código com `30` e sem `40`. Um identificador inventado entre crases cai.
-- [ ] `titleReviewerMessage` traz um bloco `Nó nX:` por título, com o código numerado do próprio nó, os vizinhos e a linha `- nX: <título>`.
-- [ ] O veredicto `supported: false`, sem evidência ou com linha fora do nó derruba o título (VID-16).
-- [ ] Gate passa.
+- [x] A primeira linha do prompt é exatamente `Você revisa títulos de nós de um fluxo de código Python.`. A versão muda quando o texto muda.
+- [x] `titleLayerOne`: 6 palavras passam e 7 caem. "Peso acima de 30 kg?" cai num código sem `kg`. "Peso acima de 40?" cai num código com `30` e sem `40`. Um identificador inventado entre crases cai.
+- [x] `titleReviewerMessage` traz um bloco `Nó nX:` por título, com o código numerado do próprio nó, os vizinhos e a linha `- nX: <título>`.
+- [x] O veredicto `supported: false`, sem evidência ou com linha fora do nó derruba o título (VID-16).
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/explain test`
