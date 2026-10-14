@@ -214,8 +214,6 @@ figcaption b { color: var(--fg); font-weight: 500; }
 }
 .dont figcaption::before { content: "Não "; color: var(--fg); font-weight: 700; }
 
-/* ---- Nota n8n ---- */
-.notice { border: 1px solid var(--line); border-radius: 6px; padding: clamp(20px, 4vw, 32px); display: grid; gap: 20px; background: var(--surface); }
 
 /* ---- Cores ---- */
 .theme-row { display: grid; gap: 14px; }
@@ -364,7 +362,6 @@ html { scroll-behavior: smooth; }
       <li><span class="pre">├─ </span><a href="#essencia">essencia</a></li>
       <li><span class="pre">├─ </span><a href="#voz">voz</a></li>
       <li><span class="pre">├─ </span><a href="#logo">logo</a></li>
-      <li><span class="pre">├─ </span><a href="#n8n">n8n</a></li>
       <li><span class="pre">├─ </span><a href="#cores">cores</a></li>
       <li><span class="pre">├─ </span><a href="#tipografia">tipografia</a></li>
       <li><span class="pre">├─ </span><a href="#componentes">componentes</a></li>
@@ -403,14 +400,14 @@ html { scroll-behavior: smooth; }
         <h2 id="h-essencia">O que o 8n8 é</h2>
       </div>
       <p class="lead">O 8n8 lê um código e desenha esse código como nós e fios. Você começa na vista ampla. Depois, abre um nó para ver o fluxo interno dele e desce até as linhas reais.</p>
-      <p>O 8n8 é para quem precisa supervisionar código, muitas vezes escrito por IA, sem ler linha por linha. O 8n8 não migra nada para o n8n. Do n8n, o 8n8 usa só o modelo mental de nós ligados por fios.</p>
+      <p>O 8n8 é para quem precisa supervisionar código, muitas vezes escrito por IA, sem ler linha por linha. A ideia de nós ligados por fios veio do n8n, que serviu de inspiração.</p>
 
       <p class="promise">Todo nó leva de volta à linha.</p>
 
       <div class="split">
         <div class="head">
           <h3>O nome</h3>
-          <p class="muted">O n8n parte de nós e chega à automação. O 8n8 faz o caminho inverso: parte do código pronto e chega aos nós. O nome espelha a referência porque o produto espelha a direção.</p>
+          <p class="muted">O n8n parte de nós e chega à automação. O 8n8 faz o caminho inverso: parte do código pronto e chega aos nós. O nome espelha a referência porque o produto espelha a direção. O nome é uma brincadeira com essa referência: o 8n8 não tem nenhuma relação, comercial ou legal, com o n8n.</p>
           <p class="muted">Escreva sempre <code>8n8</code>: minúsculo, sem espaço, sem hífen. Nunca escreva "8N8", "8-n-8" ou "Eight". Leia "oito-ene-oito".</p>
           <p class="muted">O slogan é <b>Seu código, desenhado.</b> Ele diz o propósito do 8n8: transformar o código em desenho para que ele fique simples de entender.</p>
         </div>
@@ -553,30 +550,11 @@ html { scroll-behavior: smooth; }
 
       <div class="head"><h3>Usos errados</h3></div>
       <div class="dont-grid">
-        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-coral)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>use as cores do n8n.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-coral)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>use cores fora da paleta.</figcaption></figure>
         <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-limao)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>use o verde-limão antigo nem outra cor neon.</figcaption></figure>
         <figure class="dont"><div class="tile" style="background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>ponha o Petróleo claro sobre Papel. O contraste é de 2,0:1.</figcaption></figure>
         <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" preserveAspectRatio="none" style="width:86%;height:40%" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>estique nem comprima.</figcaption></figure>
         <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" aria-hidden="true"><g transform="translate(124 0) scale(-1 1)"><use href="#wordmark" width="124" height="80"/></g></svg></div><figcaption>espelhe: o fio sai sempre do bloco de cima.</figcaption></figure>
-      </div>
-    </section>
-
-    <!-- ===================== N8N ===================== -->
-    <section id="n8n" aria-labelledby="h-n8n">
-      <div class="head">
-        <p class="eyebrow">Relação com o n8n</p>
-        <h2 id="h-n8n">Inspiração, não parentesco</h2>
-      </div>
-      <div class="notice">
-        <p class="lead">O 8n8 não tem ligação com a n8n GmbH. n8n é marca registrada deles. O nome do 8n8 fica perto do n8n de propósito. Então, todo o resto precisa ficar longe.</p>
-        <ol class="rules">
-          <li>Nunca use o rosa-coral do n8n, o logo do n8n ou a forma dos nós do n8n.</li>
-          <li>Nunca escreva "n8n" para falar do 8n8. São dois produtos.</li>
-          <li>Cite o n8n só como a origem do modelo mental de nós e fios.</li>
-          <li>Ponha esta frase no README e no site: "O 8n8 não tem ligação com o n8n."</li>
-          <li>Antes de lançar em público, consulte um advogado sobre o registro do nome.</li>
-        </ol>
-        <p class="muted">Por que isso importa: os dois produtos são ferramentas de desenvolvedor com nós e fios. Na mesma categoria, nomes parecidos aumentam o risco de confusão. A identidade visual (grafite e verde-petróleo, blocos retos) é a principal defesa.</p>
       </div>
     </section>
 
@@ -822,7 +800,7 @@ html { scroll-behavior: smooth; }
 
     <footer>
       <span>8n8 · manual da marca · v0.2</span>
-      <span>O 8n8 não tem ligação com o n8n.</span>
+      <span>Seu código, desenhado.</span>
     </footer>
   </main>
 </div>
