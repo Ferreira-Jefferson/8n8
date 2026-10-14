@@ -736,16 +736,16 @@ T49 → T50
 
 **Done when**:
 
-- [ ] Grafo do vídeo, montado à mão a partir da tabela do design: uma linha `fn:processar_pedido` com `s0..s6`. O `s7` (return sem chamada) fica fora.
-- [ ] Código solto com chamada que chama `a()`, mais a função `b` que ninguém chama: as entradas são `mod` e `b`, nessa ordem de código; `a` não é entrada.
-- [ ] Código solto só com constantes (`LIMITE = 30`) e duas funções que ninguém chama: `mod` não é entrada; as duas funções são.
-- [ ] Duas funções que ninguém chama: duas linhas na ordem do código (VID-11).
-- [ ] Função recursiva sem outro chamador: é entrada (o fio para si mesma não conta).
-- [ ] Só classes, ou duas funções que se chamam: cada definição de topo vira entrada (regra c).
-- [ ] Entrada sem chamada: a linha tem só a entrada (caso de borda da VID-10).
-- [ ] Um laço com chamada dentro entra; um laço sem chamada não; um passo de ramo (`/b0/s0`) nunca entra direto.
-- [ ] Um `mod` só com erro de sintaxe não é entrada, mas ganha linha própria.
-- [ ] Gate passa.
+- [x] Grafo do vídeo, montado à mão a partir da tabela do design: uma linha `fn:processar_pedido` com `s0..s6`. O `s7` (return sem chamada) fica fora.
+- [x] Código solto com chamada que chama `a()`, mais a função `b` que ninguém chama: as entradas são `mod` e `b`, nessa ordem de código; `a` não é entrada.
+- [x] Código solto só com constantes (`LIMITE = 30`) e duas funções que ninguém chama: `mod` não é entrada; as duas funções são.
+- [x] Duas funções que ninguém chama: duas linhas na ordem do código (VID-11).
+- [x] Função recursiva sem outro chamador: é entrada (o fio para si mesma não conta).
+- [x] Só classes, ou duas funções que se chamam: cada definição de topo vira entrada (regra c).
+- [x] Entrada sem chamada: a linha tem só a entrada (caso de borda da VID-10).
+- [x] Um laço com chamada dentro entra; um laço sem chamada não; um passo de ramo (`/b0/s0`) nunca entra direto.
+- [x] Um `mod` só com erro de sintaxe não é entrada, mas ganha linha própria.
+- [x] Gate passa.
 
 **Tests**: unit
 **Gate**: quick · `pnpm --filter @code2n8n/web test`
