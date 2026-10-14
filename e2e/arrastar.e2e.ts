@@ -64,12 +64,16 @@ test.describe("dragging cards", () => {
   test("a dragged card stays where it is dropped", async ({ page }) => {
     await openFrete(page);
     const id = `${FRETE}/s1`;
+    // Opening the call shows the panel of calcular_frete (VID-23); a drag is
+    // not a click, so the panel stays on it and does not move to the card.
+    const title = panel(page).getByRole("heading", { level: 2 });
+    const opened = await title.textContent();
     const before = await box(nodeById(page, id));
     await dragCard(page, id, 0, 160);
     const after = await box(nodeById(page, id));
     expect(after.y - before.y).toBeGreaterThan(100);
     expect(Math.abs(after.x - before.x)).toBeLessThan(5);
-    await expect(panel(page)).toBeHidden();
+    await expect(title).toHaveText(opened ?? "");
   });
 
   test("the wires keep their ports after a drag", async ({ page }) => {
