@@ -1,4 +1,5 @@
 import type {
+  ExplainPart,
   ExplainResponse,
   GraphResponse,
   HistoryEntry,
@@ -7,10 +8,17 @@ import type {
   LanguagesResponse,
   NodeTitle,
   ProjectResponse,
+  SettingsPatch,
+  SettingsResponse,
+  Suggestion,
+  Summary,
   TitlesResponse,
 } from "@8n8/model";
 
-export type ExplainResult = ExplainResponse | { status: "stale" };
+/** One part's answer, or `stale` when the server no longer has the node (404). */
+export type ExplainResult<T> = ExplainResponse<T> | { status: "stale" };
+export type SummaryResult = ExplainResult<Summary>;
+export type SuggestionsResult = ExplainResult<Suggestion[]>;
 
 const JSON_HEADERS = { "content-type": "application/json" };
 
@@ -70,14 +78,21 @@ export async function fetchProject(path: string): Promise<ProjectResult> {
 /** Where the server reads the code to explain: the snippet or the project root (AD-015). */
 export type ExplainOrigin = { source: string } | { root: string };
 
-export async function fetchExplanation(
+/** One part of a node's explanation; `cachedOnly` asks the cache and never spends the LLM (CFG-05). */
+async function fetchPart<T>(
+  part: ExplainPart,
   origin: ExplainOrigin,
   nodeId: string,
-): Promise<ExplainResult> {
+  cachedOnly: boolean,
+): Promise<ExplainResult<T>> {
   try {
-    const res = await post("/api/explain", { ...origin, nodeId });
+    const res = await post(`/api/${part}`, {
+      ...origin,
+      nodeId,
+      ...(cachedOnly ? { cachedOnly } : {}),
+    });
     if (res.status === 404) return { status: "stale" };
-    if (res.status === 200) return (await res.json()) as ExplainResponse;
+    if (res.status === 200) return (await res.json()) as ExplainResponse<T>;
     const body = (await res.json().catch(() => null)) as {
       message?: string;
     } | null;
@@ -90,6 +105,52 @@ export async function fetchExplanation(
       status: "error",
       message: err instanceof Error ? err.message : "Falha de rede",
     };
+  }
+}
+
+/** The summary, inputs and outputs of a node (CFG-01). */
+export function fetchSummary(
+  origin: ExplainOrigin,
+  nodeId: string,
+  cachedOnly = false,
+): Promise<SummaryResult> {
+  return fetchPart("summary", origin, nodeId, cachedOnly);
+}
+
+/** The suggestions of a node (CFG-02). */
+export function fetchSuggestions(
+  origin: ExplainOrigin,
+  nodeId: string,
+  cachedOnly = false,
+): Promise<SuggestionsResult> {
+  return fetchPart("suggestions", origin, nodeId, cachedOnly);
+}
+
+/** The effective settings, never the key; null when the server cannot answer (the screen then asks for each part on click). */
+export async function fetchSettings(): Promise<SettingsResponse | null> {
+  try {
+    const res = await apiFetch("/api/settings");
+    if (!res.ok) return null;
+    return (await res.json()) as SettingsResponse;
+  } catch {
+    return null;
+  }
+}
+
+/** Saves the changed fields; null when the server refuses them or fails (CFG-21). */
+export async function saveSettings(
+  patch: SettingsPatch,
+): Promise<SettingsResponse | null> {
+  try {
+    const res = await apiFetch("/api/settings", {
+      method: "PUT",
+      headers: JSON_HEADERS,
+      body: JSON.stringify(patch),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as SettingsResponse;
+  } catch {
+    return null;
   }
 }
 

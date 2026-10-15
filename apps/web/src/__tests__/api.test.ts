@@ -1,19 +1,22 @@
 import type {
-  ExplainResponse,
   Graph,
   NodeTitle,
   ProjectResponse,
+  SettingsResponse,
 } from "@8n8/model";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   deleteHistory,
-  fetchExplanation,
   fetchGraph,
   fetchHistory,
   fetchHistoryEntry,
   fetchLanguages,
   fetchProject,
+  fetchSettings,
+  fetchSuggestions,
+  fetchSummary,
   fetchTitles,
+  saveSettings,
   setSessionToken,
   starHistory,
 } from "../api";
@@ -132,90 +135,128 @@ describe("fetchProject (PROJ-05)", () => {
   });
 });
 
-describe("fetchExplanation", () => {
-  const ok: ExplainResponse = {
-    status: "ok",
-    explanation: {
-      summary: "Calcula o frete.",
-      sentences: [{ id: "s1", text: "Calcula o frete.", lines: [4, 5] }],
-      inputs: [{ id: "i1", text: "peso", lines: [4] }],
-      outputs: [{ id: "o1", text: "valor do frete", lines: [9, 11] }],
-      suggestions: [
-        {
-          id: "g1",
-          command: "Defina um timeout",
-          reason: "A chamada pode travar.",
-          line: 5,
-          severity: "alta",
-          lines: [5],
-        },
-      ],
-    },
-    fromCache: false,
-    review: "full",
+const ok = {
+  status: "ok",
+  result: { summary: "Calcula o frete." },
+  fromCache: false,
+  review: "full",
+};
+
+describe.each([
+  ["summary", fetchSummary],
+  ["suggestions", fetchSuggestions],
+] as const)(
+  "fetch of the %s part (CFG-01, CFG-02, CFG-05)",
+  (part, fetchPart) => {
+    it("posts { source, nodeId } to its own route and returns ok as received", async () => {
+      const fn = fakeFetch(200, ok);
+      const result = await fetchPart({ source: "src" }, "f");
+      const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+      expect(url).toBe(`/api/${part}`);
+      expect(JSON.parse(init.body as string)).toEqual({
+        source: "src",
+        nodeId: "f",
+      });
+      expect(result).toEqual(ok);
+    });
+
+    it("sends cachedOnly: true only when asked, and returns not-cached as received", async () => {
+      const fn = fakeFetch(200, { status: "not-cached" });
+      expect(await fetchPart({ root: "C:/loja" }, "n", true)).toEqual({
+        status: "not-cached",
+      });
+      const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+      expect(JSON.parse(init.body as string)).toEqual({
+        root: "C:/loja",
+        nodeId: "n",
+        cachedOnly: true,
+      });
+    });
+
+    it("returns no-key and unfaithful as received (FID-10)", async () => {
+      fakeFetch(200, { status: "no-key" });
+      expect(await fetchPart({ source: "s" }, "f")).toEqual({
+        status: "no-key",
+      });
+      fakeFetch(200, { status: "unfaithful" });
+      expect(await fetchPart({ source: "s" }, "f")).toEqual({
+        status: "unfaithful",
+      });
+    });
+
+    it("maps 502 and a network failure to status error (CORE-20)", async () => {
+      fakeFetch(502, { status: "error", message: "boom" });
+      expect(await fetchPart({ source: "s" }, "f")).toEqual({
+        status: "error",
+        message: "boom",
+      });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => {
+          throw new TypeError("network down");
+        }),
+      );
+      expect((await fetchPart({ source: "s" }, "f")).status).toBe("error");
+    });
+
+    it("maps 404 to status stale", async () => {
+      fakeFetch(404, { error: "not found" });
+      expect(await fetchPart({ source: "s" }, "gone")).toEqual({
+        status: "stale",
+      });
+    });
+  },
+);
+
+describe("settings (CFG-12, CFG-13, CFG-21)", () => {
+  const view: SettingsResponse = {
+    provider: "openrouter",
+    model: "m/x",
+    autoSummary: false,
+    autoSuggestions: true,
+    hasKey: true,
+    providers: [{ id: "openrouter", defaultModel: "m/x" }],
+    env: {},
   };
 
-  it("posts { source, nodeId } to /api/explain and returns ok as received", async () => {
-    const fn = fakeFetch(200, ok);
-    const result = await fetchExplanation({ source: "src" }, "f");
-    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("/api/explain");
-    expect(JSON.parse(init.body as string)).toEqual({
-      source: "src",
-      nodeId: "f",
-    });
-    expect(result).toEqual(ok);
+  it("fetchSettings gets /api/settings and returns the view", async () => {
+    const fn = fakeFetch(200, view);
+    expect(await fetchSettings()).toEqual(view);
+    expect(fn.mock.calls[0]?.[0]).toBe("/api/settings");
   });
 
-  it("returns no-key as received", async () => {
-    fakeFetch(200, { status: "no-key" });
-    expect(await fetchExplanation({ source: "s" }, "f")).toEqual({
-      status: "no-key",
-    });
-  });
-
-  it("returns unfaithful as received (FID-10)", async () => {
-    fakeFetch(200, { status: "unfaithful" });
-    expect(await fetchExplanation({ source: "s" }, "f")).toEqual({
-      status: "unfaithful",
-    });
-  });
-
-  it("maps 502 to status error (CORE-20)", async () => {
-    fakeFetch(502, { status: "error", message: "boom" });
-    expect(await fetchExplanation({ source: "s" }, "f")).toEqual({
-      status: "error",
-      message: "boom",
-    });
-  });
-
-  it("maps a network failure to status error (CORE-20)", async () => {
+  it("fetchSettings gives null on an HTTP error or a network failure", async () => {
+    fakeFetch(500, {});
+    expect(await fetchSettings()).toBeNull();
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => {
         throw new TypeError("network down");
       }),
     );
-    const result = await fetchExplanation({ source: "s" }, "f");
-    expect(result.status).toBe("error");
+    expect(await fetchSettings()).toBeNull();
   });
 
-  it("posts { root, nodeId } without source for a project (AD-015)", async () => {
-    const fn = fakeFetch(200, ok);
-    await fetchExplanation({ root: "C:/loja" }, "file:a.py/fn:f");
+  it("saveSettings puts the patch as JSON and returns the new view", async () => {
+    const fn = fakeFetch(200, view);
+    expect(await saveSettings({ apiKey: "k", autoSummary: true })).toEqual(
+      view,
+    );
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("/api/explain");
+    expect(url).toBe("/api/settings");
+    expect(init.method).toBe("PUT");
+    expect(new Headers(init.headers).get("content-type")).toBe(
+      "application/json",
+    );
     expect(JSON.parse(init.body as string)).toEqual({
-      root: "C:/loja",
-      nodeId: "file:a.py/fn:f",
+      apiKey: "k",
+      autoSummary: true,
     });
   });
 
-  it("maps 404 to status stale", async () => {
-    fakeFetch(404, { error: "not found" });
-    expect(await fetchExplanation({ source: "s" }, "gone")).toEqual({
-      status: "stale",
-    });
+  it("saveSettings gives null on 400", async () => {
+    fakeFetch(400, { error: "invalid settings" });
+    expect(await saveSettings({ baseURL: "ftp://x" })).toBeNull();
   });
 });
 
@@ -295,7 +336,10 @@ describe("session token on every call (DIST-19)", () => {
     ["fetchGraph", () => fetchGraph("x")],
     ["fetchLanguages", () => fetchLanguages()],
     ["fetchProject", () => fetchProject("C:/p")],
-    ["fetchExplanation", () => fetchExplanation({ source: "x" }, "n")],
+    ["fetchSummary", () => fetchSummary({ source: "x" }, "n")],
+    ["fetchSuggestions", () => fetchSuggestions({ source: "x" }, "n")],
+    ["fetchSettings", () => fetchSettings()],
+    ["saveSettings", () => saveSettings({ autoSummary: true })],
     ["fetchTitles", () => fetchTitles({ source: "x" }, ["n"])],
     ["fetchHistory", () => fetchHistory()],
     ["fetchHistoryEntry", () => fetchHistoryEntry(1)],

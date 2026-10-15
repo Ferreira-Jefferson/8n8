@@ -289,8 +289,8 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Cada função manda o token e o corpo certo; 404 → `stale`; falha de rede → `error`
-- [ ] Gate check passes: `pnpm --filter @8n8/web test`
+- [x] Cada função manda o token e o corpo certo; 404 → `stale`; falha de rede → `error`
+- [x] Gate check passes: `pnpm --filter @8n8/web test`
 
 **Tests**: unit
 **Gate**: quick
