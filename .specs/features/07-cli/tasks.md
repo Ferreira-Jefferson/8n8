@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/07-cli/design.md`
-**Status**: In Progress
+**Status**: Done
 
 ---
 
@@ -375,9 +375,9 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `CODEOWNERS` lista as guardas do `server`, a suíte de segurança, `.dependency-cruiser.cjs`, `biome.json`, `pnpm-workspace.yaml`, `.githooks/`, `.gitleaks.toml` e o próprio `CODEOWNERS`
-- [ ] README: `pnpm pack`, `npm install -g`, `8n8 [pasta]`, `--no-open`, `~/.8n8`
-- [ ] Gate check passes: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
+- [x] `CODEOWNERS` lista as guardas do `server`, a suíte de segurança, `.dependency-cruiser.cjs`, `biome.json`, `pnpm-workspace.yaml`, `.githooks/`, `.gitleaks.toml` e o próprio `CODEOWNERS`
+- [x] README: `pnpm pack`, `npm install -g`, `8n8 [pasta]`, `--no-open`, `~/.8n8`
+- [x] Gate check passes: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
 
 **Tests**: none
 **Gate**: build

@@ -182,6 +182,13 @@ export const parsers: Record<Dialect, Parser> = {
 };
 ```
 
+Siga este padrão para a gramática funcionar também no pacote da CLI:
+
+- Declare o pacote da gramática (`tree-sitter-<linguagem>`) em `dependencies`, não em `devDependencies`. O build da CLI copia o `.wasm` de toda dependência `tree-sitter-*` de cada plugin.
+- Ache o arquivo com `createRequire(import.meta.url).resolve("<pacote>/<arquivo>.wasm")`. No bundle, o build troca esse `createRequire` por um que aponta para a pasta `grammars/` ao lado do pacote. Outro jeito de achar o `.wasm` quebra no pacote instalado.
+
+O teste `apps/cli/src/__tests__/build.test.ts` empacota os plugins e confere que o bundle extrai o mesmo grafo que o código-fonte.
+
 ### 4. Declare ofertas e pedidos
 
 Veja a seção [Ligações entre linguagens](#ligações-entre-linguagens). Se a linguagem não tem como chamar outra, devolva `offers` e `requests` vazios. A conformidade aceita.
@@ -249,7 +256,7 @@ Em `packages/server/package.json`, acrescente a dependência junto das outras li
 "@8n8/lang-<id>": "workspace:*",
 ```
 
-Em `packages/server/src/main.ts`, importe o plugin e inclua na lista `languagePlugins`:
+Em `packages/server/src/core.ts`, importe o plugin e inclua na lista `languagePlugins`:
 
 ```ts
 import { pythonPlugin } from "@8n8/lang-python";
@@ -350,6 +357,7 @@ O código está em `packages/languages/typescript/src/detect.ts`. Cada plugin v�
 - [ ] A suíte `describeLanguagePlugin` passa, com um trecho de erro de sintaxe e um arquivo de erro de sintaxe nas fixtures.
 - [ ] Há testes próprios para funções, classes, chamadas, imports, condições, laços e retornos da linguagem.
 - [ ] `pnpm install` rodou e o plugin aparece no `packages/server/package.json` e em `languagePlugins`.
+- [ ] A gramática está em `dependencies`, é achada com `createRequire(import.meta.url).resolve(...)`, e `pnpm --filter @8n8/cli test` passa.
 - [ ] `pnpm typecheck`, `pnpm test` e `pnpm check` passam. O `check` confere as fronteiras e o Biome.
 - [ ] O plugin não importa outro plugin nem o LLM.
 - [ ] `ignoredDirs` lista as pastas de dependências e de build da linguagem.

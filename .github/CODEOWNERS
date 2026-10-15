@@ -1,0 +1,26 @@
+# Arquivos que guardam a segurança do 8n8: qualquer mudança neles pede a revisão do dono
+# do projeto (DIST-24). Sem a proteção de branch no GitHub, esta lista só aponta o revisor.
+
+# Guardas do núcleo: Host, token, JSON, chave fora das respostas.
+/packages/server/src/app.ts @Ferreira-Jefferson
+/packages/server/src/token.ts @Ferreira-Jefferson
+/packages/server/src/core.ts @Ferreira-Jefferson
+/packages/server/src/__tests__/security.test.ts @Ferreira-Jefferson
+/packages/server/src/__tests__/token-guard.test.ts @Ferreira-Jefferson
+
+# Único ponto que inicia processos, e as guardas de build.
+/apps/cli/src/open-browser.ts @Ferreira-Jefferson
+/apps/cli/src/__tests__/guards.test.ts @Ferreira-Jefferson
+/apps/cli/src/__tests__/fixtures/guards/ @Ferreira-Jefferson
+/.dependency-cruiser.cjs @Ferreira-Jefferson
+/biome.json @Ferreira-Jefferson
+
+# Dependências e scripts de instalação.
+/pnpm-workspace.yaml @Ferreira-Jefferson
+/apps/cli/package.json @Ferreira-Jefferson
+
+# Segredos.
+/.githooks/ @Ferreira-Jefferson
+/.gitleaks.toml @Ferreira-Jefferson
+
+/.github/CODEOWNERS @Ferreira-Jefferson

@@ -26,7 +26,7 @@ Para acoplar outra linguagem, siga o guia [docs/adicionar-linguagem.md](docs/adi
 
 ## Como rodar
 
-Você precisa de Node 22.12 ou mais novo e do pnpm.
+Você precisa de Node 22.13 ou mais novo e do pnpm.
 
 ```bash
 pnpm install
@@ -40,13 +40,37 @@ pnpm dev
 
 Isso sobe o servidor (`pnpm dev:server`, porta 4317) e a tela (`pnpm dev:web`, com o Vite). Abra o endereço que o Vite mostrar no terminal.
 
-Para usar sem recarga, construa a tela e suba tudo em um servidor só:
+Para usar sem recarga, construa a CLI e suba tudo em um servidor só:
 
 ```bash
 pnpm start
 ```
 
-Abra `http://127.0.0.1:4317`. A porta muda com a variável `APP8N8_PORT`.
+Abra o endereço que o terminal mostrar (`http://127.0.0.1:4317/#t=...`). O `#t=` é o token da sessão: sem ele, a API responde 401. A porta muda com a variável `APP8N8_PORT`.
+
+### O comando `8n8`
+
+A CLI abre o mapa de qualquer pasta, no PowerShell ou no Bash. Ela precisa de Node 22.13 ou mais novo. Para instalar a partir do repositório:
+
+```bash
+pnpm --filter @8n8/cli build
+pnpm --filter @8n8/cli pack
+npm install -g ./apps/cli/8n8-cli-0.0.1.tgz
+```
+
+O pacote não tem dependências nem scripts de instalação: todo o código vai dentro dele.
+
+```bash
+8n8 .              # abre o mapa da pasta atual no navegador
+8n8 C:\projeto     # ou de qualquer pasta
+8n8                # abre a tela inicial
+8n8 --no-open      # sobe o servidor sem abrir o navegador
+8n8 --help         # mostra o uso e as variáveis
+```
+
+Cada execução gera um token novo, que só a aba aberta pela CLI conhece. Outro programa da máquina não consegue usar a API nem a sua chave de LLM.
+
+Os dados ficam em `~/.8n8` (no Windows, `C:\Users\<nome>\.8n8`): o cache em `cache/` e o histórico em `historico.db`. As variáveis `APP8N8_CACHE_DIR` e `APP8N8_HISTORY_DIR` mudam essas pastas. A CLI instalada lê a config de LLM só das variáveis de ambiente, nunca de um `.env`.
 
 ### A chave do LLM
 

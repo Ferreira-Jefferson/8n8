@@ -4,7 +4,7 @@ Obrigado por querer ajudar. Este guia mostra como preparar o ambiente, como veri
 
 ## Ambiente
 
-- Node 22.12 ou mais novo (`engines` do `package.json`).
+- Node 22.13 ou mais novo: o histórico usa o `node:sqlite`, que funciona sem flag a partir dessa versão.
 - pnpm (o `package.json` fixa a versão em `packageManager`).
 - [gitleaks](https://github.com/gitleaks/gitleaks), que procura chaves e senhas antes de cada commit (veja "Segredos").
 
@@ -46,7 +46,7 @@ Toda mudança precisa de verificação antes do commit.
 | `pnpm test` | Roda os testes unitários de todos os pacotes (Vitest). |
 | `pnpm typecheck` | Roda o TypeScript em todos os pacotes e em `e2e`. |
 | `pnpm check` | Roda o Biome (estilo) e o dependency-cruiser (fronteiras). |
-| `pnpm e2e` | Roda os testes de ponta a ponta (Playwright). |
+| `pnpm e2e` | Constrói a CLI e roda os testes de ponta a ponta (Playwright) contra ela. |
 
 Durante o trabalho, rode só o teste ligado à mudança. Por exemplo, `pnpm e2e e2e/<spec>.e2e.ts`. Rode a suíte inteira uma vez, antes do commit.
 
