@@ -55,7 +55,6 @@ const breadcrumb = (page: Page) =>
   page.getByRole("navigation", { name: "Caminho de navegação" });
 const panel = (page: Page) =>
   page.getByRole("complementary", { name: "Detalhe do nó" });
-const back = (page: Page) => page.getByRole("button", { name: "Voltar" });
 
 /** The card titles of the level, without the "›" open mark, in DOM order (VID-03, 15). */
 const cardNames = (page: Page) =>
@@ -554,7 +553,7 @@ test.describe("Explicação", () => {
     expect(calls).toEqual([FRETE]);
 
     // Opening shows the inside of calcular_frete; the badge sits on its card above.
-    await back(page).click();
+    await page.keyboard.press("Escape");
     await expect(nodeById(page, FRETE).getByTitle("Sugestões")).toHaveText("2");
     await expect(nodeById(page, PEDIDO).getByTitle("Sugestões")).toHaveCount(0);
 
@@ -603,15 +602,15 @@ test.describe("Explicação", () => {
 
     await clickCard(page, FRETE);
     await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
-    await back(page).click();
+    await page.keyboard.press("Escape");
     await clickCard(page, PEDIDO);
     await expect(summaryItems(panel(page))).toHaveText([PEDIDO_SUMMARY]);
-    await back(page).click();
+    await page.keyboard.press("Escape");
     await clickCard(page, FRETE);
 
     await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
     await expect(suggestionButtons(panel(page))).toHaveCount(2);
-    await back(page).click();
+    await page.keyboard.press("Escape");
     await expect(nodeById(page, FRETE).getByTitle("Sugestões")).toHaveText("2");
     // Within a map the app keeps the answer in memory: no new request.
     expect(calls).toEqual([FRETE, PEDIDO]);
@@ -643,7 +642,7 @@ test.describe("Explicação", () => {
     await shot(page, "09-explain-error");
 
     // The map is still usable: go back, drill down and come back.
-    await back(page).click();
+    await page.keyboard.press("Escape");
     await expect(nodes(page)).toHaveCount(4);
     await clickCard(page, PEDIDO);
     await expect(nodes(page)).toHaveCount(3);

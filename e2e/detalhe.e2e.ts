@@ -135,7 +135,7 @@ test("VID-29: the step panel follows the video order; the rules line shows on st
   );
 
   // The function calcular_frete (the card that opened the level): no rules line.
-  await page.getByRole("button", { name: "Voltar" }).click();
+  await page.keyboard.press("Escape");
   await expectLevel(page, MAIN_FLOW);
   await expect(view.getByRole("heading", { level: 2 })).toHaveText(
     "Calcular frete",

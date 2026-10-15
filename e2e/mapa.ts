@@ -68,8 +68,6 @@ export const breadcrumb = (page: Page) =>
   page.getByRole("navigation", { name: "Caminho de navegação" });
 export const panel = (page: Page) =>
   page.getByRole("complementary", { name: "Detalhe do nó" });
-export const backButton = (page: Page) =>
-  page.getByRole("button", { name: "Voltar" });
 
 /** Clears the fake log and the REAL server's cache. */
 export async function freshReal(): Promise<void> {

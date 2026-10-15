@@ -767,19 +767,16 @@ describe("App, editor and map (VID-08, VID-09)", () => {
   });
 });
 
-describe("App, Voltar and Esc (VID-19, VID-23, VID-27)", () => {
-  const voltar = () =>
-    screen.getByRole("button", { name: "Voltar" }) as HTMLButtonElement;
-
-  it("disables Voltar on the top level, and Esc does nothing there", async () => {
+describe("App, Esc and the breadcrumb go back (VID-19, VID-23, VID-27)", () => {
+  it("has no Voltar button, and Esc does nothing on the top level", async () => {
     await mapVideo();
-    expect(voltar().disabled).toBe(true);
+    expect(screen.queryByRole("button", { name: "Voltar" })).toBeNull();
     fireEvent.keyDown(window, { key: "Escape" });
     expect(currentCanvas().levelId).toBeNull();
     expect(currentCanvas().selected).toBeNull();
   });
 
-  it("opens with one click, and Voltar goes back with the opened card selected and focused", async () => {
+  it("opens with one click, and Esc goes back with the opened card selected and focused", async () => {
     await mapVideo();
     act(() => currentCanvas().onOpen(videoNode(P)));
     act(() => currentCanvas().onOpen(videoNode(`${P}/s3`)));
@@ -789,8 +786,7 @@ describe("App, Voltar and Esc (VID-19, VID-23, VID-27)", () => {
       "Processar pedido",
       "Calcular frete",
     ]);
-    expect(voltar().disabled).toBe(false);
-    fireEvent.click(voltar());
+    fireEvent.keyDown(window, { key: "Escape" });
     expect(currentCanvas().levelId).toBe(P);
     expect(currentCanvas().selected).toBe(`${P}/s3`);
     expect(currentCanvas().focusId).toBe(`${P}/s3`);

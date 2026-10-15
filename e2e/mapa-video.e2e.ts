@@ -2,7 +2,6 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
 import {
   ACCENT,
-  backButton,
   box,
   breadcrumb,
   canvas,
@@ -317,7 +316,6 @@ test.describe("O editor", () => {
       width: view?.width,
       height: view?.height,
     });
-    await expect(backButton(page)).toBeVisible();
 
     await newCode.click();
     await expect(page.getByLabel("Trecho de código")).toHaveValue(VIDEO);

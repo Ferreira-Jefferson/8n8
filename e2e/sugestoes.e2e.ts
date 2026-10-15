@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import {
-  backButton,
   box,
   cardNames,
   cardOf,
@@ -76,7 +75,7 @@ test("VID-31, IT P3: the GATILHO's suggestions pin to BANCO and E-MAIL, inside a
   await expectAbove(page, TRANSACAO, SALVAR);
   await expectAbove(page, FILA, EMAIL);
 
-  await backButton(page).click();
+  await page.keyboard.press("Escape");
   await expectLevel(page, MAIN_FLOW);
   await expect(page.locator("button.alert")).toHaveText([TRANSACAO, FILA]);
   await expect(alert(page, TRANSACAO)).toHaveAttribute(

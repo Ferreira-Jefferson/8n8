@@ -120,7 +120,7 @@ async function timeClick(
 const CLICK_GENERATE = `[...document.querySelectorAll("button")].find((b) => b.textContent === "Gerar mapa").click();`;
 const clickCardCode = (id: string) =>
   `document.querySelector('[aria-roledescription="node"][data-id="${id}"]').dispatchEvent(new MouseEvent("click", { bubbles: true }));`;
-const CLICK_BACK = `[...document.querySelectorAll("button")].find((b) => b.textContent === "Voltar").click();`;
+const CLICK_BACK = `window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));`;
 
 /** Counts the page's /api/ requests in flight. */
 function trackApi(page: Page, counts?: Record<string, number>): () => number {
@@ -229,7 +229,7 @@ for (const base of [OFFLINE, REAL]) {
         open,
         blanks(blank.open),
       );
-      record("(c) Voltar → main flow drawn", label, back, blanks(blank.back));
+      record("(c) Esc → main flow drawn", label, back, blanks(blank.back));
       record(
         "(b') click Calcular frete at once after Gerar mapa",
         label,

@@ -1,4 +1,4 @@
-/** The hamburger that opens the history drawer, at the top right of both screens. */
+/** The clock that opens the history drawer, at the top right of both screens. */
 export function HistoryButton({
   open,
   onToggle,
@@ -15,13 +15,17 @@ export function HistoryButton({
       data-history-toggle=""
       onClick={onToggle}
     >
-      <svg width="28" height="22" viewBox="0 0 28 22" aria-hidden="true">
-        <path
-          d="M2 3h24M2 11h24M2 19h24"
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+        <g
+          fill="none"
           stroke="currentColor"
-          strokeWidth="3"
+          strokeWidth="2.5"
           strokeLinecap="round"
-        />
+          strokeLinejoin="round"
+        >
+          <circle cx="14" cy="14" r="11" />
+          <path d="M14 7v7l5 3" />
+        </g>
       </svg>
     </button>
   );

@@ -482,14 +482,6 @@ export function App({ initialFolder = null }: AppProps) {
       }
     >
       <div className="map-area">
-        <button
-          type="button"
-          className="btn-ghost back"
-          disabled={nav.path.length === 0}
-          onClick={back}
-        >
-          Voltar
-        </button>
         <Breadcrumb
           graph={graph}
           path={nav.path}

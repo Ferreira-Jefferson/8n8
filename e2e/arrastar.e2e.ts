@@ -1,6 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
 import {
-  backButton,
   box,
   cardOf,
   clickCard,
@@ -96,14 +95,14 @@ test.describe("dragging cards", () => {
     }
   });
 
-  test("a moved card keeps its place after Voltar and a new opening", async ({
+  test("a moved card keeps its place after Esc and a new opening", async ({
     page,
   }) => {
     await openFrete(page);
     const id = `${FRETE}/s1`;
     await dragCard(page, id, 0, 160);
     const moved = await nodeById(page, id).getAttribute("style");
-    await backButton(page).click();
+    await page.keyboard.press("Escape");
     await expectLevel(page, MAIN_FLOW);
     await clickCard(page, `${PEDIDO}/s3`);
     await expectLevel(page, FRETE_LEVEL);

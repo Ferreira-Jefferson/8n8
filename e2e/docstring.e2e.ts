@@ -1,7 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { type FakeCall, fakeLog } from "./fake-llm";
 import {
-  backButton,
   cardOf,
   clickCard,
   freshReal,
@@ -101,7 +100,7 @@ test.describe("Docstring", () => {
     await expect(view.locator('[aria-current="true"] code')).toHaveText(LIE);
 
     // Back on the first level the function's card carries the badge.
-    await backButton(page).click();
+    await page.keyboard.press("Escape");
     await expect(
       nodeById(page, "fn:total_mentiroso").getByTitle("Sugestões"),
     ).toHaveText("1");
@@ -117,7 +116,7 @@ test.describe("Docstring", () => {
     expect(lastUser(calls[0] as FakeCall)).toContain("Docstring (");
     await expect(alerts(page)).toHaveCount(0);
     await expect(view.getByText("Atualize a docstring")).toHaveCount(0);
-    await backButton(page).click();
+    await page.keyboard.press("Escape");
     await expect(
       nodeById(page, "fn:total_fiel").getByTitle("Sugestões"),
     ).toHaveCount(0);

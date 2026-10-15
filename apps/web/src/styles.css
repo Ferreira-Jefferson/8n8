@@ -228,13 +228,6 @@ body {
   min-height: 0;
 }
 
-.map-area > .back {
-  position: absolute;
-  left: 24px;
-  top: 24px;
-  z-index: 10;
-}
-
 .history-btn {
   position: absolute;
   right: 24px;
@@ -258,7 +251,7 @@ body {
    last item stays whole (VID-19). */
 .breadcrumb {
   position: absolute;
-  left: 160px;
+  left: 24px;
   top: 34px;
   right: 392px;
   z-index: 10;

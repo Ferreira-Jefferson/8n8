@@ -1,7 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
 import {
-  backButton,
   box,
   breadcrumb,
   canvas,
@@ -30,7 +29,7 @@ import {
 } from "./mapa";
 
 // Feature 05, navigation (VID-18..27): one click opens a node's inner flow and
-// shows its panel; "Voltar" and Esc go back one level at a time. On the keyed
+// shows its panel; Esc goes back one level at a time. On the keyed
 // server (4319) against the fake LLM: titles and summaries arrive while the
 // levels open, and the trail shows the titles.
 
@@ -79,7 +78,7 @@ async function expectAllInside(page: Page): Promise<void> {
 
 /**
  * The card we came back to is selected and centred in the free area of the
- * canvas (below "Voltar" and the trail), within 2 px. It may sit off-centre
+ * canvas (below the trail), within 2 px. It may sit off-centre
  * only on a side where the level already touches the free area's edge, so no
  * card leaves the view (VID-27; design C11, "o mais perto possível do centro").
  */
@@ -301,7 +300,7 @@ test.describe("Navegação", () => {
       .poll(() => trail(page))
       .toBe("Fluxo principal › Calcular frete");
 
-    await backButton(page).click();
+    await page.keyboard.press("Escape");
     await expectLevel(page, MAIN_FLOW);
     await clickCard(page, PEDIDO);
     await expectLevel(page, PEDIDO_LEVEL);
@@ -336,7 +335,7 @@ test.describe("Navegação", () => {
       ).toBe("hidden");
     }
 
-    await backButton(page).click();
+    await page.keyboard.press("Escape");
     await expectLevel(page, MAIN_FLOW);
     await clickCard(page, PEDIDO);
     await expectLevel(page, PEDIDO_LEVEL);
@@ -447,17 +446,11 @@ test.describe("Navegação", () => {
     await expect(canvas(page)).toHaveAttribute("data-phase", "open");
   });
 
-  test("VID-27: Voltar is off and Esc does nothing at the top; below, each goes up one level and selects the node we came from", async ({
+  test("VID-27: Esc does nothing at the top; below, Esc goes up one level and selects the node we came from", async ({
     page,
   }) => {
     await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
-    await expect(backButton(page)).toBeDisabled();
-    // Top left of the canvas.
-    const b = await box(backButton(page));
-    const c = await box(canvas(page));
-    expect(b.x - c.x).toBe(24);
-    expect(b.y - c.y).toBe(24);
     await page.keyboard.press("Escape");
     expect(await ids(page)).toEqual(MAIN_FLOW);
     expect(await crumbs(page)).toEqual(["Fluxo principal"]);
@@ -466,7 +459,6 @@ test.describe("Navegação", () => {
     await expectLevel(page, PEDIDO_LEVEL);
     await clickCard(page, `${PEDIDO}/s3`);
     await expectLevel(page, FRETE_LEVEL);
-    await expect(backButton(page)).toBeEnabled();
 
     await page.keyboard.press("Escape");
     await expectLevel(page, PEDIDO_LEVEL);
@@ -475,11 +467,10 @@ test.describe("Navegação", () => {
       .toEqual(["Fluxo principal", "Pedido recebido"]);
     await expectSelectedNearCentre(page, `${PEDIDO}/s3`);
 
-    await backButton(page).click();
+    await page.keyboard.press("Escape");
     await expectLevel(page, MAIN_FLOW);
     expect(await crumbs(page)).toEqual(["Fluxo principal"]);
     await expectSelectedNearCentre(page, PEDIDO);
-    await expect(backButton(page)).toBeDisabled();
   });
 });
 
@@ -549,7 +540,7 @@ test.describe("Descida até as folhas", () => {
     await clickCard(page, "fn:contar/s0/b0/s0");
     await expect.poll(() => crumbs(page)).toHaveLength(4);
     await expectLevel(page, inner);
-    await backButton(page).click();
+    await page.keyboard.press("Escape");
     await expect.poll(() => crumbs(page)).toHaveLength(3);
     await expectLevel(page, inner);
     await expect(cardOf(page, "fn:contar/s0/b0/s0")).toHaveClass(/\bon\b/);
@@ -574,7 +565,6 @@ test.describe("Descida até as folhas", () => {
       const opened: string[] = [];
       const leafLevels: string[][] = [];
       let leaves = 0;
-      let backs = 0;
 
       async function walk(depth: number): Promise<void> {
         expect(depth).toBeLessThan(5);
@@ -594,9 +584,7 @@ test.describe("Descida até as folhas", () => {
             await expect.poll(() => ids(page)).not.toEqual(level);
             await expect(panel(page)).toHaveCount(1);
             await walk(depth + 1);
-            // Alternate Esc and "Voltar": both go up exactly one level.
-            if (backs++ % 2 === 0) await page.keyboard.press("Escape");
-            else await backButton(page).click();
+            await page.keyboard.press("Escape");
             await expectLevel(page, level);
             expect(await crumbs(page)).toEqual(trailBefore);
             await expectSelectedNearCentre(page, id);
@@ -626,7 +614,6 @@ test.describe("Descida até as folhas", () => {
       expect(leafLevels).toEqual([FRETE_LEVEL, FRETE_LEVEL]);
       expect(leaves).toBe(6 + 7 + 5 + 5);
       expect(await crumbs(page)).toEqual(["Fluxo principal"]);
-      await expect(backButton(page)).toBeDisabled();
       expect(await ids(page)).toEqual(MAIN_FLOW);
     });
   }

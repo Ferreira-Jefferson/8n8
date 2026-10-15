@@ -187,7 +187,7 @@ test.describe("Fidelidade", () => {
     ).toHaveText(["Tratar a lista vazia (linha 3, alta)"]);
     await expect(view).not.toContainText("Remover o laço repetido");
     // The open level is the inside of media_notas; its card is one level up.
-    await page.getByRole("button", { name: "Voltar" }).click();
+    await page.keyboard.press("Escape");
     await expect(
       nodeById(page, "fn:media_notas").getByTitle("Sugestões"),
     ).toHaveText("1");
