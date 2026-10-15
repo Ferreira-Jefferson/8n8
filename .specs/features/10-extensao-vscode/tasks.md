@@ -122,8 +122,8 @@ T7 → T8
 
 **Done when**:
 
-- [ ] Cada mensagem inválida recebe 400 sem chegar ao app; uma válida chega com Host e token
-- [ ] Gate check passes: `pnpm --filter @8n8/vscode test`
+- [x] Cada mensagem inválida recebe 400 sem chegar ao app; uma válida chega com Host e token
+- [x] Gate check passes: `pnpm --filter @8n8/vscode test`
 
 **Tests**: unit
 **Gate**: quick
