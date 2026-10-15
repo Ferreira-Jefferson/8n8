@@ -5,6 +5,25 @@ import { join } from "node:path";
 import * as vscode from "vscode";
 import type { ExtensionApi } from "../../extension";
 
+/** The folder the panel's page was told to map, or null for the start screen. */
+function pageFolder(html: string): string | null {
+  const content = html.match(/<meta name="8n8-folder" content="([^"]*)">/)?.[1];
+  return content === undefined
+    ? null
+    : content
+        .replaceAll("&lt;", "<")
+        .replaceAll("&gt;", ">")
+        .replaceAll("&quot;", '"')
+        .replaceAll("&amp;", "&");
+}
+
+function expectFolder(html: string, folder: vscode.Uri): void {
+  const got = pageFolder(html);
+  if (got?.toLowerCase() !== folder.fsPath.toLowerCase()) {
+    throw new Error(`A página recebeu a pasta ${got}, e não ${folder.fsPath}.`);
+  }
+}
+
 async function waitFor(
   check: () => boolean,
   what: string,
@@ -51,12 +70,13 @@ export async function run(): Promise<void> {
   if (api.calls().some((c) => c.path === "/api/project")) {
     throw new Error("A paleta mapeou uma pasta sem a pessoa pedir.");
   }
-  if (api.lastHtml().includes('name="8n8-folder"')) {
+  if (pageFolder(api.lastHtml()) !== null) {
     throw new Error("A paleta mandou uma pasta para a página.");
   }
 
   // HOME-02: the Explorer command maps the folder it was given.
   await vscode.commands.executeCommand("8n8.abrirMapaDaPasta", workspace);
+  expectFolder(api.lastHtml(), workspace);
   await waitFor(
     () => api.readyCount() >= 2,
     "a página do mapa não avisou que carregou",
@@ -167,10 +187,9 @@ export async function run(): Promise<void> {
 
   // VSC-02, VSC-03: the Explorer command on another folder reuses the one panel.
   const before = api.calls().length;
-  await vscode.commands.executeCommand(
-    "8n8.abrirMapaDaPasta",
-    vscode.Uri.joinPath(workspace, "frete"),
-  );
+  const frete = vscode.Uri.joinPath(workspace, "frete");
+  await vscode.commands.executeCommand("8n8.abrirMapaDaPasta", frete);
+  expectFolder(api.lastHtml(), frete);
   await waitFor(() => api.readyCount() >= 3, "a página nova não carregou");
   await waitFor(
     () =>

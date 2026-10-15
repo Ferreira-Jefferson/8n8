@@ -48,7 +48,7 @@ O usuário instala o `.vsix` gerado pelo repositório, abre uma pasta no VS Code
 
 **Acceptance Criteria**:
 
-1. WHEN o usuário roda "8n8: Abrir mapa" na paleta THEN a extensão SHALL abrir um painel "8n8" ao lado do editor com o mapa da primeira pasta da área de trabalho. IF não há pasta aberta THEN a extensão SHALL pedir uma pasta num diálogo, e cancelar o diálogo não SHALL abrir nada.  <!-- VSC-01 -->
+1. WHEN o usuário roda "8n8: Abrir mapa" na paleta THEN a extensão SHALL abrir um painel "8n8" ao lado do editor, na tela inicial e sem mapa (mudado pela feature 13, HOME-01).  <!-- VSC-01 -->
 2. WHEN o usuário escolhe "8n8: Abrir mapa desta pasta" no menu de contexto de uma pasta do Explorer THEN a extensão SHALL abrir o mapa dessa pasta.  <!-- VSC-02 -->
 3. WHEN o painel já existe e o comando roda de novo THEN a extensão SHALL reusar o painel, trazê-lo à frente e abrir o mapa da pasta nova.  <!-- VSC-03 -->
 4. The tela SHALL funcionar na webview com as mesmas funções da CLI. Pela ponte, `POST /api/project` da pasta SHALL responder 200, `GET /api/settings` SHALL responder 200, `POST /api/summary` com `cachedOnly: true` SHALL responder 200 com `not-cached` num cache vazio, e `GET /api/history` SHALL responder 200 com o mapa aberto na lista.  <!-- VSC-04 -->
