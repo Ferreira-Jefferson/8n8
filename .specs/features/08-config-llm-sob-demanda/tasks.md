@@ -207,12 +207,12 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] `view()` nunca tem a chave; `env` dá o nome da variável de cada campo definido
-- [ ] Corpo inválido (campo extra, provedor desconhecido, URL sem http(s), chave vazia) lança erro de validação e não grava
-- [ ] Troca de provedor ou URL apaga a chave, salvo chave nova no mesmo patch
-- [ ] `llm()` monta um cliente novo só quando a config muda
-- [ ] Arquivo: ilegível → `{}`; escrita atômica com `0o600`
-- [ ] Gate check passes: `pnpm --filter @8n8/server test`
+- [x] `view()` nunca tem a chave; `env` dá o nome da variável de cada campo definido
+- [x] Corpo inválido (campo extra, provedor desconhecido, URL sem http(s), chave vazia) lança erro de validação e não grava
+- [x] Troca de provedor ou URL apaga a chave, salvo chave nova no mesmo patch
+- [x] `llm()` monta um cliente novo só quando a config muda
+- [x] Arquivo: ilegível → `{}`; escrita atômica com `0o600`
+- [x] Gate check passes: `pnpm --filter @8n8/server test`
 
 **Tests**: unit
 **Gate**: quick
