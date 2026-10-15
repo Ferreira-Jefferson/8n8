@@ -46,7 +46,7 @@ function setup() {
 describe("API accepts only JSON (AD-016)", () => {
   it("refuses text/plain with 415 on every POST route and runs nothing", async () => {
     const { calls, post } = setup();
-    for (const path of ["/api/graph", "/api/explain", "/api/project"]) {
+    for (const path of ["/api/graph", "/api/summary", "/api/project"]) {
       const res = await post(path, { "content-type": "text/plain" });
       expect(res.status).toBe(415);
     }
@@ -55,7 +55,7 @@ describe("API accepts only JSON (AD-016)", () => {
 
   it("refuses a string body with no explicit content-type (fetch defaults it to text/plain) with 415", async () => {
     const { calls, post } = setup();
-    for (const path of ["/api/graph", "/api/explain", "/api/project"]) {
+    for (const path of ["/api/graph", "/api/summary", "/api/project"]) {
       expect((await post(path, {})).status).toBe(415);
     }
     expect(calls).toEqual({ explain: 0, readProject: 0 });
@@ -63,7 +63,7 @@ describe("API accepts only JSON (AD-016)", () => {
 
   it("refuses a post with no content-type header at all with 415", async () => {
     const { app, calls } = setup();
-    for (const path of ["/api/graph", "/api/explain", "/api/project"]) {
+    for (const path of ["/api/graph", "/api/summary", "/api/project"]) {
       // A byte body gets no default content-type, so the header is really absent.
       const req = new Request(`http://127.0.0.1:4317${path}`, {
         method: "POST",
@@ -87,7 +87,7 @@ describe("API accepts only JSON (AD-016)", () => {
         return form;
       },
     };
-    for (const path of ["/api/graph", "/api/explain", "/api/project"]) {
+    for (const path of ["/api/graph", "/api/summary", "/api/project"]) {
       for (const [type, body] of Object.entries(bodies)) {
         const req = new Request(`http://127.0.0.1:4317${path}`, {
           method: "POST",

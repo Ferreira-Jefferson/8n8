@@ -31,7 +31,6 @@ import { afterAll, describe, expect, it } from "vitest";
 import { createApp } from "../app";
 import {
   composeExplain,
-  composeLlm,
   composeReadProject,
   composeTitles,
   createCore,
@@ -39,6 +38,8 @@ import {
   listenOptions,
   resolvePort,
 } from "../core";
+import { createSettingsService } from "../settings";
+import { llmOf as llmFrom } from "./llm-of";
 import { TEST_TOKEN } from "./test-token";
 
 const ptsRules = readFileSync(
@@ -106,14 +107,23 @@ function fakeFactory() {
 
 type Env = Record<string, string | undefined>;
 
-/** The server's one LLM setup, with the fake client in place of the real one. */
+/** The server's LLM getter, with the fake client in place of the real one. */
 function llmOf(env: Env, f: ReturnType<typeof fakeFactory>) {
-  return composeLlm(env, (config) =>
+  return llmFrom(env, (config) =>
     config.apiKey === undefined
       ? undefined
       : f.createClient(config.apiKey, config.baseURL),
   );
 }
+
+/** The summary part of composeExplain, asked for real. */
+function composeSummary(env: Env, deps: Parameters<typeof composeExplain>[1]) {
+  const explain = composeExplain(env, deps);
+  return (r: ExplainRequest) => explain("summary", r, { cachedOnly: false });
+}
+
+/** A settings store in memory, empty. */
+const noSettings = () => ({ read: async () => ({}), write: async () => {} });
 
 const PY = { label: "Python", commentPrefix: "#" };
 
@@ -142,7 +152,7 @@ const dir = (name: string) => join(cacheDir, name);
 describe("composeExplain", () => {
   it("without OPENROUTER_API_KEY: no client is built and explain answers no-key (CORE-19)", async () => {
     const f = fakeFactory();
-    const explain = composeExplain(
+    const explain = composeSummary(
       {},
       {
         llm: llmOf({}, f),
@@ -157,7 +167,7 @@ describe("composeExplain", () => {
 
   it("with the key: the factory is called once with it", async () => {
     const f = fakeFactory();
-    const explain = composeExplain(
+    const explain = composeSummary(
       { OPENROUTER_API_KEY: "k-123" },
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k-123" }, f),
@@ -173,7 +183,7 @@ describe("composeExplain", () => {
 
   it("APP8N8_MODEL=x/y reaches the client; the default applies without it (CORE-21)", async () => {
     const withModel = fakeFactory();
-    await composeExplain(
+    await composeSummary(
       { OPENROUTER_API_KEY: "k", APP8N8_MODEL: "x/y" },
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k", APP8N8_MODEL: "x/y" }, withModel),
@@ -185,7 +195,7 @@ describe("composeExplain", () => {
     expect(withModel.drafts()[0]?.model).toBe("x/y");
 
     const withDefault = fakeFactory();
-    await composeExplain(
+    await composeSummary(
       { OPENROUTER_API_KEY: "k" },
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k" }, withDefault),
@@ -201,7 +211,7 @@ describe("composeExplain", () => {
 
   it("the system prompt carries the PTS text read from disk", async () => {
     const f = fakeFactory();
-    await composeExplain(
+    await composeSummary(
       { OPENROUTER_API_KEY: "k" },
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
@@ -216,7 +226,7 @@ describe("composeExplain", () => {
 
   it("APP8N8_REVIEW_MODEL=r/x goes to the reviewer and the summary model to the draft (FID-15)", async () => {
     const f = fakeFactory();
-    const res = await composeExplain(
+    const res = await composeSummary(
       {
         OPENROUTER_API_KEY: "k",
         APP8N8_MODEL: "x/y",
@@ -254,7 +264,7 @@ describe("composeExplain", () => {
       ],
     ] as const) {
       const f = fakeFactory();
-      await composeExplain(env, {
+      await composeSummary(env, {
         llm: llmOf(env, f),
         ptsRules,
         plugins: [pythonPlugin],
@@ -265,35 +275,35 @@ describe("composeExplain", () => {
     }
   });
 
-  it("OPENROUTER_BASE_URL reaches createClient; unset or empty gives undefined", () => {
-    const deps = (env: Env, f: ReturnType<typeof fakeFactory>) => ({
-      llm: llmOf(env, f),
-      ptsRules,
-      plugins: [pythonPlugin],
-      cacheDir: dir("i"),
-    });
-    const set = fakeFactory();
-    const setEnv = {
-      OPENROUTER_API_KEY: "k",
-      OPENROUTER_BASE_URL: "http://127.0.0.1:9/v1",
+  it("OPENROUTER_BASE_URL reaches createClient; unset or empty gives undefined", async () => {
+    const urlOf = async (env: Env, name: string) => {
+      const f = fakeFactory();
+      await composeSummary(env, {
+        llm: llmOf(env, f),
+        ptsRules,
+        plugins: [pythonPlugin],
+        cacheDir: dir(name),
+      })(req);
+      return f.baseURLs;
     };
-    composeExplain(setEnv, deps(setEnv, set));
-    expect(set.baseURLs).toEqual(["http://127.0.0.1:9/v1"]);
-
-    const unset = fakeFactory();
-    const unsetEnv = { OPENROUTER_API_KEY: "k" };
-    composeExplain(unsetEnv, deps(unsetEnv, unset));
-    expect(unset.baseURLs).toEqual([undefined]);
-
-    const empty = fakeFactory();
-    const emptyEnv = { OPENROUTER_API_KEY: "k", OPENROUTER_BASE_URL: "" };
-    composeExplain(emptyEnv, deps(emptyEnv, empty));
-    expect(empty.baseURLs).toEqual([undefined]);
+    expect(
+      await urlOf(
+        {
+          OPENROUTER_API_KEY: "k",
+          OPENROUTER_BASE_URL: "http://127.0.0.1:9/v1",
+        },
+        "i1",
+      ),
+    ).toEqual(["http://127.0.0.1:9/v1"]);
+    expect(await urlOf({ OPENROUTER_API_KEY: "k" }, "i2")).toEqual([undefined]);
+    expect(
+      await urlOf({ OPENROUTER_API_KEY: "k", OPENROUTER_BASE_URL: "" }, "i3"),
+    ).toEqual([undefined]);
   });
 
   it("APP8N8_CACHE_DIR replaces deps.cacheDir; unset or empty keeps deps.cacheDir", async () => {
     const custom = join(cacheDir, "x");
-    await composeExplain(
+    await composeSummary(
       { OPENROUTER_API_KEY: "k", APP8N8_CACHE_DIR: custom },
       {
         llm: llmOf(
@@ -312,7 +322,7 @@ describe("composeExplain", () => {
       ["k", { OPENROUTER_API_KEY: "k" }],
       ["l", { OPENROUTER_API_KEY: "k", APP8N8_CACHE_DIR: "" }],
     ] as const) {
-      await composeExplain(env, {
+      await composeSummary(env, {
         llm: llmOf(env, fakeFactory()),
         ptsRules,
         plugins: [pythonPlugin],
@@ -326,7 +336,7 @@ describe("composeExplain", () => {
 describe("composeExplain for a step (VID-28)", () => {
   it("uses the step prompt for a step request and the full prompt for a function", async () => {
     const f = fakeFactory();
-    const explain = composeExplain(
+    const explain = composeSummary(
       { OPENROUTER_API_KEY: "k" },
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
@@ -473,10 +483,12 @@ describe("composeTitles (VID-14, VID-17)", () => {
   });
 });
 
-describe("composeLlm (LLM config, one client)", () => {
-  it("resolves the config from the environment and builds the client once", () => {
+describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
+  it("resolves the config from the environment and builds the client once", async () => {
     const f = fakeFactory();
-    const setup = llmOf({ OPENROUTER_API_KEY: "k", APP8N8_MODEL: "x/y" }, f);
+    const llm = llmOf({ OPENROUTER_API_KEY: "k", APP8N8_MODEL: "x/y" }, f);
+    const setup = await llm();
+    expect(await llm()).toBe(setup);
     expect(setup.config).toEqual({
       provider: "openrouter",
       apiKey: "k",
@@ -492,7 +504,7 @@ describe("composeLlm (LLM config, one client)", () => {
     const f = fakeFactory();
     const env = { OPENROUTER_API_KEY: "k" };
     const llm = llmOf(env, f);
-    const explain = composeExplain(env, {
+    const explain = composeSummary(env, {
       llm,
       ptsRules,
       plugins: [pythonPlugin],
@@ -510,12 +522,13 @@ describe("composeLlm (LLM config, one client)", () => {
     expect(f.seen.length).toBeGreaterThan(2);
   });
 
-  it("the default factory builds the real client for a configured provider and none without a key", () => {
-    expect(composeLlm({}).client).toBeUndefined();
-    expect(composeLlm({ OPENROUTER_API_KEY: "k" }).client).toHaveProperty(
+  it("the default factory builds the real client for a configured provider and none without a key", async () => {
+    const real = (env: Env) => createSettingsService(env, noSettings()).llm();
+    expect((await real({})).client).toBeUndefined();
+    expect((await real({ OPENROUTER_API_KEY: "k" })).client).toHaveProperty(
       "complete",
     );
-    const local = composeLlm({
+    const local = await real({
       APP8N8_LLM_PROVIDER: "openai-compatible",
       APP8N8_LLM_BASE_URL: "http://localhost:11434/v1",
       APP8N8_MODEL: "llama3",
@@ -530,17 +543,25 @@ describe("composeLlm (LLM config, one client)", () => {
   });
 
   it("an unknown provider fails at startup, naming the known ones", () => {
-    expect(() => composeLlm({ APP8N8_LLM_PROVIDER: "nope" })).toThrow(
-      /desconhecido.*openrouter, openai-compatible/,
-    );
+    expect(() =>
+      createCore({
+        env: { APP8N8_LLM_PROVIDER: "nope" },
+        ptsRules: "regras",
+        cacheDir: dir("nope"),
+        historyFile: undefined,
+        port: 4317,
+        token: TEST_TOKEN,
+        settings: noSettings(),
+      }),
+    ).toThrow(/desconhecido.*openrouter, openai-compatible/);
   });
 
   it("without a client both pipelines answer no-key, whatever the provider", async () => {
     const env = { APP8N8_LLM_PROVIDER: "openai-compatible" };
     const llm = llmOf(env, fakeFactory());
-    expect(llm.client).toBeUndefined();
+    expect((await llm()).client).toBeUndefined();
     expect(
-      await composeExplain(env, {
+      await composeSummary(env, {
         llm,
         ptsRules,
         plugins: [pythonPlugin],
@@ -566,7 +587,7 @@ describe("composeLlm (LLM config, one client)", () => {
     };
     const run = async (env: Env) => {
       const f = fakeFactory();
-      const res = await composeExplain(env, {
+      const res = await composeSummary(env, {
         llm: llmOf(env, f),
         ptsRules,
         plugins: [pythonPlugin],
@@ -659,7 +680,7 @@ describe("composeReadProject", () => {
     const received: ExplainRequest[] = [];
     const app = createApp({
       plugins: [pythonPlugin],
-      explain: async (r) => {
+      explain: async (_part, r) => {
         received.push(r);
         return { status: "no-key" };
       },
@@ -683,7 +704,7 @@ describe("composeReadProject", () => {
     // PROJ-07: map and explain leave the folder untouched.
     const before = snapshot(loja);
     expect((await post("/api/project", { path: loja })).status).toBe(200);
-    expect((await post("/api/explain", { root: loja, nodeId })).status).toBe(
+    expect((await post("/api/summary", { root: loja, nodeId })).status).toBe(
       200,
     );
     expect(snapshot(loja)).toEqual(before);
@@ -697,7 +718,7 @@ describe("composeReadProject", () => {
         ["    if peso > 100:", "        return 99", "    return 20"].join("\n"),
       ),
     );
-    await post("/api/explain", { root: loja, nodeId });
+    await post("/api/summary", { root: loja, nodeId });
     rmSync(join(loja, ".."), { recursive: true, force: true });
     expect(received[1]?.code).toContain("if peso > 100:");
   });
@@ -725,7 +746,7 @@ describe("composeReadProject", () => {
       token: TEST_TOKEN,
     });
     const explain = async (root: string) => {
-      const res = await app.request("/api/explain", {
+      const res = await app.request("/api/summary", {
         method: "POST",
         headers: {
           host: "127.0.0.1:4317",
@@ -846,6 +867,7 @@ describe("createCore (DIST-13)", () => {
       historyFile,
       port: 4317,
       token: TEST_TOKEN,
+      settings: noSettings(),
     });
   const get = (app: ReturnType<typeof core>, path: string) =>
     app.request(path, {

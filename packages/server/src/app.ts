@@ -1,4 +1,5 @@
 import {
+  type ExplainPart,
   type ExplainRequest,
   type ExplainResponse,
   type FlowNode,
@@ -18,6 +19,7 @@ import { type Context, Hono } from "hono";
 import { z } from "zod";
 import { maskDocstring } from "./docstring";
 import type { History } from "./history";
+import { InvalidSettings, type SettingsService } from "./settings";
 import { sameToken } from "./token";
 
 export type ProjectRead =
@@ -27,7 +29,12 @@ export type ProjectRead =
 export interface AppDeps {
   /** The registered languages, in a stable order: a snippet is read by the best score, a file by its extension. */
   plugins: LanguagePlugin[];
-  explain: (req: ExplainRequest) => Promise<ExplainResponse>;
+  /** One part of a node's explanation; `cachedOnly` never calls the LLM (CFG-01, CFG-02, CFG-05). */
+  explain: (
+    part: ExplainPart,
+    req: ExplainRequest,
+    options: { cachedOnly: boolean },
+  ) => Promise<ExplainResponse<unknown>>;
   titles: (req: TitleRequest) => Promise<TitlesResponse>;
   readProject: (path: string) => Promise<ProjectRead>;
   port: number;
@@ -35,17 +42,25 @@ export interface AppDeps {
   token: string;
   /** Saved searches; absent in tests that do not need them. */
   history?: History | undefined;
+  /** The LLM settings; absent in tests that do not need them (CFG-12, CFG-13). */
+  settings?: Pick<SettingsService, "view" | "update"> | undefined;
 }
 
 const projectBody = z.object({ path: z.string().min(1) });
 const graphBody = z.object({ source: z.string() });
 const starBody = z.object({ starred: z.boolean() });
 // Extra fields from the client (code, calls...) are dropped: the server builds the request (CORE-17).
+const cachedOnly = z.boolean().optional();
 const projectExplainBody = z.object({
   root: z.string().min(1),
   nodeId: z.string(),
+  cachedOnly,
 });
-const explainBody = z.object({ source: z.string(), nodeId: z.string() });
+const explainBody = z.object({
+  source: z.string(),
+  nodeId: z.string(),
+  cachedOnly,
+});
 const nodeIds = z.array(z.string()).max(200);
 const projectTitlesBody = z.object({ root: z.string().min(1), nodeIds });
 const titlesBody = z.object({ source: z.string(), nodeIds });
@@ -183,8 +198,9 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   // A "simple" cross-site POST skips the CORS preflight; only JSON is accepted (AD-016).
+  // PUT needs a preflight anyway; it gets the same rule, so no write takes another type.
   app.use("/api/*", async (c, next) => {
-    if (c.req.method === "POST") {
+    if (c.req.method === "POST" || c.req.method === "PUT") {
       const type = (c.req.header("content-type") ?? "")
         .split(";")[0]
         ?.trim()
@@ -281,7 +297,8 @@ export function createApp(deps: AppDeps): Hono {
     return c.body(null, 204);
   });
 
-  app.post("/api/explain", async (c) => {
+  /** One part of a node's explanation, built from the server graph (AD-015, CFG-01, CFG-02). */
+  const explainRoute = (part: ExplainPart) => async (c: Context) => {
     const raw = await c.req.json().catch(() => null);
     const project = projectExplainBody.safeParse(raw);
     const snippet = explainBody.safeParse(raw);
@@ -294,7 +311,10 @@ export function createApp(deps: AppDeps): Hono {
 
     let request: ExplainRequest;
     try {
-      const origin = await loadOrigin(body, deps);
+      const origin = await loadOrigin(
+        "root" in body ? { root: body.root } : { source: body.source },
+        deps,
+      );
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
@@ -317,9 +337,36 @@ export function createApp(deps: AppDeps): Hono {
       return extractFailed(c, err);
     }
 
-    const result = await deps.explain(request);
-    // unfaithful is an answer, not a failure: 200 like ok and no-key (FID-10).
+    const result = await deps.explain(part, request, {
+      cachedOnly: body.cachedOnly ?? false,
+    });
+    // unfaithful, no-key and not-cached are answers, not failures: 200 like ok (FID-10).
     return c.json(result, result.status === "error" ? 502 : 200);
+  };
+  app.post("/api/summary", explainRoute("summary"));
+  app.post("/api/suggestions", explainRoute("suggestions"));
+
+  // The key goes in through PUT and never comes back: the view says only whether one exists (CFG-12, CFG-13).
+  app.get("/api/settings", async (c) => {
+    if (!deps.settings) return c.json({ error: "not-found" }, 404);
+    return c.json(await deps.settings.view());
+  });
+
+  app.put("/api/settings", async (c) => {
+    if (!deps.settings) return c.json({ error: "not-found" }, 404);
+    const raw = await c.req.json().catch(() => undefined);
+    try {
+      return c.json(await deps.settings.update(raw));
+    } catch (err) {
+      if (err instanceof InvalidSettings) {
+        return c.json({ error: "invalid settings" }, 400);
+      }
+      console.error(
+        "configurações: não salvou",
+        err instanceof Error ? err.message : err,
+      );
+      return c.json({ error: "save failed" }, 500);
+    }
   });
 
   app.post("/api/titles", async (c) => {

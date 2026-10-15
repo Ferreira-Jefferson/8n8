@@ -16,7 +16,7 @@ const videoFixture = readFileSync(
 const explainCalls: ExplainRequest[] = [];
 const app = createApp({
   plugins: [pythonPlugin],
-  explain: async (req) => {
+  explain: async (_part, req) => {
     explainCalls.push(req);
     return { status: "no-key" };
   },

@@ -103,7 +103,7 @@ function explainSetup(files: SourceFile[], root = WIN_ROOT) {
   const received: ExplainRequest[] = [];
   const app = createApp({
     plugins: [pythonPlugin],
-    explain: async (req) => {
+    explain: async (_part, req) => {
       received.push(req);
       return { status: "no-key" };
     },
@@ -125,7 +125,7 @@ function explainSetup(files: SourceFile[], root = WIN_ROOT) {
     token: TEST_TOKEN,
   });
   const post = (body: unknown) =>
-    app.request("/api/explain", {
+    app.request("/api/summary", {
       method: "POST",
       headers: {
         host: "127.0.0.1:4317",
@@ -139,7 +139,7 @@ function explainSetup(files: SourceFile[], root = WIN_ROOT) {
 
 const calcular = "file:frete/calculo.py/fn:calcular_frete";
 
-describe("POST /api/explain with { root, nodeId } (PROJ-07, PROJ-09, AD-015)", () => {
+describe("POST /api/summary with { root, nodeId } (PROJ-07, PROJ-09, AD-015)", () => {
   it("builds the request from the file in the folder, with a scoped nodeId and qualified neighbours", async () => {
     const files = readFixture();
     const { received, post, root } = explainSetup(files);

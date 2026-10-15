@@ -1,6 +1,11 @@
 import { readFileSync } from "node:fs";
 import { pythonPlugin } from "@8n8/lang-python";
-import type { ExplainRequest, ExplainResponse } from "@8n8/model";
+import type {
+  ExplainPart,
+  ExplainRequest,
+  ExplainResponse,
+  Summary,
+} from "@8n8/model";
 import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
@@ -14,12 +19,16 @@ const videoFixture = readFileSync(
   "utf8",
 );
 
-function setup(reply: ExplainResponse) {
+const PARTS: ExplainPart[] = ["summary", "suggestions"];
+
+function setup(reply: ExplainResponse<unknown>, part: ExplainPart = "summary") {
   const received: ExplainRequest[] = [];
+  const calls: { part: ExplainPart; cachedOnly: boolean }[] = [];
   const app = createApp({
     plugins: [pythonPlugin],
-    explain: async (req) => {
+    explain: async (asked, req, options) => {
       received.push(req);
+      calls.push({ part: asked, cachedOnly: options.cachedOnly });
       return reply;
     },
     titles: async () => ({ status: "ok", titles: [] }),
@@ -28,7 +37,7 @@ function setup(reply: ExplainResponse) {
     token: TEST_TOKEN,
   });
   const post = (body: unknown) =>
-    app.request("/api/explain", {
+    app.request(`/api/${part}`, {
       method: "POST",
       headers: {
         host: "127.0.0.1:4317",
@@ -37,23 +46,73 @@ function setup(reply: ExplainResponse) {
       },
       body: JSON.stringify(body),
     });
-  return { received, post };
+  return { received, calls, post };
 }
 
-const okReply: ExplainResponse = {
+const okReply: ExplainResponse<Summary> = {
   status: "ok",
-  explanation: {
+  result: {
     summary: "x",
     sentences: [],
     inputs: [],
     outputs: [],
-    suggestions: [],
   },
   fromCache: false,
   review: "full",
 };
 
-describe("POST /api/explain", () => {
+describe.each(PARTS)(
+  "POST /api/%s: the part and cachedOnly (CFG-01, CFG-02, CFG-05)",
+  (part) => {
+    it("asks its own part, for real by default", async () => {
+      const { calls, post } = setup(okReply, part);
+      await post({ source: videoFixture, nodeId: "fn:calcular_frete" });
+      expect(calls).toEqual([{ part, cachedOnly: false }]);
+    });
+
+    it("passes cachedOnly and answers 200 with not-cached", async () => {
+      const { calls, post } = setup({ status: "not-cached" }, part);
+      const res = await post({
+        source: videoFixture,
+        nodeId: "fn:calcular_frete",
+        cachedOnly: true,
+      });
+      expect(calls).toEqual([{ part, cachedOnly: true }]);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ status: "not-cached" });
+    });
+
+    it("refuses a cachedOnly that is not a boolean", async () => {
+      const { calls, post } = setup(okReply, part);
+      const res = await post({
+        source: videoFixture,
+        nodeId: "fn:calcular_frete",
+        cachedOnly: "sim",
+      });
+      expect(res.status).toBe(400);
+      expect(calls).toEqual([]);
+    });
+
+    it("returns 502 for error and 404 for an unknown node", async () => {
+      const failing = setup({ status: "error", message: "boom" }, part);
+      expect(
+        (
+          await failing.post({
+            source: videoFixture,
+            nodeId: "fn:calcular_frete",
+          })
+        ).status,
+      ).toBe(502);
+      const { received, post } = setup(okReply, part);
+      expect(
+        (await post({ source: videoFixture, nodeId: "fn:nao_existe" })).status,
+      ).toBe(404);
+      expect(received).toEqual([]);
+    });
+  },
+);
+
+describe("POST /api/summary (the request built on the server)", () => {
   it("masks the docstring and sends its text apart", async () => {
     const { received, post } = setup(okReply);
     const source = 'def f():\n    """Doc."""\n    return 1\n';
@@ -208,7 +267,7 @@ describe("POST /api/explain", () => {
     const received: ExplainRequest[] = [];
     const app = createApp({
       plugins: [pythonPlugin],
-      explain: async (req) => {
+      explain: async (_part, req) => {
         received.push(req);
         return okReply;
       },
@@ -232,7 +291,7 @@ describe("POST /api/explain", () => {
       .map((n) => n.id);
     expect(ids).toEqual(expect.arrayContaining(["dir:pkg", "file:pkg/a.py"]));
     for (const nodeId of ids) {
-      const res = await app.request("/api/explain", {
+      const res = await app.request("/api/summary", {
         method: "POST",
         headers: {
           host: "127.0.0.1:4317",

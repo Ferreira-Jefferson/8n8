@@ -15,13 +15,9 @@ import type {
 } from "@8n8/model";
 import { buildProject } from "@8n8/project";
 import { afterAll, describe, expect, it } from "vitest";
-import {
-  composeExplain,
-  composeLlm,
-  composeReadProject,
-  composeTitles,
-} from "../core";
+import { composeExplain, composeReadProject, composeTitles } from "../core";
 import { fakeLang } from "./fake-lang";
+import { llmOf } from "./llm-of";
 
 const cacheDir = mkdtempSync(join(tmpdir(), "8n8-langs-"));
 afterAll(() => rmSync(cacheDir, { recursive: true, force: true }));
@@ -80,7 +76,7 @@ function fakeLlm() {
 
 const env = { OPENROUTER_API_KEY: "k" };
 const compose = (llm: ReturnType<typeof fakeLlm>, dir = freshDir()) => ({
-  llm: composeLlm(env, () => llm.client),
+  llm: llmOf(env, () => llm.client),
   plugins,
   ptsRules: "REGRAS",
   cacheDir: dir,
@@ -99,10 +95,17 @@ const request = (language: string, over: Partial<ExplainRequest> = {}) =>
     ...over,
   }) satisfies ExplainRequest;
 
+/** The summary part of composeExplain, asked for real. */
+const summaryOf = (deps: Parameters<typeof composeExplain>[1]) => {
+  const explain = composeExplain(env, deps);
+  return (req: ExplainRequest) =>
+    explain("summary", req, { cachedOnly: false });
+};
+
 describe("composeExplain by language (6.1-6.3)", () => {
   it("each request gets the prompts of its own language, with its marker", async () => {
     const llm = fakeLlm();
-    const explain = composeExplain(env, compose(llm));
+    const explain = summaryOf(compose(llm));
     await explain(request("typescript"));
     await explain(request("python"));
     const [ofTs, ofPy] = llm.drafts;
@@ -117,7 +120,7 @@ describe("composeExplain by language (6.1-6.3)", () => {
 
   it("the same node name and code in two languages never share a cache entry", async () => {
     const llm = fakeLlm();
-    const explain = composeExplain(env, compose(llm));
+    const explain = summaryOf(compose(llm));
     const same = { code: "f()", range: { start: 1, end: 1 } };
     expect(await explain(request("python", same))).toMatchObject({
       status: "ok",
@@ -139,7 +142,7 @@ describe("composeExplain by language (6.1-6.3)", () => {
 
   it("a language without prompts is an error, never another language's prompt", async () => {
     const llm = fakeLlm();
-    const explain = composeExplain(env, compose(llm));
+    const explain = summaryOf(compose(llm));
     expect(await explain(request("ruby"))).toEqual({
       status: "error",
       message: "Não há prompt para a linguagem ruby.",
@@ -195,7 +198,7 @@ describe("composeTitles by language (6.1, 6.3)", () => {
     const llm = fakeLlm();
     const titles = composeTitles(
       {},
-      { ...compose(llm), llm: composeLlm({}, () => undefined) },
+      { ...compose(llm), llm: llmOf({}, () => undefined) },
     );
     expect(
       await titles({ items: [item("python", "a"), item("typescript", "b")] }),

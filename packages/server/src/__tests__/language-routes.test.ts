@@ -65,7 +65,7 @@ function setup(over: Partial<AppDeps> = {}): Setup {
   const titled: TitleRequest[] = [];
   const app = createApp({
     plugins: [py, ts],
-    explain: async (req) => {
+    explain: async (_part, req) => {
       explained.push(req);
       return { status: "no-key" };
     },
@@ -216,11 +216,11 @@ describe("a failing extractor is a JSON 500 and the server goes on (5.7)", () =>
     });
   });
 
-  it("/api/explain and /api/titles", async () => {
+  it("/api/summary and /api/titles", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const s = setup({ plugins: [boom] });
     for (const [path, body] of [
-      ["/api/explain", { source: "boom", nodeId: "fn:f" }],
+      ["/api/summary", { source: "boom", nodeId: "fn:f" }],
       ["/api/titles", { source: "boom", nodeIds: ["fn:f"] }],
     ] as const) {
       const res = await s.post(path, body);
@@ -238,8 +238,8 @@ describe("a failing extractor is a JSON 500 and the server goes on (5.7)", () =>
 describe("a snippet request follows the detected language (5.4, 6.3)", () => {
   it("explain: language, cache identity and the comment prefix of the plugin", async () => {
     const s = setup();
-    await s.post("/api/explain", { source: TS_SOURCE, nodeId: "fn:f" });
-    await s.post("/api/explain", { source: PY_SOURCE, nodeId: "fn:f" });
+    await s.post("/api/summary", { source: TS_SOURCE, nodeId: "fn:f" });
+    await s.post("/api/summary", { source: PY_SOURCE, nodeId: "fn:f" });
     const [ofTs, ofPy] = s.explained;
     expect(ofTs).toMatchObject({
       nodeId: "typescript|fn:f",
@@ -298,8 +298,8 @@ describe("a project request follows the language of each file (5.4, 6.3)", () =>
 
   it("explain: each node gets the plugin of its file", async () => {
     const s = setup({ readProject: async () => read });
-    await s.post("/api/explain", { root: "/p", nodeId: "file:a.py/fn:f" });
-    await s.post("/api/explain", { root: "/p", nodeId: "file:b.ts/fn:f" });
+    await s.post("/api/summary", { root: "/p", nodeId: "file:a.py/fn:f" });
+    await s.post("/api/summary", { root: "/p", nodeId: "file:b.ts/fn:f" });
     expect(s.explained).toMatchObject([
       {
         nodeId: "/p|file:a.py/fn:f",
@@ -329,7 +329,7 @@ describe("a project request follows the language of each file (5.4, 6.3)", () =>
   it("a node of a file no plugin serves is an extract failure, not a crash", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const s = setup({ readProject: async () => read });
-    const res = await s.post("/api/explain", {
+    const res = await s.post("/api/summary", {
       root: "/p",
       nodeId: "file:c.zzz/fn:f",
     });

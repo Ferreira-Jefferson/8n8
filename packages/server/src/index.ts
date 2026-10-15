@@ -6,3 +6,5 @@ export {
   listenOptions,
   resolvePort,
 } from "./core";
+export type { SettingsStore } from "./settings";
+export { createFileSettingsStore } from "./settings-file";

@@ -236,10 +236,10 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Testes de rota de cada parte (status, corpo, `cachedOnly`, 404, 400)
-- [ ] `PUT` seguido de pedido usa a config nova sem recriar o app
-- [ ] Suíte de segurança: chave sentinela gravada pelo `PUT` não aparece em resposta nenhuma, nem em erro do provedor; `GET`/`PUT /api/settings` atacadas sem gravar
-- [ ] Gate check passes: `pnpm --filter @8n8/server test`
+- [x] Testes de rota de cada parte (status, corpo, `cachedOnly`, 404, 400)
+- [x] `PUT` seguido de pedido usa a config nova sem recriar o app
+- [x] Suíte de segurança: chave sentinela gravada pelo `PUT` não aparece em resposta nenhuma, nem em erro do provedor; `GET`/`PUT /api/settings` atacadas sem gravar
+- [x] Gate check passes: `pnpm --filter @8n8/server test`
 
 **Tests**: unit
 **Gate**: quick
