@@ -1,101 +1,244 @@
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { spawnSync } from "node:child_process";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { delimiter, dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
-import { cruise } from "dependency-cruiser";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
+
+// The guards are tested by their property, not by their config: each case writes rule
+// breakers into a temp folder that holds the real guard config and runs the real
+// `pnpm check` script there. A config, script or ignore change that lets a breaker pass
+// fails here (DIST-14, DIST-23).
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "../../../..");
-const fixtures = join(here, "fixtures", "guards");
-// The real rules of `pnpm check`, run on fixtures shaped like the repository.
-const { forbidden } = createRequire(import.meta.url)(
-  join(repo, ".dependency-cruiser.cjs"),
-) as { forbidden: object[] };
+const CONFIG = [
+  "package.json",
+  "biome.json",
+  ".dependency-cruiser.cjs",
+  "tsconfig.base.json",
+  ".gitignore",
+];
 
-async function violations(): Promise<string[]> {
-  const result = await cruise(["packages", "apps"], {
-    baseDir: fixtures,
-    validate: true,
-    ruleSet: { forbidden } as never,
-    tsPreCompilationDeps: true,
+/** Every workspace folder, plus a host that does not exist yet (apps/vscode). */
+const workspaces = [
+  ...["packages", "packages/languages", "apps"].flatMap((parent) =>
+    readdirSync(join(repo, parent))
+      .map((name) => `${parent}/${name}`)
+      .filter((dir) => existsSync(join(repo, dir, "package.json"))),
+  ),
+  "apps/vscode",
+].filter((dir, i, all) => all.indexOf(dir) === i);
+const packages = workspaces.filter((w) => w.startsWith("packages/"));
+
+const SPAWN =
+  'import { spawn } from "node:child_process";\n\nexport const probe = spawn;\n';
+const importOf = (from: string, to: string) =>
+  `import { probe as target } from "${posix.relative(posix.dirname(from), to)}";\n\nexport const probe = target;\n`;
+
+/** Clean files every case starts from: one per workspace, the import targets and the two exemptions. */
+const BASE: Record<string, string> = {
+  ...Object.fromEntries(
+    workspaces.map((w) => [`${w}/src/clean.ts`, "export const probe = 1;\n"]),
+  ),
+  "apps/cli/src/run.ts": "export const probe = 1;\n",
+  "apps/web/src/target.ts": "export const probe = 1;\n",
+  "apps/cli/src/open-browser.ts": SPAWN,
+  "apps/cli/src/__tests__/guards.test.ts": SPAWN,
+};
+
+const temps: string[] = [];
+afterAll(() => {
+  for (const dir of temps) rmSync(dir, { recursive: true, force: true });
+});
+
+/** Runs the repository's `check` script on BASE plus `files`, as `pnpm check` does. */
+function check(files: Record<string, string>): { status: number; out: string } {
+  const dir = mkdtempSync(join(tmpdir(), "8n8-guards-"));
+  temps.push(dir);
+  for (const name of CONFIG) cpSync(join(repo, name), join(dir, name));
+  for (const [file, text] of Object.entries({ ...BASE, ...files })) {
+    mkdirSync(join(dir, dirname(file)), { recursive: true });
+    writeFileSync(join(dir, file), text);
+  }
+  const script = (
+    JSON.parse(readFileSync(join(repo, "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    }
+  ).scripts.check;
+  const env = { ...process.env };
+  const path =
+    Object.keys(env).find((k) => k.toLowerCase() === "path") ?? "PATH";
+  env[path] =
+    join(repo, "node_modules", ".bin") + delimiter + (env[path] ?? "");
+  const r = spawnSync(script ?? "", {
+    cwd: dir,
+    env,
+    shell: true,
+    encoding: "utf8",
+    timeout: 60_000,
   });
-  const output = result.output as {
-    summary: {
-      violations: {
-        from: string;
-        to: string;
-        rule: { name: string; severity: string };
-      }[];
-    };
-  };
-  // Only an error fails `pnpm check`: a rule downgraded to warn must fail here too.
-  return output.summary.violations
-    .filter((v) => v.rule.severity === "error")
-    .map((v) => `${v.rule.name}: ${v.from} -> ${v.to}`);
+  return { status: r.status ?? -1, out: `${r.stdout}${r.stderr}` };
 }
 
-describe("pnpm check guards (DIST-14, DIST-23)", () => {
-  it("fails a package that imports node:child_process", async () => {
-    expect(await violations()).toContainEqual(
-      expect.stringMatching(
-        /^no-child-process: packages\/model\/src\/spawn\.ts -> /,
-      ),
-    );
+/** Biome diagnostics as "file rule severity", × being an error. */
+function biomeFindings(out: string): string[] {
+  return [...out.matchAll(/^(\S+):\d+:\d+ (\S+) ━+\r?\n\r?\n\s+(\S) /gm)].map(
+    ([, file, rule, mark]) =>
+      `${file?.replaceAll("\\", "/")} ${rule} ${mark === "×" ? "error" : "not-error"}`,
+  );
+}
+
+/** dependency-cruiser violations as "severity rule: from". */
+function cruiseFindings(out: string): string[] {
+  return [...out.matchAll(/^\s*(\S+) (\S+): (\S+) → /gm)].map(
+    ([, severity, rule, from]) => `${severity} ${rule}: ${from}`,
+  );
+}
+
+describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", () => {
+  it("passes the clean base, open-browser.ts and this test included", () => {
+    const { status, out } = check({});
+    expect(out).not.toMatch(/error|×/i);
+    expect(status).toBe(0);
   });
 
-  it("fails any other apps/cli file that imports node:child_process", async () => {
-    expect(await violations()).toContainEqual(
-      expect.stringMatching(
-        /^no-child-process: apps\/cli\/src\/spawns\.ts -> /,
-      ),
-    );
+  // One run per workspace: Biome prints at most 20 diagnostics per run.
+  it.each(workspaces)(
+    "fails eval, new Function and dangerouslySetInnerHTML in %s",
+    (w) => {
+      const { status, out } = check({
+        [`${w}/src/probe-eval.ts`]:
+          "export const probe = (code: string) => eval(code);\n",
+        [`${w}/src/probe-function.ts`]:
+          "export const probe = (body: string) => new Function(body);\n",
+        [`${w}/src/probe-html.tsx`]:
+          "export const probe = (props: { html: string }) => (\n  <div dangerouslySetInnerHTML={{ __html: props.html }} />\n);\n",
+      });
+      expect(biomeFindings(out).sort()).toEqual([
+        `${w}/src/probe-eval.ts lint/security/noGlobalEval error`,
+        `${w}/src/probe-function.ts lint/style/noRestrictedGlobals error`,
+        `${w}/src/probe-html.tsx lint/security/noDangerouslySetInnerHtml error`,
+      ]);
+      expect(status).not.toBe(0);
+    },
+  );
+
+  it("fails node:child_process anywhere but open-browser.ts and this test", () => {
+    const files: Record<string, string> = {
+      "apps/cli/src/spawns.ts": SPAWN,
+      "apps/cli/src/__tests__/other.test.ts": SPAWN,
+      "packages/server/src/probe-dynamic.ts":
+        'export const probe = () => import("node:child_process");\n',
+    };
+    for (const w of workspaces) files[`${w}/src/probe-spawn.ts`] = SPAWN;
+    const { status, out } = check(files);
+    const found = cruiseFindings(out);
+    for (const file of Object.keys(files)) {
+      expect(found).toContain(`error no-child-process: ${file}`);
+    }
+    expect(found.join("\n")).not.toMatch(/open-browser|guards\.test/);
+    expect(status).not.toBe(0);
   });
 
-  it("lets apps/cli/src/open-browser.ts import node:child_process", async () => {
-    expect(
-      (await violations()).filter((v) => v.includes("open-browser")),
-    ).toEqual([]);
-  });
-
-  it("fails a package, the screen and another host that import apps/cli", async () => {
-    const found = await violations();
-    expect(found).toContainEqual(
-      expect.stringMatching(
-        /packages\/model\/src\/uses-cli\.ts -> apps\/cli\/src\/run\.ts$/,
+  it("fails a package or a host that imports another host", () => {
+    const toCli = "apps/cli/src/run.ts";
+    const files: Record<string, string> = {
+      "apps/web/src/probe-host.ts": importOf(
+        "apps/web/src/probe-host.ts",
+        toCli,
       ),
-    );
-    expect(found).toContainEqual(
-      expect.stringMatching(
-        /apps\/web\/src\/uses-cli\.ts -> apps\/cli\/src\/run\.ts$/,
+      "apps/vscode/src/probe-host.ts": importOf(
+        "apps/vscode/src/probe-host.ts",
+        toCli,
       ),
-    );
-    expect(found).toContainEqual(
-      expect.stringMatching(
-        /^hosts-do-not-import-each-other: apps\/vscode\/src\/uses-cli\.ts -> apps\/cli\/src\/run\.ts$/,
+      "apps/cli/src/probe-host.ts": importOf(
+        "apps/cli/src/probe-host.ts",
+        "apps/web/src/target.ts",
       ),
-    );
+    };
+    for (const w of packages) {
+      files[`${w}/src/probe-cli.ts`] = importOf(`${w}/src/probe-cli.ts`, toCli);
+    }
+    const { status, out } = check(files);
+    const found = cruiseFindings(out);
+    for (const host of ["apps/web", "apps/vscode", "apps/cli"]) {
+      expect(found).toContain(
+        `error hosts-do-not-import-each-other: ${host}/src/probe-host.ts`,
+      );
+    }
+    // A boundary rule of the package itself, not only the relative-path hygiene rule.
+    for (const w of packages) {
+      expect(
+        found.filter(
+          (f) =>
+            f.startsWith("error ") &&
+            f.endsWith(`: ${w}/src/probe-cli.ts`) &&
+            !f.includes("no-relative-escape"),
+        ),
+      ).not.toEqual([]);
+    }
+    expect(status).not.toBe(0);
   });
 });
 
-describe("Biome security rules are explicit errors (DIST-23)", () => {
-  const rules = (
-    JSON.parse(readFileSync(join(repo, "biome.json"), "utf8")) as {
-      linter: { rules: Record<string, Record<string, unknown>> };
-    }
-  ).linter.rules;
+describe("source scan: what the check cannot see (DIST-23)", () => {
+  /** Files under packages/ and apps/, without dependencies and build output. */
+  const sources = ["packages", "apps"].flatMap(function walk(
+    dir: string,
+  ): string[] {
+    return readdirSync(join(repo, dir), { withFileTypes: true }).flatMap(
+      (e) => {
+        const path = `${dir}/${e.name}`;
+        if (e.isDirectory()) {
+          return ["node_modules", "dist", ".cache"].includes(e.name)
+            ? []
+            : walk(path);
+        }
+        return /\.(c|m)?(t|j)sx?$/.test(e.name) ? [path] : [];
+      },
+    );
+  });
+  // The code that ships lives in src/; tests and their fixtures do not ship.
+  const shipped = sources.filter(
+    (f) => f.includes("/src/") && !f.includes("/__tests__/"),
+  );
+  const text = (file: string) => readFileSync(join(repo, file), "utf8");
 
-  it("forbids eval and dangerouslySetInnerHTML", () => {
-    expect(rules.security?.noGlobalEval).toBe("error");
-    expect(rules.security?.noDangerouslySetInnerHtml).toBe("error");
+  it("no comment silences the security rules or the whole linter", () => {
+    const silencer =
+      /biome-ignore(?:-all|-start)?\s+lint(?:[\s:(]|\/security\b|\/style\/noRestrictedGlobals)/;
+    expect(sources.filter((f) => silencer.test(text(f)))).toEqual([]);
   });
 
-  it("forbids the Function global (new Function runs text as code)", () => {
-    const rule = rules.style?.noRestrictedGlobals as {
-      level: string;
-      options: { deniedGlobals: Record<string, string> };
-    };
-    expect(rule.level).toBe("error");
-    expect(Object.keys(rule.options.deniedGlobals)).toContain("Function");
+  it("only open-browser.ts reaches child_process; links.ts only names it as analysed code", () => {
+    expect(
+      shipped
+        .filter((f) => /child_process|getBuiltinModule/.test(text(f)))
+        .sort(),
+    ).toEqual([
+      "apps/cli/src/open-browser.ts",
+      "packages/languages/typescript/src/links.ts",
+    ]);
+  });
+
+  it("shipped code imports nothing from __tests__ (the check skips fixtures)", () => {
+    expect(
+      shipped.filter((f) => /["'][^"'\n]*__tests__\//.test(text(f))),
+    ).toEqual([]);
+  });
+
+  it("gitleaks has no allowlist and no ignore file", () => {
+    expect(text(".gitleaks.toml")).not.toMatch(/allowlist/i);
+    expect(existsSync(join(repo, ".gitleaksignore"))).toBe(false);
   });
 });

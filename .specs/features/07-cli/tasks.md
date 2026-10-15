@@ -23,7 +23,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | CLI: `run`, `openBrowser`, build (`apps/cli`) | unit (Vitest) | 1:1 com os DIST da CLI; todo caminho de erro com mensagem e código exatos | `apps/cli/src/__tests__/*.test.ts` | `pnpm --filter @8n8/cli test` |
 | Tela: `session.ts`, `api.ts`, `App` (`apps/web`) | unit (Vitest + jsdom) | Fragmento lido, guardado, limpo; cabeçalho em toda chamada | `apps/web/src/__tests__/*.test.ts*` | `pnpm --filter @8n8/web test` |
 | Ponta a ponta (pacote instalado, navegador) | e2e (Playwright) | Caminho feliz + pasta inexistente + porta ocupada + nada escrito na pasta e na instalação | `e2e/*.e2e.ts` | `pnpm e2e e2e/<spec>.e2e.ts` |
-| Config de fronteira e lint | unit (Vitest) | A regra existe e pega uma violação de fixture | `apps/cli/src/__tests__/guards.test.ts` | `pnpm --filter @8n8/cli test` |
+| Config de fronteira e lint | unit (Vitest) | O script `check` real falha com um arquivo que viola a regra, em cada workspace | `apps/cli/src/__tests__/guards.test.ts` | `pnpm --filter @8n8/cli test` |
 | Docs, CODEOWNERS | none | - | - | build gate only |
 
 ## Gate Check Commands
@@ -352,6 +352,7 @@ T10 → T11
 - [x] `biome.json` tem `noGlobalEval`, `noDangerouslySetInnerHtml` e a restrição do global `Function` como `"error"`; o teste lê e confere
 - [x] As fixtures ficam fora do `pnpm check` normal. O cruise também deixou de ler `dist/` e as fixtures de código analisado (a do plugin TypeScript chama `child_process` de propósito). A restrição do global `Function` fica desligada só em `e2e/`: o teste de desempenho usa `new Function` dentro do navegador e não vai no pacote
 - [x] Gate check passes: `pnpm typecheck && pnpm check && pnpm test`
+- [x] Desvio (depois das 3 verificações): os testes com `cruise()` e a leitura do `biome.json` deram lugar a um teste de propriedade. Ele copia a config real para uma pasta temporária, escreve arquivos que violam a regra em cada workspace e roda o script `check` do `package.json`. Uma varredura do código pega o que o check não vê. As fixtures `fixtures/guards/` saíram. O teste das guardas virou a segunda exceção da regra `no-child-process`
 
 **Tests**: unit
 **Gate**: build

@@ -3,6 +3,5 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["src"],
-  "exclude": ["src/__tests__/fixtures/guards"]
+  "include": ["src"]
 }

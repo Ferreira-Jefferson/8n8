@@ -132,8 +132,13 @@ module.exports = {
       name: "no-child-process",
       severity: "error",
       comment:
-        "Só apps/cli/src/open-browser.ts inicia processos (DIST-23). Um provedor que precise disso entra como exceção nesta regra, com revisão do CODEOWNERS.",
-      from: { pathNot: "^apps/cli/src/open-browser\\.ts$" },
+        "Só apps/cli/src/open-browser.ts inicia processos (DIST-23). O teste das guardas também, para rodar o check de verdade. Um provedor que precise disso entra como exceção nesta regra, com revisão do CODEOWNERS.",
+      from: {
+        pathNot: [
+          "^apps/cli/src/open-browser\\.ts$",
+          "^apps/cli/src/__tests__/guards\\.test\\.ts$",
+        ],
+      },
       to: { dependencyTypes: ["core"], path: "^(node:)?child_process$" },
     },
     {
@@ -174,7 +179,7 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: "node_modules" },
-    // Test fixtures are input code (code to analyse, or rule breakers for guards.test.ts),
+    // Test fixtures are input code (code to analyse),
     // and dist/ is build output: neither is code of 8n8.
     exclude: { path: "(__tests__/fixtures/|/dist/)" },
     tsPreCompilationDeps: true,
