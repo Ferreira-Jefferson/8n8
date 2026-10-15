@@ -32,7 +32,7 @@ As visualizações podem ser descartáveis: uma vista gerada para responder a um
 - `pnpm check`: Biome e dependency-cruiser (fronteiras).
 - `pnpm e2e`: testes de ponta a ponta (Playwright).
 
-Guias: [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md), [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md). Contribuição: [CONTRIBUTING.md](CONTRIBUTING.md).
+Guias: [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md), [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md), [docs/adicionar-editor.md](docs/adicionar-editor.md). Contribuição: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Antes de codar
 

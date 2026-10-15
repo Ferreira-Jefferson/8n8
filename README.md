@@ -102,11 +102,29 @@ Com o `claude-code`, o 8n8 roda o seu Claude Code em modo não interativo, numa 
 
 Para acrescentar um provedor, veja [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md).
 
+### A extensão do VS Code
+
+A extensão abre o mesmo mapa num painel ao lado do código. Ela precisa do VS Code 1.138 ou mais novo. Para instalar a partir do repositório:
+
+```bash
+pnpm install
+pnpm --filter 8n8-vscode package
+code --install-extension apps/vscode/8n8-vscode-0.0.1.vsix
+```
+
+Depois, com uma pasta aberta, rode **8n8: Abrir mapa** na paleta de comandos. Para mapear uma subpasta, clique nela com o botão direito no Explorer e escolha **8n8: Abrir mapa desta pasta**.
+
+A extensão não abre porta: a página do painel fala com o núcleo por mensagens do próprio VS Code, e nenhum outro programa da máquina alcança a API. A chave de API fica no cofre do VS Code (`SecretStorage`). O cache e o histórico ficam na pasta de dados da extensão. As variáveis de ambiente valem como na CLI.
+
+Para acrescentar outro editor, veja [docs/adicionar-editor.md](docs/adicionar-editor.md).
+
 ## Estrutura do repositório
 
 | Pasta | O que tem |
 |---|---|
 | `apps/web` | A tela: React com React Flow. |
+| `apps/cli` | A CLI `8n8`, que abre a tela no navegador. |
+| `apps/vscode` | A extensão do VS Code, que abre a tela num painel. |
 | `packages/model` | Os tipos e contratos: `Graph`, `LanguagePlugin`, `LlmClient`. |
 | `packages/languages/*` | Um plugin por linguagem, mais `testkit` (suíte de conformidade) e `treesitter` (auxiliar de gramática). |
 | `packages/project` | Monta o grafo do projeto e detecta a linguagem do trecho. |
@@ -114,7 +132,7 @@ Para acrescentar um provedor, veja [docs/adicionar-provedor-llm.md](docs/adicion
 | `packages/input` | Leitura de pasta. |
 | `packages/explain` | Resumos e sugestões, com cache. |
 | `packages/llm` | Provedores de LLM. |
-| `packages/server` | O servidor da API. |
+| `packages/server` | O núcleo: as rotas da API, montadas por `createCore`. |
 | `e2e` | Testes de ponta a ponta com Playwright. |
 | `docs` | Guias e o manual da marca. |
 

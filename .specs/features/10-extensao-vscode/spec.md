@@ -54,7 +54,7 @@ O usuário instala o `.vsix` gerado pelo repositório, abre uma pasta no VS Code
 4. The tela SHALL funcionar na webview com as mesmas funções da CLI: mapa, painel de detalhe, resumo e sugestões, histórico e Configurações.  <!-- VSC-04 -->
 5. The extensão SHALL guardar o cache e o histórico na pasta global da extensão, a chave de API no `SecretStorage` do VS Code e o resto da config no `globalState`. A chave nunca SHALL ir para o `globalState`.  <!-- VSC-05 -->
 6. The extensão SHALL passar ao núcleo o ambiente do host de extensões, então as variáveis da AD-021, da 08 e da 09 (`APP8N8_*`, `OPENROUTER_*`, `APP8N8_CLAUDE_PATH`) valem como na CLI.  <!-- VSC-06 -->
-7. WHEN o usuário roda `pnpm --filter @8n8/vscode package` THEN o repositório SHALL gerar `apps/vscode/8n8-<versão>.vsix` com a extensão empacotada num arquivo só, as gramáticas, a tela e as regras de PTS, sem dependências e sem scripts de instalação.  <!-- VSC-07 -->
+7. WHEN o usuário roda `pnpm --filter 8n8-vscode package` THEN o repositório SHALL gerar `apps/vscode/8n8-vscode-<versão>.vsix` com a extensão empacotada num arquivo só, as gramáticas, a tela e as regras de PTS, sem dependências e sem scripts de instalação.  <!-- VSC-07 -->
 8. The teste de integração SHALL rodar num VS Code real (`@vscode/test-electron`): o comando abre o painel de uma pasta de teste, a página carrega sob a CSP e avisa que está pronta, pede `POST /api/project` pela ponte e recebe 200.  <!-- VSC-08 -->
 
 **Independent Test**: o teste de integração abre o painel numa pasta com um arquivo Python e vê a ponte responder ao mapa.

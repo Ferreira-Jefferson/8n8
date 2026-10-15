@@ -163,11 +163,18 @@
 - **Consequence:** O provedor recebe o ambiente do host por `ProviderOptions.env`. `LlmProvider` ganha `usesKey`.
 - **Status:** ativa.
 
+### AD-025 — Extensão do VS Code sem porta
+- **Date:** 2026-10-15
+- **Context:** Feature 10. A extensão é a segunda embalagem do núcleo (AD-022). Um servidor local, mesmo com token, deixa uma porta aberta na máquina.
+- **Decision:** A extensão (`apps/vscode`) monta o núcleo com `createCore` no host de extensões e nunca abre porta. A tela empacotada roda numa webview com CSP estrita (scripts só com nonce, `connect-src 'none'`) e fala com a extensão por `postMessage`; a ponte (`bridge.ts`) valida cada mensagem, põe o `Host` e o token e chama `app.fetch`. A chave fica no `SecretStorage`. O núcleo vai num bundle ESM (`core.mjs`), porque os plugins de linguagem usam `await` no topo do módulo; a extensão é CommonJS e o carrega por `import()`. A tela passa a usar caminhos relativos (`base: "./"`).
+- **Consequence:** As regras `only-vscode-host-imports-vscode` e `vscode-opens-no-port` entram no `pnpm check`. O teste de integração roda num VS Code real com pastas de usuário próprias.
+- **Status:** ativa.
+
 ## Handoff
 
 *Atualizado em 2026-10-15. O usuário pediu execução sem paradas para aprovação até concluir o roteiro (08, 09, 10 e segurança do repositório). Nada foi enviado ao remoto.*
 
-- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda ✅ (Verifier PASS na rodada 2) → 09-provedor-claude-code (implementada, verificação em curso) → 10 extensão VS Code → segurança do repositório.
+- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda ✅ (Verifier PASS na rodada 2) → 09-provedor-claude-code ✅ (Verifier PASS na rodada 2) → 10-extensao-vscode (implementada, verificação em curso) → segurança do repositório.
 - **08:** resumo e sugestões em pedidos separados (`/api/summary`, `/api/suggestions`, `cachedOnly`), caches `nodes/` e `suggestions/` (schemaVersion 4), painel de configurações (`GET/PUT /api/settings`, `~/.8n8/config.json`), modos automáticos (`APP8N8_AUTO_SUMMARY`, `APP8N8_AUTO_SUGGESTIONS`). Gates: 1640+ unitários, 141 E2E.
 - **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 e bf90eb8 (T36) da 05 entraram com testes vermelhos. Na 08, os testes do `server` ficaram vermelhos entre a T4 e a T7 (registrado no tasks.md). O histórico não foi reescrito.
 - **Ambiente:**

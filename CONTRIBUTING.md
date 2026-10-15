@@ -47,6 +47,7 @@ Toda mudança precisa de verificação antes do commit.
 | `pnpm typecheck` | Roda o TypeScript em todos os pacotes e em `e2e`. |
 | `pnpm check` | Roda o Biome (estilo) e o dependency-cruiser (fronteiras). |
 | `pnpm e2e` | Constrói a CLI e roda os testes de ponta a ponta (Playwright) contra ela. |
+| `pnpm --filter 8n8-vscode test:integration` | Constrói a extensão e roda o teste dela num VS Code de verdade, com pastas de usuário próprias. Usa o VS Code instalado, ou baixa um. |
 
 Durante o trabalho, rode só o teste ligado à mudança. Por exemplo, `pnpm e2e e2e/<spec>.e2e.ts`. Rode a suíte inteira uma vez, antes do commit.
 

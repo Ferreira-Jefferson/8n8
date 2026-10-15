@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/10-extensao-vscode/design.md`
-**Status**: In Progress
+**Status**: Done
 
 ---
 
@@ -18,8 +18,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | Tela (`apps/web`) | unit (Vitest) | Transporte da ponte, pasta da meta, aviso ready | `apps/web/src/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
-| Extensão: módulos puros (`apps/vscode`) | unit (Vitest) | Cada regra da ponte, CSP, store, build | `apps/vscode/src/__tests__/*.test.ts` | `pnpm --filter @8n8/vscode test` |
-| Extensão no VS Code real | integration (`@vscode/test-electron`) | Comando, painel, ready, `POST /api/project` 200 | `apps/vscode/src/test/*.ts` | `pnpm --filter @8n8/vscode test:integration` |
+| Extensão: módulos puros (`apps/vscode`) | unit (Vitest) | Cada regra da ponte, CSP, store, build | `apps/vscode/src/__tests__/*.test.ts` | `pnpm --filter 8n8-vscode test` |
+| Extensão no VS Code real | integration (`@vscode/test-electron`) | Comando, painel, ready, `POST /api/project` 200 | `apps/vscode/src/test/*.ts` | `pnpm --filter 8n8-vscode test:integration` |
 | Guardas | unit | Regras novas com arquivo que viola | `apps/cli/src/__tests__/guards.test.ts` | `pnpm --filter @8n8/cli test` |
 | Docs | none | - | - | build gate only |
 
@@ -28,7 +28,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
 | Quick | After tasks with unit tests only | `pnpm --filter <pacote> test && pnpm typecheck` |
-| Build | After the last task | `pnpm typecheck && pnpm check && pnpm test && pnpm e2e && pnpm --filter @8n8/vscode test:integration` |
+| Build | After the last task | `pnpm typecheck && pnpm check && pnpm test && pnpm e2e && pnpm --filter 8n8-vscode test:integration` |
 
 ---
 
@@ -98,7 +98,7 @@ T7 → T8
 **Done when**:
 
 - [x] A chave vai só para o `SecretStorage`; apagar a chave apaga o segredo; o `globalState` nunca tem a chave
-- [x] Gate check passes: `pnpm --filter @8n8/vscode test && pnpm typecheck`
+- [x] Gate check passes: `pnpm --filter 8n8-vscode test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick
@@ -123,7 +123,7 @@ T7 → T8
 **Done when**:
 
 - [x] Cada mensagem inválida recebe 400 sem chegar ao app; uma válida chega com Host e token
-- [x] Gate check passes: `pnpm --filter @8n8/vscode test`
+- [x] Gate check passes: `pnpm --filter 8n8-vscode test`
 
 **Tests**: unit
 **Gate**: quick
@@ -148,7 +148,7 @@ T7 → T8
 **Done when**:
 
 - [x] A CSP exata do VSC-12; todo `<script>` com o nonce; nenhum `crossorigin`; a pasta escapada na meta
-- [x] Gate check passes: `pnpm --filter @8n8/vscode test`
+- [x] Gate check passes: `pnpm --filter 8n8-vscode test`
 
 **Tests**: unit
 **Gate**: quick
@@ -172,8 +172,8 @@ T7 → T8
 
 **Done when**:
 
-- [x] `pnpm --filter @8n8/vscode build` gera `dist/extension.cjs`, gramáticas, tela e PTS; teste do build confere os arquivos e que `vscode` ficou externo
-- [x] Gate check passes: `pnpm --filter @8n8/vscode test`
+- [x] `pnpm --filter 8n8-vscode build` gera `dist/extension.cjs`, gramáticas, tela e PTS; teste do build confere os arquivos e que `vscode` ficou externo
+- [x] Gate check passes: `pnpm --filter 8n8-vscode test`
 
 **Tests**: unit
 **Gate**: quick
@@ -198,8 +198,8 @@ T7 → T8
 **Done when**:
 
 - [x] O teste abre o painel, recebe `ready` e vê `POST /api/project` 200; o segundo comando reusa o painel
-- [x] `pnpm --filter @8n8/vscode package` gera o `.vsix`
-- [x] Gate check passes: `pnpm --filter @8n8/vscode test:integration`
+- [x] `pnpm --filter 8n8-vscode package` gera o `.vsix`
+- [x] Gate check passes: `pnpm --filter 8n8-vscode test:integration`
 
 **Tests**: integration
 **Gate**: build
@@ -248,8 +248,8 @@ T7 → T8
 
 **Done when**:
 
-- [ ] O guia cobre embalagem, `createCore`, `SettingsStore`, ponte sem porta e regras
-- [ ] Gate check passes: `pnpm check`
+- [x] O guia cobre embalagem, `createCore`, `SettingsStore`, ponte sem porta e regras
+- [x] Gate check passes: `pnpm check`
 
 **Tests**: none
 **Gate**: build
