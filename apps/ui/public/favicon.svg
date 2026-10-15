@@ -1,16 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 76">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 124 124">
   <title>8n8</title>
   <style>
-    .n { stroke: #0f7a6b; fill: none; }
-    .p { fill: #0f7a6b; }
-    @media (prefers-color-scheme: dark) {
-      .n { stroke: #3dbfa8; }
-      .p { fill: #3dbfa8; }
+    .tile { fill: #161818; }
+    .mk { stroke: #3dbfa8; }
+    .mkf { fill: #3dbfa8; }
+    .faint { stroke: #e9ebea; }
+    @media (prefers-color-scheme: light) {
+      .tile { fill: #f2f3f0; }
+      .mk { stroke: #0f7a6b; }
+      .mkf { fill: #0f7a6b; }
+      .faint { stroke: #12292a; }
     }
   </style>
-  <rect class="n" x="3" y="3" width="34" height="34" rx="6" stroke-width="6"/>
-  <rect class="n" x="59" y="39" width="34" height="34" rx="6" stroke-width="6"/>
-  <path class="n" d="M40 8C52 8 44 68 56 68" stroke-width="5" stroke-linecap="round"/>
-  <circle class="p" cx="40" cy="8" r="5"/>
-  <circle class="p" cx="56" cy="68" r="5"/>
+  <rect class="tile" width="124" height="124" rx="27"/>
+  <g transform="translate(11.15 29.2) scale(0.82)" fill="none" stroke-width="6">
+    <rect class="faint" x="3" y="43" width="38" height="34" rx="6" stroke-opacity="0.2"/>
+    <rect class="faint" x="83" y="3" width="38" height="34" rx="6" stroke-opacity="0.2"/>
+    <rect class="mk" x="3" y="3" width="38" height="34" rx="6"/>
+    <rect class="mk" x="83" y="43" width="38" height="34" rx="6"/>
+    <path class="mk" d="M44 8C66 8 58 72 80 72" stroke-width="5" stroke-linecap="round"/>
+    <circle class="mkf" cx="44" cy="8" r="5" stroke="none"/>
+    <circle class="mkf" cx="80" cy="72" r="5" stroke="none"/>
+  </g>
 </svg>
