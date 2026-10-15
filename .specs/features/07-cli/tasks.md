@@ -255,10 +255,12 @@ T10 → T11
 
 **Done when**:
 
-- [ ] Para cada plataforma, `spawn` recebe o comando e a URL como argumento separado, sem `shell: true`
-- [ ] Um erro do `spawn` não derruba a CLI
-- [ ] Conferido nesta máquina: o navegador abre com o fragmento `#t=...&pasta=...` inteiro (se não, plano B do design: query + limpeza)
-- [ ] Gate check passes: `pnpm --filter @8n8/cli test && pnpm typecheck`
+- [x] Para cada plataforma, `spawn` recebe o comando e a URL como argumento separado, sem `shell: true`
+- [x] Um erro do `spawn` não derruba a CLI
+- [x] Conferido nesta máquina: o navegador abre com o fragmento `#t=...&pasta=...` inteiro (conferido: `#t=abc123&pasta=C%3A%5CUsers%5Cx%20y` chegou idêntico; plano B descartado)
+- [x] Gate check passes: `pnpm --filter @8n8/cli test && pnpm typecheck`
+
+- [x] `src/main.ts` (entrada do repositório), vindo da T6; teste de fumaça: token → 200, sem token → 401, pasta inexistente → código 1
 
 **Tests**: unit
 **Gate**: quick
