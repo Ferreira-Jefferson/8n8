@@ -172,8 +172,8 @@ T7 → T8
 
 **Done when**:
 
-- [ ] `pnpm --filter @8n8/vscode build` gera `dist/extension.cjs`, gramáticas, tela e PTS; teste do build confere os arquivos e que `vscode` ficou externo
-- [ ] Gate check passes: `pnpm --filter @8n8/vscode test`
+- [x] `pnpm --filter @8n8/vscode build` gera `dist/extension.cjs`, gramáticas, tela e PTS; teste do build confere os arquivos e que `vscode` ficou externo
+- [x] Gate check passes: `pnpm --filter @8n8/vscode test`
 
 **Tests**: unit
 **Gate**: quick

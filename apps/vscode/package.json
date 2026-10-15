@@ -4,6 +4,7 @@
   "description": "Mostra como o código se conecta, em nós e fios, ao lado do editor.",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "publisher": "ferreira-jefferson",
   "license": "GPL-3.0-only",
   "repository": {
