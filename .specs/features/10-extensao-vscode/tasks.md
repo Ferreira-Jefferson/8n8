@@ -147,8 +147,8 @@ T7 → T8
 
 **Done when**:
 
-- [ ] A CSP exata do VSC-12; todo `<script>` com o nonce; nenhum `crossorigin`; a pasta escapada na meta
-- [ ] Gate check passes: `pnpm --filter @8n8/vscode test`
+- [x] A CSP exata do VSC-12; todo `<script>` com o nonce; nenhum `crossorigin`; a pasta escapada na meta
+- [x] Gate check passes: `pnpm --filter @8n8/vscode test`
 
 **Tests**: unit
 **Gate**: quick
