@@ -4,11 +4,10 @@ import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 
 const env = { ...process.env, APP8N8_TOKEN: randomBytes(32).toString("hex") };
-// pnpm on Windows may be a .cmd shim; the arguments are fixed, so a shell is safe here.
-const shell = process.platform === "win32";
-
-const children = ["dev:server", "dev:web"].map((script) =>
-  spawn("pnpm", ["run", script], { env, stdio: "inherit", shell }),
+// pnpm on Windows may be a .cmd shim, which needs a shell: each command is one fixed
+// string, with no argument for the shell to join.
+const children = ["pnpm run dev:server", "pnpm run dev:web"].map((command) =>
+  spawn(command, { env, stdio: "inherit", shell: true }),
 );
 
 const stop = () => {

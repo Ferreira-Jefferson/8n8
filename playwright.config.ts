@@ -13,6 +13,7 @@ const cacheDir = (name: string) => join(repoRoot, ".cache", name);
 // and count them, so they run one at a time. Every other spec runs in parallel.
 const SHARED_STATE = [
   "**/cache.e2e.ts",
+  "**/cli.e2e.ts",
   "**/detalhe.e2e.ts",
   "**/docstring.e2e.ts",
   "**/fidelidade.e2e.ts",
@@ -70,7 +71,7 @@ export default defineConfig({
       : []),
   ],
   // Never reuse a running server: it may hold the real key from .env.
-  // Every variable below is set explicitly, so process.loadEnvFile never takes it from .env.
+  // The built CLI never reads .env; every variable below is set explicitly.
   webServer: [
     {
       // OpenAI-compatible fake LLM (e2e/fake-llm.ts); the keyed server talks only to it.
@@ -80,8 +81,8 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      // Builds apps/web and serves it with the real API, with no key (feature 01).
-      command: "pnpm start",
+      // The built CLI (pnpm e2e builds it first) with the real API and no key (feature 01).
+      command: "node apps/cli/dist/8n8.mjs --no-open",
       url: URL,
       reuseExistingServer: false,
       timeout: 180_000,
@@ -98,9 +99,8 @@ export default defineConfig({
       },
     },
     {
-      // The real review pipeline against the fake LLM. It serves the apps/web/dist built by
-      // the server above; serveStatic reads it per request, so start order does not matter.
-      command: "tsx packages/server/src/main.ts start",
+      // The real review pipeline against the fake LLM, with the screen of the built CLI.
+      command: "node apps/cli/dist/8n8.mjs --no-open",
       url: "http://127.0.0.1:4319",
       reuseExistingServer: false,
       timeout: 180_000,
@@ -119,7 +119,7 @@ export default defineConfig({
     },
     {
       // The same pipeline with no model chosen: the default model (CORE-21, FID-15).
-      command: "tsx packages/server/src/main.ts start",
+      command: "node apps/cli/dist/8n8.mjs --no-open",
       url: "http://127.0.0.1:4320",
       reuseExistingServer: false,
       timeout: 180_000,
@@ -128,8 +128,7 @@ export default defineConfig({
         APP8N8_PORT: "4320",
         OPENROUTER_API_KEY: "e2e-fake-key",
         OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
-        // Set and empty: process.loadEnvFile keeps them, so .env never supplies a model,
-        // and an empty value counts as absent.
+        // Set and empty: an empty value counts as absent, so the default model is used.
         APP8N8_MODEL: "",
         APP8N8_REVIEW_MODEL: "",
         APP8N8_CACHE_DIR: cacheDir("e2e-default-model"),
@@ -139,7 +138,7 @@ export default defineConfig({
     {
       // A keyless server of its own for historico.e2e.ts: that spec wipes and counts the
       // history, so the maps other specs open on 4317 at the same time stay out of it.
-      command: "tsx packages/server/src/main.ts start",
+      command: "node apps/cli/dist/8n8.mjs --no-open",
       url: "http://127.0.0.1:4321",
       reuseExistingServer: false,
       timeout: 180_000,

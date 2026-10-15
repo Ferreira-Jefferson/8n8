@@ -312,16 +312,18 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `package.json` da raiz: `dev` → `node scripts/dev.mjs`; `start` → build da CLI + `node --env-file-if-exists=.env apps/cli/dist/8n8.mjs --no-open`; `e2e` → build da CLI + `playwright test`
-- [ ] Os webServers do Playwright rodam `node apps/cli/dist/8n8.mjs --no-open`
-- [ ] E2E: `pnpm pack` + `npm install -g --prefix <temp>`; `8n8 <fixture> --no-open` numa porta própria; a página com `#t=...&pasta=...` mostra os nós da fixture
-- [ ] E2E: `8n8 --help` do pacote instalado não escreve `ExperimentalWarning` no `stderr`
-- [ ] E2E: pasta inexistente → código 1 e mensagem; porta ocupada → código 1 e mensagem
-- [ ] E2E: com a pasta pessoal apontada para uma pasta temporária e o LLM falso, a explicação grava em `<home>/.8n8/cache` (DIST-09)
-- [ ] E2E: a fixture e a pasta de instalação ficam iguais antes e depois (lista de arquivos e conteúdo)
-- [ ] E2E: abrir só com `#t=` (sem `extraHTTPHeaders`) carrega a tela e chama a API com sucesso
-- [ ] `pnpm dev` sobe e a tela chama a API (conferido à mão)
-- [ ] Gate check passes: `pnpm test && pnpm typecheck && pnpm e2e`
+- [x] `package.json` da raiz: `dev` → `node scripts/dev.mjs`; `start` → build da CLI + `node --env-file-if-exists=.env apps/cli/dist/8n8.mjs --no-open`; `e2e` → build da CLI + `playwright test`
+- [x] Os webServers do Playwright rodam `node apps/cli/dist/8n8.mjs --no-open`
+- [x] E2E: `pnpm pack` + `npm install -g --prefix <temp>`; `8n8 <fixture> --no-open` numa porta própria; a página com `#t=...&pasta=...` mostra os nós da fixture
+- [x] E2E: `8n8 --help` do pacote instalado não escreve `ExperimentalWarning` no `stderr`
+- [x] E2E: pasta inexistente → código 1 e mensagem; porta ocupada → código 1 e mensagem
+- [x] E2E: com a pasta pessoal apontada para uma pasta temporária e o LLM falso, a explicação grava em `<home>/.8n8/cache` (DIST-09)
+- [x] E2E: a fixture e a pasta de instalação ficam iguais antes e depois (lista de arquivos e conteúdo)
+- [x] E2E: abrir só com `#t=` (sem `extraHTTPHeaders`) carrega a tela e chama a API com sucesso
+- [x] `pnpm dev` sobe e a tela chama a API (conferido à mão: `/api/languages` pelo proxy do Vite responde; direto no servidor sem token, 401). O `scripts/dev.mjs` deixou de passar argumentos ao shell (aviso DEP0190 do Node)
+- [x] Gate check passes: `pnpm test && pnpm typecheck && pnpm e2e`
+
+- [x] O teste do cache usa um `contagem.py` que o LLM falso resume com aprovação; o nó da fixture (`calcular_frete`) volta como `unfaithful` e não entra no cache
 
 **Tests**: e2e
 **Gate**: full

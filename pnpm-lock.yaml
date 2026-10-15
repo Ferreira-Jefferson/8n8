@@ -400,9 +400,6 @@ importers:
       '@8n8/project':
         specifier: workspace:*
         version: link:../project
-      '@hono/node-server':
-        specifier: 2.1.5
-        version: 2.1.5(hono@4.13.13)
       hono:
         specifier: 4.13.13
         version: 4.13.13

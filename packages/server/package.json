@@ -19,7 +19,6 @@
     "@8n8/llm": "workspace:*",
     "@8n8/model": "workspace:*",
     "@8n8/project": "workspace:*",
-    "@hono/node-server": "2.1.5",
     "hono": "4.13.13",
     "zod": "4.6.7"
   },
