@@ -76,6 +76,6 @@ O repositório tem os workflows de CI e CodeQL, a config do Dependabot e o `SECU
 
 | Requirement ID | Story | Status |
 | -------------- | ----- | ------ |
-| SEC-01..05 | P1: A CI barra um PR que enfraquece o projeto | Pending |
-| SEC-06..07 | P1: Política de segurança | Pending |
-| SEC-08 | P1: Nenhum outro jeito de iniciar processo | Pending |
+| SEC-01..05 | P1: A CI barra um PR que enfraquece o projeto | Verified |
+| SEC-06..07 | P1: Política de segurança | Verified |
+| SEC-08 | P1: Nenhum outro jeito de iniciar processo | Verified |

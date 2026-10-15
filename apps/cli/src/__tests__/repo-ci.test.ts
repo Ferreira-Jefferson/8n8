@@ -284,3 +284,28 @@ describe("the workflows as YAML (SEC-01, SEC-02, SEC-05)", () => {
     ]);
   });
 });
+
+describe("the gates job, step by step (SEC-01)", () => {
+  it("is exactly checkout, pnpm, node, install and the five gates: no extra step can disarm one", () => {
+    const doc = parse(read(".github/workflows/ci.yml")) as {
+      jobs: { gates: { steps: Record<string, unknown>[] } };
+    };
+    expect(doc.jobs.gates.steps).toEqual([
+      {
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        with: { "persist-credentials": false },
+      },
+      { uses: "pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413" },
+      {
+        uses: "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+        with: { "node-version": 22, cache: "pnpm" },
+      },
+      { run: "pnpm install --frozen-lockfile" },
+      { run: "pnpm typecheck" },
+      { run: "pnpm check" },
+      { run: "pnpm test" },
+      { run: "pnpm exec playwright install --with-deps chromium" },
+      { run: "pnpm e2e" },
+    ]);
+  });
+});

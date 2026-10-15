@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 38,
+  "next_id": 45,
   "lessons": [
     {
       "id": "L-001",
@@ -676,6 +676,132 @@
       ],
       "created": "2026-10-15T06:08:27Z",
       "last_seen": "2026-10-15T06:08:27Z"
+    },
+    {
+      "id": "L-038",
+      "key": "spec_deviation::before claiming what a third party action does read its source for the triggers you use gitleaks action scans only the event commit range on push and pull request",
+      "text": "Before claiming what a third-party action does, read its source for the triggers you use; gitleaks-action scans only the event commit range on push and pull_request.",
+      "signal": "spec_deviation",
+      "scope": ".github/workflows",
+      "status": "candidate",
+      "features": [
+        "11-seguranca-repositorio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SEC-01 .github/workflows/ci.yml:42 (gitleaks-action src/gitleaks.js:103-116) (.github/workflows)"
+      ],
+      "created": "2026-10-15T06:25:35Z",
+      "last_seen": "2026-10-15T06:25:35Z"
+    },
+    {
+      "id": "L-039",
+      "key": "surviving_mutant::a test that pins a ci step by its text must also forbid if and continue on error or the step can be switched off without removing it",
+      "text": "A test that pins a CI step by its text must also forbid if and continue-on-error, or the step can be switched off without removing it.",
+      "signal": "surviving_mutant",
+      "scope": ".github/workflows",
+      "status": "candidate",
+      "features": [
+        "11-seguranca-repositorio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "x1/x2/x3 apps/cli/src/__tests__/repo-ci.test.ts:62-70 (.github/workflows)"
+      ],
+      "created": "2026-10-15T06:25:36Z",
+      "last_seen": "2026-10-15T06:31:45Z"
+    },
+    {
+      "id": "L-040",
+      "key": "surviving_mutant::assert a job setting inside that job s block not anywhere in the workflow file",
+      "text": "Assert a job setting inside that job's block, not anywhere in the workflow file.",
+      "signal": "surviving_mutant",
+      "scope": ".github/workflows",
+      "status": "candidate",
+      "features": [
+        "11-seguranca-repositorio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "m5b apps/cli/src/__tests__/repo-ci.test.ts:74 (.github/workflows)"
+      ],
+      "created": "2026-10-15T06:25:36Z",
+      "last_seen": "2026-10-15T06:25:36Z"
+    },
+    {
+      "id": "L-041",
+      "key": "spec_precision_gap::a content test for a policy document needs one marker per item the ac lists not a sample of them",
+      "text": "A content test for a policy document needs one marker per item the AC lists, not a sample of them.",
+      "signal": "spec_precision_gap",
+      "scope": "docs",
+      "status": "candidate",
+      "features": [
+        "11-seguranca-repositorio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "SEC-06 apps/cli/src/__tests__/repo-ci.test.ts:112-120 (docs)"
+      ],
+      "created": "2026-10-15T06:25:36Z",
+      "last_seen": "2026-10-15T06:25:36Z"
+    },
+    {
+      "id": "L-042",
+      "key": "surviving_mutant::pin a security critical ci script as an exact list of lines single line matches let true or an early exit pass",
+      "text": "Pin a security-critical CI script as an exact list of lines; single-line matches let || true or an early exit pass.",
+      "signal": "surviving_mutant",
+      "scope": ".github/workflows",
+      "status": "candidate",
+      "features": [
+        "11-seguranca-repositorio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "s1/s2 apps/cli/src/__tests__/repo-ci.test.ts:77-90 (.github/workflows)"
+      ],
+      "created": "2026-10-15T06:31:44Z",
+      "last_seen": "2026-10-15T06:31:44Z"
+    },
+    {
+      "id": "L-043",
+      "key": "surviving_mutant::when pinning a ci job also pin the workflow s top level keys defaults and env change how every job runs",
+      "text": "When pinning a CI job, also pin the workflow's top-level keys; defaults and env change how every job runs.",
+      "signal": "surviving_mutant",
+      "scope": ".github/workflows",
+      "status": "candidate",
+      "features": [
+        "11-seguranca-repositorio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "s16 apps/cli/src/__tests__/repo-ci.test.ts:77-101 (.github/workflows)"
+      ],
+      "created": "2026-10-15T06:35:44Z",
+      "last_seen": "2026-10-15T06:35:44Z"
+    },
+    {
+      "id": "L-044",
+      "key": "surviving_mutant::when a test scans yaml keys by text match quoted keys too a quoted key is the same key",
+      "text": "When a test scans YAML keys by text, match quoted keys too; a quoted key is the same key.",
+      "signal": "surviving_mutant",
+      "scope": ".github/workflows",
+      "status": "candidate",
+      "features": [
+        "11-seguranca-repositorio"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "s17 apps/cli/src/__tests__/repo-ci.test.ts:53 (.github/workflows)"
+      ],
+      "created": "2026-10-15T06:39:36Z",
+      "last_seen": "2026-10-15T06:39:36Z"
     }
   ]
 }

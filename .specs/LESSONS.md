@@ -234,6 +234,48 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: R5 apps/vscode/src/extension.ts:152 (editor-host)
 - last seen: 2026-10-15T06:08:27Z
 
+### L-038 - Before claiming what a third-party action does, read its source for the triggers you use; gitleaks-action scans only the event commit range on push and pull_request.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `.github/workflows` · harmful: 0
+- features: 11-seguranca-repositorio
+- evidence: SEC-01 .github/workflows/ci.yml:42 (gitleaks-action src/gitleaks.js:103-116) (.github/workflows)
+- last seen: 2026-10-15T06:25:35Z
+
+### L-039 - A test that pins a CI step by its text must also forbid if and continue-on-error, or the step can be switched off without removing it.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `.github/workflows` · harmful: 0
+- features: 11-seguranca-repositorio
+- evidence: x1/x2/x3 apps/cli/src/__tests__/repo-ci.test.ts:62-70 (.github/workflows)
+- last seen: 2026-10-15T06:31:45Z
+
+### L-040 - Assert a job setting inside that job's block, not anywhere in the workflow file.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `.github/workflows` · harmful: 0
+- features: 11-seguranca-repositorio
+- evidence: m5b apps/cli/src/__tests__/repo-ci.test.ts:74 (.github/workflows)
+- last seen: 2026-10-15T06:25:36Z
+
+### L-041 - A content test for a policy document needs one marker per item the AC lists, not a sample of them.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `docs` · harmful: 0
+- features: 11-seguranca-repositorio
+- evidence: SEC-06 apps/cli/src/__tests__/repo-ci.test.ts:112-120 (docs)
+- last seen: 2026-10-15T06:25:36Z
+
+### L-042 - Pin a security-critical CI script as an exact list of lines; single-line matches let || true or an early exit pass.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `.github/workflows` · harmful: 0
+- features: 11-seguranca-repositorio
+- evidence: s1/s2 apps/cli/src/__tests__/repo-ci.test.ts:77-90 (.github/workflows)
+- last seen: 2026-10-15T06:31:44Z
+
+### L-043 - When pinning a CI job, also pin the workflow's top-level keys; defaults and env change how every job runs.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `.github/workflows` · harmful: 0
+- features: 11-seguranca-repositorio
+- evidence: s16 apps/cli/src/__tests__/repo-ci.test.ts:77-101 (.github/workflows)
+- last seen: 2026-10-15T06:35:44Z
+
+### L-044 - When a test scans YAML keys by text, match quoted keys too; a quoted key is the same key.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `.github/workflows` · harmful: 0
+- features: 11-seguranca-repositorio
+- evidence: s17 apps/cli/src/__tests__/repo-ci.test.ts:53 (.github/workflows)
+- last seen: 2026-10-15T06:39:36Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

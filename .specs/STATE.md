@@ -179,10 +179,10 @@
 
 ## Handoff
 
-*Atualizado em 2026-10-15. O usuário pediu execução sem paradas para aprovação até concluir o roteiro (08, 09, 10 e segurança do repositório). Nada foi enviado ao remoto.*
+*Atualizado em 2026-10-15. O roteiro pedido pelo usuário (08, 09, 10 e segurança do repositório) está concluído e verificado. Nada foi enviado ao remoto.*
 
-- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda ✅ (Verifier PASS na rodada 2) → 09-provedor-claude-code ✅ (Verifier PASS na rodada 2) → 10-extensao-vscode ✅ (Verifier PASS na rodada 3) → 11-seguranca-repositorio (implementada, verificação em curso).
-- **08:** resumo e sugestões em pedidos separados (`/api/summary`, `/api/suggestions`, `cachedOnly`), caches `nodes/` e `suggestions/` (schemaVersion 4), painel de configurações (`GET/PUT /api/settings`, `~/.8n8/config.json`), modos automáticos (`APP8N8_AUTO_SUMMARY`, `APP8N8_AUTO_SUGGESTIONS`). Gates: 1640+ unitários, 141 E2E.
+- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda ✅ (Verifier PASS na rodada 2) → 09-provedor-claude-code ✅ (Verifier PASS na rodada 2) → 10-extensao-vscode ✅ (Verifier PASS na rodada 3) → 11-seguranca-repositorio ✅ (Verifier PASS na rodada 5).
+- **08–11:** detalhes no `validation.md` de cada feature e nas AD-023 a AD-026.
 - **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 e bf90eb8 (T36) da 05 entraram com testes vermelhos. Na 08, os testes do `server` ficaram vermelhos entre a T4 e a T7 (registrado no tasks.md). O histórico não foi reescrito.
 - **Ambiente:**
   - O pnpm 12.6.0 global roda o binário nativo (`pnpm.exe`). Se ele voltar a dizer "pnpm is running through Node.js", reinstale com `npm install -g pnpm@12.6.0 --foreground-scripts`.
