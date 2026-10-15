@@ -23,6 +23,7 @@
     "@types/node": "22.20.5",
     "dependency-cruiser": "18.6.0",
     "esbuild": "0.28.2",
-    "hono": "4.13.13"
+    "hono": "4.13.13",
+    "yaml": "2.9.1"
   }
 }

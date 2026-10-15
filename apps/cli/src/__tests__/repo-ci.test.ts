@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { parse } from "yaml";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const workflowsDir = join(repo, ".github/workflows");
@@ -214,5 +215,72 @@ describe("the security policy and its owners (SEC-06, SEC-07)", () => {
         new RegExp(`^${path.replaceAll(".", "\\.")} @Ferreira-Jefferson$`, "m"),
       );
     }
+  });
+});
+
+// Parsed, not read as text: quoted keys, flow maps and other YAML spellings
+// cannot slip past (SEC-01, SEC-02, SEC-05).
+describe("the workflows as YAML (SEC-01, SEC-02, SEC-05)", () => {
+  type Step = Record<string, unknown> & { run?: string };
+  type Job = Record<string, unknown> & { steps: Step[] };
+  const parsed = workflows.map((w) => ({
+    name: w.name,
+    doc: parse(w.text) as Record<string, unknown> & {
+      jobs: Record<string, Job>;
+    },
+  }));
+
+  it.each(parsed)(
+    "$name has exactly name, on, permissions and jobs at the top",
+    ({ doc }) => {
+      expect(Object.keys(doc)).toEqual(["name", "on", "permissions", "jobs"]);
+      expect(doc.permissions).toEqual({ contents: "read" });
+    },
+  );
+
+  it.each(parsed)(
+    "$name has no job that runs conditionally, quietly or with its own defaults",
+    ({ doc }) => {
+      for (const job of Object.values(doc.jobs)) {
+        for (const key of ["if", "continue-on-error", "defaults", "env"]) {
+          expect(job).not.toHaveProperty(key);
+        }
+        for (const step of job.steps) {
+          for (const key of ["if", "continue-on-error", "shell"]) {
+            expect(step).not.toHaveProperty(key);
+          }
+          expect(step.run ?? "").not.toMatch(/\|\|\s*(true|:)|\bexit\s+0\b/);
+        }
+      }
+    },
+  );
+
+  it("gives job permissions only to the CodeQL analysis", () => {
+    for (const { name, doc } of parsed) {
+      for (const [id, job] of Object.entries(doc.jobs)) {
+        if (name === "codeql.yml" && id === "analyze") {
+          expect(job.permissions).toEqual({
+            contents: "read",
+            "security-events": "write",
+          });
+        } else {
+          expect(job).not.toHaveProperty("permissions");
+        }
+      }
+    }
+  });
+
+  it("gives env only to the gitleaks step, with exactly its version and checksum", () => {
+    const withEnv = parsed.flatMap(({ doc }) =>
+      Object.values(doc.jobs).flatMap((job) =>
+        job.steps.filter((s) => "env" in s),
+      ),
+    );
+    expect(withEnv).toHaveLength(1);
+    expect(withEnv[0]?.name).toBe("gitleaks");
+    expect(Object.keys(withEnv[0]?.env as object)).toEqual([
+      "GITLEAKS_VERSION",
+      "GITLEAKS_SHA256",
+    ]);
   });
 });
