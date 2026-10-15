@@ -1,5 +1,7 @@
 // Runs inside a real VS Code (VSC-08): the command opens the panel, the page loads
 // under the content policy, and the screen maps the workspace through the bridge.
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import * as vscode from "vscode";
 import type { ExtensionApi } from "../../extension";
 
@@ -31,6 +33,8 @@ export async function run(): Promise<void> {
   );
   if (!ext) throw new Error("A extensão 8n8 não está instalada no teste.");
   const api = await ext.activate();
+  if (!api)
+    throw new Error("Em modo de teste, a extensão devolve a API de teste.");
   const workspace = vscode.workspace.workspaceFolders?.[0]?.uri;
   if (!workspace) throw new Error("O teste abre o VS Code sem pasta.");
 
@@ -58,6 +62,77 @@ export async function run(): Promise<void> {
       api.calls().some((c) => c.path === "/api/settings" && c.status === 200),
     "a ponte não respondeu às configurações",
   );
+
+  // VSC-12: only the packaged screen is readable, and the page never holds the token.
+  const roots = api.webviewOptions()?.localResourceRoots ?? [];
+  const expected = join(ext.extensionPath, "dist", "web");
+  if (
+    roots.length !== 1 ||
+    roots[0]?.fsPath.toLowerCase() !== expected.toLowerCase()
+  ) {
+    throw new Error(
+      `localResourceRoots errado: ${roots.map((r) => r.fsPath).join(", ")}`,
+    );
+  }
+  if (/[0-9a-f]{64}/.test(api.lastHtml())) {
+    throw new Error(
+      "O HTML da webview tem algo com a forma do token da sessão.",
+    );
+  }
+
+  // VSC-06: APP8N8_AUTO_SUMMARY of the host reaches the core.
+  const settings = await api.ask({
+    type: "api",
+    id: 1,
+    method: "GET",
+    path: "/api/settings",
+  });
+  const view = JSON.parse(settings.body) as {
+    autoSummary?: boolean;
+    env?: Record<string, string>;
+  };
+  if (
+    view.autoSummary !== true ||
+    view.env?.autoSummary !== "APP8N8_AUTO_SUMMARY"
+  ) {
+    throw new Error(`O ambiente não chegou ao núcleo: ${settings.body}`);
+  }
+
+  // VSC-04: the summary and the history answer through the same bridge.
+  const summary = await api.ask({
+    type: "api",
+    id: 2,
+    method: "POST",
+    path: "/api/summary",
+    body: JSON.stringify({
+      root: workspace.fsPath,
+      nodeId: "file:frete/calculo.py/fn:calcular_frete",
+      cachedOnly: true,
+    }),
+  });
+  if (
+    summary.status !== 200 ||
+    JSON.parse(summary.body).status !== "not-cached"
+  ) {
+    throw new Error(`Resumo pela ponte: ${summary.status} ${summary.body}`);
+  }
+  // VSC-05: the map lands in the history, in the extension's data folder.
+  await waitFor(
+    () => existsSync(join(api.dataDir(), "historico.db")),
+    "o histórico não ficou na pasta da extensão",
+  );
+  const history = await api.ask({
+    type: "api",
+    id: 3,
+    method: "GET",
+    path: "/api/history",
+  });
+  if (
+    history.status !== 200 ||
+    (JSON.parse(history.body) as { items: unknown[] }).items.length === 0
+  ) {
+    throw new Error(`Histórico pela ponte: ${history.status} ${history.body}`);
+  }
 
   // VSC-02, VSC-03: the Explorer command on another folder reuses the one panel.
   const before = api.calls().length;

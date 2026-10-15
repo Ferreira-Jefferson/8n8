@@ -50,6 +50,8 @@ try {
   await runTests({
     extensionDevelopmentPath: extRoot,
     extensionTestsPath: suite,
+    // VSC-06: a variable of the host's environment must reach the core.
+    extensionTestsEnv: { APP8N8_AUTO_SUMMARY: "1" },
     ...(existsSync(installed) ? { vscodeExecutablePath: installed } : {}),
     launchArgs: [
       workspace,

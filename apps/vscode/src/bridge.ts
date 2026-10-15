@@ -47,8 +47,10 @@ export function isValidMessage(message: unknown): message is ApiMessage {
     PATH.test(m.path) &&
     !m.path.includes("..") &&
     !m.path.includes("//") &&
+    // Only POST and PUT carry a body, of 1 048 576 bytes at most.
     (m.body === undefined ||
-      (typeof m.body === "string" &&
+      ((m.method === "POST" || m.method === "PUT") &&
+        typeof m.body === "string" &&
         Buffer.byteLength(m.body, "utf8") <= MAX_BODY_BYTES))
   );
 }
@@ -68,15 +70,14 @@ export function createBridge(app: CoreApp, token: string) {
   return {
     async handle(message: unknown): Promise<ApiReply> {
       const id = idOf(message);
-      if (!isValidMessage(message)) {
-        return {
-          type: "api-response",
-          id,
-          status: 400,
-          body: JSON.stringify({ error: "invalid message" }),
-          contentType: "application/json",
-        };
-      }
+      const answer = (status: number, error: string): ApiReply => ({
+        type: "api-response",
+        id,
+        status,
+        body: JSON.stringify({ error }),
+        contentType: "application/json",
+      });
+      if (!isValidMessage(message)) return answer(400, "invalid message");
       const headers: Record<string, string> = {
         host: BRIDGE_HOST,
         "x-8n8-token": token,
@@ -84,13 +85,19 @@ export function createBridge(app: CoreApp, token: string) {
       if (message.body !== undefined) {
         headers["content-type"] = "application/json";
       }
-      const response = await app.fetch(
-        new Request(`http://${BRIDGE_HOST}${message.path}`, {
-          method: message.method,
-          headers,
-          ...(message.body === undefined ? {} : { body: message.body }),
-        }),
-      );
+      let response: Response;
+      try {
+        response = await app.fetch(
+          new Request(`http://${BRIDGE_HOST}${message.path}`, {
+            method: message.method,
+            headers,
+            ...(message.body === undefined ? {} : { body: message.body }),
+          }),
+        );
+      } catch {
+        // The page always gets an answer: a failure never leaves its promise open.
+        return answer(500, "bridge failed");
+      }
       return {
         type: "api-response",
         id,

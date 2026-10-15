@@ -112,6 +112,8 @@ describe("createBridge: what never reaches the core (VSC-10)", () => {
     ["a query", { ...valid, path: "/api/project?x=1" }],
     ["a body that is not text", { ...valid, body: { path: "C:/" } }],
     ["a body over 1 MB", { ...valid, body: "x".repeat(1024 * 1024 + 1) }],
+    ["a GET with a body", { ...valid, method: "GET", body: "{}" }],
+    ["a DELETE with a body", { ...valid, method: "DELETE", body: "{}" }],
     ["an extra field", { ...valid, headers: { host: "evil" } }],
     ["a token from the page", { ...valid, token: "x" }],
   ])("answers 400 to %s", async (_, message) => {
@@ -127,5 +129,28 @@ describe("createBridge: what never reaches the core (VSC-10)", () => {
     expect(
       (await createBridge(app, TOKEN).handle({ ...valid, method: "PATCH" })).id,
     ).toBe(7);
+  });
+});
+
+describe("createBridge: limits and failures (VSC-10)", () => {
+  it("passes a body of exactly 1 048 576 bytes", async () => {
+    const { app, seen } = recording();
+    const reply = await createBridge(app, TOKEN).handle({
+      ...valid,
+      body: "x".repeat(1_048_576),
+    });
+    expect(reply.status).toBe(200);
+    expect(seen).toHaveLength(1);
+  });
+
+  it("answers 500 when the core throws, so the page's promise settles", async () => {
+    const app: CoreApp = {
+      fetch: () => {
+        throw new Error("boom");
+      },
+    };
+    const reply = await createBridge(app, TOKEN).handle(valid);
+    expect(reply).toMatchObject({ id: 7, status: 500 });
+    expect(reply.body).not.toContain(TOKEN);
   });
 });
