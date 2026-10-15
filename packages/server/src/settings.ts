@@ -79,7 +79,7 @@ const patchSchema = z
       .string()
       .trim()
       .max(256)
-      .regex(/^[A-Za-z0-9~][\w.:/~@+-]*$/)
+      .regex(/^[A-Za-z0-9~][\w.:/~@+[\]-]*$/)
       .nullable()
       .optional(),
     autoSummary: z.boolean().optional(),

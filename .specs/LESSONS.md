@@ -186,6 +186,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: packages/server/src/app.ts PUT /api/settings 500 log (CFG-23, dba6920) (server-secrets)
 - last seen: 2026-10-15T04:36:50Z
 
+### L-030 - A no-leak assertion (not.toContain) only discriminates when every failure fixture actually carries the sentinel it checks for.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `llm-provider` · harmful: 0
+- features: 09-provedor-claude-code
+- evidence: M13 packages/llm/src/__tests__/claude-code.test.ts:248 (llm-provider)
+- last seen: 2026-10-15T04:56:18Z
+
+### L-031 - When security options live in an injected-deps default (REAL spawn, workDir), test that default adapter too, e.g. by mocking the node module, not only the fake deps.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `llm-provider` · harmful: 0
+- features: 09-provedor-claude-code
+- evidence: M4,M15 packages/llm/src/claude-code.ts:43 (llm-provider)
+- last seen: 2026-10-15T04:56:19Z
+
+### L-032 - Timeout tests must bound when the timer fires (fake timers or elapsed check); a generous testTimeout hides a wrong unit.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `llm-provider` · harmful: 0
+- features: 09-provedor-claude-code
+- evidence: M11 packages/llm/src/__tests__/claude-code.test.ts:299 (llm-provider)
+- last seen: 2026-10-15T04:56:19Z
+
+### L-033 - When the implementation adds a lookup location or makes an argument conditional, amend the AC in the same task instead of leaving the spec behind.
+- signal: `spec_deviation` · recurrence: 1 feature(s) · scope: `spec` · harmful: 0
+- features: 09-provedor-claude-code
+- evidence: CC-02 packages/llm/src/claude-code.ts:89; CC-03 claude-code.ts:131 (spec)
+- last seen: 2026-10-15T04:56:19Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

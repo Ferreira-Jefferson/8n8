@@ -345,6 +345,16 @@ describe("the conversation through stdin (CC-08)", () => {
     );
   });
 
+  it("starts no process for a model that would read as a flag", async () => {
+    const { deps, runs } = fake({ exit: 0, stdout: ok("{}") });
+    await expect(
+      createClaudeCodeProvider(deps)
+        .create(config, { env })
+        .complete({ model: "--bare", messages: MESSAGES, json: "native" }),
+    ).rejects.toThrow("Modelo inválido para o Claude Code.");
+    expect(runs).toEqual([]);
+  });
+
   it("leaves --system-prompt out when there is no system message", () => {
     expect(claudeArgs("haiku", "")).not.toContain("--system-prompt");
   });

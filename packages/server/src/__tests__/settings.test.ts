@@ -203,6 +203,7 @@ describe("model ids the patch accepts", () => {
     "~deepseek/deepseek-v4-flash-latest",
     "openai/gpt-4o-mini",
     "llama3.1:8b",
+    "sonnet[1m]",
   ])("accepts %s", async (model) => {
     const mem = memoryStore();
     await createSettingsService({}, mem.store).update({ model });

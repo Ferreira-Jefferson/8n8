@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 30,
+  "next_id": 34,
   "lessons": [
     {
       "id": "L-001",
@@ -528,6 +528,78 @@
       ],
       "created": "2026-10-15T04:36:50Z",
       "last_seen": "2026-10-15T04:36:50Z"
+    },
+    {
+      "id": "L-030",
+      "key": "surviving_mutant::a no leak assertion not tocontain only discriminates when every failure fixture actually carries the sentinel it checks for",
+      "text": "A no-leak assertion (not.toContain) only discriminates when every failure fixture actually carries the sentinel it checks for.",
+      "signal": "surviving_mutant",
+      "scope": "llm-provider",
+      "status": "candidate",
+      "features": [
+        "09-provedor-claude-code"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M13 packages/llm/src/__tests__/claude-code.test.ts:248 (llm-provider)"
+      ],
+      "created": "2026-10-15T04:56:18Z",
+      "last_seen": "2026-10-15T04:56:18Z"
+    },
+    {
+      "id": "L-031",
+      "key": "surviving_mutant::when security options live in an injected deps default real spawn workdir test that default adapter too e g by mocking the node module not only the fake deps",
+      "text": "When security options live in an injected-deps default (REAL spawn, workDir), test that default adapter too, e.g. by mocking the node module, not only the fake deps.",
+      "signal": "surviving_mutant",
+      "scope": "llm-provider",
+      "status": "candidate",
+      "features": [
+        "09-provedor-claude-code"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M4,M15 packages/llm/src/claude-code.ts:43 (llm-provider)"
+      ],
+      "created": "2026-10-15T04:56:19Z",
+      "last_seen": "2026-10-15T04:56:19Z"
+    },
+    {
+      "id": "L-032",
+      "key": "surviving_mutant::timeout tests must bound when the timer fires fake timers or elapsed check a generous testtimeout hides a wrong unit",
+      "text": "Timeout tests must bound when the timer fires (fake timers or elapsed check); a generous testTimeout hides a wrong unit.",
+      "signal": "surviving_mutant",
+      "scope": "llm-provider",
+      "status": "candidate",
+      "features": [
+        "09-provedor-claude-code"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M11 packages/llm/src/__tests__/claude-code.test.ts:299 (llm-provider)"
+      ],
+      "created": "2026-10-15T04:56:19Z",
+      "last_seen": "2026-10-15T04:56:19Z"
+    },
+    {
+      "id": "L-033",
+      "key": "spec_deviation::when the implementation adds a lookup location or makes an argument conditional amend the ac in the same task instead of leaving the spec behind",
+      "text": "When the implementation adds a lookup location or makes an argument conditional, amend the AC in the same task instead of leaving the spec behind.",
+      "signal": "spec_deviation",
+      "scope": "spec",
+      "status": "candidate",
+      "features": [
+        "09-provedor-claude-code"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CC-02 packages/llm/src/claude-code.ts:89; CC-03 claude-code.ts:131 (spec)"
+      ],
+      "created": "2026-10-15T04:56:19Z",
+      "last_seen": "2026-10-15T04:56:19Z"
     }
   ]
 }
