@@ -53,7 +53,36 @@ export function composeLlm(
   createClient: (config: LlmConfig) => LlmClient | undefined = createLlmClient,
 ): LlmSetup {
   const config = resolveLlmConfig(env);
-  return { client: createClient(config), config };
+  return { client: withoutKey(createClient(config), config.apiKey), config };
+}
+
+const KEY_MASK = "[chave omitida]";
+
+/**
+ * A provider's error message can echo the key: OpenAI shows it masked, a hostile URL
+ * in full. The message reaches the browser, so the key and any word that starts like it
+ * are cut first (DIST-17).
+ */
+function withoutKey(
+  client: LlmClient | undefined,
+  key: string | undefined,
+): LlmClient | undefined {
+  if (!client || !key) return client;
+  const prefix = key.slice(0, 6).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const masked = new RegExp(`${prefix}\\S*`, "g");
+  const scrub = (text: string) =>
+    text.split(key).join(KEY_MASK).replace(masked, KEY_MASK);
+  return {
+    async complete(req) {
+      try {
+        return await client.complete(req);
+      } catch (err) {
+        throw new Error(
+          scrub(err instanceof Error ? err.message : String(err)),
+        );
+      }
+    },
+  };
 }
 
 /** Wires explainNode with the shared client, provider and models (CORE-19, CORE-21, FID-15). */

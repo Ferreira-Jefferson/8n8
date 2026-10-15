@@ -192,10 +192,12 @@ T10 → T11
 
 **Done when**:
 
-- [ ] Para cada rota de `app.routes` em `/api/*`: Host estranho → 403, POST sem JSON → 415, sem token → 401, token errado → 401; contadores de `explain`, `titles`, `readProject` e histórico em zero
-- [ ] A suíte falha se `app.routes` tiver uma rota `/api/*` a mais do que ela conhece sem ataque (a lista vem das rotas, não de uma lista escrita à mão)
-- [ ] `createCore` com `OPENROUTER_API_KEY` sentinela e LLM falso: nenhuma resposta (corpo ou cabeçalho) contém a sentinela
-- [ ] Gate check passes: `pnpm --filter @8n8/server test && pnpm typecheck`
+- [x] Para cada rota de `app.routes` em `/api/*`: Host estranho → 403, POST sem JSON → 415, sem token → 401, token errado → 401; contadores de `explain`, `titles`, `readProject` e histórico em zero
+- [x] A suíte falha se `app.routes` tiver uma rota `/api/*` a mais do que ela conhece sem ataque (a lista vem das rotas, não de uma lista escrita à mão)
+- [x] `createCore` com `OPENROUTER_API_KEY` sentinela e LLM falso: nenhuma resposta (corpo ou cabeçalho) contém a sentinela
+- [x] Gate check passes: `pnpm --filter @8n8/server test && pnpm typecheck`
+
+- [x] Achado: a mensagem de erro do provedor chegava ao navegador com a chave (`explain.ts:134`). Corrigido em `core.ts` (`withoutKey`), que apaga a chave inteira e a forma mascarada
 
 **Tests**: unit
 **Gate**: quick
