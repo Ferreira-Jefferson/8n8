@@ -22,12 +22,17 @@ async function violations(): Promise<string[]> {
   });
   const output = result.output as {
     summary: {
-      violations: { from: string; to: string; rule: { name: string } }[];
+      violations: {
+        from: string;
+        to: string;
+        rule: { name: string; severity: string };
+      }[];
     };
   };
-  return output.summary.violations.map(
-    (v) => `${v.rule.name}: ${v.from} -> ${v.to}`,
-  );
+  // Only an error fails `pnpm check`: a rule downgraded to warn must fail here too.
+  return output.summary.violations
+    .filter((v) => v.rule.severity === "error")
+    .map((v) => `${v.rule.name}: ${v.from} -> ${v.to}`);
 }
 
 describe("pnpm check guards (DIST-14, DIST-23)", () => {
