@@ -177,6 +177,13 @@
 - **Consequence:** Ligar a proteção de branch, o aviso privado e o Dependabot exige push e acesso ao GitHub: fica com o dono do projeto.
 - **Status:** ativa.
 
+### AD-027 — Pasta limpa e histórico só com o caminho
+- **Date:** 2026-10-15
+- **Context:** Feature 12. O 8n8 lia pastas que o projeto declara fora do código (o `.gitignore`), e o histórico guardava o código e o grafo de cada pasta mapeada.
+- **Decision:** A leitura da pasta segue o `.gitignore` da raiz e o de cada subpasta, com o pacote `ignore`. O global e o `.git/info/exclude` ficam de fora. Um arquivo maior que 1 MB e de até 20 MB pode entrar no mapa pelo clique. A tela manda a lista `include` no pedido da pasta e em todo pedido de resumo, sugestões e títulos da mesma pasta (AD-015). O servidor aceita até 100 caminhos relativos, sem `..`, `\`, `:` nem `/` no começo. O histórico (schema v3) guarda o caminho de uma pasta e o texto e a linguagem de um trecho. Abrir pelo histórico lê de novo. A migração apaga a tabela `search_data`, deixa uma linha por caminho (a aberta por último, com favorito se alguma era) e roda `VACUUM`.
+- **Consequence:** Desfaz a escolha anterior, em que abrir pelo histórico não chamava o parser nem lia o disco. Os arquivos postos no mapa não ficam no histórico.
+- **Status:** ativa.
+
 ## Handoff
 
 *Atualizado em 2026-10-15. O roteiro pedido pelo usuário (08, 09, 10 e segurança do repositório) está concluído e verificado. Nada foi enviado ao remoto.*

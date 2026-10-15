@@ -24,6 +24,20 @@ Uma pasta com as duas linguagens vira um mapa só. Os arquivos se ligam por rota
 
 Para acoplar outra linguagem, siga o guia [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md).
 
+## O que o 8n8 lê de uma pasta
+
+O 8n8 respeita o `.gitignore` da pasta. Ele lê o `.gitignore` da raiz e o de cada subpasta, com as regras do git (padrões, `!`, `/` e `**`). Um arquivo que o `.gitignore` ignora não entra no mapa nem aparece na lista de arquivos ignorados. O `.gitignore` global da máquina e o `.git/info/exclude` não contam: o mapa da mesma pasta é igual em qualquer máquina.
+
+O 8n8 também pula, sempre:
+
+- as pastas `.git`, `node_modules`, `build` e `dist`;
+- as pastas de cada linguagem: `.venv`, `venv`, `__pycache__` e `site-packages` (Python), `.next` e `coverage` (TypeScript);
+- arquivos de extensão que nenhuma linguagem lê.
+
+Alguns arquivos de código ficam fora do mapa por outro motivo: maior que 1 MB, fora do UTF-8, ilegível ou link simbólico. Nesse caso, um ícone de aviso aparece no canto do mapa. O hover diz quantos arquivos ficaram fora, e o clique mostra a lista com o motivo de cada um. Um arquivo maior que 1 MB, e de até 20 MB, tem o botão "Adicionar ao mapa".
+
+O histórico guarda só o caminho de cada pasta, nunca o código. Abrir uma pasta pelo histórico lê a pasta de novo. De um trecho colado, o histórico guarda o texto e a linguagem.
+
 ## Como rodar
 
 Você precisa de Node 22.13 ou mais novo e do pnpm.
