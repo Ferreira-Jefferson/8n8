@@ -4,12 +4,11 @@ O 8n8 é um mapa visual de código. Você aponta um arquivo, uma pasta ou um tre
 
 O mapa começa amplo. Você abre um nó para ver o fluxo interno dele e vai descendo, até as linhas reais de código. Cada nó traz um resumo e sugestões de melhoria.
 
-Ele roda de duas formas, sobre o mesmo núcleo:
+Em `apps/` há três pastas. Uma é a tela e duas são as formas de rodar o 8n8, sobre o mesmo núcleo:
 
-- **CLI:** você roda o comando `8n8` no terminal (PowerShell ou Bash), e o mapa abre no navegador.
-- **Extensão do VS Code:** o mapa abre num painel ao lado do código.
-
-A tela é uma só, feita em React (`apps/web`). Ela roda na sua máquina, sem site hospedado.
+- **Tela (`apps/web`):** a interface, em React com React Flow. A CLI e a extensão servem o mesmo build. Não há backend hospedado: o núcleo roda localmente.
+- **CLI (`apps/cli`):** você roda o comando `8n8` no terminal (PowerShell ou Bash), e o mapa abre no navegador.
+- **Editores (`apps/editors`):** a extensão do VS Code abre o mapa num painel ao lado do código. Outros editores entram na mesma pasta.
 
 O objetivo é supervisionar e entender rápido um código, muitas vezes escrito por IA, sem ler linha por linha.
 
