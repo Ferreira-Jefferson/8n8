@@ -342,10 +342,10 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Campos do CFG-20; "Chave guardada" com `hasKey`; "Apagar chave" manda `apiKey: null`
-- [ ] Salvar manda só o que mudou; sucesso e erro com os textos do CFG-21
-- [ ] Campo definido pelo ambiente fica desativado com o nome da variável
-- [ ] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
+- [x] Campos do CFG-20; "Chave guardada" com `hasKey`; "Apagar chave" manda `apiKey: null`
+- [x] Salvar manda só o que mudou; sucesso e erro com os textos do CFG-21
+- [x] Campo definido pelo ambiente fica desativado com o nome da variável
+- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick

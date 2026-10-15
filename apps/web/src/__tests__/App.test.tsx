@@ -25,6 +25,7 @@ import {
   fetchHistoryEntry,
   fetchLanguages,
   fetchProject,
+  fetchSettings,
   fetchSuggestions,
   fetchSummary,
   fetchTitles,
@@ -1049,6 +1050,65 @@ describe("App, languages from the server (7.1, 7.2)", () => {
       await screen.findByRole("heading", {
         name: "CÓDIGO · trecho, linhas 1 a 2",
       }),
+    ).toBeTruthy();
+  });
+});
+
+describe("App settings (CFG-08, CFG-20)", () => {
+  const settingsMock = vi.mocked(fetchSettings);
+  const view = {
+    provider: "openrouter",
+    model: "m/x",
+    autoSummary: true,
+    autoSuggestions: false,
+    hasKey: true,
+    providers: [{ id: "openrouter", defaultModel: "m/x" }],
+    env: {},
+  };
+
+  it("opens the settings dialog from the start screen", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "Configurações" }));
+    expect(
+      await screen.findByRole("dialog", { name: "Configurações" }),
+    ).toBeTruthy();
+  });
+
+  it("asks the parts the settings make automatic for real, and the others from the cache", async () => {
+    settingsMock.mockResolvedValueOnce(view);
+    graphMock.mockResolvedValue(withLanguage(graph));
+    explainMock.mockResolvedValue({ status: "no-key" });
+    await generate();
+    await screen.findByTestId("canvas");
+    await waitFor(() => expect(settingsMock).toHaveBeenCalled());
+    // Let the settings land before the node is selected.
+    await act(async () => {});
+    act(() => currentCanvas().onSelect("fn:calcular_frete"));
+    await waitFor(() =>
+      expect(explainMock).toHaveBeenCalledWith(
+        { source },
+        "fn:calcular_frete",
+        false,
+      ),
+    );
+    expect(suggestMock).toHaveBeenCalledWith(
+      { source },
+      "fn:calcular_frete",
+      true,
+    );
+  });
+
+  it("opens the settings from the panel's no-provider notice", async () => {
+    graphMock.mockResolvedValue(withLanguage(graph));
+    explainMock.mockResolvedValue({ status: "no-key" });
+    await generate();
+    await screen.findByTestId("canvas");
+    act(() => currentCanvas().onSelect("fn:calcular_frete"));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Abrir configurações" }),
+    );
+    expect(
+      await screen.findByRole("dialog", { name: "Configurações" }),
     ).toBeTruthy();
   });
 });

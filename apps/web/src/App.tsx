@@ -6,6 +6,7 @@ import {
   type LanguageInfo,
   type NodeId,
   type ProjectResponse,
+  type SettingsResponse,
   type SnippetLanguage,
   type Suggestion,
 } from "@8n8/model";
@@ -22,6 +23,7 @@ import {
   fetchGraph,
   fetchLanguages,
   fetchProject,
+  fetchSettings,
 } from "./api";
 import { codeLineOf } from "./flow/card";
 import { FlowCanvas } from "./flow/FlowCanvas";
@@ -44,6 +46,7 @@ import { DetailPanel, type PanelCache } from "./panel/DetailPanel";
 import { externalEffects } from "./panel/effects";
 import { IgnoredFiles } from "./panel/IgnoredFiles";
 import { clampPanel, PanelResizer } from "./panel/PanelResizer";
+import { SettingsButton, SettingsDialog } from "./settings/SettingsDialog";
 
 type Mapped =
   | {
@@ -205,6 +208,26 @@ export function App({ initialFolder = null }: AppProps) {
   const [focusId, setFocusId] = useState<NodeId | null>(null);
   const [panelWidth, setPanelWidth] = useState(savedPanelWidth);
   const [historyOpen, setHistoryOpen] = useState(false);
+  // The LLM settings; null until they arrive, or if the call fails: the panel then waits for clicks.
+  const [settings, setSettings] = useState<SettingsResponse | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    fetchSettings().then((view) => {
+      if (alive) setSettings(view);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const openSettings = useCallback(() => setSettingsOpen(true), []);
+  const settingsDialog = settingsOpen && (
+    <SettingsDialog
+      settings={settings}
+      onSaved={setSettings}
+      onClose={() => setSettingsOpen(false)}
+    />
+  );
   // The languages the server reads; `[]` until they arrive, or if the call fails.
   const [languages, setLanguages] = useState<LanguageInfo[]>([]);
   useEffect(() => {
@@ -377,6 +400,7 @@ export function App({ initialFolder = null }: AppProps) {
         <main className="home">
           <header className="home-bar">
             <Logo />
+            <SettingsButton onOpen={openSettings} />
           </header>
           <Home
             folder={folder}
@@ -394,6 +418,7 @@ export function App({ initialFolder = null }: AppProps) {
           />
           <div className="home-messages">{messages}</div>
           {drawer}
+          {settingsDialog}
         </main>
       );
     }
@@ -418,6 +443,7 @@ export function App({ initialFolder = null }: AppProps) {
           open={historyOpen}
           onToggle={() => setHistoryOpen((o) => !o)}
         />
+        <SettingsButton onOpen={openSettings} />
         <div className="editor-actions">
           <button type="button" className="btn" onClick={generate}>
             Gerar mapa
@@ -427,6 +453,7 @@ export function App({ initialFolder = null }: AppProps) {
           </button>
         </div>
         {drawer}
+        {settingsDialog}
         {messages}
       </main>
     );
@@ -472,6 +499,7 @@ export function App({ initialFolder = null }: AppProps) {
           open={historyOpen}
           onToggle={() => setHistoryOpen((o) => !o)}
         />
+        <SettingsButton onOpen={openSettings} />
         {mapped.kind === "project" && (
           <IgnoredFiles ignored={mapped.response.ignored} />
         )}
@@ -539,10 +567,20 @@ export function App({ initialFolder = null }: AppProps) {
           title={titles.get(panelNode.id)}
           effects={externalEffects(graph, panelNode.id)}
           mark={mark}
+          auto={
+            settings
+              ? {
+                  summary: settings.autoSummary,
+                  suggestions: settings.autoSuggestions,
+                }
+              : undefined
+          }
           onSuggestions={onSuggestions}
+          onOpenSettings={openSettings}
           cache={explainCache.current}
         />
       )}
+      {settingsDialog}
     </main>
   );
 }
