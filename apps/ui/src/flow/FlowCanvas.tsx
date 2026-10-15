@@ -404,6 +404,7 @@ export function FlowCanvas({
           title: titles.get(n.id),
           isTrigger: level.triggers.has(n.id),
           codeLine: codeLineOf(n),
+          openable: isOpenable(n, graph),
           hasIn: targets.has(n.id),
           hasOut: sources.has(n.id),
           enterAt: times.enterAt.get(n.id) ?? 0,
@@ -478,7 +479,7 @@ export function FlowCanvas({
       if (levelId !== null) onSelect(node.id);
       return;
     }
-    if (isOpenable(node)) open(node, event.currentTarget);
+    if (n.data.openable) open(node, event.currentTarget);
     else onSelect(node.id);
   }
 

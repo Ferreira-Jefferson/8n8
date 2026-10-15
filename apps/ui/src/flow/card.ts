@@ -1,4 +1,4 @@
-import type { ExternalCategory, FlowNode } from "@8n8/model";
+import type { ExternalCategory, FlowNode, Graph } from "@8n8/model";
 
 const CODE_LINE_MAX = 32;
 
@@ -101,7 +101,14 @@ export function codeLineOf(node: FlowNode, source: string): string {
   }
 }
 
-/** Whether a click opens the node's inner flow (VID-24); the rule comes from the extractor. */
-export function isOpenable(node: FlowNode): boolean {
-  return node.openable;
+/**
+ * Whether a click opens the node's inner flow (VID-24): the extractor's rule,
+ * plus, for a container, having at least one child to show. An openable kind
+ * with no inner node is a dead end: it stays a leaf (no `›`, a click selects it).
+ */
+export function isOpenable(node: FlowNode, graph: Graph): boolean {
+  if (!node.openable) return false;
+  // A call opens its target elsewhere, not inner children.
+  if (node.kind === "call") return true;
+  return graph.nodes.some((n) => n.parentId === node.id);
 }

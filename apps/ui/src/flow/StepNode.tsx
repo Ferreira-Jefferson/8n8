@@ -1,6 +1,6 @@
 import type { FlowNode } from "@8n8/model";
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { isOpenable, provisionalLabel, tagOf } from "./card";
+import { provisionalLabel, tagOf } from "./card";
 
 export interface StepNodeData extends Record<string, unknown> {
   node: FlowNode;
@@ -13,6 +13,8 @@ export interface StepNodeData extends Record<string, unknown> {
   /** A wire arrives on the left / leaves on the right (VID-03). */
   hasIn: boolean;
   hasOut: boolean;
+  /** A click opens an inner flow, so the card shows the `›` mark (VID-24). */
+  openable: boolean;
   /** Milliseconds until the card enters (VID-06). */
   enterAt: number;
   /** Selected or anchoring a suggestion card (VID-22, 32). */
@@ -73,7 +75,7 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
       <span className="tag">{tag}</span>
       <b className="name" title={name}>
         {name}
-        {isOpenable(node) && !data.isHub && (
+        {data.openable && !data.isHub && (
           <span className="open-mark" aria-hidden="true">
             ›
           </span>

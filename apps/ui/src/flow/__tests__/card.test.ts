@@ -1,4 +1,4 @@
-import type { ExternalCategory, FlowNode, NodeKind } from "@8n8/model";
+import type { ExternalCategory, FlowNode, Graph, NodeKind } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import {
   categoryTag,
@@ -237,7 +237,11 @@ describe("VID-03: codeLineOf", () => {
 });
 
 describe("VID-24: isOpenable", () => {
-  it("follows node.openable on each kind", () => {
+  function graphOf(...nodes: FlowNode[]): Graph {
+    return { language: "test", nodes, edges: [], empty: nodes.length === 0 };
+  }
+
+  it("follows node.openable on each kind, when the container has a child", () => {
     const opens: NodeKind[] = [
       "folder",
       "file",
@@ -250,11 +254,25 @@ describe("VID-24: isOpenable", () => {
     ];
     const leaves: NodeKind[] = ["code", "condition", "external", "return"];
     for (const kind of opens) {
-      expect(isOpenable(node(kind, "x", { openable: true }))).toBe(true);
+      const parent = node(kind, "x", { openable: true });
+      const child = node("code", "c", { parentId: parent.id });
+      expect(isOpenable(parent, graphOf(parent, child))).toBe(true);
     }
     for (const kind of leaves) {
-      expect(isOpenable(node(kind, "x", { openable: false }))).toBe(false);
+      const leaf = node(kind, "x", { openable: false });
+      expect(isOpenable(leaf, graphOf(leaf))).toBe(false);
     }
-    expect(isOpenable(node("call", "x", { openable: false }))).toBe(false);
+    const call = node("call", "x", { openable: false });
+    expect(isOpenable(call, graphOf(call))).toBe(false);
+  });
+
+  it("a container with no child is a leaf, even when the kind opens", () => {
+    const empty = node("block", "x", { openable: true });
+    expect(isOpenable(empty, graphOf(empty))).toBe(false);
+  });
+
+  it("a call opens its target without having a child", () => {
+    const call = node("call", "x", { openable: true, target: "fn:f" });
+    expect(isOpenable(call, graphOf(call))).toBe(true);
   });
 });

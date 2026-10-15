@@ -33,6 +33,7 @@ function renderStep(n: FlowNode, extra: Partial<StepNodeData> = {}) {
     node: n,
     isTrigger: false,
     codeLine: "",
+    openable: n.openable,
     hasIn: true,
     hasOut: true,
     enterAt: 0,
