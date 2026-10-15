@@ -197,9 +197,9 @@ T7 → T8
 
 **Done when**:
 
-- [ ] O teste abre o painel, recebe `ready` e vê `POST /api/project` 200; o segundo comando reusa o painel
-- [ ] `pnpm --filter @8n8/vscode package` gera o `.vsix`
-- [ ] Gate check passes: `pnpm --filter @8n8/vscode test:integration`
+- [x] O teste abre o painel, recebe `ready` e vê `POST /api/project` 200; o segundo comando reusa o painel
+- [x] `pnpm --filter @8n8/vscode package` gera o `.vsix`
+- [x] Gate check passes: `pnpm --filter @8n8/vscode test:integration`
 
 **Tests**: integration
 **Gate**: build
