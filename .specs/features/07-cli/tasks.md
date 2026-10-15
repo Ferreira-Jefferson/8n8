@@ -284,11 +284,11 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `pnpm --filter @8n8/cli build` gera `dist/8n8.mjs`, `dist/web-tree-sitter.wasm`, `dist/grammars/*.wasm`, `dist/web/`, `dist/pts.md`
-- [ ] Teste de fumaça: o bundle, rodado de uma pasta temporária, extrai um trecho Python e um TypeScript
-- [ ] Teste do pacote: o `package.json` publicado não tem `dependencies` nem `preinstall`/`install`/`postinstall`; `bin` aponta para `dist/8n8.mjs`; `engines.node` é `>=22.13.0`; `files` é só `dist`
-- [ ] O aviso "SQLite is an experimental feature" não aparece no terminal (ou plano B do design)
-- [ ] Gate check passes: `pnpm --filter @8n8/cli test && pnpm typecheck`
+- [x] `pnpm --filter @8n8/cli build` gera `dist/8n8.mjs` (filtro do aviso), `dist/cli.mjs` (o resto), `dist/web-tree-sitter.wasm`, `dist/grammars/*.wasm`, `dist/web/`, `dist/pts.md`
+- [x] Teste de fumaça: o bundle, rodado de uma pasta temporária, extrai um trecho Python e um TypeScript
+- [x] Teste do pacote: o `package.json` publicado não tem `dependencies` nem `preinstall`/`install`/`postinstall`; `bin` aponta para `dist/8n8.mjs`; `engines.node` é `>=22.13.0`; `files` é só `dist`
+- [x] O aviso "SQLite is an experimental feature" não aparece no terminal. Plano B usado: o bundle único subia o import do `node:sqlite` para antes do filtro, então o pacote tem dois arquivos e o `8n8.mjs` carrega o `cli.mjs` depois do filtro. Conferido rodando o `dist` copiado para fora do repositório: `stderr` vazio no `--help`, tela servida, fixture mapeada. A prova automática fica no E2E da T9
+- [x] Gate check passes: `pnpm --filter @8n8/cli test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick
@@ -315,6 +315,7 @@ T10 → T11
 - [ ] `package.json` da raiz: `dev` → `node scripts/dev.mjs`; `start` → build da CLI + `node --env-file-if-exists=.env apps/cli/dist/8n8.mjs --no-open`; `e2e` → build da CLI + `playwright test`
 - [ ] Os webServers do Playwright rodam `node apps/cli/dist/8n8.mjs --no-open`
 - [ ] E2E: `pnpm pack` + `npm install -g --prefix <temp>`; `8n8 <fixture> --no-open` numa porta própria; a página com `#t=...&pasta=...` mostra os nós da fixture
+- [ ] E2E: `8n8 --help` do pacote instalado não escreve `ExperimentalWarning` no `stderr`
 - [ ] E2E: pasta inexistente → código 1 e mensagem; porta ocupada → código 1 e mensagem
 - [ ] E2E: com a pasta pessoal apontada para uma pasta temporária e o LLM falso, a explicação grava em `<home>/.8n8/cache` (DIST-09)
 - [ ] E2E: a fixture e a pasta de instalação ficam iguais antes e depois (lista de arquivos e conteúdo)

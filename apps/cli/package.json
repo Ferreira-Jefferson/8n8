@@ -14,12 +14,14 @@
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "pnpm --filter @8n8/web build && tsx src/build.ts"
   },
   "devDependencies": {
     "@8n8/server": "workspace:*",
     "@hono/node-server": "2.1.5",
     "@types/node": "22.20.5",
+    "esbuild": "0.28.2",
     "hono": "4.13.13"
   }
 }
