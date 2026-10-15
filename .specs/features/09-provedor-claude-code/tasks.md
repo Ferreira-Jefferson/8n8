@@ -83,8 +83,8 @@ T1 → T2 → T3 → T4
 
 **Done when**:
 
-- [ ] Sem executável, `claude-code` responde `no-key`; com `APP8N8_CLAUDE_PATH`, monta o cliente
-- [ ] Gate check passes: `pnpm --filter @8n8/server test`
+- [x] Sem executável, `claude-code` responde `no-key`; com `APP8N8_CLAUDE_PATH`, monta o cliente
+- [x] Gate check passes: `pnpm --filter @8n8/server test`
 
 **Tests**: unit
 **Gate**: quick

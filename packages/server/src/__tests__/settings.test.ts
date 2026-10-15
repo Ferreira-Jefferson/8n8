@@ -47,8 +47,9 @@ describe("view (CFG-12)", () => {
       autoSuggestions: false,
       hasKey: false,
       providers: [
-        { id: "openrouter", defaultModel: DEFAULT_MODEL },
-        { id: "openai-compatible", defaultModel: "gpt-4o-mini" },
+        { id: "openrouter", defaultModel: DEFAULT_MODEL, usesKey: true },
+        { id: "openai-compatible", defaultModel: "gpt-4o-mini", usesKey: true },
+        { id: "claude-code", defaultModel: "sonnet", usesKey: false },
       ],
       env: {},
     });
@@ -295,5 +296,48 @@ describe("llm (CFG-16, CFG-17)", () => {
       ?.complete({ model: "m", messages: [], json: "native" })
       .catch((e: Error) => e.message);
     expect(error).toBe("bad key [chave omitida] and [chave omitida]");
+  });
+});
+
+describe("the claude-code provider through the settings (CC-01, CC-02, CC-12)", () => {
+  // Any file that exists stands for the executable: the client is never called here.
+  const exe = process.execPath;
+
+  it("builds no client when the executable is missing: the pipeline answers no-key", async () => {
+    const service = createSettingsService(
+      { APP8N8_CLAUDE_PATH: `${exe}.nada` },
+      memoryStore({ provider: "claude-code" }).store,
+    );
+    expect((await service.llm()).client).toBeUndefined();
+  });
+
+  it("builds a client with the executable named by the host environment", async () => {
+    const service = createSettingsService(
+      { APP8N8_CLAUDE_PATH: exe },
+      memoryStore({ provider: "claude-code" }).store,
+    );
+    const { client, config } = await service.llm();
+    expect(client).toBeDefined();
+    expect(config).toMatchObject({ provider: "claude-code", model: "sonnet" });
+  });
+
+  it("shows no key and no key variable for claude-code", async () => {
+    const view = await createSettingsService(
+      { APP8N8_CLAUDE_PATH: exe, OPENROUTER_API_KEY: KEY },
+      memoryStore({ provider: "claude-code" }).store,
+    ).view();
+    expect(view).toMatchObject({ provider: "claude-code", hasKey: false });
+    expect(view.env).toEqual({});
+  });
+
+  it("refuses a path to the executable through a patch", async () => {
+    const mem = memoryStore();
+    const service = createSettingsService({}, mem.store);
+    for (const field of ["claudePath", "executable", "APP8N8_CLAUDE_PATH"]) {
+      await expect(
+        service.update({ provider: "claude-code", [field]: "C:/x.exe" }),
+      ).rejects.toBeInstanceOf(InvalidSettings);
+    }
+    expect(mem.writes).toEqual([]);
   });
 });

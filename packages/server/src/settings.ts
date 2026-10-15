@@ -116,7 +116,9 @@ export function applyPatch(
 export function createSettingsService(
   env: Env,
   store: SettingsStore,
-  createClient: (config: LlmConfig) => LlmClient | undefined = createLlmClient,
+  // The host's environment reaches the providers: Claude Code finds its executable there (CC-02).
+  createClient: (config: LlmConfig) => LlmClient | undefined = (config) =>
+    createLlmClient(config, { env }),
 ): SettingsService {
   let stored: Promise<StoredSettings> | undefined;
   const load = () => {
@@ -136,17 +138,21 @@ export function createSettingsService(
     const s = await load();
     const config = resolveLlmConfig(env, s);
     const provider = providerOf(config.provider);
-    const names: Record<SettingsField, string> = {
+    // A provider without a key or a URL has no variable for them.
+    const names: Record<SettingsField, string | undefined> = {
       provider: "APP8N8_LLM_PROVIDER",
       apiKey: provider.env.apiKey,
       baseURL: provider.env.baseURL,
       model: "APP8N8_MODEL",
       ...AUTO_ENV,
     };
-    const setBy = (field: SettingsField) =>
-      field === "autoSummary" || field === "autoSuggestions"
-        ? flag(env[names[field]]) !== undefined
-        : Boolean(env[names[field]]);
+    const setBy = (field: SettingsField) => {
+      const name = names[field];
+      if (name === undefined) return false;
+      return field === "autoSummary" || field === "autoSuggestions"
+        ? flag(env[name]) !== undefined
+        : Boolean(env[name]);
+    };
     const modes = auto(s);
     return {
       provider: config.provider,
@@ -155,9 +161,10 @@ export function createSettingsService(
       autoSummary: modes.summary,
       autoSuggestions: modes.suggestions,
       hasKey: config.apiKey !== undefined,
-      providers: PROVIDERS.map(({ id, defaultModel }) => ({
+      providers: PROVIDERS.map(({ id, defaultModel, usesKey }) => ({
         id,
         defaultModel,
+        usesKey,
       })),
       env: Object.fromEntries(
         (Object.keys(names) as SettingsField[])

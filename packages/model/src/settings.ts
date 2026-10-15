@@ -37,7 +37,8 @@ export interface SettingsResponse {
   autoSuggestions: boolean;
   /** Whether a key is in effect, from the environment or stored. */
   hasKey: boolean;
-  providers: { id: string; defaultModel: string }[];
+  /** `usesKey` false: the provider needs no key and no URL (Claude Code, CC-01). */
+  providers: { id: string; defaultModel: string; usesKey: boolean }[];
   /** The environment variable that sets a field, for each field one sets (CFG-22). */
   env: Partial<Record<SettingsField, string>>;
 }
