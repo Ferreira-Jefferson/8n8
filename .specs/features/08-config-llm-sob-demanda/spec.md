@@ -57,7 +57,7 @@ Com a CLI instalada e sem nenhuma variável de ambiente, o usuário abre o mapa,
 6. WHEN a pessoa seleciona um nó e o modo automático de um pedido está desligado THEN o painel SHALL pedir esse pedido com `cachedOnly: true`. Um acerto de cache SHALL aparecer sem clique. Sem acerto, o painel SHALL mostrar o botão "Gerar resumo" (resumo) ou "Pedir sugestões" (sugestões).  <!-- CFG-06 -->
 7. WHEN a pessoa clica em "Gerar resumo" ou "Pedir sugestões" THEN o painel SHALL fazer o pedido sem `cachedOnly`, mostrar "Gerando resumo…" ou "Pedindo sugestões…" e depois o resultado.  <!-- CFG-07 -->
 8. WHEN o modo automático de um pedido está ligado THEN o painel SHALL fazer esse pedido sem `cachedOnly` assim que a pessoa seleciona o nó.  <!-- CFG-08 -->
-9. IF nenhum provedor de LLM está configurado THEN o painel SHALL mostrar "Configure um provedor de LLM em Configurações." no lugar do resumo, com um botão que abre o painel de configurações. As sugestões SHALL mostrar o mesmo texto.  <!-- CFG-09 -->
+9. IF nenhum provedor de LLM está configurado WHEN o painel faz um pedido sem `cachedOnly` (pelo clique ou pelo modo automático) THEN o painel SHALL mostrar "Configure um provedor de LLM em Configurações." no lugar daquela parte, com um botão que abre o painel de configurações. Antes do pedido, o painel mostra o botão da parte (CFG-06), porque a resposta só do cache não sabe se há provedor.  <!-- CFG-09 -->
 10. WHEN as sugestões de um nó chegam THEN os cartões de sugestão do mapa e a contagem no nó (VID-31, VID-32) SHALL usar essas sugestões. Um resumo nunca SHALL criar cartão.  <!-- CFG-10 -->
 11. WHEN as sugestões chegam vazias THEN o painel SHALL mostrar "Nenhuma sugestão para este nó.".  <!-- CFG-11 -->
 

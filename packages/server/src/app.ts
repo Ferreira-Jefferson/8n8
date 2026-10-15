@@ -361,9 +361,10 @@ export function createApp(deps: AppDeps): Hono {
       if (err instanceof InvalidSettings) {
         return c.json({ error: "invalid settings" }, 400);
       }
+      // Only the error code reaches the terminal: a message could carry the key (DIST-22).
       console.error(
         "configurações: não salvou",
-        err instanceof Error ? err.message : err,
+        (err as NodeJS.ErrnoException).code ?? "erro desconhecido",
       );
       return c.json({ error: "save failed" }, 500);
     }

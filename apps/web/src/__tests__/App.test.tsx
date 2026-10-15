@@ -1112,3 +1112,14 @@ describe("App settings (CFG-08, CFG-20)", () => {
     ).toBeTruthy();
   });
 });
+
+describe("App settings button in the editor (CFG-20)", () => {
+  it("opens the settings dialog from the editor", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Configurações" }));
+    expect(
+      await screen.findByRole("dialog", { name: "Configurações" }),
+    ).toBeTruthy();
+  });
+});
