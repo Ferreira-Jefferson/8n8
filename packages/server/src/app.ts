@@ -18,6 +18,7 @@ import { type Context, Hono } from "hono";
 import { z } from "zod";
 import { maskDocstring } from "./docstring";
 import type { History } from "./history";
+import { sameToken } from "./token";
 
 export type ProjectRead =
   | { kind: "ok"; root: string; response: ProjectResponse }
@@ -30,6 +31,8 @@ export interface AppDeps {
   titles: (req: TitleRequest) => Promise<TitlesResponse>;
   readProject: (path: string) => Promise<ProjectRead>;
   port: number;
+  /** The session token every /api call must carry in x-8n8-token (DIST-20). */
+  token: string;
   /** Saved searches; absent in tests that do not need them. */
   history?: History | undefined;
 }
@@ -168,6 +171,14 @@ export function createApp(deps: AppDeps): Hono {
   app.use("*", async (c, next) => {
     const host = c.req.header("host");
     if (!host || !allowed.has(host)) return c.text("Forbidden", 403);
+    await next();
+  });
+
+  // Only the tab the CLI opened holds the token: any other local process gets 401 (DIST-20).
+  app.use("/api/*", async (c, next) => {
+    if (!sameToken(deps.token, c.req.header("x-8n8-token"))) {
+      return c.text("Unauthorized", 401);
+    }
     await next();
   });
 

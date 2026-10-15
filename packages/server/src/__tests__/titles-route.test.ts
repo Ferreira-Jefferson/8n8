@@ -4,6 +4,7 @@ import type { SourceFile, TitleRequest, TitlesResponse } from "@8n8/model";
 import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
+import { TEST_TOKEN } from "./test-token";
 
 const fixture = readFileSync(
   new URL(
@@ -45,6 +46,7 @@ function setup(reply: TitlesResponse = { status: "ok", titles: [] }) {
           }
         : { kind: "not-found" },
     port: 4317,
+    token: TEST_TOKEN,
   });
   const post = (
     body: unknown,
@@ -52,7 +54,7 @@ function setup(reply: TitlesResponse = { status: "ok", titles: [] }) {
   ) =>
     app.request("/api/titles", {
       method: "POST",
-      headers: { host, "content-type": type },
+      headers: { host, "content-type": type, "x-8n8-token": TEST_TOKEN },
       body: JSON.stringify(body),
     });
   return { received, post };

@@ -4,6 +4,7 @@ import type { ExplainRequest, ExplainResponse } from "@8n8/model";
 import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
+import { TEST_TOKEN } from "./test-token";
 
 const videoFixture = readFileSync(
   new URL(
@@ -24,11 +25,16 @@ function setup(reply: ExplainResponse) {
     titles: async () => ({ status: "ok", titles: [] }),
     readProject: async () => ({ kind: "not-found" }),
     port: 4317,
+    token: TEST_TOKEN,
   });
   const post = (body: unknown) =>
     app.request("/api/explain", {
       method: "POST",
-      headers: { host: "127.0.0.1:4317", "content-type": "application/json" },
+      headers: {
+        host: "127.0.0.1:4317",
+        "x-8n8-token": TEST_TOKEN,
+        "content-type": "application/json",
+      },
       body: JSON.stringify(body),
     });
   return { received, post };
@@ -218,6 +224,7 @@ describe("POST /api/explain", () => {
         },
       }),
       port: 4317,
+      token: TEST_TOKEN,
     });
     const graph = buildProject(files, [pythonPlugin]);
     const ids = graph.nodes
@@ -229,6 +236,7 @@ describe("POST /api/explain", () => {
         method: "POST",
         headers: {
           host: "127.0.0.1:4317",
+          "x-8n8-token": TEST_TOKEN,
           "content-type": "application/json",
         },
         body: JSON.stringify({ root: "/tmp/p", nodeId }),

@@ -2,6 +2,7 @@ import type { Graph } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
 import { fakeLang } from "./fake-lang";
+import { TEST_TOKEN } from "./test-token";
 
 const emptyGraph: Graph = {
   language: "python",
@@ -16,6 +17,7 @@ const app = createApp({
   titles: async () => ({ status: "ok", titles: [] }),
   readProject: async () => ({ kind: "not-found" }),
   port: 4317,
+  token: TEST_TOKEN,
 });
 
 const get = (host: string) => app.request("/", { headers: { host } });

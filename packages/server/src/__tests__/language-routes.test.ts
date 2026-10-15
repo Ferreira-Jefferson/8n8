@@ -11,6 +11,7 @@ import { describe, expect, it, vi } from "vitest";
 import { type AppDeps, createApp, type ProjectRead } from "../app";
 import { openHistory } from "../history";
 import { fakeLang } from "./fake-lang";
+import { TEST_TOKEN } from "./test-token";
 
 const fn = (
   id: string,
@@ -74,10 +75,12 @@ function setup(over: Partial<AppDeps> = {}): Setup {
     },
     readProject: async () => ({ kind: "not-found" }),
     port: 4317,
+    token: TEST_TOKEN,
     ...over,
   });
   const headers = {
     host: "127.0.0.1:4317",
+    "x-8n8-token": TEST_TOKEN,
     "content-type": "application/json",
   };
   return {

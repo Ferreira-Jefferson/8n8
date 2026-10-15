@@ -7,6 +7,7 @@ import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 import { fakeLang } from "./fake-lang";
+import { TEST_TOKEN } from "./test-token";
 
 const response: ProjectResponse = {
   name: "loja",
@@ -26,11 +27,16 @@ function setup(read: ProjectRead) {
       return read;
     },
     port: 4317,
+    token: TEST_TOKEN,
   });
   const post = (body: unknown, host = "127.0.0.1:4317") =>
     app.request("/api/project", {
       method: "POST",
-      headers: { host, "content-type": "application/json" },
+      headers: {
+        host,
+        "content-type": "application/json",
+        "x-8n8-token": TEST_TOKEN,
+      },
       body: JSON.stringify(body),
     });
   return { paths, post };
@@ -116,11 +122,16 @@ function explainSetup(files: SourceFile[], root = WIN_ROOT) {
           }
         : { kind: "not-found" },
     port: 4317,
+    token: TEST_TOKEN,
   });
   const post = (body: unknown) =>
     app.request("/api/explain", {
       method: "POST",
-      headers: { host: "127.0.0.1:4317", "content-type": "application/json" },
+      headers: {
+        host: "127.0.0.1:4317",
+        "x-8n8-token": TEST_TOKEN,
+        "content-type": "application/json",
+      },
       body: JSON.stringify(body),
     });
   return { received, post, root };

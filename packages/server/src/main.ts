@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -14,6 +15,13 @@ async function main(): Promise<void> {
     // no .env: the explain panel answers no-key
   }
   const port = resolvePort(process.env);
+  // A known token comes from the environment (dev, e2e); otherwise a fresh one per run (DIST-18).
+  const given = process.env.APP8N8_TOKEN ?? "";
+  if (given !== "" && given.length < 32) {
+    console.error("APP8N8_TOKEN precisa de 32 caracteres ou mais.");
+    process.exit(1);
+  }
+  const token = given || randomBytes(32).toString("hex");
   const cacheDir = join(repoRoot, ".cache/explain");
   const app = createCore({
     env: process.env,
@@ -29,6 +37,7 @@ async function main(): Promise<void> {
       "historico.db",
     ),
     port,
+    token,
   });
   if (process.argv[2] === "start") {
     const dist = join(repoRoot, "apps/web/dist");
@@ -43,7 +52,7 @@ async function main(): Promise<void> {
     );
     process.exit(1);
   });
-  console.log(`8n8 em http://127.0.0.1:${port}`);
+  console.log(`8n8 em http://127.0.0.1:${port}/#t=${token}`);
 }
 
 if (

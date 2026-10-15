@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
 import { fakeLang } from "./fake-lang";
+import { TEST_TOKEN } from "./test-token";
 
 function setup() {
   const calls = { explain: 0, readProject: 0 };
@@ -23,6 +24,7 @@ function setup() {
       return { kind: "not-found" };
     },
     port: 4317,
+    token: TEST_TOKEN,
   });
   const post = (
     path: string,
@@ -31,7 +33,11 @@ function setup() {
   ) =>
     app.request(path, {
       method: "POST",
-      headers: { host: "127.0.0.1:4317", ...headers },
+      headers: {
+        host: "127.0.0.1:4317",
+        "x-8n8-token": TEST_TOKEN,
+        ...headers,
+      },
       body,
     });
   return { app, calls, post };
@@ -61,7 +67,7 @@ describe("API accepts only JSON (AD-016)", () => {
       // A byte body gets no default content-type, so the header is really absent.
       const req = new Request(`http://127.0.0.1:4317${path}`, {
         method: "POST",
-        headers: { host: "127.0.0.1:4317" },
+        headers: { host: "127.0.0.1:4317", "x-8n8-token": TEST_TOKEN },
         body: new TextEncoder().encode('{"path":"."}'),
       });
       expect(req.headers.get("content-type")).toBeNull();
@@ -85,7 +91,7 @@ describe("API accepts only JSON (AD-016)", () => {
       for (const [type, body] of Object.entries(bodies)) {
         const req = new Request(`http://127.0.0.1:4317${path}`, {
           method: "POST",
-          headers: { host: "127.0.0.1:4317" },
+          headers: { host: "127.0.0.1:4317", "x-8n8-token": TEST_TOKEN },
           body: body(),
         });
         expect(req.headers.get("content-type")).toMatch(new RegExp(`^${type}`));
@@ -105,7 +111,9 @@ describe("API accepts only JSON (AD-016)", () => {
 
   it("does not touch GET / with a valid Host", async () => {
     const { app } = setup();
-    const res = await app.request("/", { headers: { host: "127.0.0.1:4317" } });
+    const res = await app.request("/", {
+      headers: { host: "127.0.0.1:4317", "x-8n8-token": TEST_TOKEN },
+    });
     expect(res.status).not.toBe(415);
   });
 });

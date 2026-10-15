@@ -39,6 +39,7 @@ import {
   listenOptions,
   resolvePort,
 } from "../core";
+import { TEST_TOKEN } from "./test-token";
 
 const ptsRules = readFileSync(
   new URL(
@@ -665,12 +666,14 @@ describe("composeReadProject", () => {
       titles: async () => ({ status: "ok", titles: [] }),
       readProject,
       port: 4317,
+      token: TEST_TOKEN,
     });
     const post = (path: string, body: unknown) =>
       app.request(path, {
         method: "POST",
         headers: {
           host: "127.0.0.1:4317",
+          "x-8n8-token": TEST_TOKEN,
           "content-type": "application/json",
         },
         body: JSON.stringify(body),
@@ -719,12 +722,14 @@ describe("composeReadProject", () => {
       titles: async () => ({ status: "ok", titles: [] }),
       readProject,
       port: 4317,
+      token: TEST_TOKEN,
     });
     const explain = async (root: string) => {
       const res = await app.request("/api/explain", {
         method: "POST",
         headers: {
           host: "127.0.0.1:4317",
+          "x-8n8-token": TEST_TOKEN,
           "content-type": "application/json",
         },
         body: JSON.stringify({
@@ -840,9 +845,12 @@ describe("createCore (DIST-13)", () => {
       cacheDir: join(dir, "cache"),
       historyFile,
       port: 4317,
+      token: TEST_TOKEN,
     });
   const get = (app: ReturnType<typeof core>, path: string) =>
-    app.request(path, { headers: { host: "127.0.0.1:4317" } });
+    app.request(path, {
+      headers: { host: "127.0.0.1:4317", "x-8n8-token": TEST_TOKEN },
+    });
 
   it("serves the languages of the built-in plugins from the options alone", async () => {
     const res = await get(core(undefined), "/api/languages");
@@ -855,7 +863,11 @@ describe("createCore (DIST-13)", () => {
     const saveAMap = (app: ReturnType<typeof core>) =>
       app.request("/api/graph", {
         method: "POST",
-        headers: { host: "127.0.0.1:4317", "content-type": "application/json" },
+        headers: {
+          host: "127.0.0.1:4317",
+          "x-8n8-token": TEST_TOKEN,
+          "content-type": "application/json",
+        },
         body: JSON.stringify({ source: "def f():\n    pass\n" }),
       });
     const items = async (app: ReturnType<typeof core>) => {

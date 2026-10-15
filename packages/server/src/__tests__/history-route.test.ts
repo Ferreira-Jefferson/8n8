@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 import { type History, openHistory } from "../history";
 import { fakeLang } from "./fake-lang";
+import { TEST_TOKEN } from "./test-token";
 
 const graph: Graph = {
   language: "python",
@@ -25,12 +26,17 @@ function setup(history: History, g: Graph = graph, read?: ProjectRead) {
     titles: async () => ({ status: "ok", titles: [] }),
     readProject: async () => read ?? { kind: "ok", root: "/r/loja", response },
     port: 4317,
+    token: TEST_TOKEN,
     history,
   });
   return (path: string, method = "GET", body?: unknown) =>
     app.request(path, {
       method,
-      headers: { host: "127.0.0.1:4317", "content-type": "application/json" },
+      headers: {
+        host: "127.0.0.1:4317",
+        "x-8n8-token": TEST_TOKEN,
+        "content-type": "application/json",
+      },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
 }

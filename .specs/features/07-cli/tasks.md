@@ -161,12 +161,14 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `token.ts` com `sameToken` (SHA-256 + `timingSafeEqual`); `AppDeps.token` obrigatório
-- [ ] Sem token e com token errado → 401, e nenhum dublê é chamado; arquivos estáticos não pedem token
-- [ ] `main.ts` usa `APP8N8_TOKEN` (32+ caracteres) ou gera um, e escreve a URL com `#t=`
-- [ ] `vite.config.ts` põe `x-8n8-token` no proxy; `playwright.config.ts` define `APP8N8_TOKEN` nos webServers e `use.extraHTTPHeaders`
-- [ ] Os testes de `app` existentes passam a mandar o token
-- [ ] Gate check passes: `pnpm test && pnpm typecheck && pnpm e2e`
+- [x] `token.ts` com `sameToken` (SHA-256 + `timingSafeEqual`); `AppDeps.token` obrigatório
+- [x] Sem token e com token errado → 401, e nenhum dublê é chamado; arquivos estáticos não pedem token
+- [x] `main.ts` usa `APP8N8_TOKEN` (32+ caracteres) ou gera um, e escreve a URL com `#t=`
+- [x] `vite.config.ts` põe `x-8n8-token` no proxy; `playwright.config.ts` define `APP8N8_TOKEN` nos webServers e `use.extraHTTPHeaders`
+- [x] Os testes de `app` existentes passam a mandar o token
+- [x] Gate check passes: `pnpm test && pnpm typecheck && pnpm e2e`
+
+- [x] Desvio: `scripts/dev.mjs` (previsto na T9) entrou aqui, senão o `pnpm dev` ficaria sem token até a T9
 
 **Tests**: unit, e2e
 **Gate**: full

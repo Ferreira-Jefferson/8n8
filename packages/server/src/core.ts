@@ -239,6 +239,8 @@ export interface CoreOptions {
   historyFile: string | undefined;
   /** The port the Host guard accepts. */
   port: number;
+  /** The session token of the API (DIST-20). */
+  token: string;
 }
 
 /** The whole app, built from explicit options: the host decides where data lives and opens the port (AD-022). */
@@ -259,5 +261,6 @@ export function createCore(options: CoreOptions): Hono {
         ? undefined
         : openHistoryOrWarn(options.historyFile),
     port: options.port,
+    token: options.token,
   });
 }

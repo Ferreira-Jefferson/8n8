@@ -3,6 +3,9 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
 const URL = "http://127.0.0.1:4317";
+// Every test server runs with this session token, and every page request carries it (DIST-20).
+// Obviously fake and low entropy, so gitleaks does not take it for a secret.
+export const E2E_TOKEN = "e2e-session-token-not-a-secret-0000";
 const repoRoot = dirname(fileURLToPath(import.meta.url));
 const cacheDir = (name: string) => join(repoRoot, ".cache", name);
 
@@ -39,6 +42,7 @@ export default defineConfig({
     baseURL: URL,
     // The specs check the dark theme; marca.e2e.ts asks for the light one.
     colorScheme: "dark",
+    extraHTTPHeaders: { "x-8n8-token": E2E_TOKEN },
     trace: "retain-on-failure",
   },
   projects: [
@@ -82,6 +86,7 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 180_000,
       env: {
+        APP8N8_TOKEN: E2E_TOKEN,
         // Set and empty: .env never supplies the key.
         OPENROUTER_API_KEY: "",
         // A cache dir of its own (<repo>/.cache/e2e-offline), apart from the user's entries;
@@ -100,6 +105,7 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 180_000,
       env: {
+        APP8N8_TOKEN: E2E_TOKEN,
         APP8N8_PORT: "4319",
         // A fake key and a local base URL: no request ever reaches openrouter.ai.
         OPENROUTER_API_KEY: "e2e-fake-key",
@@ -118,6 +124,7 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 180_000,
       env: {
+        APP8N8_TOKEN: E2E_TOKEN,
         APP8N8_PORT: "4320",
         OPENROUTER_API_KEY: "e2e-fake-key",
         OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
@@ -137,6 +144,7 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 180_000,
       env: {
+        APP8N8_TOKEN: E2E_TOKEN,
         APP8N8_PORT: "4321",
         OPENROUTER_API_KEY: "",
         APP8N8_CACHE_DIR: cacheDir("e2e-history-offline"),
