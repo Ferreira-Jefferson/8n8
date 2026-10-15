@@ -199,7 +199,9 @@ module.exports = {
     // Test fixtures are input code (code to analyse),
     // dist/ is build output and .vscode-test/ the VS Code the extension test downloads:
     // none of them is code of 8n8.
-    exclude: { path: "(__tests__/fixtures/|/dist/|/\\.vscode-test/)" },
+    exclude: {
+      path: "(__tests__/fixtures/|/dist/|^apps/vscode/\\.vscode-test/)",
+    },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: "tsconfig.base.json" },
     enhancedResolveOptions: {

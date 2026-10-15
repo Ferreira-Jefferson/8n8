@@ -116,7 +116,21 @@ export async function run(): Promise<void> {
   ) {
     throw new Error(`Resumo pela ponte: ${summary.status} ${summary.body}`);
   }
-  // VSC-05: the map lands in the history, in the extension's data folder.
+  // VSC-05: the data folder is VS Code's global storage of this extension, found
+  // from the user-data folder the runner chose, not from what the extension says.
+  const storage = join(
+    process.env.APP8N8_TEST_USER_DATA ?? "",
+    "User",
+    "globalStorage",
+    "ferreira-jefferson.8n8-vscode",
+  ).toLowerCase();
+  if (
+    !process.env.APP8N8_TEST_USER_DATA ||
+    api.dataDir().toLowerCase() !== storage
+  ) {
+    throw new Error(`Pasta de dados fora do globalStorage: ${api.dataDir()}`);
+  }
+  // The map lands in the history, in that folder.
   await waitFor(
     () => existsSync(join(api.dataDir(), "historico.db")),
     "o histórico não ficou na pasta da extensão",

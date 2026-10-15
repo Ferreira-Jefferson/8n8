@@ -51,7 +51,11 @@ try {
     extensionDevelopmentPath: extRoot,
     extensionTestsPath: suite,
     // VSC-06: a variable of the host's environment must reach the core.
-    extensionTestsEnv: { APP8N8_AUTO_SUMMARY: "1" },
+    // The user-data folder lets the suite find VS Code's global storage on its own (VSC-05).
+    extensionTestsEnv: {
+      APP8N8_AUTO_SUMMARY: "1",
+      APP8N8_TEST_USER_DATA: join(tmp, "user-data"),
+    },
     ...(existsSync(installed) ? { vscodeExecutablePath: installed } : {}),
     launchArgs: [
       workspace,

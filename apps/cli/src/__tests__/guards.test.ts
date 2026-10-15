@@ -239,9 +239,9 @@ describe("source scan: what the check cannot see (DIST-23)", () => {
       (e) => {
         const path = `${dir}/${e.name}`;
         if (e.isDirectory()) {
-          return ["node_modules", "dist", ".cache", ".vscode-test"].includes(
-            e.name,
-          )
+          // The VS Code the extension test downloads, only at its one place.
+          return ["node_modules", "dist", ".cache"].includes(e.name) ||
+            path === "apps/vscode/.vscode-test"
             ? []
             : walk(path);
         }
