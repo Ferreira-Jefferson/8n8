@@ -75,7 +75,7 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 - [x] 7.1 **[1ª]** Tirar os textos fixos: `App.tsx:103` (`trecho.py`), `App.tsx:327` ("arquivo .py"), `App.tsx:373` ("Trecho Python"), `Home.tsx:170` ("arquivos .py"), `DetailPanel.tsx:49` (`trecho.py`). Os textos vêm de `/api/languages`.
 - [x] 7.2 **[D5]** A tela mostra a linguagem detectada do trecho e o aviso "linguagem incerta" quando for o caso.
 - [x] 7.3 **[2ª]** Conferir que o card do nó (`flow/card.ts:88`) e o painel tratam o comentário de documentação de forma geral.
-- [ ] 7.4 **[2ª]** e2e: specs novos para o seletor, a pasta mista e o histórico com linguagem. Rodar só os specs da mudança, e a suíte inteira antes do commit.
+- [x] 7.4 **[2ª]** e2e: `e2e/multilinguagem.e2e.ts` cobre a detecção do trecho, o rótulo e o aviso de linguagem incerta, a pasta mista e a pasta sem arquivo reconhecido. Não há seletor (D5). O histórico com linguagem tem testes de servidor (`history-language.test.ts`), porque o mesmo texto não gera duas linguagens pela tela.
 
 ## Fase 8 — Prova e documentação para open source
 
@@ -102,7 +102,7 @@ O plugin não conhece outra linguagem. Ele só declara dois tipos de dado neutro
 - [x] 9.4 Um pedido sem oferta continua como nó `external`, como hoje.
 - [x] 9.5 Um pedido com mais de uma oferta não liga nenhuma. A ligação incerta fica de fora, e o painel diz por quê. Essa regra pesa mais no canal "nome igual", que erra mais.
 - [x] 9.6 Ordem de confiança: HTTP, depois processo, depois nome igual. Um pedido já ligado por um canal mais confiável não passa pelos outros.
-- [ ] 9.7 Fixture de projeto misto com os três canais: `a.py` chama uma rota de `b.ts`, roda `c.ts` por processo e chama uma função de `d.ts` pelo nome. Testes unit por canal e spec e2e com o mapa ligado.
+- [x] 9.7 Fixture de projeto misto com os três canais: `a.py` chama uma rota de `b.ts`, roda `c.ts` por processo e chama uma função de `d.ts` pelo nome. Testes unit por canal e spec e2e com o mapa ligado.
 
 ## Fase 10 — Chamada ao modelo (LLM)
 

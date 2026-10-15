@@ -161,9 +161,11 @@ test.describe("Títulos", () => {
         "model",
         "neighbours",
         "promptVersion",
+        "provider",
         "reviewModel",
         "reviewerVersion",
       ]);
+      expect(e.fingerprint.provider).toBe("openrouter");
       expect(e.fingerprint.model).toBe("e2e/drafter");
       expect(e.fingerprint.reviewModel).toBe("e2e/reviewer");
     }

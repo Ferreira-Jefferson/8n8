@@ -126,8 +126,11 @@ function cachedFiles(): string[] {
 
 const sha256 = (text: string) =>
   createHash("sha256").update(text).digest("hex");
-/** The node's entry: `<cache>/nodes/<sha256(node identity)>.json`; a snippet node's identity is its id. */
-const entryFile = (id: string) => join(CACHE, "nodes", `${sha256(id)}.json`);
+/** A snippet node's identity: its language and its id, so the same id in two languages never meets. */
+const identity = (id: string) => `python|${id}`;
+/** The node's entry: `<cache>/nodes/<sha256(node identity)>.json`. */
+const entryFile = (id: string) =>
+  join(CACHE, "nodes", `${sha256(identity(id))}.json`);
 const fingerprint = (): Record<string, string> =>
   JSON.parse(readFileSync(entryFile(FRETE), "utf8")).fingerprint;
 
@@ -145,7 +148,7 @@ async function reopenInNewMap(
 
 /** The rewritten entry is read back: reopening FRETE comes from the cache, with no LLM call. */
 async function expectValidEntry(page: Page) {
-  expect(cachedFiles()).toEqual([`${sha256(FRETE)}.json`]);
+  expect(cachedFiles()).toEqual([`${sha256(identity(FRETE))}.json`]);
   await open(page, PEDIDO);
   expect((await reopenInNewMap(page, VIDEO)).fromCache).toBe(true);
   await expect(badge(panel(page))).toHaveText("Revisado");
@@ -231,9 +234,11 @@ test.describe("Cache por nó", () => {
       "model",
       "neighbours",
       "promptVersion",
+      "provider",
       "reviewModel",
       "reviewerVersion",
     ]);
+    expect(first.provider).toBe("openrouter");
     expect(first.model).toBe("e2e/drafter");
     expect(first.reviewModel).toBe("e2e/reviewer");
     for (const value of Object.values(first)) expect(value).not.toBe("");
