@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { ExplainResponse, Explanation, Graph } from "@8n8/model";
+import type { Graph, ReviewStatus, Suggestion, Summary } from "@8n8/model";
 import {
   expect,
   type Locator,
@@ -10,7 +10,8 @@ import {
 } from "@playwright/test";
 
 // Feature 01-fatia-central, end to end: real build, real server, real parser.
-// /api/explain is mocked only where a fake LLM answer is needed (no key, no network).
+// /api/summary and /api/suggestions are mocked only where a fake LLM answer is needed
+// (no key, no network).
 // Feature 05 moved it to the video map: the top level is the main flow ("Fluxo
 // principal"), one click opens a node, and cards show a tag and a provisional name.
 
@@ -119,20 +120,56 @@ async function nodeIds(page: Page): Promise<(string | null)[]> {
   );
 }
 
-type Reply = { status: 200 | 502; body: ExplainResponse };
+/** A node's whole explanation, as the fixtures write it; the server answers it in two parts. */
+interface Explanation extends Summary {
+  suggestions: Suggestion[];
+}
 
-/** Answers /api/explain with the server's own shapes; `nth` counts calls per node. */
+type Body =
+  | {
+      status: "ok";
+      explanation: Explanation;
+      fromCache: boolean;
+      review: ReviewStatus;
+    }
+  | { status: "error"; message: string };
+type Reply = { status: 200 | 502; body: Body };
+
+/**
+ * Answers /api/summary and /api/suggestions with the server's own shapes; `nth`
+ * counts summary calls per node. The suggestions of a failed reply are an empty
+ * list, so the panel shows one failure, the summary's.
+ */
 async function mockExplain(
   page: Page,
   reply: (nodeId: string, nth: number) => Reply,
 ): Promise<string[]> {
   const calls: string[] = [];
-  await page.route("**/api/explain", async (route: Route) => {
+  await page.route("**/api/summary", async (route: Route) => {
     const { nodeId } = route.request().postDataJSON() as { nodeId: string };
     const nth = calls.filter((id) => id === nodeId).length;
     calls.push(nodeId);
     const { status, body } = reply(nodeId, nth);
-    await route.fulfill({ status, json: body });
+    if (body.status !== "ok") return route.fulfill({ status, json: body });
+    const { suggestions: _, ...summary } = body.explanation;
+    await route.fulfill({
+      status,
+      json: { ...body, explanation: undefined, result: summary },
+    });
+  });
+  await page.route("**/api/suggestions", async (route: Route) => {
+    const { nodeId } = route.request().postDataJSON() as { nodeId: string };
+    const nth = Math.max(0, calls.filter((id) => id === nodeId).length - 1);
+    const { body } = reply(nodeId, nth);
+    await route.fulfill({
+      status: 200,
+      json: {
+        status: "ok",
+        result: body.status === "ok" ? body.explanation.suggestions : [],
+        fromCache: body.status === "ok" && body.fromCache,
+        review: "full",
+      },
+    });
   });
   return calls;
 }
@@ -263,7 +300,9 @@ test.describe("Mapa", () => {
   }) => {
     const explainCalls: string[] = [];
     page.on("request", (r) => {
-      if (r.url().includes("/api/explain")) explainCalls.push(r.url());
+      if (/\/api\/(summary|suggestions)$/.test(r.url())) {
+        explainCalls.push(r.url());
+      }
     });
 
     await generate(page, VIDEO);
@@ -473,7 +512,7 @@ test.describe("Explicação", () => {
     await generate(page, VIDEO);
     const response = page.waitForResponse(
       (r) =>
-        r.url().includes("/api/explain") &&
+        r.url().includes("/api/summary") &&
         (r.request().postDataJSON() as { nodeId: string }).nodeId === FRETE,
     );
     await openFrete(page);
@@ -481,11 +520,12 @@ test.describe("Explicação", () => {
     const res = await response;
     expect(res.status()).toBe(200);
     expect(await res.json()).toEqual({ status: "no-key" });
+    // Both parts say it: the summary and the suggestions (CFG-09).
     await expect(
-      panel(page).getByText("Configure OPENROUTER_API_KEY para ver resumos", {
+      panel(page).getByText("Configure um provedor de LLM em Configurações.", {
         exact: true,
       }),
-    ).toHaveCount(1);
+    ).toHaveCount(2);
     await expect(nodes(page)).toHaveCount(5);
     await expect(edges(page)).toHaveCount(4);
     await shot(page, "07-no-key");
@@ -554,7 +594,7 @@ test.describe("Explicação", () => {
     );
     const fromCache: boolean[] = [];
     page.on("response", async (r) => {
-      if (r.url().includes("/api/explain")) {
+      if (r.url().includes("/api/summary")) {
         const body = (await r.json()) as { fromCache?: boolean };
         fromCache.push(body.fromCache === true);
       }

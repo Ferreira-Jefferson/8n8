@@ -13,7 +13,8 @@ import {
 } from "./mapa";
 
 // Docstring: the model sees the code with the docstring masked; a docstring the
-// answer calls false becomes a suggestion on the docstring's first line. Keyed
+// answer calls false becomes a suggestion on the docstring's first line. Only the
+// suggestions request gets the docstring block; the summary never sees it (CFG-03). Keyed
 // server (4319) with the fake LLM; the module card case runs with no key (4317).
 
 const LIE = '    """Soma os preços dos itens."""';
@@ -24,10 +25,11 @@ const SEM_DOC = `def total_sem_doc(itens):\n${BODY}`;
 const COMMAND =
   "Atualize a docstring: A docstring fala de soma de preços, mas o código usa `len`";
 
+/** The suggestions drafts about one node: the request that judges the docstring. */
 const drafts = (log: FakeCall[], marker: string) =>
   log.filter(
     (c) =>
-      c.role === "draft" &&
+      c.role === "suggest" &&
       c.messages.some((m) => m.role === "user" && m.content.includes(marker)),
   );
 const lastUser = (call: FakeCall) =>
@@ -75,6 +77,15 @@ test.describe("Docstring", () => {
     expect(numbered).not.toContain("Soma os preços");
     expect(numbered).not.toContain('"""');
     expect(numbered).toContain("3 |     n = len(itens)");
+    // The summary draft never gets the docstring text (CFG-03).
+    const summaries = (await fakeLog()).filter(
+      (c) =>
+        c.role === "draft" &&
+        c.messages.some((m) => m.content.includes("def total_mentiroso")),
+    );
+    expect(summaries).toHaveLength(1);
+    expect(lastUser(summaries[0] as FakeCall)).not.toContain("Docstring (");
+    expect(lastUser(summaries[0] as FakeCall)).not.toContain("Soma os preços");
 
     await expect(alerts(page)).toHaveText([COMMAND]);
     await expect(suggestionButtons(view)).toHaveText([

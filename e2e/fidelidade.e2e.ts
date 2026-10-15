@@ -5,7 +5,7 @@ import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 
 // Feature 04, story P1 (fidelity), end to end through the REAL review pipeline:
 // the keyed server (4319) drafts, checks, reviews, redrafts and cuts against the
-// scripted fake LLM (e2e/fake-llm.ts). /api/explain is never intercepted.
+// scripted fake LLM (e2e/fake-llm.ts). /api/summary is never intercepted.
 // Feature 05: one click opens a node, and title requests (roles "title" and
 // "title-review") come with each level; the call counts here look only at
 // drafts and reviews (D2).
@@ -65,9 +65,10 @@ async function openFrete(
   clearLog = true,
 ): Promise<void> {
   await clickCard(page, "fn:processar_pedido/s1");
-  await expect(panel(page).getByText(loopState, { exact: true })).toHaveCount(
-    1,
-  );
+  // Without a provider both parts say so: the first one is enough here (CFG-09).
+  await expect(
+    panel(page).getByText(loopState, { exact: true }).first(),
+  ).toBeVisible();
   if (clearLog) await resetFake();
   await clickCard(page, "fn:processar_pedido/s1/s0");
   await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
@@ -248,6 +249,10 @@ test.describe("Fidelidade", () => {
     const view = panel(page);
     // Any reviewed answer, so the requests are all in; the exact badge is checked last.
     await expect(badge(view)).toHaveText(/^Revisado/);
+    // The suggestions are a request of their own (CFG-02): wait for them too.
+    await expect(
+      view.getByText("Guardar a tabela de frete em cache", { exact: false }),
+    ).toHaveCount(1);
 
     const nodeLines = VIDEO.split("\n").slice(3, 11);
     const outside = [
@@ -261,6 +266,7 @@ test.describe("Fidelidade", () => {
     const log = await fakeLog();
     const draft = drafts(log)[0] as FakeCall;
     const review = reviews(log)[0] as FakeCall;
+    const suggestReview = log.find((c) => c.role === "suggest-review");
 
     // CORE-17: the node code and the direct neighbour, nothing else of the snippet.
     for (const line of nodeLines) expect(sent(draft)).toContain(line.trim());
@@ -274,12 +280,18 @@ test.describe("Fidelidade", () => {
       "`peso`",
       "`distancia`",
       "valor do frete",
-      "Guardar a tabela de frete em cache",
-      "A função busca a tabela na rede a cada chamada.",
     ];
     for (const line of nodeLines) expect(sent(review)).toContain(line.trim());
     expect(sent(review)).toContain("processar_pedido");
     for (const item of items) expect(sent(review)).toContain(item);
+    // The suggestions go to a review of their own, never to the summary's (CFG-02).
+    for (const item of [
+      "Guardar a tabela de frete em cache",
+      "A função busca a tabela na rede a cada chamada.",
+    ]) {
+      expect(sent(review)).not.toContain(item);
+      expect(sent(suggestReview as FakeCall)).toContain(item);
+    }
     for (const piece of outside) expect(sent(review)).not.toContain(piece);
     for (const message of draft.messages) {
       expect(sent(review)).not.toContain(message.content);
@@ -321,16 +333,16 @@ test.describe("Fidelidade", () => {
     // The log is never cleared here: the whole test makes no LLM call.
     await openFrete(
       page,
-      "Configure OPENROUTER_API_KEY para ver resumos",
+      "Configure um provedor de LLM em Configurações.",
       false,
     );
 
     const view = panel(page);
     await expect(
-      view.getByText("Configure OPENROUTER_API_KEY para ver resumos", {
+      view.getByText("Configure um provedor de LLM em Configurações.", {
         exact: true,
       }),
-    ).toHaveCount(1);
+    ).toHaveCount(2);
     await expect(
       view
         .getByRole("list", { name: "Efeitos externos" })
@@ -357,7 +369,7 @@ test.describe("Fidelidade", () => {
     expect(drafts(log)).toHaveLength(3);
     expect(reviews(log)).toHaveLength(0);
 
-    const retried = page.waitForResponse(`${REAL}/api/explain`);
+    const retried = page.waitForResponse(`${REAL}/api/summary`);
     await view.getByRole("button", { name: "Tentar de novo" }).click();
     expect(await (await retried).json()).toEqual({ status: "unfaithful" });
     log = await fakeLog();

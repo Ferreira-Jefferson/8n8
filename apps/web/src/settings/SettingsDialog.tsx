@@ -243,7 +243,7 @@ export function SettingsDialog({
   );
 }
 
-/** The gear that opens the settings, on every screen (CFG-20). */
+/** The sliders that open the settings, on every screen (CFG-20). */
 export function SettingsButton({ onOpen }: { onOpen: () => void }) {
   return (
     <button
@@ -252,13 +252,36 @@ export function SettingsButton({ onOpen }: { onOpen: () => void }) {
       aria-label="Configurações"
       onClick={onOpen}
     >
-      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+      <svg width="28" height="22" viewBox="0 0 28 22" aria-hidden="true">
         <path
-          d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm8.1-2.6 1.7 1.3-1.8 3.1-2-.8a7.6 7.6 0 0 1-2.2 1.3l-.3 2.1h-3.6l-.3-2.1a7.6 7.6 0 0 1-2.2-1.3l-2 .8-1.8-3.1 1.7-1.3a7.8 7.8 0 0 1 0-2.6L3.6 9l1.8-3.1 2 .8A7.6 7.6 0 0 1 9.6 5.4l.3-2.1h3.6l.3 2.1a7.6 7.6 0 0 1 2.2 1.3l2-.8L19.8 9l-1.7 1.3a7.8 7.8 0 0 1 0 2.6Z"
-          fill="none"
+          d="M2 4h24M2 11h24M2 18h24"
           stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinejoin="round"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <circle
+          cx="9"
+          cy="4"
+          r="3"
+          fill="var(--panel-bg)"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <circle
+          cx="19"
+          cy="11"
+          r="3"
+          fill="var(--panel-bg)"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <circle
+          cx="12"
+          cy="18"
+          r="3"
+          fill="var(--panel-bg)"
+          stroke="currentColor"
+          strokeWidth="2"
         />
       </svg>
     </button>

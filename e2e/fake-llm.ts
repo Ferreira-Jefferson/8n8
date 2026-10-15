@@ -17,7 +17,14 @@ interface Message {
 }
 
 export interface FakeCall {
-  role: "draft" | "review" | "title" | "title-review";
+  /** draft and review: the summary; suggest and suggest-review: the suggestions (feature 08). */
+  role:
+    | "draft"
+    | "review"
+    | "suggest"
+    | "suggest-review"
+    | "title"
+    | "title-review";
   model: string;
   messages: Message[];
 }
@@ -430,16 +437,28 @@ function answer(call: FakeCall): string | undefined {
     users.some((m) => m.content.includes(s.marker)),
   );
   if (!scenario) return undefined;
-  if (call.role === "draft") return JSON.stringify(scenario.draft);
+  // Each parser reads only its own fields of the same scripted draft.
+  if (call.role === "draft" || call.role === "suggest") {
+    return JSON.stringify(scenario.draft);
+  }
   return verdicts(users.at(-1)?.content ?? "", scenario);
 }
 
-/** The role comes from the system message, in this order (D1). */
-function roleOf(system: string | undefined): FakeCall["role"] {
+/**
+ * The role comes from the system message, in this order (D1). A review of the
+ * suggestions judges only suggestion items (`- g1: ...`); a summary review never does.
+ */
+function roleOf(
+  system: string | undefined,
+  user: string | undefined,
+): FakeCall["role"] {
   const text = system ?? "";
   if (text.startsWith("Você revisa títulos de nós")) return "title-review";
   if (text.startsWith("Você escreve títulos de nós")) return "title";
-  if (text.includes('"verdicts"')) return "review";
+  if (text.includes('"verdicts"')) {
+    return /^- g\d+: /m.test(user ?? "") ? "suggest-review" : "review";
+  }
+  if (text.startsWith("Você sugere melhorias")) return "suggest";
   return "draft";
 }
 
@@ -489,7 +508,10 @@ function startFake(): void {
       messages: Message[];
     };
     const call: FakeCall = {
-      role: roleOf(body.messages.find((m) => m.role === "system")?.content),
+      role: roleOf(
+        body.messages.find((m) => m.role === "system")?.content,
+        body.messages.filter((m) => m.role === "user").at(-1)?.content,
+      ),
       model: body.model,
       messages: body.messages,
     };

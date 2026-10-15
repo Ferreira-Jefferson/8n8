@@ -405,7 +405,7 @@ test("(f) title and LLM calls when walking the whole video map, then again from 
       pass,
       levelsOpened: opened,
       "/api/titles": api["/api/titles"] ?? 0,
-      "/api/explain": api["/api/explain"] ?? 0,
+      "/api/summary": api["/api/summary"] ?? 0,
       "LLM total": log.length,
       title: by("title"),
       "title-review": by("title-review"),

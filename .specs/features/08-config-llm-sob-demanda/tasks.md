@@ -369,9 +369,9 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Modo por clique: selecionar não chama o LLM; o clique chama só a parte pedida; o cache aparece sem clique
-- [ ] Salvar chave falsa e URL do LLM falso pelo diálogo liga o "Gerar resumo" sem reiniciar
-- [ ] Gate check passes: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
+- [x] Modo por clique: selecionar não chama o LLM; o clique chama só a parte pedida; o cache aparece sem clique
+- [x] Salvar chave falsa e URL do LLM falso pelo diálogo liga o "Gerar resumo" sem reiniciar
+- [x] Gate check passes: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
 
 **Tests**: e2e
 **Gate**: build

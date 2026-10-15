@@ -64,7 +64,7 @@ async function clickCard(page: Page, id: string): Promise<void> {
   await card.dispatchEvent("click");
 }
 
-/** Clicks the card and returns the body of the /api/explain answer for `explained`. */
+/** Clicks the card and returns the body of the /api/summary answer for `explained`. */
 async function clickAndExplain(
   page: Page,
   card: string,
@@ -72,7 +72,7 @@ async function clickAndExplain(
 ): Promise<{ fromCache?: boolean }> {
   const response = page.waitForResponse(
     (r) =>
-      r.url() === `${REAL}/api/explain` &&
+      r.url() === `${REAL}/api/summary` &&
       (r.request().postDataJSON() as { nodeId: string }).nodeId === explained,
   );
   await clickCard(page, card);
@@ -93,7 +93,7 @@ async function toTop(page: Page): Promise<void> {
 }
 
 /**
- * Opens a node from the main flow and returns its /api/explain answer: FRETE
+ * Opens a node from the main flow and returns its /api/summary answer: FRETE
  * through the loop and its call, PEDIDO by its own card (only to change the
  * selection: the fake answers 500 for it).
  */

@@ -8,12 +8,16 @@ const URL = "http://127.0.0.1:4317";
 export const E2E_TOKEN = "e2e-session-token-not-a-secret-0000";
 const repoRoot = dirname(fileURLToPath(import.meta.url));
 const cacheDir = (name: string) => join(repoRoot, ".cache", name);
+// The specs written before feature 08 test the pipeline, not the way to ask: their
+// servers explain a node as soon as it is selected. configuracoes.e2e.ts covers the clicks.
+const AUTO = { APP8N8_AUTO_SUMMARY: "1", APP8N8_AUTO_SUGGESTIONS: "1" };
 
 // These specs share the fake LLM's request log and the e2e-real cache (4319): they wipe
 // and count them, so they run one at a time. Every other spec runs in parallel.
 const SHARED_STATE = [
   "**/cache.e2e.ts",
   "**/cli.e2e.ts",
+  "**/configuracoes.e2e.ts",
   "**/detalhe.e2e.ts",
   "**/docstring.e2e.ts",
   "**/fidelidade.e2e.ts",
@@ -93,6 +97,8 @@ export default defineConfig({
         // A cache dir of its own (<repo>/.cache/e2e-offline), apart from the user's entries;
         // with no key the server never writes.
         APP8N8_CACHE_DIR: cacheDir("e2e-offline"),
+        APP8N8_CONFIG_DIR: cacheDir("e2e-offline-config"),
+        ...AUTO,
         // The history lives apart: the specs wipe the cache dir, never this one.
         APP8N8_HISTORY_DIR: cacheDir("e2e-offline-history"),
         APP8N8_MODEL: "e2e/offline",
@@ -114,6 +120,8 @@ export default defineConfig({
         APP8N8_REVIEW_MODEL: "e2e/reviewer",
         // Isolated cache, wiped by the specs before each test.
         APP8N8_CACHE_DIR: cacheDir("e2e-real"),
+        APP8N8_CONFIG_DIR: cacheDir("e2e-real-config"),
+        ...AUTO,
         APP8N8_HISTORY_DIR: cacheDir("e2e-real-history"),
       },
     },
@@ -132,6 +140,8 @@ export default defineConfig({
         APP8N8_MODEL: "",
         APP8N8_REVIEW_MODEL: "",
         APP8N8_CACHE_DIR: cacheDir("e2e-default-model"),
+        APP8N8_CONFIG_DIR: cacheDir("e2e-default-model-config"),
+        ...AUTO,
         APP8N8_HISTORY_DIR: cacheDir("e2e-default-model-history"),
       },
     },
@@ -147,8 +157,29 @@ export default defineConfig({
         APP8N8_PORT: "4321",
         OPENROUTER_API_KEY: "",
         APP8N8_CACHE_DIR: cacheDir("e2e-history-offline"),
+        APP8N8_CONFIG_DIR: cacheDir("e2e-history-offline-config"),
+        ...AUTO,
         APP8N8_HISTORY_DIR: cacheDir("e2e-history"),
         APP8N8_MODEL: "e2e/offline",
+      },
+    },
+    {
+      // Feature 08: no key, no automatic mode, a config of its own that the spec writes
+      // through the settings dialog (configuracoes.e2e.ts).
+      command: "node apps/cli/dist/8n8.mjs --no-open",
+      url: "http://127.0.0.1:4322",
+      reuseExistingServer: false,
+      timeout: 180_000,
+      env: {
+        APP8N8_TOKEN: E2E_TOKEN,
+        APP8N8_PORT: "4322",
+        OPENROUTER_API_KEY: "",
+        OPENROUTER_BASE_URL: "",
+        APP8N8_MODEL: "e2e/drafter",
+        APP8N8_REVIEW_MODEL: "e2e/reviewer",
+        APP8N8_CACHE_DIR: cacheDir("e2e-settings"),
+        APP8N8_HISTORY_DIR: cacheDir("e2e-settings-history"),
+        APP8N8_CONFIG_DIR: cacheDir("e2e-settings-config"),
       },
     },
   ],

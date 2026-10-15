@@ -317,8 +317,8 @@ test.describe("Pasta local", () => {
     await breadcrumb(page).getByRole("button", { name: "calculo.py" }).click();
     await clickCard(page, FRETE);
     await expect(
-      panel(page).getByText("Configure OPENROUTER_API_KEY para ver resumos"),
-    ).toHaveCount(1);
+      panel(page).getByText("Configure um provedor de LLM em Configurações."),
+    ).toHaveCount(2);
 
     expect(fingerprint(loja)).toEqual(before);
   });
@@ -346,7 +346,7 @@ test.describe("Pasta local", () => {
   }) => {
     const bodies: unknown[] = [];
     page.on("request", (r) => {
-      if (r.url().includes("/api/explain")) bodies.push(r.postDataJSON());
+      if (r.url().includes("/api/summary")) bodies.push(r.postDataJSON());
     });
 
     await openFolder(page, LOJA);
@@ -356,10 +356,10 @@ test.describe("Pasta local", () => {
 
     const view = panel(page);
     await expect(
-      view.getByText("Configure OPENROUTER_API_KEY para ver resumos", {
+      view.getByText("Configure um provedor de LLM em Configurações.", {
         exact: true,
       }),
-    ).toHaveCount(1);
+    ).toHaveCount(2);
     expect(bodies).toEqual([{ root: LOJA, nodeId: FRETE }]);
     await expect(
       view.getByText("CÓDIGO · frete/calculo.py, linhas 1 a 4", {
