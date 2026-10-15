@@ -4,9 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { gzipSync } from "node:zlib";
-import type { Graph, HistoryEntry } from "@8n8/model";
+import type { Graph } from "@8n8/model";
 import { describe, expect, it } from "vitest";
-import { openHistory } from "../history";
+import { type MadeMap, openHistory } from "../history";
 
 const graph = (language: string): Graph => ({
   language,
@@ -15,7 +15,7 @@ const graph = (language: string): Graph => ({
   edges: [],
 });
 
-const snippet = (source: string, language: string): HistoryEntry => ({
+const snippet = (source: string, language: string): MadeMap => ({
   kind: "snippet",
   source,
   graph: graph(language),
@@ -67,13 +67,13 @@ describe("history by language (5.5, 5.6)", () => {
     expect(items.map((i) => i.openCount).sort()).toEqual([1, 2]);
   });
 
-  it("each entry gives back the graph of its own language", () => {
+  it("each entry gives back its own language", () => {
     const h = openHistory(":memory:");
     h.save(snippet("x = 1", "python"));
     h.save(snippet("x = 1", "typescript"));
     const languages = h.list().map((i) => {
       const entry = h.get(i.id);
-      return entry?.kind === "snippet" ? entry.graph.language : "";
+      return entry?.kind === "snippet" ? entry.language : "";
     });
     expect(languages.sort()).toEqual(["python", "typescript"]);
   });
@@ -94,7 +94,7 @@ describe("history by language (5.5, 5.6)", () => {
       const [old] = h.list();
       expect(old).toMatchObject({ id: 1, title: "x = 1", openCount: 1 });
       const entry = h.get(1);
-      expect(entry?.kind === "snippet" && entry.graph.language).toBe("python");
+      expect(entry?.kind === "snippet" && entry.language).toBe("python");
 
       h.save(snippet("x = 1", "python"));
       expect(h.list()).toHaveLength(1);

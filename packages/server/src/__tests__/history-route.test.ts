@@ -76,7 +76,7 @@ describe("history routes", () => {
     expect(h.list()).toEqual([]);
   });
 
-  it("GET /api/history/:id returns the entry and touches it", async () => {
+  it("GET /api/history/:id returns the text and language, and counts no visit (the re-read does)", async () => {
     const h = openHistory(":memory:");
     const call = setup(h);
     await call("/api/graph", "POST", { source: "a = 1" });
@@ -85,9 +85,9 @@ describe("history routes", () => {
     const res = await call(`/api/history/${id}`);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
-      entry: { kind: "snippet", source: "a = 1", graph },
+      entry: { kind: "snippet", source: "a = 1", language: "python" },
     });
-    expect(h.list()[0]?.openCount).toBe(2);
+    expect(h.list()[0]?.openCount).toBe(1);
   });
 
   it("answers 404 for a missing id and 400 for a bad one", async () => {

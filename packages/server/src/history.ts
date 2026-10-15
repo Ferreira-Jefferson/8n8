@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { gunzipSync, gzipSync } from "node:zlib";
+import { gunzipSync } from "node:zlib";
 import type {
   Graph,
   HistoryEntry,
@@ -10,13 +10,16 @@ import type {
   ProjectResponse,
 } from "@8n8/model";
 
+/** A map as it was made: the history keeps only its path or its text, and the sizes. */
+export type MadeMap =
+  | { kind: "snippet"; source: string; graph: Graph }
+  | { kind: "project"; root: string; response: ProjectResponse };
+
 export interface History {
-  /** Inserts the map, or, when the same content is already saved, bumps its opened_at and open_count. */
-  save(entry: HistoryEntry): void;
+  /** Inserts the map, or, when the same folder or snippet is already saved, bumps its opened_at and open_count. */
+  save(map: MadeMap): void;
   list(): HistoryItem[];
   get(id: number): HistoryEntry | undefined;
-  /** Marks the entry as opened now. */
-  touch(id: number): void;
   /** Marks or unmarks the entry as a favourite; false when the id is unknown. */
   star(id: number, starred: boolean): boolean;
   remove(id: number): boolean;
@@ -24,7 +27,7 @@ export interface History {
 }
 
 const KEEP = 100;
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 const SCHEMA = `
 CREATE TABLE search (
@@ -70,43 +73,79 @@ interface Row {
   starred: number;
 }
 
-const gz = (value: unknown) => gzipSync(JSON.stringify(value));
 const ungz = (blob: Uint8Array) =>
   JSON.parse(gunzipSync(blob).toString("utf8")) as unknown;
 
-/** The source texts of an entry, in path order (the content hash input). */
-function sourcesOf(entry: HistoryEntry): string[] {
-  if (entry.kind === "snippet") return [entry.source];
-  return [...entry.response.files]
-    .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
-    .map((f) => f.source);
+/**
+ * The key of a row: a folder is its path, so a folder has one row however its code
+ * changes. A snippet is its text and language; Python adds no tag, so rows saved before
+ * multi-language keep their key (5.5, 5.6).
+ */
+function keyOf(
+  kind: "snippet" | "project",
+  root: string,
+  source?: string,
+): string {
+  const hash = createHash("sha256").update(kind).update("\0").update(root);
+  if (source !== undefined) hash.update("\0").update(source);
+  return hash.digest("hex");
 }
+
+const snippetTag = (language: string) =>
+  language === "python" ? "" : `language:${language}`;
 
 /**
- * What a snippet adds to its content hash: its language, so the same text in two languages
- * is two entries. Python adds nothing: rows saved before multi-language have the hash of
- * a Python snippet, so they count as `python` and the same snippet finds them (5.5, 5.6).
+ * v3: the history keeps only the path of a folder and the text of a snippet (CLEAN-08, CLEAN-10).
+ * The stored code and graphs go; a folder saved many times keeps its latest row, starred
+ * if any of its rows was.
  */
-function snippetTag(entry: HistoryEntry): string {
-  if (entry.kind !== "snippet" || entry.graph.language === "python") return "";
-  return `language:${entry.graph.language}`;
+function migrateV3(db: DatabaseSync): void {
+  db.exec("ALTER TABLE search ADD COLUMN source TEXT");
+  db.exec("ALTER TABLE search ADD COLUMN language TEXT");
+  const snippets = db
+    .prepare(
+      "SELECT s.id, d.graph, d.files FROM search s JOIN search_data d ON d.search_id = s.id WHERE s.kind = 'snippet'",
+    )
+    .all() as { id: number; graph: Uint8Array; files: Uint8Array }[];
+  const setSnippet = db.prepare(
+    "UPDATE search SET source = ?, language = ?, content_hash = ? WHERE id = ?",
+  );
+  for (const r of snippets) {
+    const { source } = ungz(r.files) as { source: string };
+    const { language } = ungz(r.graph) as Graph;
+    setSnippet.run(
+      source,
+      language,
+      keyOf("snippet", snippetTag(language), source),
+      r.id,
+    );
+  }
+  // A snippet with no text left cannot open again.
+  db.exec("DELETE FROM search WHERE kind = 'snippet' AND source IS NULL");
+  db.exec(`
+    UPDATE search SET starred = 1
+    WHERE kind = 'project' AND starred = 0
+      AND root IN (SELECT root FROM search WHERE kind = 'project' AND starred = 1)`);
+  db.exec(`
+    DELETE FROM search
+    WHERE kind = 'project' AND id NOT IN (
+      SELECT id FROM (
+        SELECT id, ROW_NUMBER() OVER (PARTITION BY root ORDER BY opened_at DESC, id DESC) AS n
+        FROM search WHERE kind = 'project'
+      ) WHERE n = 1
+    )`);
+  const projects = db
+    .prepare("SELECT id, root FROM search WHERE kind = 'project'")
+    .all() as { id: number; root: string | null }[];
+  const setKey = db.prepare("UPDATE search SET content_hash = ? WHERE id = ?");
+  for (const r of projects) setKey.run(keyOf("project", r.root ?? ""), r.id);
+  db.exec("DROP TABLE search_data");
 }
 
-/** What goes in `search_data.files`: everything but the graph, in its original order. */
-function filesBlobOf(entry: HistoryEntry): unknown {
-  if (entry.kind === "snippet") return { source: entry.source };
-  const { name, files, ignored } = entry.response;
-  return { name, files, ignored };
-}
-
-function titleOf(entry: HistoryEntry): string {
-  if (entry.kind === "project") return entry.response.name;
-  const first = entry.source.split(/\r?\n/).find((l) => l.trim() !== "");
+function titleOf(map: MadeMap): string {
+  if (map.kind === "project") return map.response.name;
+  const first = map.source.split(/\r?\n/).find((l) => l.trim() !== "");
   return first ? first.trim().slice(0, 60) : "Trecho";
-}
-
-function graphOf(entry: HistoryEntry): Graph {
-  return entry.kind === "snippet" ? entry.graph : entry.response.graph;
 }
 
 function toItem(r: Row): HistoryItem {
@@ -141,35 +180,34 @@ export function openHistory(path: string): History {
     db.exec("BEGIN");
     try {
       if (version < 1) db.exec(SCHEMA);
-      db.exec(SCHEMA_V2);
+      if (version < 2) db.exec(SCHEMA_V2);
+      migrateV3(db);
       db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
       db.exec("COMMIT");
     } catch (err) {
       db.exec("ROLLBACK");
       throw err;
     }
+    // The deleted code leaves the file too, not only the tables.
+    if (version >= 1) db.exec("VACUUM");
   }
 
+  // A folder's sizes and name follow its latest read; a snippet's never change.
   const upsert = db.prepare(`
-    INSERT INTO search (kind, title, root, content_hash, created_at, opened_at, open_count, lines, bytes, files, nodes, edges)
-    VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)
-    ON CONFLICT (content_hash) DO UPDATE SET opened_at = excluded.opened_at, open_count = open_count + 1
-    RETURNING id, created_at`);
-  const insertData = db.prepare(
-    "INSERT OR IGNORE INTO search_data (search_id, graph, files) VALUES (?, ?, ?)",
-  );
+    INSERT INTO search (kind, title, root, source, language, content_hash, created_at, opened_at, open_count, lines, bytes, files, nodes, edges)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)
+    ON CONFLICT (content_hash) DO UPDATE SET
+      title = excluded.title, opened_at = excluded.opened_at, open_count = open_count + 1,
+      lines = excluded.lines, bytes = excluded.bytes, files = excluded.files,
+      nodes = excluded.nodes, edges = excluded.edges`);
   const prune = db.prepare(
     "DELETE FROM search WHERE starred = 0 AND id NOT IN (SELECT id FROM search WHERE starred = 0 ORDER BY opened_at DESC, id DESC LIMIT ?)",
   );
   const listAll = db.prepare(
     "SELECT id, kind, title, root, created_at, opened_at, open_count, lines, bytes, files, nodes, edges, starred FROM search ORDER BY opened_at DESC, id DESC",
   );
-  const kindOf = db.prepare("SELECT kind, root FROM search WHERE id = ?");
-  const dataOf = db.prepare(
-    "SELECT graph, files FROM search_data WHERE search_id = ?",
-  );
-  const touchRow = db.prepare(
-    "UPDATE search SET opened_at = ?, open_count = open_count + 1 WHERE id = ?",
+  const entryOf = db.prepare(
+    "SELECT kind, root, source, language FROM search WHERE id = ?",
   );
   const starRow = db.prepare("UPDATE search SET starred = ? WHERE id = ?");
   const del = db.prepare("DELETE FROM search WHERE id = ?");
@@ -182,40 +220,39 @@ export function openHistory(path: string): History {
   };
 
   return {
-    save(entry) {
-      const sources = sourcesOf(entry);
-      const root = entry.kind === "project" ? entry.root : snippetTag(entry);
-      const hash = createHash("sha256")
-        .update(entry.kind)
-        .update("\0")
-        .update(root);
-      for (const s of sources) hash.update("\0").update(s);
-      const graph = graphOf(entry);
-      const code = sources;
-      const lines = code.reduce(
+    save(map) {
+      const sources =
+        map.kind === "snippet"
+          ? [map.source]
+          : map.response.files.map((f) => f.source);
+      const graph = map.kind === "snippet" ? map.graph : map.response.graph;
+      const lines = sources.reduce(
         (n, s) => n + (s === "" ? 0 : s.split(/\r?\n/).length),
         0,
       );
-      const bytes = code.reduce((n, s) => n + Buffer.byteLength(s), 0);
+      const bytes = sources.reduce((n, s) => n + Buffer.byteLength(s), 0);
+      const key =
+        map.kind === "project"
+          ? keyOf("project", map.root)
+          : keyOf("snippet", snippetTag(map.graph.language), map.source);
       const now = tick();
-      // Blobs are compressed before the transaction: the write lock is held for the SQL only.
-      const blobs = [gz(graph), gz(filesBlobOf(entry))];
       db.exec("BEGIN");
       try {
-        const row = upsert.get(
-          entry.kind,
-          titleOf(entry),
-          entry.kind === "project" ? entry.root : null,
-          hash.digest("hex"),
+        upsert.run(
+          map.kind,
+          titleOf(map),
+          map.kind === "project" ? map.root : null,
+          map.kind === "snippet" ? map.source : null,
+          map.kind === "snippet" ? map.graph.language : null,
+          key,
           now,
           now,
           lines,
           bytes,
-          entry.kind === "snippet" ? 1 : entry.response.files.length,
+          sources.length,
           graph.nodes.length,
           graph.edges.length,
-        ) as { id: number };
-        insertData.run(row.id, blobs[0] as Buffer, blobs[1] as Buffer);
+        );
         prune.run(KEEP);
         db.exec("COMMIT");
       } catch (err) {
@@ -227,36 +264,22 @@ export function openHistory(path: string): History {
       return (listAll.all() as unknown as Row[]).map(toItem);
     },
     get(id) {
-      const head = kindOf.get(id) as
-        | { kind: "snippet" | "project"; root: string | null }
+      const row = entryOf.get(id) as
+        | {
+            kind: "snippet" | "project";
+            root: string | null;
+            source: string | null;
+            language: string | null;
+          }
         | undefined;
-      const data = dataOf.get(id) as
-        | { graph: Uint8Array; files: Uint8Array }
-        | undefined;
-      if (!head || !data) return undefined;
-      const graph = ungz(data.graph) as Graph;
-      const rest = ungz(data.files) as
-        | { source: string }
-        | Pick<ProjectResponse, "name" | "files" | "ignored">;
-      if (head.kind === "snippet") {
-        return {
-          kind: "snippet",
-          source: (rest as { source: string }).source,
-          graph,
-        };
-      }
-      const { name, files, ignored } = rest as Pick<
-        ProjectResponse,
-        "name" | "files" | "ignored"
-      >;
+      if (!row) return undefined;
+      if (row.kind === "project")
+        return { kind: "project", root: row.root ?? "" };
       return {
-        kind: "project",
-        root: head.root ?? "",
-        response: { name, graph, files, ignored },
+        kind: "snippet",
+        source: row.source ?? "",
+        language: row.language ?? "python",
       };
-    },
-    touch(id) {
-      touchRow.run(tick(), id);
     },
     star(id, starred) {
       return Number(starRow.run(starred ? 1 : 0, id).changes) > 0;

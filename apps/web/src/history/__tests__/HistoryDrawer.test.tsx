@@ -167,7 +167,6 @@ describe("HistoryDrawer", () => {
     const entry: HistoryEntry = {
       kind: "project",
       root: "C:/codigo/loja",
-      response: {} as never,
     };
     entryMock.mockResolvedValue(entry);
     const { onOpenEntry } = setup();

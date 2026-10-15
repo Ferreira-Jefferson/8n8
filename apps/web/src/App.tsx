@@ -264,12 +264,12 @@ export function App({ initialFolder = null }: AppProps) {
     setFailed(missing === null);
   }
 
-  async function generate() {
+  async function generate(source = text) {
     setFailed(false);
     setNotFound(null);
     try {
-      const { graph, language } = await fetchGraph(text);
-      show({ kind: "snippet", source: text, graph, language });
+      const { graph, language } = await fetchGraph(source);
+      show({ kind: "snippet", source, graph, language });
     } catch {
       fail(null);
     }
@@ -294,12 +294,18 @@ export function App({ initialFolder = null }: AppProps) {
     openFolder(initialFolder);
   }, []);
 
-  /** A saved map opens as a fresh one would, with no call to the parser. */
+  /** A saved map opens by reading its folder or its text again: the history keeps no code (CLEAN-09). */
   function openEntry(entry: HistoryEntry) {
-    setFailed(false);
-    setNotFound(null);
     setHistoryOpen(false);
-    show(entry);
+    if (entry.kind === "project") {
+      setFolder(entry.root);
+      setView("home");
+      openFolder(entry.root);
+    } else {
+      setText(entry.source);
+      setView("editor");
+      generate(entry.source);
+    }
   }
 
   /** A snippet map goes back to its text; a folder map goes back to the launcher. */
@@ -445,7 +451,7 @@ export function App({ initialFolder = null }: AppProps) {
         />
         <SettingsButton onOpen={openSettings} />
         <div className="editor-actions">
-          <button type="button" className="btn" onClick={generate}>
+          <button type="button" className="btn" onClick={() => generate()}>
             Gerar mapa
           </button>
           <button type="button" className="btn-ghost" onClick={goHome}>

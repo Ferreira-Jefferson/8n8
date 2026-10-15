@@ -6,7 +6,6 @@ import {
   fileNodeOf,
   type Graph,
   type GraphResponse,
-  type HistoryEntry,
   type LanguagePlugin,
   type LanguagesResponse,
   type ProjectResponse,
@@ -18,7 +17,7 @@ import { detectLanguage, pluginForPath } from "@8n8/project";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
 import { maskDocstring } from "./docstring";
-import type { History } from "./history";
+import type { History, MadeMap } from "./history";
 import { InvalidSettings, type SettingsService } from "./settings";
 import { sameToken } from "./token";
 
@@ -187,11 +186,11 @@ function extractFailed(c: Context, err: unknown): Response {
 }
 
 /** Saves a map after the response is sent; a failing save is logged, never raised (best effort). */
-function saveLater(history: History | undefined, entry: HistoryEntry): void {
+function saveLater(history: History | undefined, map: MadeMap): void {
   if (!history) return;
   setImmediate(() => {
     try {
-      history.save(entry);
+      history.save(map);
     } catch (err) {
       console.error("histórico: não salvou", err);
     }
@@ -297,8 +296,8 @@ export function createApp(deps: AppDeps): Hono {
     const id = historyId(c.req.param("id"));
     if (id === null) return c.json({ error: "invalid id" }, 400);
     const entry = deps.history?.get(id);
+    // Opening it re-reads the folder or the text, and that read counts the visit.
     if (!entry) return c.json({ error: "not-found" }, 404);
-    deps.history?.touch(id);
     return c.json({ entry });
   });
 

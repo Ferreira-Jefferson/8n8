@@ -868,21 +868,31 @@ describe("App: history", () => {
   };
   const drawer = () => screen.getByRole("complementary", { name: "Histórico" });
 
-  it("opens a map from the launcher's Recentes, without asking the parser", async () => {
+  it("opens a map from the launcher's Recentes by generating it from the saved text (CLEAN-09)", async () => {
     historyMock.mockResolvedValue([item]);
-    historyEntryMock.mockResolvedValue({ kind: "snippet", source, graph });
+    historyEntryMock.mockResolvedValue({
+      kind: "snippet",
+      source,
+      language: "python",
+    });
+    graphMock.mockResolvedValue(withLanguage(graph));
     render(<App />);
     const recent = await screen.findByRole("region", { name: "Recentes" });
     fireEvent.click(
       within(recent).getByRole("button", { name: /^def calcular_frete/ }),
     );
     await waitFor(() => expect(breadcrumbItems()).toEqual(["Fluxo principal"]));
-    expect(graphMock).not.toHaveBeenCalled();
+    expect(graphMock).toHaveBeenCalledWith(source);
   });
 
-  it("opens a saved snippet as a fresh map, without asking the parser", async () => {
+  it("opens a saved snippet by generating its map again from the text (CLEAN-09)", async () => {
     historyMock.mockResolvedValue([item]);
-    historyEntryMock.mockResolvedValue({ kind: "snippet", source, graph });
+    historyEntryMock.mockResolvedValue({
+      kind: "snippet",
+      source,
+      language: "python",
+    });
+    graphMock.mockResolvedValue(withLanguage(graph));
     render(<App />);
     fireEvent.click(
       screen.getByRole("button", { name: "Ver todo o histórico" }),
@@ -895,21 +905,24 @@ describe("App: history", () => {
     await waitFor(() => expect(breadcrumbItems()).toEqual(["Fluxo principal"]));
     expect(historyEntryMock).toHaveBeenCalledWith(9);
     expect(currentCanvas().graph).toEqual(graph);
-    expect(graphMock).not.toHaveBeenCalled();
+    expect(graphMock).toHaveBeenCalledWith(source);
     expect(projectMock).not.toHaveBeenCalled();
     expect(
       screen.queryByRole("complementary", { name: "Histórico" }),
     ).toBeNull();
   });
 
-  it("opens a saved project, and the hamburger stays on the map", async () => {
+  it("opens a saved project by reading its folder again, and the hamburger stays on the map (CLEAN-09)", async () => {
     historyMock.mockResolvedValue([
       { ...item, kind: "project", title: "loja" },
     ]);
     historyEntryMock.mockResolvedValue({
       kind: "project",
       root: "C:/codigo/loja",
-      response: { ...loja, ignored: [{ path: "g.py", reason: "too-large" }] },
+    });
+    projectMock.mockResolvedValue({
+      ...loja,
+      ignored: [{ path: "g.py", reason: "too-large" }],
     });
     render(<App />);
     fireEvent.click(
@@ -919,8 +932,33 @@ describe("App: history", () => {
       await within(drawer()).findByRole("button", { name: /^loja/ }),
     );
     await screen.findByRole("region", { name: "Arquivos ignorados" });
-    expect(projectMock).not.toHaveBeenCalled();
+    expect(projectMock).toHaveBeenCalledWith("C:/codigo/loja");
     expect(screen.getByRole("button", { name: "Histórico" })).toBeTruthy();
+  });
+
+  it("says the folder is gone when a saved project no longer exists (CLEAN-09)", async () => {
+    historyMock.mockResolvedValue([
+      { ...item, kind: "project", title: "loja" },
+    ]);
+    historyEntryMock.mockResolvedValue({
+      kind: "project",
+      root: "C:/codigo/loja",
+    });
+    projectMock.mockResolvedValue({
+      error: "not-found",
+      path: "C:/codigo/loja",
+    });
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver todo o histórico" }),
+    );
+    fireEvent.click(
+      await within(drawer()).findByRole("button", { name: /^loja/ }),
+    );
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Pasta não encontrada: C:/codigo/loja",
+    );
+    expect(screen.queryByRole("region", { name: "Recentes" })).toBeTruthy();
   });
 });
 

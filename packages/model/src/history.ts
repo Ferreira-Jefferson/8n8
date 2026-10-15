@@ -1,6 +1,3 @@
-import type { Graph } from "./graph";
-import type { ProjectResponse } from "./project";
-
 /** One row of the history list: light, never carries the graph or the code. */
 export interface HistoryItem {
   id: number;
@@ -24,7 +21,10 @@ export interface HistoryItem {
   edges: number;
 }
 
-/** A saved map, whole: opening it asks no parser and reads no disk. */
+/**
+ * What the history keeps to open a map again: a folder's path, or a snippet's text and
+ * language. Never the code of a folder nor a graph: opening re-reads the folder or the text (CLEAN-08).
+ */
 export type HistoryEntry =
-  | { kind: "snippet"; source: string; graph: Graph }
-  | { kind: "project"; root: string; response: ProjectResponse };
+  | { kind: "snippet"; source: string; language: string }
+  | { kind: "project"; root: string };
