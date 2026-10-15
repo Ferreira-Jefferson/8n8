@@ -26,7 +26,7 @@ O monorepo tem cinco pacotes. As dependências apontam só para baixo: `model` �
 
 ```mermaid
 graph LR
-    U[Usuário] --> W[apps/web<br/>React + React Flow]
+    U[Usuário] --> W[apps/ui<br/>React + React Flow]
     W -- "POST /api/graph<br/>POST /api/explain" --> S[packages/server<br/>Hono em 127.0.0.1]
     S --> X[packages/extract-python]
     S --> E[packages/explain]
@@ -67,7 +67,7 @@ sequenceDiagram
 3. O `.dependency-cruiser.cjs` roda em `pnpm check` e bloqueia:
    - ciclos;
    - import fora das setas do diagrama, por exemplo `web` → `explain`;
-   - import de `node:*` em `model` e em `apps/web`;
+   - import de `node:*` em `model` e em `apps/ui`;
    - caminho relativo que sai da pasta do pacote (`../../packages/...`).
 
 Não usamos project references do TypeScript. Os pacotes exportam o código-fonte, como no roadmap, e cada um roda `tsc --noEmit`.
@@ -172,7 +172,7 @@ O 8n8 ainda não tem código. O reuso vem do roadmap.
   - `createApp(deps: { extractor: Extractor; explain: (req: ExplainRequest) => Promise<ExplainResponse>; port: number }): Hono`: os testes chamam `app.request()` sem rede;
   - `POST /api/graph` `{ source: string }` → `200 { graph }`;
   - `POST /api/explain` `{ source: string; nodeId: string }` → `200 ExplainResponse`, `502` com `{ status: 'error' }`, `404` para nó desconhecido e `400` para um tipo de nó que não é `function` nem `class`;
-  - `main.ts`: carrega o `.env`, lê o PTS, cria o extrator, cria o cliente só se `OPENROUTER_API_KEY` existe e chama `serve({ fetch, port: 4317, hostname: '127.0.0.1' })`. Em modo `start`, serve `apps/web/dist` como arquivos estáticos.
+  - `main.ts`: carrega o `.env`, lê o PTS, cria o extrator, cria o cliente só se `OPENROUTER_API_KEY` existe e chama `serve({ fetch, port: 4317, hostname: '127.0.0.1' })`. Em modo `start`, serve `apps/ui/dist` como arquivos estáticos.
 - **Regras**:
   - o corpo de cada requisição é validado com zod;
   - um middleware recusa todo `Host` diferente de `127.0.0.1:4317` ou `localhost:4317`, contra DNS rebinding;
@@ -180,7 +180,7 @@ O 8n8 ainda não tem código. O reuso vem do roadmap.
 - **Dependencies**: `@8n8/model`, `@8n8/extract-python`, `@8n8/explain`, `hono`, `@hono/node-server`, `zod`.
 - **ACs**: CORE-05 (o grafo não passa pelo explain), CORE-17 (o servidor monta o pedido), CORE-19 (cliente opcional), CORE-20 (502).
 
-### web: `apps/web` (`@8n8/web`)
+### web: `apps/ui` (`@8n8/ui`)
 
 - **Purpose**: Cola o trecho, desenha um nível do grafo por vez, navega pelos níveis e mostra o painel do nó.
 - **Interfaces e módulos**:
@@ -333,7 +333,7 @@ A fixture do vídeo precisa ter:
 | --- | --- | --- | --- |
 | O local e a forma dos nós `ERROR` do Tree-sitter variam com o tipo de erro. | `extract-python/src/errors.ts` | A CORE-06 pode marcar o nó errado. | Uma fixture por classe de erro: parêntese aberto, `def` sem `:` e indentação. Um teste nesta fase confirmou que `def b(:` mantém as duas funções. |
 | `tree-sitter-python` tem um script de instalação `node-gyp-build`. | `package.json` raiz | Uma build nativa no Windows pode falhar. | O pnpm ≥ 10 não roda scripts de dependências sem aprovação. Não aprovar esse script: o projeto usa só o `.wasm`. |
-| O React Flow no jsdom precisa de `ResizeObserver` e de medidas. | testes de `apps/web` | Testes de componente quebradiços. | A lógica fica em funções puras (`projectLevel`, `navigation`, `layoutLR`). Componentes rodam sem `<ReactFlow>`, só dentro de `ReactFlowProvider`. O canvas tem uma checagem manual no Independent Test. |
+| O React Flow no jsdom precisa de `ResizeObserver` e de medidas. | testes de `apps/ui` | Testes de componente quebradiços. | A lógica fica em funções puras (`projectLevel`, `navigation`, `layoutLR`). Componentes rodam sem `<ReactFlow>`, só dentro de `ReactFlowProvider`. O canvas tem uma checagem manual no Independent Test. |
 | A chave do cache não inclui os nomes dos vizinhos (a spec fixa código + modelo + prompt). | `explain/src/explain.ts` | Um resumo que cita um vizinho fica velho quando só os vizinhos mudam. | Seguir a spec. Ver a pergunta no relatório. |
 | DNS rebinding contra o servidor local gastaria a chave. | `server/src/app.ts` | Custo no OpenRouter. | Bind em `127.0.0.1`, checagem de `Host` e nenhum CORS. |
 | A resolução de nomes é estática e simples (sem tipos e sem `import *`). | `extract-python/src/calls.ts` | Algumas chamadas viram `code` ou `EXTERNO` em vez de `call`. | O determinismo continua. O limite fica documentado. A tabela e a resolução ficam isoladas para crescer depois. |

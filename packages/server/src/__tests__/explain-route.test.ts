@@ -142,7 +142,7 @@ describe("POST /api/summary (the request built on the server)", () => {
     });
   });
 
-  it("ignores extra fields sent by the web (CORE-17)", async () => {
+  it("ignores extra fields sent by the UI (CORE-17)", async () => {
     const { received, post } = setup(okReply);
     await post({
       source: videoFixture,

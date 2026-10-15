@@ -27,7 +27,7 @@ Os 12 ACs têm prova que discrimina. Os 27 mutantes, 25 deles de segurança, mor
 
 | AC | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| CC-01 | `claude-code` com padrão `sonnet`; o diálogo lista; sem chave e URL; aviso exato | `packages/llm/src/__tests__/claude-code.test.ts:109-111` - `defaultModel` `"sonnet"`, `usesKey` `false`; `packages/llm/src/__tests__/providers.test.ts:16-20` - ids; `packages/server/src/__tests__/settings.test.ts:52` - `{ id: "claude-code", defaultModel: "sonnet", usesKey: false }`; `apps/web/src/settings/__tests__/SettingsDialog.test.tsx:204-208` - `queryByLabelText("Chave de API")`/`("URL")` nulos, aviso exato; `e2e/configuracoes.e2e.ts:214-234` - na tela real, `selectOption("claude-code")`, campos com `toHaveCount(0)`, aviso visível, `config.json` com `provider: "claude-code"` | ✅ PASS |
+| CC-01 | `claude-code` com padrão `sonnet`; o diálogo lista; sem chave e URL; aviso exato | `packages/llm/src/__tests__/claude-code.test.ts:109-111` - `defaultModel` `"sonnet"`, `usesKey` `false`; `packages/llm/src/__tests__/providers.test.ts:16-20` - ids; `packages/server/src/__tests__/settings.test.ts:52` - `{ id: "claude-code", defaultModel: "sonnet", usesKey: false }`; `apps/ui/src/settings/__tests__/SettingsDialog.test.tsx:204-208` - `queryByLabelText("Chave de API")`/`("URL")` nulos, aviso exato; `e2e/configuracoes.e2e.ts:214-234` - na tela real, `selectOption("claude-code")`, campos com `toHaveCount(0)`, aviso visível, `config.json` com `provider: "claude-code"` | ✅ PASS |
 | CC-02 | `APP8N8_CLAUDE_PATH` → APPDATA npm → `~\.local\bin\claude.exe` (Windows); `PATH` → `~/.local/bin` → `~/.claude/local` (fora); nada → `no-key` | `claude-code.test.ts:128-139` - caminho fixo inválido dá `toBeUndefined()` mesmo com o do APPDATA presente; `:141-157`, `:159-164`, `:166-184`; `:345-348` e `settings.test.ts` (bloco CC-01/02/12) - `client` `toBeUndefined()` | ✅ PASS |
 | CC-03 | Sem shell, argumentos exatos, `--system-prompt` só com mensagem de sistema, conversa pelo stdin, nunca `--bare`; modelo com `-` falha; `PUT` só aceita id | `claude-code.test.ts:194-212` - lista exata, `shell` `false`, sem `--bare`; `:218-219` - stdin exato; `:342-344` - `claudeArgs("--bare", "S")` lança "Modelo inválido para o Claude Code."; `packages/llm/src/__tests__/claude-code-real.test.ts:66` - adaptador real com `shell` `false`; `settings.test.ts:174-177` - `--dangerously-skip-permissions` e `sonnet --bare` recusados; `:199-210` - ids válidos aceitos | ✅ PASS |
 | CC-04 | `cwd` = `<tmp>/8n8-claude`, criada se falta, nunca a pasta analisada | `claude-code.test.ts:225` (deps falsas); `claude-code-real.test.ts:69-71` - `cwd` `toBe(join(tmpdir(), "8n8-claude"))`, `not.toBe(process.cwd())`, `existsSync(workDir)` | ✅ PASS |
@@ -79,7 +79,7 @@ Worktree isolado em `7c3e316` (`git worktree add --detach`, `pnpm install --offl
 | M18 | `claude-code.ts` | limite de 50 MB | ✅ |
 | M19 | `claude-code.ts` | subtipo inválido ecoado | ✅ |
 | M20 | `packages/server/src/settings.ts` | `env` do host não chega ao provedor | ✅ |
-| M21 | `apps/web/src/settings/SettingsDialog.tsx` | esconde pelo provedor salvo | ✅ |
+| M21 | `apps/ui/src/settings/SettingsDialog.tsx` | esconde pelo provedor salvo | ✅ |
 | M22 | `SettingsDialog.tsx` | `usesKey` padrão invertido | ✅ |
 | M23 | `.dependency-cruiser.cjs` | exceção ampliada para `^packages/llm/` | ✅ |
 | M24 | `claude-code.ts` | timer nunca dispara | ✅ |

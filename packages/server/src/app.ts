@@ -437,7 +437,7 @@ export function createApp(deps: AppDeps): Hono {
       const empty: TitlesResponse = { status: "ok", titles: [] };
       return c.json(empty);
     }
-    // A title is best effort: the web always has the provisional name, so every status is 200.
+    // A title is best effort: the UI always has the provisional name, so every status is 200.
     return c.json(await deps.titles({ items }));
   });
 

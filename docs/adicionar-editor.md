@@ -21,14 +21,14 @@ Uma embalagem de editor mora em `apps/editors/<id>` (a CLI e a tela ficam direto
 
 2. **Guarda a config** num `SettingsStore`. A chave de API vai para o cofre do editor (no VS Code, o `SecretStorage`). O resto pode ir para o estado do editor. A chave nunca vai para um arquivo de texto quando o editor tem cofre.
 
-3. **Mostra a tela.** A tela é o build de `apps/web`, que usa caminhos relativos. A embalagem serve esse build num painel do editor.
+3. **Mostra a tela.** A tela é o build de `apps/ui`, que usa caminhos relativos. A embalagem serve esse build num painel do editor.
 
 4. **Liga a tela ao núcleo.** Prefira uma ponte sem porta, como a do VS Code: a página manda mensagens, e a embalagem transforma cada uma num `Request` e chama `app.fetch`. A ponte:
    - aceita só `GET`, `POST`, `PUT` e `DELETE` em caminhos `/api/...`, sem `..`, `//`, `\` ou esquema;
    - põe ela mesma o cabeçalho `Host` e o token, para a página nunca ver o token;
    - responde 400 a qualquer outra mensagem, sem chamar o núcleo.
 
-   A tela já sabe falar com uma ponte: com `<meta name="8n8-host" content="vscode">` na página, `apps/web/src/api.ts` manda cada chamada por `postMessage`. Um editor novo pode usar o mesmo formato de mensagem (`apps/web/src/vscode-host.ts`) ou acrescentar um transporte ao lado dele.
+   A tela já sabe falar com uma ponte: com `<meta name="8n8-host" content="vscode">` na página, `apps/ui/src/api.ts` manda cada chamada por `postMessage`. Um editor novo pode usar o mesmo formato de mensagem (`apps/ui/src/vscode-host.ts`) ou acrescentar um transporte ao lado dele.
 
 ## As regras de segurança
 

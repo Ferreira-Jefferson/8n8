@@ -107,9 +107,9 @@ export function copyGrammars(outDir: string): void {
 export async function buildExtension(
   outDir = join(extRoot, "dist"),
 ): Promise<void> {
-  const web = join(repoRoot, "apps/web/dist");
+  const web = join(repoRoot, "apps/ui/dist");
   if (!existsSync(join(web, "index.html"))) {
-    throw new Error("Construa a tela antes: pnpm --filter @8n8/web build");
+    throw new Error("Construa a tela antes: pnpm --filter @8n8/ui build");
   }
   rmSync(outDir, { recursive: true, force: true });
   await bundleCore(join(outDir, "core.mjs"));

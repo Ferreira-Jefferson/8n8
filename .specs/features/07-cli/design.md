@@ -21,7 +21,7 @@ graph TD
     end
     RUN -->|CoreOptions| CORE
     RUN -->|serve app.fetch em 127.0.0.1| HTTP[(porta 4317)]
-    WEB[apps/web] -->|fetch /api/* + x-8n8-token| HTTP
+    WEB[apps/ui] -->|fetch /api/* + x-8n8-token| HTTP
     OPEN -->|"#t=token&pasta=..."| WEB
 ```
 
@@ -49,7 +49,7 @@ graph TD
 
 | System | Integration Method |
 | ------ | ------------------ |
-| `apps/web` | Um wrapper `apiFetch` em `api.ts` põe o cabeçalho `x-8n8-token` em toda chamada. Um módulo `session.ts` lê `#t=` e `pasta=` do fragmento. |
+| `apps/ui` | Um wrapper `apiFetch` em `api.ts` põe o cabeçalho `x-8n8-token` em toda chamada. Um módulo `session.ts` lê `#t=` e `pasta=` do fragmento. |
 | Vite (dev) | O proxy de `/api` acrescenta `x-8n8-token` a partir de `APP8N8_TOKEN`. |
 | Playwright | Os servidores de teste rodam o bundle com `APP8N8_TOKEN` fixo. `use.extraHTTPHeaders` manda o token em toda requisição. Um spec próprio testa o caminho do fragmento sem esse cabeçalho. |
 
@@ -89,7 +89,7 @@ graph TD
 ### Entradas da CLI
 
 - **Purpose**: Dizer onde estão a tela e as regras de PTS em cada forma de rodar, sem ramificar o `run`.
-- **Location**: `apps/cli/src/bin.ts` (bundle: assets ao lado do arquivo) e `apps/cli/src/main.ts` (repositório: `apps/web/dist` e `docs/`).
+- **Location**: `apps/cli/src/bin.ts` (bundle: assets ao lado do arquivo) e `apps/cli/src/main.ts` (repositório: `apps/ui/dist` e `docs/`).
 - **Interfaces**: cada uma chama `run(process.argv.slice(2), {...})` e faz `process.exitCode = código`.
 - O `bin.ts` também filtra o aviso "SQLite is an experimental feature" e repassa os outros avisos.
 
@@ -103,7 +103,7 @@ graph TD
 ### `session.ts` (tela)
 
 - **Purpose**: Ler `t` e `pasta` do fragmento, guardar o token em `sessionStorage` e limpar a barra (DIST-19).
-- **Location**: `apps/web/src/session.ts`
+- **Location**: `apps/ui/src/session.ts`
 - **Interfaces**: `readLaunch(location, storage, history): { token: string | null; folder: string | null }`
 - O `App` abre o mapa de `folder` com o mesmo caminho do formulário de pasta da tela inicial.
 
@@ -181,5 +181,5 @@ O `AppDeps` de hoje ganha `token: string`.
 | Token via `APP8N8_TOKEN` | aceito com 32 caracteres ou mais | O E2E e o dev precisam de um token conhecido. Um valor curto seria fácil de adivinhar. |
 | Comparação de token | `timingSafeEqual` dos hashes SHA-256 | Tempo constante mesmo quando os tamanhos diferem. |
 | `pnpm start` e E2E rodam o bundle | `node apps/cli/dist/8n8.mjs --no-open` | O E2E testa o artefato instalado, não o código-fonte. |
-| `pnpm dev` | `scripts/dev.mjs` gera o token e sobe `dev:server` e `dev:web` com ele no ambiente | O token chega ao servidor e ao proxy do Vite sem modo "sem token". |
+| `pnpm dev` | `scripts/dev.mjs` gera o token e sobe `dev:server` e `dev:ui` com ele no ambiente | O token chega ao servidor e ao proxy do Vite sem modo "sem token". |
 | Duas entradas finas (`bin.ts`, `main.ts`) | cada uma só monta os caminhos | O `run` não ramifica por modo, e as duas são triviais de ler. |

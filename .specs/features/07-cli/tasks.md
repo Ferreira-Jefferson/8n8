@@ -21,7 +21,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | Núcleo: composição e rotas (`packages/server`) | unit (Vitest, `app.request`) | Toda rota `/api/*` atacada; cada guarda com o status exato da spec | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
 | CLI: `run`, `openBrowser`, build (`apps/cli`) | unit (Vitest) | 1:1 com os DIST da CLI; todo caminho de erro com mensagem e código exatos | `apps/cli/src/__tests__/*.test.ts` | `pnpm --filter @8n8/cli test` |
-| Tela: `session.ts`, `api.ts`, `App` (`apps/web`) | unit (Vitest + jsdom) | Fragmento lido, guardado, limpo; cabeçalho em toda chamada | `apps/web/src/__tests__/*.test.ts*` | `pnpm --filter @8n8/web test` |
+| Tela: `session.ts`, `api.ts`, `App` (`apps/ui`) | unit (Vitest + jsdom) | Fragmento lido, guardado, limpo; cabeçalho em toda chamada | `apps/ui/src/__tests__/*.test.ts*` | `pnpm --filter @8n8/ui test` |
 | Ponta a ponta (pacote instalado, navegador) | e2e (Playwright) | Caminho feliz + pasta inexistente + porta ocupada + nada escrito na pasta e na instalação | `e2e/*.e2e.ts` | `pnpm e2e e2e/<spec>.e2e.ts` |
 | Config de fronteira e lint | unit (Vitest) | O script `check` real falha com um arquivo que viola a regra, em cada workspace | `apps/cli/src/__tests__/guards.test.ts` | `pnpm --filter @8n8/cli test` |
 | Docs, CODEOWNERS | none | - | - | build gate only |
@@ -95,7 +95,7 @@ T10 → T11
 ### T2: Ler o lançamento do fragmento da URL
 
 **What**: Criar `readLaunch(location, storage, history)`, que lê `t` e `pasta` do fragmento, guarda o token em `sessionStorage`, tira o fragmento da barra e devolve `{ token, folder }`.
-**Where**: `apps/web/src/session.ts`
+**Where**: `apps/ui/src/session.ts`
 **Depends on**: T1
 **Reuses**: nenhum
 **Requirement**: DIST-19
@@ -110,7 +110,7 @@ T10 → T11
 - [x] Fragmento `#t=abc&pasta=C%3A%5Cproj` → `{ token: "abc", folder: "C:\\proj" }`, token em `sessionStorage`, `history.replaceState` sem fragmento
 - [x] Sem fragmento → token lido do `sessionStorage` (recarregar a página mantém a sessão), `folder: null`
 - [x] Nada em `localStorage`
-- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
+- [x] Gate check passes: `pnpm --filter @8n8/ui test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick
@@ -122,7 +122,7 @@ T10 → T11
 ### T3: Mandar o token em toda chamada e abrir a pasta do lançamento
 
 **What**: Fazer toda chamada de `api.ts` passar por um `apiFetch` que põe `x-8n8-token`, e fazer o `App` abrir o mapa de `folder` ao carregar.
-**Where**: `apps/web/src/api.ts`
+**Where**: `apps/ui/src/api.ts`
 **Depends on**: T2
 **Reuses**: `post` e as funções `fetch*` de `api.ts`; o fluxo do formulário de pasta da tela inicial
 **Requirement**: DIST-19, DIST-01
@@ -137,7 +137,7 @@ T10 → T11
 - [x] Toda função de `api.ts` manda `x-8n8-token` quando há token; nenhuma chama `fetch` direto
 - [x] Com `folder`, o `App` abre o mapa da pasta sem o usuário digitar nada
 - [x] Os testes atuais da web continuam passando
-- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
+- [x] Gate check passes: `pnpm --filter @8n8/ui test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick
@@ -348,7 +348,7 @@ T10 → T11
 **Done when**:
 
 - [x] `cruise()` (API do dependency-cruiser) numa fixture com `import "node:child_process"` → violação; o mesmo import em `open-browser.ts` → sem violação
-- [x] `cruise()` numa fixture onde `packages/` ou `apps/web` importa `apps/cli` → violação
+- [x] `cruise()` numa fixture onde `packages/` ou `apps/ui` importa `apps/cli` → violação
 - [x] `biome.json` tem `noGlobalEval`, `noDangerouslySetInnerHtml` e a restrição do global `Function` como `"error"`; o teste lê e confere
 - [x] As fixtures ficam fora do `pnpm check` normal. O cruise também deixou de ler `dist/` e as fixtures de código analisado (a do plugin TypeScript chama `child_process` de propósito). A restrição do global `Function` fica desligada só em `e2e/`: o teste de desempenho usa `new Function` dentro do navegador e não vai no pacote
 - [x] Gate check passes: `pnpm typecheck && pnpm check && pnpm test`

@@ -11,7 +11,7 @@ A extensão é a segunda embalagem do núcleo (AD-022). Ela monta o app com `cre
 
 ```mermaid
 graph LR
-    subgraph "Webview (apps/web empacotada)"
+    subgraph "Webview (apps/ui empacotada)"
       API[api.ts: apiFetch] -->|postMessage {id, method, path, body}| HOSTMSG
     end
     subgraph "Host de extensões (apps/editors/vscode)"
@@ -32,8 +32,8 @@ graph LR
 | Component | Location | How to Use |
 | --------- | -------- | ---------- |
 | `createCore`, `CoreOptions`, `SettingsStore` | `packages/server/src/index.ts` | A extensão passa env, pastas de dados, token e o seu `SettingsStore`. |
-| `apiFetch` | `apps/web/src/api.ts` | Ganha um transporte: `fetch` na CLI, `postMessage` na webview. As funções da API não mudam. |
-| `readLaunch` | `apps/web/src/session.ts` | Lê também a pasta da `<meta name="8n8-folder">`. |
+| `apiFetch` | `apps/ui/src/api.ts` | Ganha um transporte: `fetch` na CLI, `postMessage` na webview. As funções da API não mudam. |
+| `readLaunch` | `apps/ui/src/session.ts` | Lê também a pasta da `<meta name="8n8-folder">`. |
 | Build da CLI (bundle, gramáticas, tela, PTS) | `apps/cli/src/build.ts` | Copiado, não importado: uma embalagem não importa outra. A extensão sai em CommonJS com `vscode` externo. |
 | Guardas reais do check | `apps/cli/src/__tests__/guards.test.ts` | Ganham os casos de `vscode` fora da extensão e de porta dentro dela. |
 
@@ -41,7 +41,7 @@ graph LR
 
 ## Components
 
-### `apps/web`
+### `apps/ui`
 
 - `vite.config.ts`: `base: "./"`.
 - `api.ts`: `apiFetch` usa a ponte quando a página tem `<meta name="8n8-host" content="vscode">` e o global `acquireVsCodeApi` existe. A ponte devolve um `Response` montado com o status e o corpo, então as funções de cima não mudam.

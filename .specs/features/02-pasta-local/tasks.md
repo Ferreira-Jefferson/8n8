@@ -15,9 +15,9 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 Regras que valem para toda task:
 
-- **Fases 1 a 5 não tocam nenhum arquivo em `apps/web/` nem em `e2e/`.** Elas podem rodar num git worktree separado enquanto a fase web da feature 04 termina. Cada task dessas fases fecha com o próprio gate verde e vira um commit sozinha.
+- **Fases 1 a 5 não tocam nenhum arquivo em `apps/ui/` nem em `e2e/`.** Elas podem rodar num git worktree separado enquanto a fase web da feature 04 termina. Cada task dessas fases fecha com o próprio gate verde e vira um commit sozinha.
 - **Fases 6 a 8 só começam depois do merge da feature 04** (fase web e E2E dela concluídas). O mapa de conflitos do design aponta `App.tsx`, `DetailPanel.tsx`, `api.ts` e os testes deles. A fase 6 começa rebaseada na `main` com a feature 04.
-- **Janela de typecheck da web.** T1 acrescenta `folder` e `file` a `NodeKind`. `ICONS: Record<NodeKind, string>` em `apps/web/src/flow/StepNode.tsx` fica incompleto, então `pnpm --filter @8n8/web typecheck` fica vermelho de T1 até T21. Por isso as fases 1 a 5 usam o build não-web. O Vitest não checa tipos: `pnpm test` continua verde. O branch das fases 1 a 5 só entra na `main` junto com a fase 6, e T21 é a primeira task depois do merge.
+- **Janela de typecheck da web.** T1 acrescenta `folder` e `file` a `NodeKind`. `ICONS: Record<NodeKind, string>` em `apps/ui/src/flow/StepNode.tsx` fica incompleto, então `pnpm --filter @8n8/ui typecheck` fica vermelho de T1 até T21. Por isso as fases 1 a 5 usam o build não-web. O Vitest não checa tipos: `pnpm test` continua verde. O branch das fases 1 a 5 só entra na `main` junto com a fase 6, e T21 é a primeira task depois do merge.
 - AD-016 vale para toda a API: o 415 cobre todo `POST /api/*` (`/api/graph`, `/api/explain`, `/api/project`), não só as duas rotas citadas em C4.
 - Nenhum teste lê uma pasta real do usuário. Árvores de teste vivem em `os.tmpdir()` (`mkdtemp`) ou em memória. A fixture comprometida é `packages/extract-python/src/__tests__/fixtures/projeto-loja/` (criada em T14).
 - Os testes nascem das ACs e do comportamento visível. Eles conferem saída, nunca chamadas internas.
@@ -43,8 +43,8 @@ Regras que valem para toda task:
 | Fronteiras (`.dependency-cruiser.cjs`) | none | - (build gate: `pnpm check`) | - | `pnpm check` |
 | `server`: rotas (`app.ts`) | integration (`app.request()`, sem porta) | `/api/project`: 200, 404, 400, 403, 415. `/api/explain` de projeto: pedido montado com o código do arquivo, `nodeId` com escopo, vizinhos qualificados, 404 (pasta ou nó ausente), 400 (pasta, arquivo). Todos os casos atuais de `/api/graph` e `/api/explain` continuam | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
 | `server`: composição (`main.ts`) | integration (cópia da fixture em `os.tmpdir()`) | `composeReadProject` ok e `not-found`; releitura do disco entre o mapa e a explicação; pasta intacta; `listenOptions` (PROJ-08) | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @8n8/server test` |
-| `web`: lógica pura (`project-level`, `navigation`, `api`, `toFlowEdges`) | unit | Todos os ramos; níveis de topo, pasta, arquivo e trecho; `ancestry`, `jump`; `fetchProject` 200/404/erro; `origin` `{source}` e `{root}` | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
-| `web`: componentes (`StepNode`, `Breadcrumb`, `IgnoredFiles`, `DetailPanel`, `App`) | unit (jsdom + Testing Library) | Cada texto exato de C5 (rótulos, mensagens, motivos); cada interação (abrir pasta, salto entre arquivos, painel de pasta e de arquivo); os testes das features 01 e 04 continuam passando com a mesma intenção | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/web test` |
+| `web`: lógica pura (`project-level`, `navigation`, `api`, `toFlowEdges`) | unit | Todos os ramos; níveis de topo, pasta, arquivo e trecho; `ancestry`, `jump`; `fetchProject` 200/404/erro; `origin` `{source}` e `{root}` | `apps/ui/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/ui test` |
+| `web`: componentes (`StepNode`, `Breadcrumb`, `IgnoredFiles`, `DetailPanel`, `App`) | unit (jsdom + Testing Library) | Cada texto exato de C5 (rótulos, mensagens, motivos); cada interação (abrir pasta, salto entre arquivos, painel de pasta e de arquivo); os testes das features 01 e 04 continuam passando com a mesma intenção | `apps/ui/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/ui test` |
 | E2E: `e2e/pasta-local.e2e.ts` | e2e (Playwright, servidor real na 4317 sem chave, fixture copiada para `os.tmpdir()`) | Independent Test inteiro e cada item da seção E2E do design, com textos e contagens exatos | `e2e/*.e2e.ts` | `pnpm e2e` |
 | E2E: regressão (`fatia-central.e2e.ts` e specs da feature 04) | e2e | Passam sem mudança | `e2e/*.e2e.ts` | `pnpm e2e` |
 
@@ -61,7 +61,7 @@ Regras que valem para toda task:
 | E2E | Task de spec Playwright | `pnpm e2e` |
 | Build (final) | Fim da fase 8 | `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` |
 
-O build não-web roda o typecheck de todos os pacotes em `packages/` (inclui `input` a partir de T4) e o de `e2e/`, mas não o de `apps/web` (janela de typecheck, ver Regras). `pnpm test` roda os testes da web também: eles continuam verdes, porque nenhuma task das fases 1 a 5 muda código da web. A partir de T21 o typecheck da raiz volta a valer sem exceção.
+O build não-web roda o typecheck de todos os pacotes em `packages/` (inclui `input` a partir de T4) e o de `e2e/`, mas não o de `apps/ui` (janela de typecheck, ver Regras). `pnpm test` roda os testes da web também: eles continuam verdes, porque nenhuma task das fases 1 a 5 muda código da web. A partir de T21 o typecheck da raiz volta a valer sem exceção.
 
 ---
 
@@ -160,7 +160,7 @@ T31 → T32
 
 - [x] Os tipos batem com C1 campo a campo.
 - [x] O stub de `host-guard.test.ts` (`{ language, extract }`) continua compilando sem mudança.
-- [x] Build não-web passa. O typecheck de `apps/web` fica vermelho só em `StepNode.tsx` (`ICONS`), como previsto; T21 fecha.
+- [x] Build não-web passa. O typecheck de `apps/ui` fica vermelho só em `StepNode.tsx` (`ICONS`), como previsto; T21 fecha.
 
 **Tests**: none (tipos)
 **Gate**: build (não-web)
@@ -685,7 +685,7 @@ T31 → T32
 ### T21: Ícones de pasta e arquivo no `StepNode`
 
 **What**: Acrescentar a `ICONS` glifos para `folder` e `file` (sem emoji). Fecha a janela de typecheck aberta em T1.
-**Where**: `apps/web/src/flow/StepNode.tsx`
+**Where**: `apps/ui/src/flow/StepNode.tsx`
 **Depends on**: T1; feature 04 merged na `main`
 **Reuses**: `ICONS`
 **Requirement**: PROJ-02
@@ -700,7 +700,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test && pnpm typecheck`
+**Gate**: quick · `pnpm --filter @8n8/ui test && pnpm typecheck`
 
 **Commit**: `feat(web): add folder and file glyphs to step nodes`
 **Status**: ✅ Complete
@@ -709,8 +709,8 @@ T31 → T32
 
 ### T22: Níveis de projeto com arestas elevadas por tipo
 
-**What**: Trocar `liftedCalls` por `lifted(graph, visible, kind)`. Em `projectLevel`, num grafo com `project`: topo e nível de pasta mostram filhos diretos + arestas `imports` elevados; nível de arquivo mostra filhos diretos + arestas `calls` elevados. Uma aresta cuja ponta não tem ancestral visível some. Trecho e demais níveis como hoje. Criar o grafo de teste `apps/web/src/flow/__tests__/loja-graph.ts`, copiado da saída de `extractProject` da fixture (T16).
-**Where**: `apps/web/src/flow/project-level.ts`
+**What**: Trocar `liftedCalls` por `lifted(graph, visible, kind)`. Em `projectLevel`, num grafo com `project`: topo e nível de pasta mostram filhos diretos + arestas `imports` elevados; nível de arquivo mostra filhos diretos + arestas `calls` elevados. Uma aresta cuja ponta não tem ancestral visível some. Trecho e demais níveis como hoje. Criar o grafo de teste `apps/ui/src/flow/__tests__/loja-graph.ts`, copiado da saída de `extractProject` da fixture (T16).
+**Where**: `apps/ui/src/flow/project-level.ts`
 **Depends on**: T1
 **Reuses**: `liftedCalls` atual
 **Requirement**: PROJ-02, PROJ-03, PROJ-04
@@ -726,7 +726,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): lift wires by kind on project levels`
 **Status**: ✅ Complete
@@ -736,7 +736,7 @@ T31 → T32
 ### T23: `ancestry` e ação `jump`
 
 **What**: Em `navigation.ts`, criar `ancestry(graph, id)` (IDs do topo até `id`, inclusive) e a ação `{ type: "jump"; path }`, que troca o caminho e limpa `selected`. `openTarget` abre `folder` e `file`.
-**Where**: `apps/web/src/nav/navigation.ts`
+**Where**: `apps/ui/src/nav/navigation.ts`
 **Depends on**: T1
 **Reuses**: `navReducer`
 **Requirement**: PROJ-04
@@ -753,7 +753,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): jump to a node's ancestry across files`
 **Status**: ✅ Complete
@@ -763,7 +763,7 @@ T31 → T32
 ### T24: `fetchProject` e `origin` na explicação
 
 **What**: Em `api.ts`, criar `fetchProject(path): Promise<ProjectResponse | { error: "not-found"; path }>` (outro status lança erro com o código HTTP). `fetchExplanation(origin, nodeId)` recebe `origin = { source } | { root }` e posta `{ ...origin, nodeId }`. Exportar o tipo `ExplainOrigin`.
-**Where**: `apps/web/src/api.ts`
+**Where**: `apps/ui/src/api.ts`
 **Depends on**: T3
 **Reuses**: `post`, `JSON_HEADERS`
 **Requirement**: PROJ-05 (AD-015)
@@ -780,7 +780,7 @@ T31 → T32
 **Ajuste na execução**: a assinatura nova quebra o tipo da chamada em `DetailPanel.tsx`, que hoje é `fetchExplanation(source, node.id)`. Para o typecheck seguir verde, a chamada passa a `fetchExplanation({ source }, node.id)` já aqui; a prop `origin` continua em T27. Por isso duas asserções mudam nesta task, só no formato do primeiro argumento: `DetailPanel.test.tsx` ("fetches once for a function and shows summary, inputs, outputs and suggestions (CORE-16)") e `App.test.tsx` ("passes the suggestion count 2 to the canvas after the node is explained (CORE-23)") passam de `toHaveBeenCalledWith(source, "fn:calcular_frete")` para `toHaveBeenCalledWith({ source }, "fn:calcular_frete")`. A intenção é a mesma: a explicação do trecho é pedida com o código do trecho e o ID do nó.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): fetch projects and explain by source or root`
 **Status**: ✅ Complete
@@ -790,7 +790,7 @@ T31 → T32
 ### T25: Breadcrumb com o nome do projeto
 
 **What**: O primeiro item do `Breadcrumb` passa a ser `graph.project?.name ?? "Trecho"`.
-**Where**: `apps/web/src/nav/Breadcrumb.tsx`
+**Where**: `apps/ui/src/nav/Breadcrumb.tsx`
 **Depends on**: T1
 **Reuses**: `Breadcrumb`
 **Requirement**: PROJ-02, PROJ-04
@@ -805,7 +805,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): start the breadcrumb with the project name`
 **Status**: ✅ Complete
@@ -815,7 +815,7 @@ T31 → T32
 ### T26: Painel "Arquivos ignorados"
 
 **What**: Criar `IgnoredFiles({ ignored })`: `<section aria-label="Arquivos ignorados">` só com lista não vazia, um item `<path> — <motivo>` por arquivo. Motivos: `too-large` → "maior que 1 MB"; `not-utf8` → "não está em UTF-8"; `unreadable` → "não foi possível ler"; `symlink` → "link simbólico não seguido".
-**Where**: `apps/web/src/panel/IgnoredFiles.tsx`
+**Where**: `apps/ui/src/panel/IgnoredFiles.tsx`
 **Depends on**: T3
 **Reuses**: estilos do painel
 **Requirement**: PROJ-06
@@ -829,7 +829,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): list ignored files with their reason`
 **Status**: ✅ Complete
@@ -841,7 +841,7 @@ T31 → T32
 ### T27: `DetailPanel` com origem e nós de pasta e arquivo
 
 **What**: `DetailPanel` ganha `origin: ExplainOrigin` e `filePath?: string`; `source` passa a ser o texto do arquivo do nó. Nó `folder` mostra só `Pasta: <path>`, sem código e sem pedido de explicação. Nó `file` mostra o arquivo inteiro, sem resumo. Função ou classe de projeto mostra `filePath` acima das linhas. A explicação usa `fetchExplanation(origin, node.id)`.
-**Where**: `apps/web/src/panel/DetailPanel.tsx`
+**Where**: `apps/ui/src/panel/DetailPanel.tsx`
 **Depends on**: T24
 **Reuses**: `DetailPanel` da feature 04, `CodeView`
 **Requirement**: PROJ-02, PROJ-04 (AD-015)
@@ -857,7 +857,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): show folder, file and project nodes in the detail panel`
 
@@ -868,7 +868,7 @@ T31 → T32
 ### T28: Aresta de importação tracejado
 
 **What**: Extrair de `FlowCanvas.tsx` a função pura exportada `toFlowEdges(edges)`, que põe `className: "edge-imports"` nas arestas `imports`. Acrescentar em `styles.css` o traço tracejado de `.edge-imports`.
-**Where**: `apps/web/src/flow/FlowCanvas.tsx`
+**Where**: `apps/ui/src/flow/FlowCanvas.tsx`
 **Depends on**: T22
 **Reuses**: o mapeamento atual de arestas no `useMemo`
 **Requirement**: PROJ-03
@@ -881,7 +881,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): draw import wires dashed`
 
@@ -892,7 +892,7 @@ T31 → T32
 ### T29: Abrir pasta no `App`
 
 **What**: Ao lado do textarea, o campo `aria-label="Caminho da pasta"` e o botão "Abrir pasta". Estado `Mapped = { kind: "snippet"; source; graph } | { kind: "project"; root; response }`; gerar um trecho ou abrir uma pasta troca o mapa inteiro. `not-found` → `<p role="alert">Pasta não encontrada: <caminho></p>`. `graph.empty` num projeto → "Nenhum arquivo .py encontrado na pasta.". `IgnoredFiles` aparece com `response.ignored`. O `DetailPanel` recebe `origin = { root }`, `source = files[fileNodeOf(...).path]` e `filePath`.
-**Where**: `apps/web/src/App.tsx`
+**Where**: `apps/ui/src/App.tsx`
 **Depends on**: T24, T25, T26, T27
 **Reuses**: `App` da feature 04, `fileNodeOf` (T3)
 **Requirement**: PROJ-02, PROJ-05, PROJ-06
@@ -910,7 +910,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): open a local folder as a project map`
 
@@ -921,7 +921,7 @@ T31 → T32
 ### T30: Salto para chamada em outro arquivo
 
 **What**: Abrir um `call` cujo alvo está em outro arquivo despacha `jump` com `ancestry(graph, target)`. No mesmo arquivo, e no trecho, empilha como na feature 01.
-**Where**: `apps/web/src/App.tsx`
+**Where**: `apps/ui/src/App.tsx`
 **Depends on**: T29, T23
 **Reuses**: `ancestry`/`jump` (T23), `fileNodeOf` (T3)
 **Requirement**: PROJ-04
@@ -936,7 +936,7 @@ T31 → T32
 - [x] Build (web) passa (fim das fases 6 e 7).
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): jump across files when opening a project call`
 
@@ -1027,10 +1027,10 @@ T31 → T32
 | `packages/server/src/__tests__/graph-route.test.ts` | 01 | T17 | `AppDeps` ganha `readProject` | CORE-01, 05, 06, 07 e o 400; só o stub entra |
 | `packages/server/src/__tests__/host-guard.test.ts` | 01 | T17 | `AppDeps` ganha `readProject` | AD-007: 403 para Host estranho, sem CORS; só o stub entra |
 | `packages/server/src/__tests__/explain-route.test.ts` | 01, 04 | T17 | `AppDeps` ganha `readProject` | CORE-17 e todos os códigos HTTP, `unfaithful` (FID-10); só o stub entra |
-| `apps/web/src/__tests__/api.test.ts` | 01, 04 | T24 | `fetchExplanation(origin, nodeId)` | Corpo `{ source, nodeId }` e os 8 casos (ok, no-key, unfaithful, 502, rede, stale) |
-| `apps/web/src/panel/__tests__/DetailPanel.test.tsx` | 01, 04 | T24 | `fetchExplanation({ source }, id)`: só o primeiro argumento do `toHaveBeenCalledWith` do teste CORE-16 | CORE-16: o trecho é explicado com o código e o ID do nó |
-| `apps/web/src/__tests__/App.test.tsx` | 01 | T24 | `fetchExplanation({ source }, id)`: só o primeiro argumento do `toHaveBeenCalledWith` do teste CORE-23 | CORE-23: a contagem de sugestões chega ao canvas depois da explicação |
-| `apps/web/src/panel/__tests__/DetailPanel.test.tsx` | 01, 04 | T27 | Prop nova `origin` | CORE-14, 16, 19, 20, 24, `stale`, `onExplained`, FID-09..14, CACHE-04 |
+| `apps/ui/src/__tests__/api.test.ts` | 01, 04 | T24 | `fetchExplanation(origin, nodeId)` | Corpo `{ source, nodeId }` e os 8 casos (ok, no-key, unfaithful, 502, rede, stale) |
+| `apps/ui/src/panel/__tests__/DetailPanel.test.tsx` | 01, 04 | T24 | `fetchExplanation({ source }, id)`: só o primeiro argumento do `toHaveBeenCalledWith` do teste CORE-16 | CORE-16: o trecho é explicado com o código e o ID do nó |
+| `apps/ui/src/__tests__/App.test.tsx` | 01 | T24 | `fetchExplanation({ source }, id)`: só o primeiro argumento do `toHaveBeenCalledWith` do teste CORE-23 | CORE-23: a contagem de sugestões chega ao canvas depois da explicação |
+| `apps/ui/src/panel/__tests__/DetailPanel.test.tsx` | 01, 04 | T27 | Prop nova `origin` | CORE-14, 16, 19, 20, 24, `stale`, `onExplained`, FID-09..14, CACHE-04 |
 
 Só ganham testes, sem mudar os atuais: `ids.test.ts` (T2), `imports.test.ts` (T8), `calls.test.ts` (T12), `build-graph.test.ts` (T13), `extractor.test.ts` e o snapshot (T16, snapshot intacto), `main.test.ts` da feature 04 (T20), `StepNode.test.tsx` (T21), `project-level.test.ts` (T22), `navigation.test.ts` (T23), `Breadcrumb.test.tsx` (T25), `App.test.tsx` (T29, T30). Sem mudança: `steps.test.ts`, `e2e/fatia-central.e2e.ts` e os specs E2E da feature 04.
 
@@ -1038,7 +1038,7 @@ Só ganham testes, sem mudar os atuais: `ids.test.ts` (T2), `imports.test.ts` (T
 
 ## Phase Execution Map
 
-| Fase | Tasks (em ordem) | Toca `apps/web` ou `e2e/`? | Gate de fim de fase |
+| Fase | Tasks (em ordem) | Toca `apps/ui` ou `e2e/`? | Gate de fim de fase |
 | ---- | ---------------- | -------------------------- | ------------------- |
 | 1 | T1, T2, T3 | Não | Build (não-web) |
 | 2 | T4, T5, T6, T7 | Não | Build (não-web) |

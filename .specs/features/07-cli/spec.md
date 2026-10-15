@@ -86,7 +86,7 @@ Num PowerShell novo, numa pasta qualquer fora do repositório, o usuário roda `
 **Acceptance Criteria**:
 
 1. The `server` package SHALL receber a config de LLM, as pastas de cache e de histórico, as regras de PTS e os plugins por parâmetro, e SHALL nunca ler `process.env`, abrir uma porta ou montar caminhos a partir da raiz do repositório.  <!-- DIST-13 -->
-2. IF um pacote em `packages/` ou o app `apps/web` importa `apps/cli`, ou uma embalagem em `apps/` importa outra embalagem THEN `pnpm check` SHALL falhar.  <!-- DIST-14 -->
+2. IF um pacote em `packages/` ou o app `apps/ui` importa `apps/cli`, ou uma embalagem em `apps/` importa outra embalagem THEN `pnpm check` SHALL falhar.  <!-- DIST-14 -->
 3. WHEN o usuário roda `pnpm dev` ou `pnpm start` no repositório THEN o script SHALL rodar a CLI (`apps/cli/src/main.ts` no `dev:server`, `apps/cli/dist/8n8.mjs` no `start`) com a flag `--env-file-if-exists=.env` do Node, que lê o `.env` da raiz quando ele existe e segue sem ele quando não existe.  <!-- DIST-15 -->
 
 **Independent Test**: `pnpm check` falha com um import proibido de teste e passa sem ele; `pnpm test`, `pnpm typecheck` e `pnpm e2e` continuam verdes.

@@ -44,9 +44,9 @@ Regras que valem para toda task:
 | `explain`: pipeline, caches e orquestração (`review`, `explain`, `title-cache`, `titles`) | unit (`LlmClient` falso, diretório temporário) | Todos os ramos; 1:1 com VID-14, 16, 17, 28; toda linha da tabela de erros do design; contagem exata de chamadas (0 com cache, 2 sem cache) | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @8n8/explain test` |
 | `server`: rotas (`app.ts`) | integration (`app.request()`) | `/api/titles`: caminho feliz, trecho e projeto, ID desconhecido, pasta e arquivo descartados, mais de 200 IDs, corpo inválido, 404, 415, 403; `/api/explain`: cada `ExplainKind` aceito, pasta e arquivo com 400 | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
 | `server`: composição (`main.ts`) | unit | `composeTitles` com e sem chave, pasta de cache, modelos; `composeExplain` com `stepPrompt` | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @8n8/server test` |
-| `web`: lógica pura (`card`, `main-flow`, `project-level`, `layout`, `motion`, `suggestion-cards`, `navigation`, `api`) | unit | Todos os ramos; 1:1 com as VIDs de cada módulo; cada caso de borda (entrada sem chamada, recursão, título fora do pedido, passo sem entrada e saída) | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
-| `web`: componentes e hooks (`StepNode`, `WireEdge`, `SuggestionCard`, `FlowCanvas`, `Breadcrumb`, `DetailPanel`, `use-titles`, `App`) | unit (jsdom + Testing Library) | Cada texto, atributo e interação das VIDs; os testes atuais continuam com a mesma intenção | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/web test` |
-| `web`: CSS e fontes | none | - (build gate: `vite build`; os valores visíveis são provados no E2E) | - | `pnpm --filter @8n8/web build` |
+| `web`: lógica pura (`card`, `main-flow`, `project-level`, `layout`, `motion`, `suggestion-cards`, `navigation`, `api`) | unit | Todos os ramos; 1:1 com as VIDs de cada módulo; cada caso de borda (entrada sem chamada, recursão, título fora do pedido, passo sem entrada e saída) | `apps/ui/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/ui test` |
+| `web`: componentes e hooks (`StepNode`, `WireEdge`, `SuggestionCard`, `FlowCanvas`, `Breadcrumb`, `DetailPanel`, `use-titles`, `App`) | unit (jsdom + Testing Library) | Cada texto, atributo e interação das VIDs; os testes atuais continuam com a mesma intenção | `apps/ui/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/ui test` |
+| `web`: CSS e fontes | none | - (build gate: `vite build`; os valores visíveis são provados no E2E) | - | `pnpm --filter @8n8/ui build` |
 | E2E: LLM falso (`e2e/fake-llm.ts`) | none | - (build gate: `tsc -p e2e`; exercitado pelos specs) | - | `pnpm typecheck` |
 | E2E: `playwright.config.ts` | e2e (regressão) | A suíte inteira roda com as imagens de referência configuradas | `e2e/*.e2e.ts` | `pnpm e2e` |
 | E2E: specs (`e2e/*.e2e.ts`) | e2e (Playwright, servidor real) | Cada VID com ao menos um teste; cada passo dos 3 Independent Tests; cada caso de borda da spec; estilos conferidos por `getComputedStyle` com o valor exato da spec | `e2e/*.e2e.ts` | `pnpm exec playwright test <arquivo>` e `pnpm e2e` |
@@ -64,7 +64,7 @@ Regras que valem para toda task:
 | Build Fase 0 | Fim da Fase 0 | `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` |
 | Build A | Fim da Fase 1 | `pnpm --filter @8n8/model --filter @8n8/extract-python typecheck && pnpm check && pnpm --filter @8n8/model --filter @8n8/extract-python test` |
 | Build B | Fim das Fases 2 e 3 | `pnpm --filter @8n8/explain --filter @8n8/server typecheck && pnpm check && pnpm --filter @8n8/explain --filter @8n8/server test` |
-| Build C | Fim das Fases 4, 5 e 6, e a task de fontes | `pnpm --filter @8n8/web typecheck && pnpm check && pnpm --filter @8n8/web test && pnpm --filter @8n8/web build` |
+| Build C | Fim das Fases 4, 5 e 6, e a task de fontes | `pnpm --filter @8n8/ui typecheck && pnpm check && pnpm --filter @8n8/ui test && pnpm --filter @8n8/ui build` |
 | Mescla | Depois de mesclar A, B e C, antes da Fase 7 | `pnpm install && pnpm typecheck && pnpm check && pnpm test` |
 | Build final | Fim das Fases 7, 8 e 9 | `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` |
 
@@ -76,10 +76,10 @@ O Playwright precisa de `C:\Windows\System32` no PATH (STATE, Ambiente).
 
 | Fase | Trilha | Arquivos e pacotes (só estes) | Depende de |
 | ---- | ------ | ----------------------------- | ---------- |
-| 0 | Contratos | `packages/model/src/graph.ts`, `explanation.ts`, `index.ts`, `__tests__/explanation.test.ts` (novo); `apps/web/src/flow/StepNode.tsx` (só a linha de `ICONS`); `packages/explain/src/explain.ts` (só `KIND_LABEL`); `packages/extract-python/src/__tests__/fixtures/pedido_video.py` (novo) | nada |
+| 0 | Contratos | `packages/model/src/graph.ts`, `explanation.ts`, `index.ts`, `__tests__/explanation.test.ts` (novo); `apps/ui/src/flow/StepNode.tsx` (só a linha de `ICONS`); `packages/explain/src/explain.ts` (só `KIND_LABEL`); `packages/extract-python/src/__tests__/fixtures/pedido_video.py` (novo) | nada |
 | 1 | A: extrator | `packages/extract-python/**` | Fase 0 |
 | 2, 3 | B: explicação e servidor | `packages/explain/**`, `packages/server/**` | Fase 0 |
-| 4, 5, 6 | C: web | `apps/web/**`, `pnpm-lock.yaml` | Fase 0 |
+| 4, 5, 6 | C: web | `apps/ui/**`, `pnpm-lock.yaml` | Fase 0 |
 | — | Mescla | (sem arquivo; ver "Ponto de mescla") | Fases 1 a 6 |
 | 7, 8, 9 | D: E2E | `e2e/**`, `playwright.config.ts` | Mescla |
 
@@ -201,7 +201,7 @@ T49 → T50
 
 **What**: Acrescentar `"return"` a `NodeKind` e documentar em `FlowNode` a regra de `openable` (VID-24) e os campos `target`/`callee`/`category` do `return`, conforme "Contratos de dados" do design. Para o typecheck continuar verde, acrescentar `return: "↩"` ao `ICONS` de `StepNode.tsx`.
 **Where**: `packages/model/src/graph.ts`
-**Também**: a linha de `ICONS` em `apps/web/src/flow/StepNode.tsx`
+**Também**: a linha de `ICONS` em `apps/ui/src/flow/StepNode.tsx`
 **Depends on**: None
 **Reuses**: `NodeKind` e `FlowNode` atuais
 **Requirement**: VID-20, VID-24 (contrato)
@@ -681,8 +681,8 @@ T49 → T50
 ### T19: Fontes servidas pelo app
 
 **What**: Acrescentar as três dependências `@fontsource` em versão exata (C1) e importar os pesos em `main.tsx`.
-**Where**: `apps/web/package.json`
-**Também**: `apps/web/src/main.tsx`, `pnpm-lock.yaml`
+**Where**: `apps/ui/package.json`
+**Também**: `apps/ui/src/main.tsx`, `pnpm-lock.yaml`
 **Depends on**: None
 **Reuses**: nada
 **Requirement**: VID-02
@@ -692,7 +692,7 @@ T49 → T50
 **Done when**:
 
 - [x] `package.json` lista `@fontsource/archivo-black`, `@fontsource/space-grotesk` e `@fontsource/dm-mono` na versão `5.3.0`, sem `^`.
-- [x] `pnpm --filter @8n8/web build` gera arquivos `.woff2` em `apps/web/dist/assets`. O `index.html` gerado não aponta para outro host.
+- [x] `pnpm --filter @8n8/ui build` gera arquivos `.woff2` em `apps/ui/dist/assets`. O `index.html` gerado não aponta para outro host.
 - [x] Gate passa.
 
 **Tests**: none (dependência; o E2E de T43 prova as fontes)
@@ -705,7 +705,7 @@ T49 → T50
 ### T20: Etiqueta, nome provisório e linha de código do cartão
 
 **What**: Criar `tagOf`, `categoryTag`, `provisionalLabel`, `codeLineOf` e `isOpenable` conforme C4.
-**Where**: `apps/web/src/flow/card.ts` (novo)
+**Where**: `apps/ui/src/flow/card.ts` (novo)
 **Também**: `flow/__tests__/card.test.ts` (novo)
 **Depends on**: None
 **Reuses**: `FlowNode`
@@ -722,7 +722,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): derive card tag, provisional name and code line`
 
@@ -731,7 +731,7 @@ T49 → T50
 ### T21: Linhas do fluxo principal
 
 **What**: Criar `mainFlowRows(graph)` com as regras 1 a 5 de C5.
-**Where**: `apps/web/src/flow/main-flow.ts` (novo)
+**Where**: `apps/ui/src/flow/main-flow.ts` (novo)
 **Também**: `flow/__tests__/main-flow.test.ts` (novo)
 **Depends on**: None
 **Reuses**: os IDs `<pai>/s<i>` (AD-006)
@@ -753,7 +753,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): compute the main flow rows`
 
@@ -762,7 +762,7 @@ T49 → T50
 ### T22: Nível do fluxo principal em `projectLevel`
 
 **What**: Fazer `projectLevel(graph, null)` de um trecho retornar o fluxo principal, com os campos `rows` e `triggers` e as arestas sintéticas `main:<a>-><b>` (C6). Atualizar os testes de topo de trecho (tabela "Testes existentes que mudam").
-**Where**: `apps/web/src/flow/project-level.ts`
+**Where**: `apps/ui/src/flow/project-level.ts`
 **Também**: `__tests__/project-level.test.ts`
 **Depends on**: T21
 **Reuses**: `mainFlowRows`, `lifted`
@@ -778,7 +778,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): show the main flow as the first level of a snippet`
 
@@ -787,7 +787,7 @@ T49 → T50
 ### T23: Posições em linhas e ramos "sim" acima
 
 **What**: Trocar as medidas para 320×140 com espaço de 60, criar `layoutRows` e criar `orderBranches` depois do dagre (C7).
-**Where**: `apps/web/src/flow/layout.ts`
+**Where**: `apps/ui/src/flow/layout.ts`
 **Também**: `__tests__/layout.test.ts`
 **Depends on**: None
 **Reuses**: `layoutLR`
@@ -803,7 +803,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): lay out rows and keep the yes branch on top`
 
@@ -812,7 +812,7 @@ T49 → T50
 ### T24: Agenda de entrada, desenho e ponto
 
 **What**: Criar `schedule(nodes, edges, positions, reduced)` conforme C8.
-**Where**: `apps/web/src/flow/motion.ts` (novo)
+**Where**: `apps/ui/src/flow/motion.ts` (novo)
 **Também**: `flow/__tests__/motion.test.ts` (novo)
 **Depends on**: None
 **Reuses**: nada
@@ -829,7 +829,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): schedule node entry, wire drawing and pulses`
 
@@ -838,7 +838,7 @@ T49 → T50
 ### T25: Âncoras dos cartões de sugestão
 
 **What**: Criar `suggestionCards(...)` e o conjunto `highlighted` conforme C9.
-**Where**: `apps/web/src/flow/suggestion-cards.ts` (novo)
+**Where**: `apps/ui/src/flow/suggestion-cards.ts` (novo)
 **Também**: `flow/__tests__/suggestion-cards.test.ts` (novo)
 **Depends on**: None
 **Reuses**: `Explanation`, `Level`
@@ -856,7 +856,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): anchor suggestion cards to the visible nodes`
 
@@ -865,7 +865,7 @@ T49 → T50
 ### T26: Navegação com clique, "Voltar" e de onde se veio
 
 **What**: Trocar o `navReducer` pelo estado `Opened[]` e pelas ações de C10, e criar `panelNodeOf`. Atualizar os testes de navegação.
-**Where**: `apps/web/src/nav/navigation.ts`
+**Where**: `apps/ui/src/nav/navigation.ts`
 **Também**: `__tests__/navigation.test.ts`
 **Depends on**: None
 **Reuses**: `ancestry`, `openTarget`
@@ -896,7 +896,7 @@ T49 → T50
 ### T27: Tema do vídeo em CSS
 
 **What**: Trocar `styles.css` pelos tokens e pelas classes da tabela C2, com as telas de C3 e o bloco `prefers-reduced-motion`.
-**Where**: `apps/web/src/styles.css`
+**Where**: `apps/ui/src/styles.css`
 **Depends on**: None
 **Reuses**: `base.css` do vídeo (valores copiados no design)
 **Requirement**: VID-01, VID-03, VID-05, VID-08, VID-22, VID-32, VID-07
@@ -919,7 +919,7 @@ T49 → T50
 ### T28: Cartão de três linhas
 
 **What**: Reescrever `StepNode` com a estrutura C11: etiqueta, título com `›`, linha de código, portas, `data-tag`, `data-enter-at`, `on` e `dim`. O selo de sugestões e o erro de sintaxe continuam.
-**Where**: `apps/web/src/flow/StepNode.tsx`
+**Where**: `apps/ui/src/flow/StepNode.tsx`
 **Também**: `__tests__/StepNode.test.tsx`
 **Depends on**: None
 **Reuses**: `tagOf`, `provisionalLabel`, `codeLineOf`, `isOpenable` (T20)
@@ -937,7 +937,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): draw nodes as three-line cards`
 
@@ -946,7 +946,7 @@ T49 → T50
 ### T29: Aresta com desenho, ponto e rótulo de ramo
 
 **What**: Criar a aresta `WireEdge` conforme C11: curva, `pathLength=1`, `data-draw-at`, ponto com `animateMotion` e `data-pulse-at`, e `.branch-label` em `t = 0.25`.
-**Where**: `apps/web/src/flow/WireEdge.tsx` (novo)
+**Where**: `apps/ui/src/flow/WireEdge.tsx` (novo)
 **Também**: `flow/__tests__/WireEdge.test.tsx` (novo)
 **Depends on**: None
 **Reuses**: `BaseEdge`/`EdgeLabelRenderer` do `@xyflow/react`
@@ -962,7 +962,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): draw wires with pulse and branch labels`
 
@@ -971,7 +971,7 @@ T49 → T50
 ### T30: Cartão de sugestão
 
 **What**: Criar `SuggestionCard` (`button.alert` com `.dot`, o texto e `data-anchor-id`) conforme C11.
-**Where**: `apps/web/src/flow/SuggestionCard.tsx` (novo)
+**Where**: `apps/ui/src/flow/SuggestionCard.tsx` (novo)
 **Também**: `flow/__tests__/SuggestionCard.test.tsx` (novo)
 **Depends on**: None
 **Reuses**: `SuggestionCardModel` (T25)
@@ -986,7 +986,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): add the suggestion card`
 
@@ -995,7 +995,7 @@ T49 → T50
 ### T31: Canvas com clique único, moldura e "Voltar"
 
 **What**: Reescrever `FlowCanvas` conforme C11. Clique único, sem duplo clique. Fase `expanding` com `.open-frame` de 1100 ms (imediata com movimento reduzido). Aresta `wire`. Cartões de sugestão no `ViewportPortal`. `data-phase` e `data-level`. `key` com a profundidade. `fitView` no `focusId`. Atualizar `FlowCanvas.test.ts`.
-**Where**: `apps/web/src/flow/FlowCanvas.tsx`
+**Where**: `apps/ui/src/flow/FlowCanvas.tsx`
 **Também**: `__tests__/FlowCanvas.test.ts`
 **Depends on**: T28, T29, T30
 **Reuses**: `projectLevel`, `layoutRows`, `layoutLR`, `schedule`, `suggestionCards`
@@ -1024,7 +1024,7 @@ T49 → T50
 ### T32: Trilha "Fluxo principal › …"
 
 **What**: Fazer a `Breadcrumb` receber `Opened[]` e uma função de título, com "Fluxo principal" na raiz de um trecho e o nome do projeto num projeto (C12). Atualizar os testes.
-**Where**: `apps/web/src/nav/Breadcrumb.tsx`
+**Where**: `apps/ui/src/nav/Breadcrumb.tsx`
 **Também**: `__tests__/Breadcrumb.test.tsx`
 **Depends on**: None
 **Reuses**: a estrutura atual de botões
@@ -1041,7 +1041,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): show the main flow and the opened titles in the breadcrumb`
 
@@ -1050,7 +1050,7 @@ T49 → T50
 ### T33: Painel com as seções do vídeo
 
 **What**: Reorganizar o `DetailPanel` conforme C13. Pedido de explicação para todo `ExplainKind`. Ordem das seções e textos exatos. Linha das regras só em passo. "ENTRADA E SAÍDA" com `→`. `categoryTag` nos efeitos. Prop `mark`. Atualizar os testes.
-**Where**: `apps/web/src/panel/DetailPanel.tsx`
+**Where**: `apps/ui/src/panel/DetailPanel.tsx`
 **Também**: `__tests__/DetailPanel.test.tsx`
 **Depends on**: None
 **Reuses**: `CodeView`, `formatLines`, `ClaimItem`, `explainStyle`, `categoryTag`
@@ -1069,7 +1069,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): lay out the detail panel like the video`
 
@@ -1078,7 +1078,7 @@ T49 → T50
 ### T34: `fetchTitles`
 
 **What**: Criar `fetchTitles(origin, nodeIds)` conforme C14.
-**Where**: `apps/web/src/api.ts`
+**Where**: `apps/ui/src/api.ts`
 **Também**: `__tests__/api.test.ts`
 **Depends on**: None
 **Reuses**: `post`
@@ -1093,7 +1093,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): fetch the titles of a level`
 
@@ -1102,7 +1102,7 @@ T49 → T50
 ### T35: `useTitles`, um pedido por nível
 
 **What**: Criar o hook `useTitles(origin, mapVersion, levelIds)` conforme C14.
-**Where**: `apps/web/src/flow/use-titles.ts` (novo)
+**Where**: `apps/ui/src/flow/use-titles.ts` (novo)
 **Também**: `flow/__tests__/use-titles.test.tsx` (novo)
 **Depends on**: T34
 **Reuses**: `fetchTitles`
@@ -1120,7 +1120,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): request titles once per level`
 
@@ -1129,7 +1129,7 @@ T49 → T50
 ### T36: App com editor, mapa, "Novo código", Esc e cartões
 
 **What**: Reescrever o `App` conforme C3 e C15: duas telas, "Novo código", "Voltar" e Esc com `focusId`, títulos, `codeLineOf` com a fonte certa, cartões de sugestão com `select` e `mark`, e painel de `panelNodeOf(selected)`. Atualizar `App.test.tsx`.
-**Where**: `apps/web/src/App.tsx`
+**Where**: `apps/ui/src/App.tsx`
 **Também**: `__tests__/App.test.tsx`
 **Depends on**: T32, T33, T35
 **Reuses**: `FlowCanvas`, `Breadcrumb`, `DetailPanel`, `useTitles`, `navReducer`
@@ -1570,13 +1570,13 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 | `packages/server/src/__tests__/explain-route.test.ts` | "returns 400 for a step node (external, code)" | Passos têm resumo (VID-28) | T16 |
 | `packages/server/src/__tests__/*.test.ts` | `setup` sem `titles` | `AppDeps.titles` (VID-14) | T17 |
 | `packages/explain/src/__tests__/explain.test.ts` | fixtures de `ExplainDeps` | `stepPrompt` (VID-28) | T11 |
-| `apps/web/src/flow/__tests__/project-level.test.ts` | "shows only function, class and module nodes (CORE-01, 03)", "keeps a calls wire between functions (CORE-02)", "lifts a method-to-function wire…", "drops a wire from a class to itself", "collapses equal wires into one" | O topo de um trecho vira o fluxo principal (VID-10, VID-12). A regra de `lifted` continua coberta nos níveis de projeto. | T22 |
-| `apps/web/src/flow/__tests__/StepNode.test.tsx` | todos | Cartão de três linhas (VID-03) | T28 |
-| `apps/web/src/flow/__tests__/FlowCanvas.test.ts` | `toFlowEdges` | Aresta `wire` (VID-05) | T31 |
-| `apps/web/src/nav/__tests__/navigation.test.ts` | todos | `Opened[]`, `click` e `back` (VID-23, VID-27) | T26 |
-| `apps/web/src/nav/__tests__/Breadcrumb.test.tsx` | "shows Trecho › …", "shows only Trecho…", "calls onGoTo…" | "Fluxo principal" e títulos (VID-19) | T32 |
-| `apps/web/src/panel/__tests__/DetailPanel.test.tsx` | "Entradas"/"Saídas", explicação só de função | VID-28, VID-29, VID-30 | T33 |
-| `apps/web/src/__tests__/App.test.tsx` | CORE-01, 07, 15, 20, 23, FID-14, projeto | Editor e mapa, clique único, "Fluxo principal" (VID-08, 09, 19, 23) | T36 |
+| `apps/ui/src/flow/__tests__/project-level.test.ts` | "shows only function, class and module nodes (CORE-01, 03)", "keeps a calls wire between functions (CORE-02)", "lifts a method-to-function wire…", "drops a wire from a class to itself", "collapses equal wires into one" | O topo de um trecho vira o fluxo principal (VID-10, VID-12). A regra de `lifted` continua coberta nos níveis de projeto. | T22 |
+| `apps/ui/src/flow/__tests__/StepNode.test.tsx` | todos | Cartão de três linhas (VID-03) | T28 |
+| `apps/ui/src/flow/__tests__/FlowCanvas.test.ts` | `toFlowEdges` | Aresta `wire` (VID-05) | T31 |
+| `apps/ui/src/nav/__tests__/navigation.test.ts` | todos | `Opened[]`, `click` e `back` (VID-23, VID-27) | T26 |
+| `apps/ui/src/nav/__tests__/Breadcrumb.test.tsx` | "shows Trecho › …", "shows only Trecho…", "calls onGoTo…" | "Fluxo principal" e títulos (VID-19) | T32 |
+| `apps/ui/src/panel/__tests__/DetailPanel.test.tsx` | "Entradas"/"Saídas", explicação só de função | VID-28, VID-29, VID-30 | T33 |
+| `apps/ui/src/__tests__/App.test.tsx` | CORE-01, 07, 15, 20, 23, FID-14, projeto | Editor e mapa, clique único, "Fluxo principal" (VID-08, 09, 19, 23) | T36 |
 | `e2e/fatia-central.e2e.ts` | os 14 | Duplo clique, "Módulo", nomes de passos, "Trecho", topo (VID-10, 12, 15, 19, 23) | T39 |
 | `e2e/fidelidade.e2e.ts` | os 9 | Duplo clique, seções do painel, contagem com títulos | T40 |
 | `e2e/cache.e2e.ts` | os 8 | Duplo clique, contagem com títulos | T41 |

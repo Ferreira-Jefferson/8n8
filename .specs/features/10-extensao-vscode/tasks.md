@@ -17,7 +17,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
-| Tela (`apps/web`) | unit (Vitest) | Transporte da ponte, pasta da meta, aviso ready | `apps/web/src/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
+| Tela (`apps/ui`) | unit (Vitest) | Transporte da ponte, pasta da meta, aviso ready | `apps/ui/src/__tests__/*.test.ts` | `pnpm --filter @8n8/ui test` |
 | Extensão: módulos puros (`apps/editors/vscode`) | unit (Vitest) | Cada regra da ponte, CSP, store, build | `apps/editors/vscode/src/__tests__/*.test.ts` | `pnpm --filter 8n8-vscode test` |
 | Extensão no VS Code real | integration (`@vscode/test-electron`) | Comando, painel, ready, `POST /api/project` 200 | `apps/editors/vscode/src/test/*.ts` | `pnpm --filter 8n8-vscode test:integration` |
 | Guardas | unit | Regras novas com arquivo que viola | `apps/cli/src/__tests__/guards.test.ts` | `pnpm --filter @8n8/cli test` |
@@ -59,7 +59,7 @@ T7 → T8
 ### T1: Tela com ponte e caminhos relativos
 
 **What**: `base: "./"` no Vite; `apiFetch` com o transporte da webview; `readLaunch` com a pasta da meta; aviso `ready`.
-**Where**: `apps/web/src/api.ts`
+**Where**: `apps/ui/src/api.ts`
 **Depends on**: None
 **Reuses**: `apiFetch`, `readLaunch`
 **Requirement**: VSC-04, VSC-11
@@ -73,7 +73,7 @@ T7 → T8
 
 - [x] Com a meta `vscode`, cada chamada vira uma mensagem e a resposta vira um `Response`; sem a meta, nada muda
 - [x] `readLaunch` lê a pasta da meta
-- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm e2e` (a CLI serve a tela com caminhos relativos)
+- [x] Gate check passes: `pnpm --filter @8n8/ui test && pnpm e2e` (a CLI serve a tela com caminhos relativos)
 
 **Tests**: unit
 **Gate**: build
@@ -137,7 +137,7 @@ T7 → T8
 **What**: `webviewHtml` com CSP, nonce, base, metas e sem `crossorigin`.
 **Where**: `apps/editors/vscode/src/webview-html.ts`
 **Depends on**: T3
-**Reuses**: `apps/web/dist/index.html`
+**Reuses**: `apps/ui/dist/index.html`
 **Requirement**: VSC-12
 
 **Tools**:

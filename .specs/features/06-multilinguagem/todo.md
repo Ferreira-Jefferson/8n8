@@ -70,7 +70,7 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 - [x] 6.3 **[2ª]** Cache: a linguagem entra na chave. Hoje a chave do trecho é só o `nodeId` (`fn:x`). O mesmo nome e código em duas linguagens leria a explicação errada. Com o prompt por linguagem, a versão do prompt também troca a cada linguagem e invalida o cache sem motivo real.
 - [x] 6.4 **[2ª]** A troca de prompt muda a versão. As explicações em cache do Python serão geradas de novo uma vez. Avisar no commit. Nota: o texto do prompt do Python não mudou, então a versão dele ficou igual; só as explicações de trecho são geradas de novo, porque a chave passou a levar a linguagem (`<languageId>|<nodeId>`).
 
-## Fase 7 — Tela (`apps/web`)
+## Fase 7 — Tela (`apps/ui`)
 
 - [x] 7.1 **[1ª]** Tirar os textos fixos: `App.tsx:103` (`trecho.py`), `App.tsx:327` ("arquivo .py"), `App.tsx:373` ("Trecho Python"), `Home.tsx:170` ("arquivos .py"), `DetailPanel.tsx:49` (`trecho.py`). Os textos vêm de `/api/languages`.
 - [x] 7.2 **[D5]** A tela mostra a linguagem detectada do trecho e o aviso "linguagem incerta" quando for o caso.

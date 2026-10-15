@@ -59,7 +59,7 @@
 ### AD-010 — Informação derivada do grafo sem LLM é calculada na web
 - **Date:** 2026-10-13
 - **Context:** Feature 04 (FID-14, efeitos externos). A web já recebe o `Graph` inteiro e importa só tipos de `model`.
-- **Decision:** Uma visão deterministicamente derivada do `Graph`, como os efeitos externos de um nó, é uma função pura em `apps/web` sobre o `Graph` já carregado. Ela não entra na resposta de `/api/explain` e não cria outra rota.
+- **Decision:** Uma visão deterministicamente derivada do `Graph`, como os efeitos externos de um nó, é uma função pura em `apps/ui` sobre o `Graph` já carregado. Ela não entra na resposta de `/api/explain` e não cria outra rota.
 - **Consequence:** Essas listas aparecem sem chave de LLM e com o explain falhando. A web continua importando só tipos de `model`.
 
 ### AD-011 — Decoradores no contrato do grafo
@@ -72,7 +72,7 @@
 ### AD-012 — Modo grafo: layout determinístico com d3-force, desenho com React Flow
 - **Date:** 2026-10-13
 - **Context:** Feature 03. Os testes E2E precisam de posições estáveis e de seletores no DOM.
-- **Decision:** O layout de forças é uma função pura em `apps/web` (`d3-force` 3.0.0, `.stop().tick(300)`, posições inteiras). O desenho usa o React Flow, que já está instalado. O modo (`flow`/`graph`) fica no `navReducer`, e trocar de modo nunca muda `nav.selected`.
+- **Decision:** O layout de forças é uma função pura em `apps/ui` (`d3-force` 3.0.0, `.stop().tick(300)`, posições inteiras). O desenho usa o React Flow, que já está instalado. O modo (`flow`/`graph`) fica no `navReducer`, e trocar de modo nunca muda `nav.selected`.
 - **Consequence:** A mesma entrada gera o mesmo grafo, e os seletores do E2E servem para os dois modos. A escala para milhares de nós fica adiada.
 - **Status:** cancelada pela AD-019.
 
@@ -119,7 +119,7 @@
 ### AD-018 — Tema visual do vídeo
 - **Date:** 2026-10-13
 - **Context:** Feature 05. O usuário aprovou o vídeo como a régua de aparência.
-- **Decision:** As cores, medidas e fontes do vídeo são tokens CSS em `apps/web/src/styles.css` (fundo `#121110`, destaque `#D4FF3F`, texto `#F5F2EC`, secundário `#A8A399`). As fontes Archivo Black, Space Grotesk e DM Mono vêm de pacotes `@fontsource` empacotados no build, sem pedido a outro host.
+- **Decision:** As cores, medidas e fontes do vídeo são tokens CSS em `apps/ui/src/styles.css` (fundo `#121110`, destaque `#D4FF3F`, texto `#F5F2EC`, secundário `#A8A399`). As fontes Archivo Black, Space Grotesk e DM Mono vêm de pacotes `@fontsource` empacotados no build, sem pedido a outro host.
 - **Consequence:** Uma tela nova usa os mesmos tokens. Uma mudança de aparência é aprovada por imagens de referência do Playwright.
 
 ### AD-019 — Sem modo grafo

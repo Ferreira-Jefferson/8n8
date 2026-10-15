@@ -22,7 +22,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Config do LLM (`packages/llm`) | unit (Vitest) | Cada regra de precedência do CFG-16 | `packages/llm/src/__tests__/*.test.ts` | `pnpm --filter @8n8/llm test` |
 | Núcleo: serviço, arquivo, rotas (`packages/server`) | unit (Vitest, `app.request`) | Cada AC de rota com status e corpo exatos; suíte de segurança | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
 | CLI (`apps/cli`) | unit (Vitest) | Pasta da config, permissão, saída sem chave | `apps/cli/src/__tests__/*.test.ts` | `pnpm --filter @8n8/cli test` |
-| Tela (`apps/web`) | unit (Vitest + jsdom) | Botões, modos, diálogo, campos do ambiente | `apps/web/src/**/__tests__/*.test.ts*` | `pnpm --filter @8n8/web test` |
+| Tela (`apps/ui`) | unit (Vitest + jsdom) | Botões, modos, diálogo, campos do ambiente | `apps/ui/src/**/__tests__/*.test.ts*` | `pnpm --filter @8n8/ui test` |
 | Ponta a ponta | e2e (Playwright) | Modo por clique, cache sem clique, salvar a config pela tela | `e2e/*.e2e.ts` | `pnpm e2e e2e/<spec>.e2e.ts` |
 | Docs | none | - | - | build gate only |
 
@@ -277,7 +277,7 @@ T9 → T10 → T11 → T12 → T13
 ### T9: Cliente da API na tela
 
 **What**: `fetchSummary`, `fetchSuggestions` (com `cachedOnly`), `fetchSettings`, `saveSettings`.
-**Where**: `apps/web/src/api.ts`
+**Where**: `apps/ui/src/api.ts`
 **Depends on**: None (a fase 2 termina antes)
 **Reuses**: `apiFetch`, `post`
 **Requirement**: CFG-05, CFG-12, CFG-13
@@ -290,7 +290,7 @@ T9 → T10 → T11 → T12 → T13
 **Done when**:
 
 - [x] Cada função manda o token e o corpo certo; 404 → `stale`; falha de rede → `error`
-- [x] Gate check passes: `pnpm --filter @8n8/web test`
+- [x] Gate check passes: `pnpm --filter @8n8/ui test`
 
 **Tests**: unit
 **Gate**: quick
@@ -302,7 +302,7 @@ T9 → T10 → T11 → T12 → T13
 ### T10: Painel com resumo e sugestões sob demanda
 
 **What**: `DetailPanel` com duas seções, botões, modos automáticos e o aviso sem provedor; `App` e os cartões de sugestão passam a usar as sugestões.
-**Where**: `apps/web/src/panel/DetailPanel.tsx`, `apps/web/src/App.tsx`, `apps/web/src/flow/suggestion-cards.ts`, `apps/web/src/flow/FlowCanvas.tsx`
+**Where**: `apps/ui/src/panel/DetailPanel.tsx`, `apps/ui/src/App.tsx`, `apps/ui/src/flow/suggestion-cards.ts`, `apps/ui/src/flow/FlowCanvas.tsx`
 **Depends on**: T9
 **Reuses**: `SummaryView`, `SuggestionsView`
 **Requirement**: CFG-06, CFG-07, CFG-08, CFG-09, CFG-10, CFG-11
@@ -318,7 +318,7 @@ T9 → T10 → T11 → T12 → T13
 - [x] Modo automático: pedido de verdade ao selecionar
 - [x] Sem provedor: texto do CFG-09 e botão que abre as configurações
 - [x] Cartões e contagem vêm só das sugestões; lista vazia mostra o texto do CFG-11
-- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
+- [x] Gate check passes: `pnpm --filter @8n8/ui test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick
@@ -330,7 +330,7 @@ T9 → T10 → T11 → T12 → T13
 ### T11: Diálogo de configurações
 
 **What**: `SettingsDialog` e o botão "Configurações" em todas as vistas; `App` lê a config ao abrir e passa os modos ao painel.
-**Where**: `apps/web/src/settings/SettingsDialog.tsx`, `apps/web/src/App.tsx`, `apps/web/src/styles.css`
+**Where**: `apps/ui/src/settings/SettingsDialog.tsx`, `apps/ui/src/App.tsx`, `apps/ui/src/styles.css`
 **Depends on**: T10
 **Reuses**: tokens CSS (AD-018)
 **Requirement**: CFG-20, CFG-21, CFG-22
@@ -345,7 +345,7 @@ T9 → T10 → T11 → T12 → T13
 - [x] Campos do CFG-20; "Chave guardada" com `hasKey`; "Apagar chave" manda `apiKey: null`
 - [x] Salvar manda só o que mudou; sucesso e erro com os textos do CFG-21
 - [x] Campo definido pelo ambiente fica desativado com o nome da variável
-- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
+- [x] Gate check passes: `pnpm --filter @8n8/ui test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick

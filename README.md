@@ -6,13 +6,13 @@ O mapa começa amplo. Você abre um nó para ver o fluxo interno dele e vai desc
 
 Em `apps/` há três pastas. Uma é a tela e duas são as formas de rodar o 8n8, sobre o mesmo núcleo:
 
-- **Tela (`apps/web`):** a interface, em React com React Flow. A CLI e a extensão servem o mesmo build. Não há backend hospedado: o núcleo roda localmente.
+- **Tela (`apps/ui`):** a interface, em React com React Flow. A CLI e a extensão servem o mesmo build. Não há backend hospedado: o núcleo roda localmente.
 - **CLI (`apps/cli`):** você roda o comando `8n8` no terminal (PowerShell ou Bash), e o mapa abre no navegador.
 - **Editores (`apps/editors`):** a extensão do VS Code abre o mapa num painel ao lado do código. Outros editores entram na mesma pasta.
 
 O objetivo é supervisionar e entender rápido um código, muitas vezes escrito por IA, sem ler linha por linha.
 
-O desenho de nós e arestas foi inspirado no [n8n](https://n8n.io). O 8n8 não tem outra relação com ele.
+O desenho de nós e arestas foi inspirado no [n8n](https://n8n.io), e o nome 8n8 é uma brincadeira com ele. Fora isso, os dois projetos não têm relação nenhuma.
 
 ## Como funciona
 
@@ -112,7 +112,7 @@ Para acrescentar um provedor, veja [docs/adicionar-provedor-llm.md](docs/adicion
 
 - **Token por execução.** Cada execução da CLI gera um token novo, que só a aba aberta por ela conhece. Outro programa da máquina não consegue usar a API nem a sua chave de LLM. Sem o token, a API responde 401.
 - **Pasta de dados.** Tudo fica em `~/.8n8` (no Windows, `C:\Users\<nome>\.8n8`): o cache em `cache/`, o histórico em `historico.db` e as configurações em `config.json`, só com permissão do dono. As variáveis `APP8N8_CACHE_DIR`, `APP8N8_HISTORY_DIR` e `APP8N8_CONFIG_DIR` mudam essas pastas.
-- **Histórico.** Ele guarda só o caminho de cada pasta, nunca o código. Abrir uma pasta pelo histórico lê a pasta de novo. De um trecho colado, o histórico guarda o texto e a linguagem.
+- O histórico guarda só o caminho de cada pasta, nunca o código. Abrir uma pasta pelo histórico lê a pasta de novo. De um trecho colado, o histórico guarda o texto e a linguagem.
 - **Na extensão do VS Code**, não há porta aberta: a página do painel fala com o núcleo por mensagens do próprio VS Code. A chave de API fica no cofre do VS Code (`SecretStorage`). O cache e o histórico ficam na pasta de dados da extensão.
 
 ## O que o 8n8 lê de uma pasta
@@ -136,7 +136,7 @@ pnpm install
 pnpm dev
 ```
 
-O `pnpm dev` recarrega sozinho. Ele sobe o servidor (`pnpm dev:server`, porta 4317) e a tela (`pnpm dev:web`, com o Vite). Abra o endereço que o Vite mostrar no terminal.
+O `pnpm dev` recarrega sozinho. Ele sobe o servidor (`pnpm dev:server`, porta 4317) e a tela (`pnpm dev:ui`, com o Vite). Abra o endereço que o Vite mostrar no terminal.
 
 Para usar sem recarga, construa a tela e suba tudo em um servidor só:
 
@@ -150,7 +150,7 @@ Abra o endereço que o terminal mostrar (`http://127.0.0.1:4317/#t=...`). O `#t=
 
 | Pasta | O que tem |
 |---|---|
-| `apps/web` | A tela: React com React Flow. |
+| `apps/ui` | A tela: React com React Flow. |
 | `apps/cli` | A CLI `8n8`, que abre a tela no navegador. |
 | `apps/editors/vscode` | A extensão do VS Code, que abre a tela num painel. |
 | `packages/model` | Os tipos e contratos: `Graph`, `LanguagePlugin`, `LlmClient`. |

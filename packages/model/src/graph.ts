@@ -51,7 +51,7 @@ export interface FlowNode {
   docstring?: LineRange;
 }
 
-/** `contains` is never in a `Graph`: the web draws it from the hub of a level. */
+/** `contains` is never in a `Graph`: the UI draws it from the hub of a level. */
 export type EdgeKind = "calls" | "next" | "branch" | "imports" | "contains";
 
 export interface FlowEdge {

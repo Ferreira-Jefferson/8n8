@@ -11,7 +11,7 @@ O pedido único de explicação vira dois pedidos, resumo e sugestões, sobre o 
 
 ```mermaid
 graph TD
-    subgraph "apps/web"
+    subgraph "apps/ui"
       PANEL[DetailPanel: resumo e sugestões, cada um com botão ou automático] -->|POST /api/summary, /api/suggestions| API
       DIALOG[SettingsDialog] -->|GET/PUT /api/settings| API
     end
@@ -45,7 +45,7 @@ graph TD
 | `resolveLlmConfig(env)` | `packages/llm/src/config.ts` | Ganha o segundo parâmetro `stored`. |
 | `withoutKey` | `packages/server/src/core.ts` | Embrulha cada cliente novo com a chave efetiva. |
 | `loadOrigin`, `neighboursOf` | `packages/server/src/app.ts` | As duas rotas novas usam o mesmo handler da rota antiga. |
-| `suggestionCards` | `apps/web/src/flow/suggestion-cards.ts` | Recebe `Map<NodeId, Suggestion[]>` no lugar de `Map<NodeId, Explanation>`. |
+| `suggestionCards` | `apps/ui/src/flow/suggestion-cards.ts` | Recebe `Map<NodeId, Suggestion[]>` no lugar de `Map<NodeId, Explanation>`. |
 | Escrita atômica | `packages/explain/src/cache.ts` | O arquivo de config usa o mesmo padrão (temporário + `rename`). |
 | Suíte de segurança | `packages/server/src/__tests__/security.test.ts` | Já lista as rotas e ataca cada uma. Ganha a chave sentinela gravada pelo `PUT`. |
 
@@ -84,11 +84,11 @@ graph TD
 
 - `APP8N8_CONFIG_DIR` (padrão `~/.8n8`) e `createFileSettingsStore(<dir>/config.json)` passado a `createCore`. O `--help` lista as variáveis novas.
 
-### `apps/web`
+### `apps/ui`
 
 - `api.ts`: `fetchSummary`, `fetchSuggestions` (com `cachedOnly`), `fetchSettings`, `saveSettings`.
 - `DetailPanel`: duas seções independentes, cada uma com estado `idle | loading | resultado`. O cache da tela usa a chave `<parte>:<nodeId>`. Props novas: `auto { summary, suggestions }`, `onOpenSettings`, `onSuggestions(id, suggestions)` no lugar de `onExplained`.
-- `SettingsDialog` (`apps/web/src/settings/SettingsDialog.tsx`): `<dialog>` com os campos do CFG-20, envia só o que mudou (CFG-21).
+- `SettingsDialog` (`apps/ui/src/settings/SettingsDialog.tsx`): `<dialog>` com os campos do CFG-20, envia só o que mudou (CFG-21).
 - `App`: lê `GET /api/settings` ao abrir, guarda em estado, mostra o botão "Configurações" em todas as vistas e passa `auto` ao painel.
 
 ---

@@ -166,23 +166,23 @@ module.exports = {
       name: "hosts-do-not-import-each-other",
       severity: "error",
       comment:
-        "Uma embalagem em apps/ (cli, web, vscode...) não importa outra (AD-022).",
+        "Uma embalagem em apps/ (cli, ui, vscode...) não importa outra (AD-022).",
       from: { path: "^apps/(editors/[^/]+|[^/]+)/" },
       to: { path: "^apps/", pathNot: "^apps/$1/" },
     },
     {
-      name: "web-only-model",
+      name: "ui-only-model",
       severity: "error",
-      comment: "apps/web importa só model.",
-      from: { path: "^apps/web/" },
+      comment: "apps/ui importa só model.",
+      from: { path: "^apps/ui/" },
       to: { path: ["^packages/(?!model/)", "@8n8/(?!model)"] },
     },
     {
-      name: "no-node-core-in-model-and-web",
+      name: "no-node-core-in-model-and-ui",
       severity: "error",
       comment:
-        "model e apps/web não usam módulos do Node (node:*, fs, path...).",
-      from: { path: ["^packages/model/", "^apps/web/"] },
+        "model e apps/ui não usam módulos do Node (node:*, fs, path...).",
+      from: { path: ["^packages/model/", "^apps/ui/"] },
       to: { dependencyTypes: ["core"] },
     },
     {

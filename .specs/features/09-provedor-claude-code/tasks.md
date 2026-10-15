@@ -20,7 +20,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Provedor (`packages/llm`) | unit (Vitest, `spawn` falso) | Argumentos, stdin, pasta, ambiente, saídas, erros, tempo, tamanho, busca do executável | `packages/llm/src/__tests__/claude-code.test.ts` | `pnpm --filter @8n8/llm test` |
 | Núcleo (`packages/server`) | unit | `env` chega ao provedor; `usesKey` na vista | `packages/server/src/__tests__/settings.test.ts` | `pnpm --filter @8n8/server test` |
 | Guardas (`apps/cli`) | unit | Exceção nomeada, outro arquivo de `llm` falha | `apps/cli/src/__tests__/guards.test.ts` | `pnpm --filter @8n8/cli test` |
-| Tela (`apps/web`) | unit | Diálogo sem chave e URL para `claude-code` | `apps/web/src/settings/__tests__/*.test.tsx` | `pnpm --filter @8n8/web test` |
+| Tela (`apps/ui`) | unit | Diálogo sem chave e URL para `claude-code` | `apps/ui/src/settings/__tests__/*.test.tsx` | `pnpm --filter @8n8/ui test` |
 
 ## Gate Check Commands
 
@@ -121,7 +121,7 @@ T1 → T2 → T3 → T4
 ### T4: Diálogo e documentação
 
 **What**: O diálogo esconde chave e URL de um provedor sem chave e mostra o aviso do CC-01; README, guia de provedor e STATE.
-**Where**: `apps/web/src/settings/SettingsDialog.tsx`
+**Where**: `apps/ui/src/settings/SettingsDialog.tsx`
 **Depends on**: T3
 **Reuses**: `SettingsDialog`
 **Requirement**: CC-01

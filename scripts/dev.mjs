@@ -6,7 +6,7 @@ import { randomBytes } from "node:crypto";
 const env = { ...process.env, APP8N8_TOKEN: randomBytes(32).toString("hex") };
 // pnpm on Windows may be a .cmd shim, which needs a shell: each command is one fixed
 // string, with no argument for the shell to join.
-const children = ["pnpm run dev:server", "pnpm run dev:web"].map((command) =>
+const children = ["pnpm run dev:server", "pnpm run dev:ui"].map((command) =>
   spawn(command, { env, stdio: "inherit", shell: true }),
 );
 

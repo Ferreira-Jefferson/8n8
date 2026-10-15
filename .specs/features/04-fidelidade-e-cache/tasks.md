@@ -38,8 +38,8 @@ Regras que valem para toda task:
 | `explain`: pipeline, cache e orquestração (`review`, `cache`, `explain`) | unit (`LlmClient` falso roteirizado, diretório temporário) | Todos os ramos; 1:1 com FID-01, FID-08..11, CACHE-02..07; toda linha da tabela de erros do design (JSON inválido, revisor omite ID, nada sobrevive, entrada corrompida ou v1, falha ao gravar); o "5 kg" do Independent Test P1 e o +3 linhas do Independent Test P2 | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @8n8/explain test` |
 | `server`: rotas (`app.ts`) | integration (`app.request()`, sem porta) | `/api/explain`: caminho feliz + `unfaithful` (200) + todos os casos da feature 01 (400, 403, 404, 502) | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
 | `server`: composição (`main.ts`) | unit | Ramos de ambiente: chave, `APP8N8_MODEL`, `APP8N8_REVIEW_MODEL`, `OPENROUTER_BASE_URL`, `APP8N8_CACHE_DIR`, `APP8N8_PORT`, com e sem cada um, string vazia como ausente | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @8n8/server test` |
-| `web`: lógica pura (`effects.ts`, `format-lines.ts`, `api.ts`) | unit | Todos os ramos; 1:1 com FID-12 e FID-14 | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
-| `web`: componentes (`CodeView`, `DetailPanel`, `App`) | unit (jsdom + Testing Library) | Cada texto e cada interação de FID-09..14 e CACHE-04; os testes da feature 01 continuam passando com a mesma intenção | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/web test` |
+| `web`: lógica pura (`effects.ts`, `format-lines.ts`, `api.ts`) | unit | Todos os ramos; 1:1 com FID-12 e FID-14 | `apps/ui/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/ui test` |
+| `web`: componentes (`CodeView`, `DetailPanel`, `App`) | unit (jsdom + Testing Library) | Cada texto e cada interação de FID-09..14 e CACHE-04; os testes da feature 01 continuam passando com a mesma intenção | `apps/ui/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/ui test` |
 | E2E: LLM falso (`e2e/fake-llm.ts`) | none | - (build gate: `tsc -p e2e`; exercitado pelos specs de T25 e T26) | - | `pnpm typecheck` |
 | E2E: `playwright.config.ts` | e2e (regressão) | A suíte da feature 01 continua verde com os três servidores no ar | `e2e/*.e2e.ts` | `pnpm e2e` |
 | E2E: specs (`e2e/*.e2e.ts`) | e2e (Playwright, servidor real + LLM falso) | Cada passo dos Independent Tests de P1 e P2, com textos exatos e contagem exata de chamadas ao LLM falso | `e2e/*.e2e.ts` | `pnpm e2e` |
@@ -538,7 +538,7 @@ T24 → T26
 ### T16: Efeitos externos do nó (`effects.ts`)
 
 **What**: Criar `externalEffects(graph, nodeId): ExternalEffect[]` conforme C10: descendentes pelo `parentId` com `kind === "external"`, ordenados por `range.start`, como `{ callee, category, line: range.start }`.
-**Where**: `apps/web/src/panel/effects.ts`
+**Where**: `apps/ui/src/panel/effects.ts`
 **Depends on**: T1
 **Reuses**: tipos `Graph` e `ExternalEffect` de `@8n8/model`
 **Requirement**: FID-14 (AD-010)
@@ -555,7 +555,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): derive external effects of a node from the graph`
 
@@ -566,7 +566,7 @@ T24 → T26
 ### T17: `api.test.ts` no contrato novo
 
 **What**: Migrar o teste de `fetchExplanation` para o contrato novo e cobrir `unfaithful`. `api.ts` não muda (200 já passa o corpo adiante).
-**Where**: `apps/web/src/__tests__/api.test.ts`
+**Where**: `apps/ui/src/__tests__/api.test.ts`
 **Depends on**: T1
 **Reuses**: o `fetch` falso do arquivo
 **Requirement**: FID-10
@@ -581,7 +581,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `test(web): cover the reviewed explain contract and unfaithful in api`
 
@@ -592,7 +592,7 @@ T24 → T26
 ### T18: Formato das linhas de evidência (`formatLines`)
 
 **What**: Criar `formatLines(lines: number[]): string`: ordena, junta sequências com en dash e separa grupos por ", ".
-**Where**: `apps/web/src/panel/format-lines.ts`
+**Where**: `apps/ui/src/panel/format-lines.ts`
 **Depends on**: None
 **Reuses**: NONE
 **Requirement**: FID-12
@@ -605,7 +605,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): format evidence lines as compact ranges`
 
@@ -616,7 +616,7 @@ T24 → T26
 ### T19: `CodeView` com várias linhas marcadas
 
 **What**: Trocar `highlightedLine?: number` por `highlightedLines?: ReadonlySet<number>`. Cada linha marcada mantém `aria-current="true"` e a classe `current`.
-**Where**: `apps/web/src/panel/CodeView.tsx`
+**Where**: `apps/ui/src/panel/CodeView.tsx`
 **Depends on**: None
 **Reuses**: o componente atual
 **Requirement**: FID-13
@@ -630,7 +630,7 @@ T24 → T26
 - [x] Gate passa (o typecheck de `DetailPanel.tsx` fica vermelho até T20).
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): highlight a set of lines in the code view`
 
@@ -641,7 +641,7 @@ T24 → T26
 ### T20: Painel com frases, evidência, selo, aviso, falha fiel e efeitos
 
 **What**: Atualizar `DetailPanel` conforme C11: resumo em `<ol aria-label="Resumo">`; cada item é `<li data-claim-id>` com o texto num `<span>` e um botão de evidência (`formatLines`) que marca as linhas; selo `review-badge` ("Revisado" ou "Revisado com cortes"); `<p role="status">Resumo atualizado: …</p>`; estado `unfaithful` com "Não foi possível gerar um resumo fiel." e "Tentar de novo"; seção "Efeitos externos" para `function` e `class` em qualquer estado, a partir da prop `effects`.
-**Where**: `apps/web/src/panel/DetailPanel.tsx`; também as fixtures de `apps/web/src/__tests__/App.test.tsx` e `effects={[]}` provisório em `apps/web/src/App.tsx` (movido de T21 pelo orquestrador: sem isso o `App.test.tsx` quebra com o painel novo e o gate de T20 fica vermelho)
+**Where**: `apps/ui/src/panel/DetailPanel.tsx`; também as fixtures de `apps/ui/src/__tests__/App.test.tsx` e `effects={[]}` provisório em `apps/ui/src/App.tsx` (movido de T21 pelo orquestrador: sem isso o `App.test.tsx` quebra com o painel novo e o gate de T20 fica vermelho)
 **Depends on**: T18, T19
 **Reuses**: `CodeView` (T19), `formatLines` (T18), o fluxo `live`/`attempt` atual
 **Requirement**: FID-09, FID-10, FID-11, FID-12, FID-13, FID-14, CACHE-04
@@ -660,7 +660,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): show reviewed claims with evidence, badges, updates and effects`
 
@@ -671,7 +671,7 @@ T24 → T26
 ### T21: `App` calcula os efeitos e passa ao painel
 
 **What**: Em `App.tsx`, calcular `externalEffects(graph, selected.id)` com o `graph` em estado e passar como `effects` ao `DetailPanel`. `onExplained` e o contador de sugestões não mudam.
-**Where**: `apps/web/src/App.tsx`
+**Where**: `apps/ui/src/App.tsx`
 **Depends on**: T16, T20
 **Reuses**: o estado `graph` atual
 **Requirement**: FID-14
@@ -682,10 +682,10 @@ T24 → T26
 
 - [x] A migração das fixtures de `App.test.tsx` foi para T20 (decisão do orquestrador). Aqui o `effects={[]}` provisório vira `externalEffects(graph, selected.id)`.
 - [x] Teste novo: ao selecionar `calcular_frete` com `fetch` de explain respondendo `no-key`, o painel mostra `requests.get (HTTP, linha 5)`.
-- [x] Gate passa. `pnpm --filter @8n8/web typecheck` volta a verde; o typecheck da raiz só fecha em T22, por causa de `e2e/`.
+- [x] Gate passa. `pnpm --filter @8n8/ui typecheck` volta a verde; o typecheck da raiz só fecha em T22, por causa de `e2e/`.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): pass graph-derived external effects to the detail panel`
 
@@ -771,7 +771,7 @@ Roteiro, decidido pelo conteúdo do pedido:
 **Done when**:
 
 - [x] O comentário "The cache dir is fixed" é corrigido para a pasta isolada.
-- [x] O servidor 3 serve `apps/web/dist` construído pelo servidor 2 (o `serveStatic` lê por pedido, então a ordem de subida não importa para os testes).
+- [x] O servidor 3 serve `apps/ui/dist` construído pelo servidor 2 (o `serveStatic` lê por pedido, então a ordem de subida não importa para os testes).
 - [x] A suíte da feature 01 (`e2e/fatia-central.e2e.ts`) passa sem mudança, com os três servidores no ar.
 - [x] `.cache/e2e-real` e `.cache/e2e-offline` ficam fora do git (`.cache/` já está no `.gitignore`).
 
@@ -877,10 +877,10 @@ Roteiro, decidido pelo conteúdo do pedido:
 | `packages/explain/src/__tests__/explain.test.ts` | T12 | `nodeId`, revisor, cache novo, linhas em `Claim` | CORE-17, 18, 19, 20, 22 e modo JSON; CORE-16 é substituída por FID-01/05 conforme o design |
 | `packages/server/src/__tests__/explain-route.test.ts` | T13 | `nodeId` no pedido; `review` no `ok` | CORE-17 e todos os códigos HTTP |
 | `packages/server/src/__tests__/main.test.ts` | T14 | `nodeId`; o falso responde ao revisor | CORE-19, CORE-21, chave uma vez, PTS no prompt |
-| `apps/web/src/__tests__/api.test.ts` | T17 | Fixture `ok` no contrato novo | O corpo 200 volta igual |
-| `apps/web/src/panel/__tests__/CodeView.test.tsx` | T19 | `highlightedLine` → `highlightedLines` | Exatamente 1 linha marcada (CORE-24); nenhuma sem a prop |
-| `apps/web/src/panel/__tests__/DetailPanel.test.tsx` | T20 | `Claim[]`, resumo em `<ol>` | CORE-14, 16, 19, 20, 24, `stale`, `onExplained` |
-| `apps/web/src/__tests__/App.test.tsx` | T20 (movido de T21) | Fixtures em `Claim[]` | CORE-23 e o resto |
+| `apps/ui/src/__tests__/api.test.ts` | T17 | Fixture `ok` no contrato novo | O corpo 200 volta igual |
+| `apps/ui/src/panel/__tests__/CodeView.test.tsx` | T19 | `highlightedLine` → `highlightedLines` | Exatamente 1 linha marcada (CORE-24); nenhuma sem a prop |
+| `apps/ui/src/panel/__tests__/DetailPanel.test.tsx` | T20 | `Claim[]`, resumo em `<ol>` | CORE-14, 16, 19, 20, 24, `stale`, `onExplained` |
+| `apps/ui/src/__tests__/App.test.tsx` | T20 (movido de T21) | Fixtures em `Claim[]` | CORE-23 e o resto |
 | `e2e/fatia-central.e2e.ts` | T22 | Contrato e DOM novos | Os 14 testes, com as mesmas contagens de chamadas e linhas |
 | `playwright.config.ts` | T24 | Três servidores, cache isolado | O servidor sem chave da feature 01 continua igual na 4317 |
 

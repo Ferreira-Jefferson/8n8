@@ -45,7 +45,7 @@ HEAD (`890dfe3`) is green. The two red commits are recorded as a process deviati
 
 | AC | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| FID-12 | Evidence lines next to each claim, e.g. "L5" or "L5–7" | `apps/web/src/panel/__tests__/format-lines.test.ts` - `[5,6,7]` gives `"L5–7"` and `[5,6,7,9]` gives `"L5–7, L9"`; `DetailPanel.test.tsx:296-301` - a button named `"L8–9"` inside `[data-claim-id="s2"]`; `e2e/fidelidade.e2e.ts:104-106` - `["L5"]`, `["L8–9"]`, `["L9, L11"]` | ✅ PASS |
+| FID-12 | Evidence lines next to each claim, e.g. "L5" or "L5–7" | `apps/ui/src/panel/__tests__/format-lines.test.ts` - `[5,6,7]` gives `"L5–7"` and `[5,6,7,9]` gives `"L5–7, L9"`; `DetailPanel.test.tsx:296-301` - a button named `"L8–9"` inside `[data-claim-id="s2"]`; `e2e/fidelidade.e2e.ts:104-106` - `["L5"]`, `["L8–9"]`, `["L9, L11"]` | ✅ PASS |
 | FID-13 | Clicking the evidence highlights those lines in the code | `DetailPanel.test.tsx:299,303` - `marked(container)` `toEqual(["8","9"])`, then `["4"]`; `CodeView.test.tsx:47`; `e2e/fidelidade.e2e.ts:114-117` - 0 marked before the click, 2 after, `["8","9"]` | ✅ PASS |
 | FID-14 | Below the summary, without the LLM, each external effect (HTTP, BANCO, ARQUIVO, E-MAIL, EXTERNO) with its call and line, taken from the graph | `effects.test.ts:29` - `requests.get` on line 5 for `calcular_frete`; `:41,61,81` - nested, class and order cases; `DetailPanel.test.tsx:368-385` - `["requests.get (HTTP, linha 5)"]`; `:387-403` - `resumo.compareDocumentPosition(efeitos) & Node.DOCUMENT_POSITION_FOLLOWING` `toBeTruthy()`, so the "Efeitos externos" heading follows the `Resumo` list; `:405-474` - shown under no effects, no-key, error and loading; `e2e/fidelidade.e2e.ts:139-157` - offline server, item `"requests.get (HTTP, linha 5)"`, `fakeLog()` `toEqual([])` | ✅ PASS. The position is asserted, and M24 (effects rendered above the summary) is killed. |
 | FID-15 | `APP8N8_REVIEW_MODEL` for the reviewer, else the summary model | `model-env.test.ts:22-49` - `"r/x"`, then the fallback to `APP8N8_MODEL` and to the default, with an empty value treated as unset; `main.test.ts:127,142` - wired through `composeExplain`; `review.test.ts:250-272` - the reviewer request carries `reviewModel`; `e2e/fidelidade.e2e.ts:126-127` - draft model `["e2e/drafter"]`, review model `["e2e/reviewer"]` | ✅ PASS |
@@ -127,12 +127,12 @@ Run in a scratch `git worktree` at `890dfe3`, under the session scratchpad. The 
 | M16 | `explain.ts:52` | CACHE-05: `suggestion.line` not shifted | ✅ Killed (8) |
 | M17 | `explain.ts:73,105` | CACHE-03/06: entry keyed by node + neighbours (content-addressed) | ✅ Killed (3) |
 | M19 | `cache.ts:31` | CACHE-07: any `schemaVersion` accepted | ✅ Killed (1) |
-| M20 | `apps/web/src/panel/DetailPanel.tsx:27` | CACHE-04: reason text `"os vizinhos mudou"` | ✅ Killed (1) |
+| M20 | `apps/ui/src/panel/DetailPanel.tsx:27` | CACHE-04: reason text `"os vizinhos mudou"` | ✅ Killed (1) |
 | M21 | `DetailPanel.tsx:146` | CACHE-04: reasons joined with `" e "` | ✅ Killed (1) |
 | M22 | `packages/server/src/app.ts:54` | Identity: `nodeId: node.label` (and a variant that omits `nodeId`) | ✅ Killed (1, re-run on an LF fixture) |
-| M23 | `apps/web/src/panel/format-lines.ts:7` | FID-12: adjacent lines not merged into ranges | ✅ Killed (3) |
+| M23 | `apps/ui/src/panel/format-lines.ts:7` | FID-12: adjacent lines not merged into ranges | ✅ Killed (3) |
 
-| M24 | `apps/web/src/panel/DetailPanel.tsx:78-85` | FID-14: `EffectsView` rendered above `ExplanationView` | ✅ Killed (1, `DetailPanel.test.tsx:387`) |
+| M24 | `apps/ui/src/panel/DetailPanel.tsx:78-85` | FID-14: `EffectsView` rendered above `ExplanationView` | ✅ Killed (1, `DetailPanel.test.tsx:387`) |
 | M25 | `checks.ts:72` | FID-03: code tokens no longer split between digit and letter | ✅ Killed (1, `checks.test.ts:100`) |
 | M26 | `checks.ts:105` | FID-04: the trailing `(...)` is no longer stripped from a backticked name | ✅ Killed (1, `checks.test.ts:155`) |
 | M27 | `cache.ts:71` | CACHE-07: an entry that fails the schema is returned as is | ✅ Killed (3) |

@@ -57,7 +57,7 @@ const BASE: Record<string, string> = {
     workspaces.map((w) => [`${w}/src/clean.ts`, "export const probe = 1;\n"]),
   ),
   "apps/cli/src/run.ts": "export const probe = 1;\n",
-  "apps/web/src/target.ts": "export const probe = 1;\n",
+  "apps/ui/src/target.ts": "export const probe = 1;\n",
   "apps/cli/src/open-browser.ts": SPAWN,
   "packages/llm/src/claude-code.ts": SPAWN,
   "apps/cli/src/__tests__/guards.test.ts": SPAWN,
@@ -169,17 +169,14 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
   it("fails a package or a host that imports another host", () => {
     const toCli = "apps/cli/src/run.ts";
     const files: Record<string, string> = {
-      "apps/web/src/probe-host.ts": importOf(
-        "apps/web/src/probe-host.ts",
-        toCli,
-      ),
+      "apps/ui/src/probe-host.ts": importOf("apps/ui/src/probe-host.ts", toCli),
       "apps/editors/vscode/src/probe-host.ts": importOf(
         "apps/editors/vscode/src/probe-host.ts",
         toCli,
       ),
       "apps/cli/src/probe-host.ts": importOf(
         "apps/cli/src/probe-host.ts",
-        "apps/web/src/target.ts",
+        "apps/ui/src/target.ts",
       ),
     };
     for (const w of packages) {
@@ -187,7 +184,7 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
     }
     const { status, out } = check(files);
     const found = cruiseFindings(out);
-    for (const host of ["apps/web", "apps/editors/vscode", "apps/cli"]) {
+    for (const host of ["apps/ui", "apps/editors/vscode", "apps/cli"]) {
       expect(found).toContain(
         `error hosts-do-not-import-each-other: ${host}/src/probe-host.ts`,
       );
@@ -212,7 +209,7 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
       // A .vscode-test folder anywhere else is code like any other.
       "packages/server/.vscode-test/probe-vscode.ts",
       "packages/model/src/probe-vscode.ts",
-      "apps/web/src/probe-vscode.ts",
+      "apps/ui/src/probe-vscode.ts",
       "apps/cli/src/probe-vscode.ts",
     ];
     const ports = ["@hono/node-server", "node:http", "node:https", "node:net"];

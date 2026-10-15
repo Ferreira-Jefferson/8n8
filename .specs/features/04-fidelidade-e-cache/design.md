@@ -62,7 +62,7 @@ A estrutura não muda: `model` ← `explain` ← `server`, e a web importa só t
 | `resolveModel` | `packages/explain/src/model-env.ts` | Base de `resolveReviewModel`. |
 | `createDiskCache` | `packages/explain/src/cache.ts` | Mantém a gravação atômica (temp + `rename`). Muda a chave e o formato. |
 | `sliceLines` | `packages/model/src/lines.ts` | O servidor continua cortando o código do nó. |
-| `CodeView` | `apps/web/src/panel/CodeView.tsx` | Passa de uma linha marcada para um conjunto de linhas. |
+| `CodeView` | `apps/ui/src/panel/CodeView.tsx` | Passa de uma linha marcada para um conjunto de linhas. |
 | Nós `external` com `callee`, `category`, `range` | `packages/extract-python/src/steps.ts:213` | Fonte dos efeitos externos (FID-14). Nenhuma mudança no extrator. |
 
 ---
@@ -172,7 +172,7 @@ interface Fingerprint {
 - Inclui `nodeId: node.id` no `ExplainRequest`.
 - `unfaithful` responde `200`, e `error` continua `502`. O corpo do pedido HTTP não muda.
 
-### C10. Efeitos externos: `apps/web/src/panel/effects.ts` (FID-14)
+### C10. Efeitos externos: `apps/ui/src/panel/effects.ts` (FID-14)
 
 - `externalEffects(graph: Graph, nodeId: NodeId): ExternalEffect[]` retorna os descendentes do nó (seguindo `parentId`) com `kind === "external"`, ordenados por `range.start`, como `{ callee, category, line: range.start }`.
 - **Por que na web**: a web já tem o `Graph` de `/api/graph`. A lista aparece sem chave de LLM, com erro do LLM e com o `/api/explain` interceptado no E2E. A web importa só tipos de `model`, e a função é pura, em TS, testável no Vitest (AD-010).
@@ -294,7 +294,7 @@ O revisor recebe só o código e uma lista curta, então seu custo fica abaixo d
 
 | Concern | Location | Impact | Mitigation |
 | ------- | -------- | ------ | ---------- |
-| A web duplica o corte de linhas (`nodeCode`) em vez de importar `sliceLines` | `apps/web/src/panel/DetailPanel.tsx:14` | Duas regras de split podem divergir (`\r?\n`) | Não mexer (mudança cirúrgica). `effects.ts` não corta código. |
+| A web duplica o corte de linhas (`nodeCode`) em vez de importar `sliceLines` | `apps/ui/src/panel/DetailPanel.tsx:14` | Duas regras de split podem divergir (`\r?\n`) | Não mexer (mudança cirúrgica). `effects.ts` não corta código. |
 | Pior caso de 6 chamadas com timeout de 60 s cada | `openrouter.ts:16` | Até 6 min de "Gerando resumo…" | O teto vem da spec. O painel pode trocar de nó, e a resposta antiga é descartada (`live`). |
 | A camada 1 corta sugestões que propõem valores novos ("timeout de 10 s") | `checks.ts` | Menos sugestões úteis | O prompt do resumo proíbe números ausentes do código. É o comportamento pedido por FID-02/03. |
 | Lista de unidades com uma letra gera falso positivo em texto comum | `checks.ts` | Corte indevido | Uma unidade de uma letra só conta depois de um número. Cada regra tem fixtures próprias. |

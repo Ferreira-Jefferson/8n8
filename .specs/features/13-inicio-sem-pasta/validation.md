@@ -22,16 +22,16 @@ No product defect was found in either round.
 | -- | -------------------- | ----------------------- | ------ |
 | HOME-01 | The palette opens the "8n8" panel on the start screen and maps no folder, with or without a workspace folder | Code: `apps/editors/vscode/src/extension.ts:130` `show(uri?.fsPath ?? null)`; the palette passes no `uri`. Integration `apps/editors/vscode/src/__tests__/integration/suite.ts:60-75` (round 2 lines), VS Code opened **with** a workspace folder: the page loads, reads `/api/history`, makes no `/api/project` call, and `pageFolder(api.lastHtml())` is `null`. `apps/editors/vscode/src/__tests__/webview-html.test.ts:69` `folder: null` → no folder meta | ✅ PASS (the "without a workspace folder" case is not run. The code never reads the workspace, so this case follows from the code) |
 | HOME-02 | The Explorer command opens the map of **that** folder, as before | `suite.ts:77-79` Explorer on the workspace root → `expectFolder(api.lastHtml(), workspace)`: the page's `8n8-folder` meta equals the folder, without regard to case, then `/api/project` 200; `suite.ts:189-192` Explorer on `frete` → `expectFolder(api.lastHtml(), frete)`, a new page, a new `/api/project` 200, one panel. `expectFolder` is defined at `suite.ts:20-25` | ✅ PASS (round 1: PARTIAL, V3 survived; closed by `6a6ec43`) |
-| HOME-03 | A folder map shows "Início", not "Novo código". The click goes back to the start screen with the folder path in the field, from any level | `apps/web/src/__tests__/App.test.tsx:700-711` no "Novo código", "Início" → no canvas, field = `lojaRoot`; `:713-727` from depth 2 "Início" → no canvas, "Mapear pasta" visible, the new map at depth 0; `:467` folder map → "Início" → paste a snippet. E2E `e2e/pasta-local.e2e.ts:257-272` two levels deep: "Novo código" count 0, "Início" → 0 nodes, field = LOJA, "Mapear pasta" → 5 nodes with `dir:pedidos`; `e2e/historico.e2e.ts:296` | ✅ PASS |
+| HOME-03 | A folder map shows "Início", not "Novo código". The click goes back to the start screen with the folder path in the field, from any level | `apps/ui/src/__tests__/App.test.tsx:700-711` no "Novo código", "Início" → no canvas, field = `lojaRoot`; `:713-727` from depth 2 "Início" → no canvas, "Mapear pasta" visible, the new map at depth 0; `:467` folder map → "Início" → paste a snippet. E2E `e2e/pasta-local.e2e.ts:257-272` two levels deep: "Novo código" count 0, "Início" → 0 nodes, field = LOJA, "Mapear pasta" → 5 nodes with `dir:pedidos`; `e2e/historico.e2e.ts:296` | ✅ PASS |
 | HOME-04 | A snippet map keeps "Novo código", which goes back to the text | `App.test.tsx:688-698` no "Início" on a snippet map, "Novo código" → editor with the same text; `e2e/historico.e2e.ts:108` a snippet map's "Novo código" | ✅ PASS |
 
-Code: `apps/web/src/App.tsx:509` label `mapped.kind === "project" ? "Início" : "Novo código"`; `:319-323` `newCode` clears the map and goes `home` for a folder and `editor` for a snippet. README `README.md:129` describes the new palette behaviour and "Início".
+Code: `apps/ui/src/App.tsx:509` label `mapped.kind === "project" ? "Início" : "Novo código"`; `:319-323` `newCode` clears the map and goes `home` for a folder and `editor` for a snippet. README `README.md:129` describes the new palette behaviour and "Início".
 
 ---
 
 ## Discrimination Sensor
 
-Run in an isolated worktree (`git worktree add --detach C:/w13 2c2154d`, `pnpm install --offline --frozen-lockfile`). Web mutants ran `apps/web/src/__tests__/App.test.tsx`. VS Code mutants ran `pnpm --filter 8n8-vscode test:integration` with `APP8N8_VSCODE_PATH` set to the downloaded VS Code 1.142.0. E2E mutants rebuilt the CLI and ran the named tests. Each mutant was reverted after its run.
+Run in an isolated worktree (`git worktree add --detach C:/w13 2c2154d`, `pnpm install --offline --frozen-lockfile`). Web mutants ran `apps/ui/src/__tests__/App.test.tsx`. VS Code mutants ran `pnpm --filter 8n8-vscode test:integration` with `APP8N8_VSCODE_PATH` set to the downloaded VS Code 1.142.0. E2E mutants rebuilt the CLI and ran the named tests. Each mutant was reverted after its run.
 
 | # | Mutant (file) | AC | Tests run | Result |
 | - | ------------- | -- | --------- | ------ |
@@ -64,7 +64,7 @@ The worktree was `C:/w13b` at `6a6ec43`, set up with `pnpm install --offline --f
 
 `6a6ec43` changes no product code (only `suite.ts` and the feature 10 spec), so the round 1 web and e2e kills still hold.
 
-Main repo, round 1: no file was written there except this file. `git status` changed during the run only in `apps/web/src/panel/DetailPanel.tsx` and its test, which the other sessions edit. The worktree is unregistered (`git worktree list` shows only master). `git worktree remove --force` could not delete every file, so the folder `C:/w13` is still on disk and needs a manual delete.
+Main repo, round 1: no file was written there except this file. `git status` changed during the run only in `apps/ui/src/panel/DetailPanel.tsx` and its test, which the other sessions edit. The worktree is unregistered (`git worktree list` shows only master). `git worktree remove --force` could not delete every file, so the folder `C:/w13` is still on disk and needs a manual delete.
 
 ---
 

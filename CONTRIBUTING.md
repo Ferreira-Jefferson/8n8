@@ -74,8 +74,8 @@ Cada pacote exporta só `"."` (o `src/index.ts`). O `dependency-cruiser` confere
 - Um plugin de linguagem importa só `model`, `lang-testkit` e `lang-treesitter`. Ele nunca importa outro plugin.
 - `project`, `input`, `links`, `explain` e `llm` importam só `model`.
 - `explain` não importa `llm`: ele conhece só o contrato `LlmClient` do `model`.
-- `apps/web` importa só `model`.
-- `model` e `apps/web` não usam módulos do Node (`node:*`).
+- `apps/ui` importa só `model`.
+- `model` e `apps/ui` não usam módulos do Node (`node:*`).
 - Um caminho relativo não sai da pasta do pacote.
 
 Um import que cruza uma fronteira falha no `pnpm check`.

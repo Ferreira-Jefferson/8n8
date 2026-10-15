@@ -15,7 +15,7 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build": "pnpm --filter @8n8/web build && tsx src/build.ts",
+    "build": "pnpm --filter @8n8/ui build && tsx src/build.ts",
     "package": "pnpm run build && pnpm pack --pack-destination ../../release"
   },
   "devDependencies": {

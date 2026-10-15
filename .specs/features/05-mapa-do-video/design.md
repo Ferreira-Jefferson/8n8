@@ -49,7 +49,7 @@ As setas entre pacotes não mudam: `model` ← `extract-python`/`explain` ← `s
 | AD | Decisão | Relação |
 | -- | ------- | ------- |
 | AD-017 | O LLM escreve resumos, sugestões e **títulos de nó**. Um título passa pela revisão em duas camadas e cai para um nome provisório determinístico. | Substitui a AD-001, que falava só de resumos e sugestões. A estrutura continua só do parsing. |
-| AD-018 | O tema visual do vídeo é o padrão da interface. As cores e medidas são tokens CSS em `apps/web/src/styles.css`. As fontes vêm de pacotes `@fontsource` empacotados no build, sem rede. | Convenção para features futuras. |
+| AD-018 | O tema visual do vídeo é o padrão da interface. As cores e medidas são tokens CSS em `apps/ui/src/styles.css`. As fontes vêm de pacotes `@fontsource` empacotados no build, sem rede. | Convenção para features futuras. |
 
 A AD-010 vale sem mudança: o fluxo principal, as etiquetas, o nome provisório, a linha de código do cartão e os cartões de sugestão são funções puras da web sobre o `Graph`.
 
@@ -123,10 +123,10 @@ O fluxo principal tem uma linha: `fn:processar_pedido` e os passos `s0..s6`, lig
 | `fingerprintOf`, `diffReasons`, `normalizeCode` | `packages/explain/src/fingerprint.ts` | Mesma impressão digital para títulos (VID-17). |
 | Gravação atômica de `createDiskCache` | `packages/explain/src/cache.ts` | Mesmo padrão (temp + `rename`) no cache de títulos. |
 | Rota `/api/explain` | `packages/server/src/app.ts` | O ramo projeto/trecho (AD-015) é extraído para uma função e reusado por `/api/titles`. |
-| `projectLevel`, `lifted` | `apps/web/src/flow/project-level.ts` | O nível `null` de um trecho passa a ser o fluxo principal. Os níveis de projeto não mudam. |
-| `layoutLR` (dagre) | `apps/web/src/flow/layout.ts` | Continua para níveis de passos e de projeto. Ganha o pós-passo dos ramos. |
-| `navReducer`, `ancestry` | `apps/web/src/nav/navigation.ts` | O caminho guarda de onde se veio, para o "Voltar". |
-| `DetailPanel`, `CodeView`, `formatLines`, `externalEffects` | `apps/web/src/panel/` | Ganham as seções do vídeo. Os itens com evidência (FID-12, FID-13) ficam. |
+| `projectLevel`, `lifted` | `apps/ui/src/flow/project-level.ts` | O nível `null` de um trecho passa a ser o fluxo principal. Os níveis de projeto não mudam. |
+| `layoutLR` (dagre) | `apps/ui/src/flow/layout.ts` | Continua para níveis de passos e de projeto. Ganha o pós-passo dos ramos. |
+| `navReducer`, `ancestry` | `apps/ui/src/nav/navigation.ts` | O caminho guarda de onde se veio, para o "Voltar". |
+| `DetailPanel`, `CodeView`, `formatLines`, `externalEffects` | `apps/ui/src/panel/` | Ganham as seções do vídeo. Os itens com evidência (FID-12, FID-13) ficam. |
 | LLM falso | `e2e/fake-llm.ts` | Ganha os papéis de título e os cenários do código do vídeo. |
 
 ---
@@ -226,7 +226,7 @@ export type TitlesResponse =
 
 O alargamento quebra o typecheck em dois pontos. A Fase 0 corrige os dois para o repositório continuar verde antes das trilhas:
 
-- `apps/web/src/flow/StepNode.tsx`: o `ICONS: Record<NodeKind, string>` ganha `return: "↩"`. A trilha C reescreve o arquivo depois.
+- `apps/ui/src/flow/StepNode.tsx`: o `ICONS: Record<NodeKind, string>` ganha `return: "↩"`. A trilha C reescreve o arquivo depois.
 - `packages/explain/src/explain.ts`: `KIND_LABEL` vira `Record<ExplainKind, string>` com os rótulos finais:
 
 | kind | Rótulo no pedido ao LLM |
@@ -418,11 +418,11 @@ interface TitleCacheEntry {
 
 ---
 
-## Trilha C: web (`apps/web`)
+## Trilha C: web (`apps/ui`)
 
 ### C1. Fontes (VID-02)
 
-- **Dependências** em `apps/web/package.json`: `@fontsource/archivo-black@5.3.0`, `@fontsource/space-grotesk@5.3.0` e `@fontsource/dm-mono@5.3.0`.
+- **Dependências** em `apps/ui/package.json`: `@fontsource/archivo-black@5.3.0`, `@fontsource/space-grotesk@5.3.0` e `@fontsource/dm-mono@5.3.0`.
 - **Pesos** importados em `main.tsx`: Archivo Black 400, Space Grotesk 400/500/700 e DM Mono 400/500.
 - **Build**: o Vite copia os `.woff2` para `dist/assets`, então o app não pede fonte a outro host.
 

@@ -38,7 +38,7 @@
 
 | AC | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| DIST-01 | Server on `127.0.0.1`, default browser opens the folder map | `apps/cli/src/__tests__/run.test.ts:78` `expect(h.port()).toBe(4317)`; `:80` `url.startsWith("http://127.0.0.1:4317/#")`; `:81` `get("pasta")).toBe(h.project)`; `apps/cli/src/__tests__/open-browser.test.ts:178-179`; `apps/web/src/__tests__/App.test.tsx:298-299`; `e2e/cli.e2e.ts:197-207` | ✅ PASS |
+| DIST-01 | Server on `127.0.0.1`, default browser opens the folder map | `apps/cli/src/__tests__/run.test.ts:78` `expect(h.port()).toBe(4317)`; `:80` `url.startsWith("http://127.0.0.1:4317/#")`; `:81` `get("pasta")).toBe(h.project)`; `apps/cli/src/__tests__/open-browser.test.ts:178-179`; `apps/ui/src/__tests__/App.test.tsx:298-299`; `e2e/cli.e2e.ts:197-207` | ✅ PASS |
 | DIST-02 | No argument: start screen | `run.test.ts:89` `get("pasta")).toBeNull()`; `:90` token present | ✅ PASS |
 | DIST-03 | Relative path from the terminal folder | `run.test.ts:96` | ✅ PASS |
 | DIST-04 | `C:\proj` and `C:/proj` | `run.test.ts:106-107` (`runIf(win32)`, ran on this host) | ✅ PASS |
@@ -51,7 +51,7 @@
 | DIST-11 | No LLM config: map opens, existing no-key notice | `run.test.ts:226` `toEqual({ status: "no-key" })`; `App.test.tsx:235-237` notice text | ✅ PASS |
 | DIST-12 | Installed `.tgz` runs with Node only, no repo file | `e2e/cli.e2e.ts:146-160` pack + `npm install -g --offline`; `:104`, `:131` `cwd: tmp`; `:197-209`; `build.test.ts:38`, `:61-63` | ✅ PASS |
 | DIST-13 | `server` gets config by parameter; no `process.env`, port or repo paths | `core.test.ts:892-895`; `:859`, `:883`, `:887` | ✅ PASS |
-| DIST-14 | Package / `apps/web` / host importing `apps/cli` or another host fails `pnpm check` | `guards.test.ts:174-178` `error hosts-do-not-import-each-other` for web, vscode, cli; `:180-189` each package gets an `error` from its own boundary rule; `:190` `status not 0` | ✅ PASS |
+| DIST-14 | Package / `apps/ui` / host importing `apps/cli` or another host fails `pnpm check` | `guards.test.ts:174-178` `error hosts-do-not-import-each-other` for web, vscode, cli; `:180-189` each package gets an `error` from its own boundary rule; `:190` `status not 0` | ✅ PASS |
 | DIST-15 | `dev:server` and `start` run the CLI with `--env-file-if-exists=.env` | `repo-scripts.test.ts:15-17`, `:21-23` | ✅ PASS |
 | DIST-16 | No `dependencies`, no install scripts | `build.test.ts:48-50`, `:55-56` | ✅ PASS |
 | DIST-17 | Key never to browser or terminal | via DIST-22 | ✅ PASS |

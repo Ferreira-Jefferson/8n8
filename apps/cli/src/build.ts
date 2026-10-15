@@ -90,9 +90,9 @@ export function copyGrammars(outDir: string): void {
 
 /** apps/cli/dist: the two bundles, the grammars, the built screen and the PTS rules. */
 export async function buildCli(outDir = join(cliRoot, "dist")): Promise<void> {
-  const web = join(repoRoot, "apps/web/dist");
+  const web = join(repoRoot, "apps/ui/dist");
   if (!existsSync(join(web, "index.html"))) {
-    throw new Error("Construa a tela antes: pnpm --filter @8n8/web build");
+    throw new Error("Construa a tela antes: pnpm --filter @8n8/ui build");
   }
   rmSync(outDir, { recursive: true, force: true });
   // Two files: 8n8.mjs sets the warning filter, then loads cli.mjs (see bin.ts).

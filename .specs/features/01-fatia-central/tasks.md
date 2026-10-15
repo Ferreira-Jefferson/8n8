@@ -35,8 +35,8 @@ Regras que valem para toda task:
 | `explain`: modelo, prompt, schema, cache, cliente, `explainNode` | unit (`LlmClient` falso, `fetch` falso, diretório temporário) | Todos os ramos; 1:1 com CORE-16..22; todo caminho da tabela de erros do design (rede, JSON inválido, cache corrompido, falha ao gravar) | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @8n8/explain test` |
 | `server`: rotas e middleware (`app.ts`) | integration (`app.request()`, sem porta) | Toda rota: caminho feliz + cada caso de borda + cada erro (400, 403, 404, 502) | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
 | `server`: composição (`main.ts`) | unit | Ramos de ambiente: com e sem chave, com e sem `APP8N8_MODEL` | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
-| `web`: lógica pura (`api.ts`, `navigation.ts`, `project-level.ts`, `layout.ts`) | unit (jsdom) | Todos os ramos; 1:1 com as ACs de interface (CORE-01..03, 08..11, 15) | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
-| `web`: componentes (`StepNode`, `Breadcrumb`, `CodeView`, `DetailPanel`, `App`) | unit (componente leve: jsdom + Testing Library, sem `<ReactFlow>`) | Cada texto e cada interação das ACs (CORE-06, 07, 14, 15, 19, 20, 23, 24) | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/web test` |
+| `web`: lógica pura (`api.ts`, `navigation.ts`, `project-level.ts`, `layout.ts`) | unit (jsdom) | Todos os ramos; 1:1 com as ACs de interface (CORE-01..03, 08..11, 15) | `apps/ui/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/ui test` |
+| `web`: componentes (`StepNode`, `Breadcrumb`, `CodeView`, `DetailPanel`, `App`) | unit (componente leve: jsdom + Testing Library, sem `<ReactFlow>`) | Cada texto e cada interação das ACs (CORE-06, 07, 14, 15, 19, 20, 23, 24) | `apps/ui/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/ui test` |
 | `web`: `FlowCanvas.tsx` (só monta `<ReactFlow>`) | none | - (build gate + checagem manual no Independent Test; o design tira o canvas do jsdom) | - | `pnpm typecheck && pnpm check` |
 | Config, scaffold de pacote, fixtures, scripts | none | - (build gate only) | - | `pnpm typecheck && pnpm check && pnpm test` |
 
@@ -281,8 +281,8 @@ T48 → T49
 
 **Done when**:
 
-- [x] Regras: sem ciclos; `model` não importa nenhum `@8n8/*`; `extract-python` e `explain` importam só `model`; `server` importa `model`, `extract-python` e `explain`; `apps/web` importa só `model`.
-- [x] Bloqueia `node:*` em `packages/model` e em `apps/web`.
+- [x] Regras: sem ciclos; `model` não importa nenhum `@8n8/*`; `extract-python` e `explain` importam só `model`; `server` importa `model`, `extract-python` e `explain`; `apps/ui` importa só `model`.
+- [x] Bloqueia `node:*` em `packages/model` e em `apps/ui`.
 - [x] Bloqueia caminho relativo que sai da pasta do pacote (`../../packages/...`).
 - [x] A sintaxe das regras foi conferida no dependency-cruiser 18 (item incerto do design).
 - [x] Prova negativa: um arquivo temporário em `packages/model/src` com `import 'node:fs'` faz `pnpm check` falhar. O arquivo é apagado antes do commit.
@@ -1131,7 +1131,7 @@ T48 → T49
 
 ### T37: Composição em `main.ts`
 
-**What**: Implementar `main.ts`: carrega o `.env` com `process.loadEnvFile()` dentro de `try`, lê o PTS, cria o extrator, cria o cliente só se `OPENROUTER_API_KEY` existe, liga `explainNode` com `resolveModel` e o cache em `<repo>/.cache/explain`, e chama `serve` em `127.0.0.1:4317`. Em modo `start`, serve `apps/web/dist`. A parte de montagem fica numa função exportada `composeExplain(env, deps)` para teste.
+**What**: Implementar `main.ts`: carrega o `.env` com `process.loadEnvFile()` dentro de `try`, lê o PTS, cria o extrator, cria o cliente só se `OPENROUTER_API_KEY` existe, liga `explainNode` com `resolveModel` e o cache em `<repo>/.cache/explain`, e chama `serve` em `127.0.0.1:4317`. Em modo `start`, serve `apps/ui/dist`. A parte de montagem fica numa função exportada `composeExplain(env, deps)` para teste.
 **Where**: `packages/server/src/main.ts`
 **Depends on**: T36
 **Requirement**: CORE-19, CORE-21
@@ -1162,8 +1162,8 @@ T48 → T49
 
 ### T38: Scaffold da web
 
-**What**: Criar `apps/web` com package.json, `index.html`, `vite.config.ts` (proxy de `/api` para `127.0.0.1:4317`), vitest.config com `jsdom`, tsconfig e `src/main.tsx` mínimo.
-**Where**: `apps/web/package.json`, `apps/web/index.html`, `apps/web/vite.config.ts`, `apps/web/vitest.config.ts`, `apps/web/tsconfig.json`, `apps/web/src/main.tsx`
+**What**: Criar `apps/ui` com package.json, `index.html`, `vite.config.ts` (proxy de `/api` para `127.0.0.1:4317`), vitest.config com `jsdom`, tsconfig e `src/main.tsx` mínimo.
+**Where**: `apps/ui/package.json`, `apps/ui/index.html`, `apps/ui/vite.config.ts`, `apps/ui/vitest.config.ts`, `apps/ui/tsconfig.json`, `apps/ui/src/main.tsx`
 **Depends on**: T6, T13
 **Requirement**: base de CORE-01..15, CORE-19, CORE-20, CORE-23, CORE-24
 
@@ -1177,7 +1177,7 @@ T48 → T49
 - [x] `pnpm check` passa: a web não importa `explain`, `extract-python`, `server` nem `node:*`.
 
 **Tests**: none (scaffold)
-**Gate**: build · `pnpm install && pnpm --filter @8n8/web typecheck && pnpm --filter @8n8/web build && pnpm check`
+**Gate**: build · `pnpm install && pnpm --filter @8n8/ui typecheck && pnpm --filter @8n8/ui build && pnpm check`
 
 **Commit**: `chore(web): scaffold vite react app with api proxy`
 
@@ -1188,11 +1188,11 @@ T48 → T49
 ### T39: Cliente HTTP da web
 
 **What**: Implementar `fetchGraph(source)` e `fetchExplanation(source, nodeId)`. `fetchExplanation` devolve o `ExplainResponse` ou `{ status: 'stale' }` para `404`.
-**Where**: `apps/web/src/api.ts`
+**Where**: `apps/ui/src/api.ts`
 **Depends on**: T38
 **Requirement**: CORE-19, CORE-20
 
-**Test file**: `apps/web/src/__tests__/api.test.ts` (`fetch` falso)
+**Test file**: `apps/ui/src/__tests__/api.test.ts` (`fetch` falso)
 
 **Tools**: MCP NONE · Skill NONE
 
@@ -1206,7 +1206,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): add api client for graph and explain`
 
@@ -1217,11 +1217,11 @@ T48 → T49
 ### T40: Reducer de navegação
 
 **What**: Implementar o reducer puro sobre `{ path, selected }` com as ações `open(node)`, `goTo(index)` e `select(id)`.
-**Where**: `apps/web/src/nav/navigation.ts`
+**Where**: `apps/ui/src/nav/navigation.ts`
 **Depends on**: T38
 **Requirement**: CORE-08, CORE-10, CORE-11, CORE-15
 
-**Test file**: `apps/web/src/nav/__tests__/navigation.test.ts`
+**Test file**: `apps/ui/src/nav/__tests__/navigation.test.ts`
 
 **Tools**: MCP NONE · Skill NONE
 
@@ -1236,7 +1236,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): add navigation reducer for drill-down`
 
@@ -1247,11 +1247,11 @@ T48 → T49
 ### T41: Projeção de um nível do grafo
 
 **What**: Implementar `projectLevel(graph, containerId | null)`, que devolve os nós e arestas visíveis num nível. No nível superior, sobe as pontas das arestas `calls` até o ancestral visível e remove laços e repetições.
-**Where**: `apps/web/src/flow/project-level.ts`
+**Where**: `apps/ui/src/flow/project-level.ts`
 **Depends on**: T38
 **Requirement**: CORE-01, CORE-02, CORE-03, CORE-08, CORE-09, CORE-10, CORE-13
 
-**Test file**: `apps/web/src/flow/__tests__/project-level.test.ts` (grafos montados à mão no teste)
+**Test file**: `apps/ui/src/flow/__tests__/project-level.test.ts` (grafos montados à mão no teste)
 
 **Tools**: MCP NONE · Skill NONE
 
@@ -1265,7 +1265,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): project one graph level with lifted calls edges`
 
@@ -1276,11 +1276,11 @@ T48 → T49
 ### T42: Layout da esquerda para a direita
 
 **What**: Implementar `layoutLR(nodes, edges)` com `@dagrejs/dagre` e `rankdir: 'LR'`, devolvendo uma posição por nó.
-**Where**: `apps/web/src/flow/layout.ts`
+**Where**: `apps/ui/src/flow/layout.ts`
 **Depends on**: T38
 **Requirement**: CORE-01, CORE-08 (desenho do fluxo)
 
-**Test file**: `apps/web/src/flow/__tests__/layout.test.ts`
+**Test file**: `apps/ui/src/flow/__tests__/layout.test.ts`
 
 **Tools**: MCP NONE · Skill NONE
 
@@ -1293,7 +1293,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 4 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): add left-to-right dagre layout`
 
@@ -1306,11 +1306,11 @@ T48 → T49
 ### T43: Componente `StepNode`
 
 **What**: Implementar `StepNode`, que mostra o ícone do tipo, o rótulo, a categoria externa, o selo de erro de sintaxe e o selo com o número de sugestões.
-**Where**: `apps/web/src/flow/StepNode.tsx`
+**Where**: `apps/ui/src/flow/StepNode.tsx`
 **Depends on**: T41
 **Requirement**: CORE-06, CORE-12, CORE-23
 
-**Test file**: `apps/web/src/flow/__tests__/StepNode.test.tsx` (dentro de `ReactFlowProvider`, sem `<ReactFlow>`)
+**Test file**: `apps/ui/src/flow/__tests__/StepNode.test.tsx` (dentro de `ReactFlowProvider`, sem `<ReactFlow>`)
 
 **Tools**: MCP NONE · Skill NONE
 
@@ -1323,7 +1323,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 5 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): add step node with category and badges`
 
@@ -1334,7 +1334,7 @@ T48 → T49
 ### T44: Componente `FlowCanvas`
 
 **What**: Implementar `FlowCanvas`, que recebe o grafo, o nível atual e o mapa de contagens de sugestões, aplica `projectLevel` e `layoutLR` e desenha `<ReactFlow>` com o tipo `StepNode`. Clique seleciona; duplo clique abre.
-**Where**: `apps/web/src/flow/FlowCanvas.tsx`
+**Where**: `apps/ui/src/flow/FlowCanvas.tsx`
 **Depends on**: T43
 **Requirement**: CORE-01, CORE-02, CORE-08, CORE-14 (seleção), CORE-23
 
@@ -1358,11 +1358,11 @@ T48 → T49
 ### T45: Componente `Breadcrumb`
 
 **What**: Implementar `Breadcrumb`, que mostra "Trecho › nível › nível" e chama `onGoTo(index)` ao clicar num item.
-**Where**: `apps/web/src/nav/Breadcrumb.tsx`
+**Where**: `apps/ui/src/nav/Breadcrumb.tsx`
 **Depends on**: T40
 **Requirement**: CORE-15
 
-**Test file**: `apps/web/src/nav/__tests__/Breadcrumb.test.tsx`
+**Test file**: `apps/ui/src/nav/__tests__/Breadcrumb.test.tsx`
 
 **Tools**: MCP NONE · Skill NONE
 
@@ -1374,7 +1374,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): add clickable breadcrumb`
 
@@ -1385,11 +1385,11 @@ T48 → T49
 ### T46: Componente `CodeView`
 
 **What**: Implementar `CodeView`: um `<pre>` com o número absoluto de cada linha e a marca na linha destacada.
-**Where**: `apps/web/src/panel/CodeView.tsx`
+**Where**: `apps/ui/src/panel/CodeView.tsx`
 **Depends on**: T38
 **Requirement**: CORE-14, CORE-24
 
-**Test file**: `apps/web/src/panel/__tests__/CodeView.test.tsx`
+**Test file**: `apps/ui/src/panel/__tests__/CodeView.test.tsx`
 
 **Tools**: MCP NONE · Skill NONE
 
@@ -1401,7 +1401,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): add numbered code view with line highlight`
 
@@ -1412,11 +1412,11 @@ T48 → T49
 ### T47: Componente `DetailPanel`
 
 **What**: Implementar `DetailPanel`: mostra o intervalo de linhas e o `CodeView` do nó; para `function` e `class`, busca a explicação ao abrir e mostra resumo, entradas, saídas e sugestões; trata `no-key`, `error` com "Tentar de novo" e `stale`; avisa o pai com `onExplained(id, explanation)`.
-**Where**: `apps/web/src/panel/DetailPanel.tsx`
+**Where**: `apps/ui/src/panel/DetailPanel.tsx`
 **Depends on**: T46
 **Requirement**: CORE-14, CORE-16, CORE-19, CORE-20, CORE-24
 
-**Test file**: `apps/web/src/panel/__tests__/DetailPanel.test.tsx` (`fetchExplanation` falso)
+**Test file**: `apps/ui/src/panel/__tests__/DetailPanel.test.tsx` (`fetchExplanation` falso)
 
 **Tools**: MCP NONE · Skill NONE
 
@@ -1432,7 +1432,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): add detail panel with explanation states`
 
@@ -1443,11 +1443,11 @@ T48 → T49
 ### T48: Componente `App`
 
 **What**: Implementar `App`: área para colar o trecho, botão "Gerar mapa", `FlowCanvas`, `Breadcrumb` e `DetailPanel`, ligados pelo reducer de navegação e pelo `Map<NodeId, Explanation>` da sessão.
-**Where**: `apps/web/src/App.tsx`
+**Where**: `apps/ui/src/App.tsx`
 **Depends on**: T44, T45, T47
 **Requirement**: CORE-01, CORE-07, CORE-15, CORE-20, CORE-23
 
-**Test file**: `apps/web/src/__tests__/App.test.tsx` (`api.ts` falso; `FlowCanvas` trocado por um falso com `vi.mock` que expõe as props)
+**Test file**: `apps/ui/src/__tests__/App.test.tsx` (`api.ts` falso; `FlowCanvas` trocado por um falso com `vi.mock` que expõe as props)
 
 **Tools**: MCP NONE · Skill NONE
 
@@ -1462,7 +1462,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @8n8/web test`
+**Gate**: quick · `pnpm --filter @8n8/ui test`
 
 **Commit**: `feat(web): wire app with paste, map, breadcrumb and panel`
 
@@ -1472,7 +1472,7 @@ T48 → T49
 
 ### T49: Scripts de uso e Independent Test
 
-**What**: Adicionar na raiz os scripts `dev` (servidor com `tsx watch` e Vite juntos) e `start` (build da web e servidor servindo `apps/web/dist`), e rodar o Independent Test da spec.
+**What**: Adicionar na raiz os scripts `dev` (servidor com `tsx watch` e Vite juntos) e `start` (build da web e servidor servindo `apps/ui/dist`), e rodar o Independent Test da spec.
 **Where**: `package.json`
 **Depends on**: T48
 **Requirement**: CORE-01..24 (Independent Test e Success Criteria)

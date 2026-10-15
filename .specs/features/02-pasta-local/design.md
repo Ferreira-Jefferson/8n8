@@ -53,7 +53,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 | `importAliases` | `packages/extract-python/src/imports.ts` | Base dos aliases. Corrige a junção relativa (`from . import x` hoje gera `..x`). |
 | `markSyntaxErrors` | `errors.ts` | Por arquivo, sem mudança. |
 | `childId`, `topLevelId` | `packages/model/src/ids.ts` | Os IDs internos continuam saindo do pai: basta trocar a raiz. |
-| `projectLevel`/`liftedCalls` | `apps/web/src/flow/project-level.ts` | A elevação vira genérica por tipo de aresta. |
+| `projectLevel`/`liftedCalls` | `apps/ui/src/flow/project-level.ts` | A elevação vira genérica por tipo de aresta. |
 | Guarda de `Host` e `hostname: "127.0.0.1"` | `server/src/app.ts`, `main.ts` | PROJ-08 já existe; a rota nova fica atrás da mesma guarda. |
 | Pipeline e cache de explicação | `packages/explain` | Sem mudança. O servidor passa a identidade com escopo em `nodeId`. |
 
@@ -132,7 +132,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 - **PROJ-08**: o `serve` já usa `hostname: "127.0.0.1"`. Extrair `listenOptions(port)` para testar o `hostname` em unidade. A guarda de `Host` vale para a rota nova.
 - `package.json` do servidor declara `@8n8/input`.
 
-### C5. Web (`apps/web`) (PROJ-02, 03, 04, 05, 06, 09)
+### C5. Web (`apps/ui`) (PROJ-02, 03, 04, 05, 06, 09)
 
 - **Entrada**: ao lado do textarea, um campo `aria-label="Caminho da pasta"` e o botão "Abrir pasta". Gerar um trecho ou uma pasta troca o mapa inteiro. Estado: `Mapped = { kind: "snippet"; source; graph } | { kind: "project"; root; response }`.
 - **`api.ts`**: `fetchProject(path): Promise<ProjectResponse | { error: "not-found"; path }>`. `fetchExplanation(origin, nodeId)` com `origin = { source } | { root }`.
@@ -153,7 +153,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 ### C6. Fronteiras: `.dependency-cruiser.cjs` (AD-005)
 
 - Regra nova `input-only-model`: `^packages/input/` só importa `model`.
-- `extract-python-only-model` e `explain-only-model` já impedem `input`. `web-only-model` já impede `@8n8/input`.
+- `extract-python-only-model` e `explain-only-model` já impedem `input`. `ui-only-model` já impede `@8n8/input`.
 - O comentário de `server-only-core-packages` passa a citar `input`.
 
 ---
@@ -187,7 +187,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 | `input` unit | ignorados por nome em qualquer profundidade, 1 MB exato (1 048 576 entra, +1 sai), UTF-8 inválido, `EACCES` (com `vi.mock` de `node:fs/promises`), link, ordem, `not-found` para caminho inexistente e para arquivo, varredura de APIs de escrita (PROJ-07) | `packages/input/src/__tests__/` (árvores em `os.tmpdir()`) |
 | `extract-python` unit | nomes de módulo, relativo nível 1 e 2, `__init__.py` e reexportação, fallback da pasta do script, mesmo nome com e sem import (PROJ-09), arestas `imports`, IDs prefixados estáveis em duas execuções, snapshot do trecho sem mudança | `packages/extract-python/src/__tests__/project.test.ts`, `modules.test.ts` |
 | `server` unit | `/api/project` 200/404/400/415; explain `{root,nodeId}` monta o pedido com código do disco (arquivo alterado no tmp após o mapa), `nodeId` com escopo, vizinhos qualificados; Host estranho → 403; `listenOptions` | `packages/server/src/__tests__/project-route.test.ts` |
-| `web` unit | `lifted`/`projectLevel` por tipo de nível, `ancestry`, `jump`, breadcrumb com nome do projeto, `IgnoredFiles`, mensagem de not-found | `apps/web/src/**/__tests__/` |
+| `web` unit | `lifted`/`projectLevel` por tipo de nível, `ancestry`, `jump`, breadcrumb com nome do projeto, `IgnoredFiles`, mensagem de not-found | `apps/ui/src/**/__tests__/` |
 | E2E | ver abaixo | `e2e/pasta-local.e2e.ts` |
 
 **Fixture comprometida**: `packages/extract-python/src/__tests__/fixtures/projeto-loja/` (mesmo padrão do `pedido_frete.py`, usada por unit, servidor e E2E):
@@ -228,7 +228,7 @@ loja/
 | POST "simples" de outra página local (`text/plain`) passa pela guarda de `Host` | `server/src/app.ts:26` | Página maliciosa dispara leituras e gasto de LLM | As rotas `/api/project` e `/api/explain` exigem `content-type: application/json` (força preflight, que falha sem CORS) → `415` |
 | A guarda não cobre a pasta de cache dentro do repo | `server/src/main.ts` | Analisar o próprio repo do 8n8 escreve em `.cache/` dentro dele | Aceito: o cache é do app, não da pasta analisada, e fica em `.cache/` (fora do git) |
 | Colisão teórica de ID: pasta chamada `x.py` com arquivo `fn:y.py` | C1 | Dois nós com o mesmo ID | Impossível no Windows (`:` proibido). Aceito; `extractProject` lança erro se achar ID repetido |
-| Feature 04 em andamento edita `App.tsx`, `DetailPanel.tsx`, `api.test.ts` | `apps/web/src` | Conflito de merge | Agendar a fase web desta feature depois da T22 |
+| Feature 04 em andamento edita `App.tsx`, `DetailPanel.tsx`, `api.test.ts` | `apps/ui/src` | Conflito de merge | Agendar a fase web desta feature depois da T22 |
 
 ---
 

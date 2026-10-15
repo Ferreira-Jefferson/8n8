@@ -52,7 +52,7 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build": "pnpm --filter @8n8/web build && tsx src/build.ts",
+    "build": "pnpm --filter @8n8/ui build && tsx src/build.ts",
     "test:integration": "pnpm run build && tsx src/__tests__/integration/run.ts",
     "package": "pnpm run build && vsce package --no-dependencies --skip-license --out ../../../release/"
   },

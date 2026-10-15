@@ -33,7 +33,7 @@ All 15 ACs trace to a test that asserts the outcome the spec defines. All gates 
 | VSC-08 | Real VS Code: panel, page under CSP, `ready`, `POST /api/project` 200 | `suite.ts:42-56` (I4 killed) | ✅ PASS |
 | VSC-09 | No port imports in `apps/editors/vscode`; `pnpm check` fails otherwise | `apps/cli/src/__tests__/guards.test.ts:203`, `:225` (M24-M27 killed) | ✅ PASS |
 | VSC-10 | Only `{id,method,path,body?}`, 4 methods, safe `/api/` path, body ≤ 1 048 576 bytes only on POST/PUT, else 400 without the core; a core failure gives 500 | `apps/editors/vscode/src/__tests__/bridge.test.ts:99-125` 19 cases `status 400` + `seen toEqual([])`; `:136` 1 048 576 bytes → 200; `:146` → `status: 500` | ✅ PASS (R7, R8, R10 killed) |
-| VSC-11 | The bridge adds Host and token; no token in the webview or its HTML; the core refuses without it; the test API only in `ExtensionMode.Test` | `bridge.test.ts:49-50`, `:94` 401; `apps/web/src/__tests__/vscode-host.test.ts:85`; `suite.ts:77` no 64-hex string in `lastHtml()`; `activate.test.ts:38` Production and Development `toBeUndefined()`, `:44` Test `toBeDefined()` | ✅ PASS (I3/R3, R5/S1, S1b killed) |
+| VSC-11 | The bridge adds Host and token; no token in the webview or its HTML; the core refuses without it; the test API only in `ExtensionMode.Test` | `bridge.test.ts:49-50`, `:94` 401; `apps/ui/src/__tests__/vscode-host.test.ts:85`; `suite.ts:77` no 64-hex string in `lastHtml()`; `activate.test.ts:38` Production and Development `toBeUndefined()`, `:44` Test `toBeDefined()` | ✅ PASS (I3/R3, R5/S1, S1b killed) |
 | VSC-12 | Exact CSP; `localResourceRoots` only the packaged screen | `apps/editors/vscode/src/__tests__/webview-html.test.ts:31` exact policy; `panel.test.ts:6`; `suite.ts:74` exactly `[<ext>/dist/web]` | ✅ PASS (I2/R1/R2 killed) |
 | VSC-13 | A `vscode` import outside `apps/editors/vscode` fails `pnpm check`, proven by the guards test | `guards.test.ts:221` | ✅ PASS |
 | VSC-14 | CODEOWNERS on the bridge and the webview HTML | `.github/CODEOWNERS:16-17` | ✅ PASS (doc check) |
@@ -105,7 +105,7 @@ Round 3 anchored both exclusions to `apps/editors/vscode/.vscode-test`, as round
 - `pnpm test`: ✅ exit 0. 1898 passed, 3 skipped (outside the diff). `apps/editors/vscode` 54.
 - `pnpm --filter 8n8-vscode test:integration` (real tree, VS Code 1.142.0 from `.vscode-test`): ✅ "teste de integração no VS Code passou"
 - `pnpm --filter 8n8-vscode package`: ✅ in round 2 (44 files). Round 3 changes only tests and config.
-- `pnpm e2e`: ✅ 142/142 in round 1. Rounds 2-3 do not touch `apps/web` or the CLI runtime.
+- `pnpm e2e`: ✅ 142/142 in round 1. Rounds 2-3 do not touch `apps/ui` or the CLI runtime.
 
 ---
 
