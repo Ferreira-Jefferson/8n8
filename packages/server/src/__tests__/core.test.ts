@@ -34,10 +34,11 @@ import {
   composeLlm,
   composeReadProject,
   composeTitles,
+  createCore,
   languagePlugins,
   listenOptions,
   resolvePort,
-} from "../main";
+} from "../core";
 
 const ptsRules = readFileSync(
   new URL(
@@ -826,5 +827,59 @@ describe("listenOptions", () => {
       port: 4317,
       hostname: "127.0.0.1",
     });
+  });
+});
+
+describe("createCore (DIST-13)", () => {
+  const dir = mkdtempSync(join(tmpdir(), "8n8-core-"));
+  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+  const core = (historyFile: string | undefined) =>
+    createCore({
+      env: {},
+      ptsRules: "regras",
+      cacheDir: join(dir, "cache"),
+      historyFile,
+      port: 4317,
+    });
+  const get = (app: ReturnType<typeof core>, path: string) =>
+    app.request(path, { headers: { host: "127.0.0.1:4317" } });
+
+  it("serves the languages of the built-in plugins from the options alone", async () => {
+    const res = await get(core(undefined), "/api/languages");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { languages: { id: string }[] };
+    expect(body.languages.map((l) => l.id)).toEqual(["python", "typescript"]);
+  });
+
+  it("keeps the maps in the history it receives, and none without one", async () => {
+    const saveAMap = (app: ReturnType<typeof core>) =>
+      app.request("/api/graph", {
+        method: "POST",
+        headers: { host: "127.0.0.1:4317", "content-type": "application/json" },
+        body: JSON.stringify({ source: "def f():\n    pass\n" }),
+      });
+    const items = async (app: ReturnType<typeof core>) => {
+      // The save runs after the response (saveLater).
+      await new Promise((r) => setTimeout(r, 50));
+      const res = await get(app, "/api/history");
+      return ((await res.json()) as { items: unknown[] }).items;
+    };
+
+    // An in-memory database: on Windows an open file blocks the temp folder cleanup.
+    const withHistory = core(":memory:");
+    expect((await saveAMap(withHistory)).status).toBe(200);
+    expect(await items(withHistory)).toHaveLength(1);
+
+    const without = core(undefined);
+    expect((await saveAMap(without)).status).toBe(200);
+    expect(await items(without)).toEqual([]);
+  });
+
+  it("never reads the process environment nor the repository layout", () => {
+    const source = readFileSync(join(__dirname, "..", "core.ts"), "utf8");
+    expect(source).not.toMatch(/process\.env/);
+    expect(source).not.toMatch(/import\.meta\.url/);
+    expect(source).not.toMatch(/process\.loadEnvFile/);
+    expect(source).not.toMatch(/@hono\/node-server/);
   });
 });

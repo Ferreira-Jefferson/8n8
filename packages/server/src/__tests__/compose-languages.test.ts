@@ -20,7 +20,7 @@ import {
   composeLlm,
   composeReadProject,
   composeTitles,
-} from "../main";
+} from "../core";
 import { fakeLang } from "./fake-lang";
 
 const cacheDir = mkdtempSync(join(tmpdir(), "8n8-langs-"));

@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/07-cli/design.md`
-**Status**: Draft
+**Status**: In Progress
 
 ---
 
@@ -79,11 +79,11 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `packages/server/src/index.ts` exporta `createCore`, `CoreOptions`, `languagePlugins`, `resolvePort`, `listenOptions`; `exports` do pacote aponta para `index.ts`
-- [ ] `main.ts` fica fino: lê o ambiente e chama `createCore` (sai na T9)
-- [ ] `main.test.ts` e `compose-languages.test.ts` passam a importar de `core.ts`, sem perder casos
-- [ ] Teste novo: `core.ts` não referencia `process.env` nem `import.meta.url` (DIST-13)
-- [ ] Gate check passes: `pnpm --filter @8n8/server test && pnpm typecheck`
+- [x] `packages/server/src/index.ts` exporta `createCore`, `CoreOptions`, `languagePlugins`, `resolvePort`, `listenOptions`; `exports` do pacote aponta para `index.ts`
+- [x] `main.ts` fica fino: lê o ambiente e chama `createCore` (sai na T9)
+- [x] `main.test.ts` e `compose-languages.test.ts` passam a importar de `core.ts`, sem perder casos
+- [x] Teste novo: `core.ts` não referencia `process.env` nem `import.meta.url` (DIST-13)
+- [x] Gate check passes: `pnpm --filter @8n8/server test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick
