@@ -158,23 +158,17 @@
 
 ## Handoff
 
-*Pausado pelo usuário em 2026-10-14, durante a verificação da feature 05. Nada foi enviado ao remoto.*
+*Atualizado em 2026-10-15. O usuário pediu execução sem paradas para aprovação até concluir o roteiro (08, 09, 10 e segurança do repositório). Nada foi enviado ao remoto.*
 
-- **Ordem das features:** 01-fatia-central ✅ → 04-fidelidade-e-cache ✅ → 02-pasta-local ✅ → 05-mapa-do-video (implementada, falta verificar).
-- **06-multilinguagem:** plugins Python e TypeScript, ligações entre linguagens e provedores de LLM (AD-020, AD-021). Documentação pronta: `README.md`, `CONTRIBUTING.md` e `docs/adicionar-linguagem.md`. O e2e da tarefa 7.4 não foi marcado.
-- **Features futuras:** o tour em vídeo (degrau 4). O modo grafo (03) foi removido em 2026-10-14 (AD-019).
-- **01, 04 e 02:** verificadas (PASS). Detalhes no `validation.md` de cada uma.
-- **05-mapa-do-video:**
-  - T1–T48 feitas e mescladas no master (merge e7ed837). T49–T50 (imagens de referência) canceladas pelo usuário em 2026-10-14. O usuário também cancelou a página de comparação com o vídeo.
-  - Gate no master em e7ed837: typecheck, check, 830 unitários e 83 E2E verdes. O E2E passou 3 vezes seguidas na feat/05d. O projeto `performance` (`APP8N8_PERF=1 pnpm exec playwright test --project performance`) passa 9/9.
-  - Medidas de desempenho: o mapa aparece em cerca de 45 ms, a animação termina em cerca de 3 s, abrir um nó leva cerca de 1,2 s (0,13 s sem animação), Voltar leva cerca de 20–80 ms e uma pasta de 300 arquivos leva cerca de 0,2 s.
-  - O bug do canvas em branco foi corrigido em 089e3a6. O "em branco" que restou na porta 4319 era erro de medição do teste de desempenho, corrigido em f75feb6, com teste de guarda em 632b943.
-  - **Aprovada pelo usuário em 2026-10-14** (UAT: "parecido ao vídeo de referência"). O Verifier independente não foi rodado e o `validation.md` não foi escrito.
-- **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 e bf90eb8 (T36) da 05 entraram com testes vermelhos. O histórico não foi reescrito.
+- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda (implementada, verificação em curso) → 09 provedor Claude Code → 10 extensão VS Code → segurança do repositório.
+- **08:** resumo e sugestões em pedidos separados (`/api/summary`, `/api/suggestions`, `cachedOnly`), caches `nodes/` e `suggestions/` (schemaVersion 4), painel de configurações (`GET/PUT /api/settings`, `~/.8n8/config.json`), modos automáticos (`APP8N8_AUTO_SUMMARY`, `APP8N8_AUTO_SUGGESTIONS`). Gates: 1640+ unitários, 141 E2E.
+- **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 e bf90eb8 (T36) da 05 entraram com testes vermelhos. Na 08, os testes do `server` ficaram vermelhos entre a T4 e a T7 (registrado no tasks.md). O histórico não foi reescrito.
 - **Ambiente:**
-  - O pnpm 12.6.0 global foi reinstalado em 2026-10-13 com os scripts de instalação ligados e agora roda o binário nativo (`pnpm.exe`). Se ele voltar a dizer "pnpm is running through Node.js", reinstale com `npm install -g pnpm@12.6.0 --foreground-scripts`.
-  - O Playwright precisa de `C:\Windows\System32` no PATH para chamar o `taskkill`.
+  - O pnpm 12.6.0 global roda o binário nativo (`pnpm.exe`). Se ele voltar a dizer "pnpm is running through Node.js", reinstale com `npm install -g pnpm@12.6.0 --foreground-scripts`.
+  - O Playwright precisa de `C:WindowsSystem32` no PATH para chamar o `taskkill`.
+  - O gitleaks está em `%LOCALAPPDATA%MicrosoftWinGetPackagesGitleaks.Gitleaks_*`; reinicie o VS Code para ele entrar no PATH.
+  - Nunca rode `pnpm` numa pasta temporária ligada ao `node_modules` do repositório: ele reinstala e apaga pacotes do repositório.
 - **Pendências não bloqueantes:**
   - Os worktrees `../8n8-f02`, `../8n8-05a`, `05b`, `05c` e `05d` e seus branches continuam existindo. Não apagar sem pedido.
-  - Preencher a seção "Comandos" do CLAUDE.md.
-  - Lições candidatas L-015..L-017 esperam confirmação de outra feature.
+  - Lições candidatas L-015..L-024 esperam confirmação de outra feature.
+  - Bloquear `node:cluster` na regra `no-child-process` (limite conhecido da 07).

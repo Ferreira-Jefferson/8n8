@@ -395,8 +395,8 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] README explica o painel, o `config.json` e as variáveis que ganham do painel
-- [ ] Gate check passes: `pnpm check`
+- [x] README explica o painel, o `config.json` e as variáveis que ganham do painel
+- [x] Gate check passes: `pnpm check`
 
 **Tests**: none
 **Gate**: build

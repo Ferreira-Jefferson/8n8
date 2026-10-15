@@ -78,7 +78,7 @@ export const meuProvedor: LlmProvider = {
 
 2. Registre o provedor em `PROVIDERS`, em `packages/llm/src/providers.ts`.
 3. Escreva `packages/llm/src/__tests__/meu-provedor.test.ts` com um `fetch` falso. Use `openrouter.test.ts` como modelo. Nenhum teste usa a rede.
-4. Acrescente as variáveis ao `.env.example`.
+4. Acrescente as variáveis ao `.env.example`. O diálogo de Configurações lista o provedor novo sozinho, a partir de `PROVIDERS`, e guarda a chave, a URL e o modelo dele sem código a mais.
 5. Rode `pnpm typecheck`, `pnpm check` e `pnpm test`.
 
 ## API com protocolo próprio
@@ -88,5 +88,6 @@ export const meuProvedor: LlmProvider = {
 ## O que não muda
 
 - O pipeline `explain` não importa `llm`. A regra `explain-not-llm` do dependency-cruiser garante isso.
-- O servidor cria um cliente só e o passa ao resumo e aos títulos.
+- O servidor cria um cliente para a config atual e o passa ao resumo, às sugestões e aos títulos. Ele só cria outro quando a config muda.
+- A config vem campo a campo: a variável de ambiente ganha do valor guardado pela tela, e o valor guardado ganha do padrão do provedor. A chave, a URL e o modelo guardados valem só para o provedor com que foram guardados.
 - O id do provedor entra na impressão digital do cache. Trocar de provedor refaz os textos, mesmo com o mesmo nome de modelo.

@@ -70,11 +70,20 @@ O pacote não tem dependências nem scripts de instalação: todo o código vai 
 
 Cada execução gera um token novo, que só a aba aberta pela CLI conhece. Outro programa da máquina não consegue usar a API nem a sua chave de LLM.
 
-Os dados ficam em `~/.8n8` (no Windows, `C:\Users\<nome>\.8n8`): o cache em `cache/` e o histórico em `historico.db`. As variáveis `APP8N8_CACHE_DIR` e `APP8N8_HISTORY_DIR` mudam essas pastas. A CLI instalada lê a config de LLM só das variáveis de ambiente, nunca de um `.env`.
+Os dados ficam em `~/.8n8` (no Windows, `C:\Users\<nome>\.8n8`): o cache em `cache/`, o histórico em `historico.db` e as configurações em `config.json`. As variáveis `APP8N8_CACHE_DIR`, `APP8N8_HISTORY_DIR` e `APP8N8_CONFIG_DIR` mudam essas pastas. A CLI instalada nunca lê um `.env`.
 
 ### A chave do LLM
 
-Os resumos e as sugestões pedem um provedor de LLM. Copie `.env.example` para `.env` na raiz e preencha:
+Os resumos e as sugestões pedem um provedor de LLM. O jeito mais simples é pela tela: clique no botão **Configurações** (no canto de cima, em todas as telas) e preencha:
+
+- **Provedor**: `openrouter` (o padrão) ou `openai-compatible` (OpenAI, Ollama, LM Studio).
+- **Chave de API**: o campo só recebe a chave. Ela nunca volta para a tela: o diálogo diz só "Chave guardada".
+- **URL** e **Modelo**: vazios usam o padrão do provedor.
+- **Gerar o resumo ao selecionar um nó** e **Pedir as sugestões ao selecionar um nó**: desligados, o resumo e as sugestões só são pedidos quando você clica em "Gerar resumo" ou "Pedir sugestões". Assim nada é gasto enquanto você só navega. O que já está no cache aparece sem clique.
+
+A CLI guarda isso em `~/.8n8/config.json`, só com permissão do dono. Trocar o provedor ou a URL apaga a chave guardada, para a chave nunca ir a um servidor que você não escolheu.
+
+Uma variável de ambiente ganha da tela, e o campo dela aparece travado no diálogo. No repositório, `pnpm dev` e `pnpm start` leem o `.env` da raiz. Copie `.env.example` para `.env` e preencha:
 
 ```bash
 cp .env.example .env
@@ -84,6 +93,7 @@ cp .env.example .env
 - `OPENROUTER_API_KEY`: a chave do provedor `openrouter`.
 - `APP8N8_LLM_BASE_URL` e `APP8N8_LLM_API_KEY`: a URL e a chave do provedor `openai-compatible`. Em servidor local, a chave é opcional.
 - `APP8N8_MODEL` e `APP8N8_REVIEW_MODEL`: o modelo do resumo e o do revisor. Vazio usa o padrão do provedor.
+- `APP8N8_AUTO_SUMMARY` e `APP8N8_AUTO_SUGGESTIONS`: `1` pede o resumo ou as sugestões ao selecionar um nó; `0` espera o clique.
 
 **Sem chave, o mapa funciona.** Só os textos (resumos e sugestões) ficam de fora. A estrutura não depende do LLM.
 
