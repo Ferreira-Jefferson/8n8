@@ -5,6 +5,7 @@ import type {
 } from "@8n8/model";
 import { useEffect, useId, useState } from "react";
 import { saveSettings } from "../api";
+import { DonatePanel } from "./DonatePanel";
 
 export interface SettingsDialogProps {
   /** The effective settings; null when the server could not answer. */
@@ -240,6 +241,7 @@ export function SettingsDialog({
             </button>
           </div>
         )}
+        <DonatePanel />
       </div>
     </div>
   );

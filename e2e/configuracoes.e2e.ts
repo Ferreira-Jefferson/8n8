@@ -68,6 +68,24 @@ test.describe("Configurações e LLM sob demanda", () => {
     await resetFake();
   });
 
+  test("the settings end with a Pix do Café section: the Pix QR opens and the code is copyable", async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await openFunction(page);
+    await page.getByRole("button", { name: "Configurações" }).click();
+    const dialog = page.getByRole("dialog", { name: "Configurações" });
+    const qr = dialog.getByRole("img", { name: "QR Code Pix para doação" });
+    await expect(qr).toBeHidden();
+    await dialog.getByText("Pix do Café", { exact: true }).click();
+    await expect(qr).toBeVisible();
+    await dialog.getByRole("button", { name: "Copiar código Pix" }).click();
+    await expect(dialog.getByText("Código copiado")).toBeVisible();
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toMatch(/^000201.*br\.gov\.bcb\.pix.*6304[0-9A-F]{4}$/);
+  });
+
   test("CFG-06, CFG-09: with no provider a node asks nothing, the click says what to configure and opens the settings", async ({
     page,
   }) => {
