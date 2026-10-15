@@ -16,12 +16,13 @@ describe("providerOf", () => {
     expect(PROVIDERS.map((p) => p.id)).toEqual([
       "openrouter",
       "openai-compatible",
+      "claude-code",
     ]);
   });
 
   it("throws, naming the known ids, on an unknown id", () => {
     expect(() => providerOf("nope")).toThrow(
-      'Provedor de LLM desconhecido: "nope". Use um destes: openrouter, openai-compatible.',
+      'Provedor de LLM desconhecido: "nope". Use um destes: openrouter, openai-compatible, claude-code.',
     );
   });
 });

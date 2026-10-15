@@ -56,9 +56,10 @@ T1 → T2 → T3 → T4
 
 **Done when**:
 
-- [ ] Testes com `spawn` falso para cada AC de CC-02 a CC-08
-- [ ] Teste real opcional com `APP8N8_CLAUDE_SMOKE=1`
-- [ ] Gate check passes: `pnpm --filter @8n8/llm test`
+- [x] Testes com `spawn` falso para cada AC de CC-02 a CC-08
+- [x] Teste real opcional com `APP8N8_CLAUDE_SMOKE=1`
+- [x] Gate check passes: `pnpm --filter @8n8/llm test`
+- [x] Desvio: `pnpm check` fica vermelho até a T3, que nomeia o arquivo como exceção da regra `no-child-process`
 
 **Tests**: unit
 **Gate**: quick

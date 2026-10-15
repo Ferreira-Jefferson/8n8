@@ -7,6 +7,7 @@ const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 export const openrouter: LlmProvider = {
   id: "openrouter",
   defaultModel: "~deepseek/deepseek-v4-flash-latest",
+  usesKey: true,
   env: { apiKey: "OPENROUTER_API_KEY", baseURL: "OPENROUTER_BASE_URL" },
   isConfigured: (config) => config.apiKey !== undefined,
   create: (config, options = {}) =>

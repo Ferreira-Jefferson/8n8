@@ -1,10 +1,15 @@
 import type { LlmClient } from "@8n8/model";
+import { claudeCode } from "./claude-code";
 import { openaiCompatible } from "./openai-compatible";
 import { openrouter } from "./openrouter";
-import type { LlmConfig, LlmProvider } from "./provider";
+import type { LlmConfig, LlmProvider, ProviderOptions } from "./provider";
 
 /** The registry: a new provider is one file plus one entry here. */
-export const PROVIDERS: LlmProvider[] = [openrouter, openaiCompatible];
+export const PROVIDERS: LlmProvider[] = [
+  openrouter,
+  openaiCompatible,
+  claudeCode,
+];
 
 export const DEFAULT_PROVIDER = openrouter.id;
 
@@ -21,10 +26,10 @@ export function providerOf(id: string): LlmProvider {
 /** The client for the configured provider; undefined when the config is incomplete (CORE-19). */
 export function createLlmClient(
   config: LlmConfig,
-  options?: { fetch?: typeof globalThis.fetch | undefined },
+  options?: ProviderOptions,
 ): LlmClient | undefined {
   const provider = providerOf(config.provider);
-  return provider.isConfigured(config)
+  return provider.isConfigured(config, options)
     ? provider.create(config, options)
     : undefined;
 }

@@ -7,6 +7,10 @@ type Env = Record<string, string | undefined>;
 /** Empty values count as absent (CORE-21). */
 const present = (value: string | undefined) => value || undefined;
 
+/** The value of a provider variable; a provider without that variable reads nothing. */
+const fromEnv = (env: Env, name: string | undefined) =>
+  name === undefined ? undefined : present(env[name]);
+
 /** A stored provider no registry entry knows (a hand-edited file) counts as absent. */
 const knownProvider = (id: string | undefined) =>
   PROVIDERS.some((p) => p.id === id) ? id : undefined;
@@ -37,8 +41,8 @@ export function resolveLlmConfig(
     present(env.APP8N8_MODEL) ?? present(own.model) ?? provider.defaultModel;
   return {
     provider: provider.id,
-    apiKey: present(env[provider.env.apiKey]) ?? present(own.apiKey),
-    baseURL: present(env[provider.env.baseURL]) ?? present(own.baseURL),
+    apiKey: fromEnv(env, provider.env.apiKey) ?? present(own.apiKey),
+    baseURL: fromEnv(env, provider.env.baseURL) ?? present(own.baseURL),
     model,
     reviewModel: present(env.APP8N8_REVIEW_MODEL) ?? model,
   };

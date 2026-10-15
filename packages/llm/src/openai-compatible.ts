@@ -7,6 +7,7 @@ const DEFAULT_BASE_URL = "https://api.openai.com/v1";
 export const openaiCompatible: LlmProvider = {
   id: "openai-compatible",
   defaultModel: "gpt-4o-mini",
+  usesKey: true,
   env: { apiKey: "APP8N8_LLM_API_KEY", baseURL: "APP8N8_LLM_BASE_URL" },
   isConfigured: (config) =>
     config.apiKey !== undefined || config.baseURL !== undefined,
