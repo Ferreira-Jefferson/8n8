@@ -14,6 +14,7 @@ import type {
   Summary,
   TitlesResponse,
 } from "@8n8/model";
+import { bridgeFetch, vscodeHost } from "./vscode-host";
 
 /** One part's answer, or `stale` when the server no longer has the node (404). */
 export type ExplainResult<T> = ExplainResponse<T> | { status: "stale" };
@@ -29,8 +30,10 @@ export function setSessionToken(token: string | null): void {
   sessionToken = token;
 }
 
-/** Every call to the server goes through here, so none leaves without the token. */
+/** Every call to the server goes through here, so none leaves without the token. In the VS Code webview it goes through the extension instead (VSC-04). */
 function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const host = vscodeHost();
+  if (host) return bridgeFetch(host, url, init);
   const headers = new Headers(init.headers);
   if (sessionToken !== null) headers.set("x-8n8-token", sessionToken);
   return fetch(url, { ...init, headers });

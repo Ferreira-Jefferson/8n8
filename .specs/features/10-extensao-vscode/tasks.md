@@ -71,9 +71,9 @@ T7 → T8
 
 **Done when**:
 
-- [ ] Com a meta `vscode`, cada chamada vira uma mensagem e a resposta vira um `Response`; sem a meta, nada muda
-- [ ] `readLaunch` lê a pasta da meta
-- [ ] Gate check passes: `pnpm --filter @8n8/web test && pnpm e2e` (a CLI serve a tela com caminhos relativos)
+- [x] Com a meta `vscode`, cada chamada vira uma mensagem e a resposta vira um `Response`; sem a meta, nada muda
+- [x] `readLaunch` lê a pasta da meta
+- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm e2e` (a CLI serve a tela com caminhos relativos)
 
 **Tests**: unit
 **Gate**: build

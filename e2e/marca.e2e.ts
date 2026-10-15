@@ -22,7 +22,10 @@ test("the tab says 8n8 and shows the symbol as its icon", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("8n8");
   const icon = page.locator('link[rel="icon"]');
-  await expect(icon).toHaveAttribute("href", "/favicon.svg");
+  // Relative since feature 10 (VSC-04): it resolves to the root's favicon.
+  expect(await icon.evaluate((el) => (el as HTMLLinkElement).href)).toBe(
+    `${OFFLINE}/favicon.svg`,
+  );
   const res = await page.request.get(`${OFFLINE}/favicon.svg`);
   expect(res.status()).toBe(200);
   expect(await res.text()).toContain("<title>8n8</title>");

@@ -2,6 +2,8 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  // Relative paths: the CLI serves the page at the root, the VS Code webview from a <base> (VSC-04).
+  base: "./",
   plugins: [react()],
   server: {
     proxy: {

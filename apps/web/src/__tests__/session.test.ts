@@ -51,3 +51,21 @@ describe("readLaunch (DIST-19)", () => {
     expect(launch(browser(""))).toEqual({ token: null, folder: null });
   });
 });
+
+describe("readLaunch in the VS Code webview (VSC-01)", () => {
+  it("takes the folder from the meta when the fragment has none, and leaves the history alone", () => {
+    const b = browser("");
+    expect(readLaunch(b.location, b.storage, b.history, "C:/proj")).toEqual({
+      token: null,
+      folder: "C:/proj",
+    });
+    expect(b.replaced).toEqual([]);
+  });
+
+  it("lets the fragment's folder win over the meta", () => {
+    const b = browser("#pasta=C%3A%2Ffrag");
+    expect(readLaunch(b.location, b.storage, b.history, "C:/meta").folder).toBe(
+      "C:/frag",
+    );
+  });
+});
