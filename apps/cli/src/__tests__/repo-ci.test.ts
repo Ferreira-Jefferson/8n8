@@ -43,6 +43,26 @@ describe("the workflows (SEC-02)", () => {
     expect(topBlock(text, "permissions")).toEqual(["contents: read"]);
   });
 
+  // A top-level defaults or env changes every job: a shell without -e lets a failed
+  // checksum through, an env can swap the gitleaks rules (SEC-01).
+  it.each(workflows)(
+    "$name has only name, on, permissions and jobs at the top",
+    ({ text }) => {
+      const keys = text
+        .split(/\r?\n/)
+        .filter((l) => /^[A-Za-z_]/.test(l))
+        .map((l) => l.split(":")[0]);
+      expect(keys).toEqual(["name", "on", "permissions", "jobs"]);
+    },
+  );
+
+  it.each(workflows)(
+    "$name never hides a failure with || true or exit 0",
+    ({ text }) => {
+      expect(text).not.toMatch(/\|\|\s*true|\bexit 0\b/);
+    },
+  );
+
   it.each(workflows)("$name never runs on pull_request_target", ({ text }) => {
     expect(text).not.toMatch(/pull_request_target/);
   });
