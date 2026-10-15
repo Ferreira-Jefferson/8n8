@@ -1,9 +1,4 @@
-import type {
-  FlowNode,
-  LinkChannel,
-  LinkRequest,
-  Offer,
-} from "@code2n8n/model";
+import type { FlowNode, LinkChannel, LinkRequest, Offer } from "@8n8/model";
 import type { LinkContext } from "../types";
 
 export function fileNode(path: string): FlowNode {

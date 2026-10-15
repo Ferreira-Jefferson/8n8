@@ -5,7 +5,7 @@ import type {
   GraphResponse,
   LanguagesResponse,
   ProjectResponse,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import { expect, type Page, test } from "@playwright/test";
 import { OFFLINE } from "./mapa";
 
@@ -82,7 +82,7 @@ function makeMista(root: string): void {
 }
 
 test.beforeAll(() => {
-  tmp = mkdtempSync(join(tmpdir(), "code2n8n-multilinguagem-"));
+  tmp = mkdtempSync(join(tmpdir(), "8n8-multilinguagem-"));
   MISTA = join(tmp, "mista");
   makeMista(MISTA);
 });

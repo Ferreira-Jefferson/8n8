@@ -1,4 +1,4 @@
-import type { NodeId } from "@code2n8n/model";
+import type { NodeId } from "@8n8/model";
 import type { CSSProperties } from "react";
 import type { SuggestionCardModel } from "./suggestion-cards";
 

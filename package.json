@@ -1,5 +1,5 @@
 {
-  "name": "code2n8n",
+  "name": "8n8",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -13,13 +13,13 @@
     "check": "biome check . && depcruise packages apps --config .dependency-cruiser.cjs",
     "dev": "pnpm run \"/^dev:/\"",
     "dev:server": "tsx watch packages/server/src/main.ts",
-    "dev:web": "pnpm --filter @code2n8n/web dev",
-    "start": "pnpm --filter @code2n8n/web build && tsx packages/server/src/main.ts start",
+    "dev:web": "pnpm --filter @8n8/web dev",
+    "start": "pnpm --filter @8n8/web build && tsx packages/server/src/main.ts start",
     "e2e": "playwright test"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
-    "@code2n8n/model": "workspace:*",
+    "@8n8/model": "workspace:*",
     "@playwright/test": "1.64.0",
     "@types/node": "22.20.5",
     "dependency-cruiser": "18.6.0",

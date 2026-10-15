@@ -6,7 +6,7 @@ import type {
   LanguageInfo,
   ProjectResponse,
   SnippetLanguage,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import {
   act,
   cleanup,

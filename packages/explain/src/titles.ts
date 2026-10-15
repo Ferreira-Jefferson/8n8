@@ -4,7 +4,7 @@ import type {
   TitleItem,
   TitleRequest,
   TitlesResponse,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import {
   diffReasons,
   type Fingerprint,

@@ -1,4 +1,4 @@
-import type { ExternalCategory } from "@code2n8n/model";
+import type { ExternalCategory } from "@8n8/model";
 
 /**
  * Tested in order. A plain name matches the first segment of the callee or

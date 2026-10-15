@@ -1,4 +1,4 @@
-import type { FlowEdge, FlowNode, NodeId } from "@code2n8n/model";
+import type { FlowEdge, FlowNode, NodeId } from "@8n8/model";
 import { Graph, layout } from "@dagrejs/dagre";
 
 export const NODE_WIDTH = 320;

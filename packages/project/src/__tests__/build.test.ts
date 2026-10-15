@@ -1,4 +1,4 @@
-import type { SourceFile } from "@code2n8n/model";
+import type { SourceFile } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { analyzeProject, buildProject } from "../build";
 import { fakePlugin } from "./fake-plugin";

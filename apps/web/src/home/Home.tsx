@@ -1,4 +1,4 @@
-import type { HistoryEntry, HistoryItem } from "@code2n8n/model";
+import type { HistoryEntry, HistoryItem } from "@8n8/model";
 import { useEffect, useState } from "react";
 import { fetchHistory, fetchHistoryEntry, starHistory } from "../api";
 import { relativeDate } from "../history/HistoryDrawer";

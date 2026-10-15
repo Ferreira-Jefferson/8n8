@@ -1,4 +1,4 @@
-import type { Explanation, FlowNode, NodeId } from "@code2n8n/model";
+import type { Explanation, FlowNode, NodeId } from "@8n8/model";
 import type { Level } from "./project-level";
 
 export interface SuggestionCardModel {

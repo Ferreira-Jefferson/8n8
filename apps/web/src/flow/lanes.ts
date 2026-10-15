@@ -1,4 +1,4 @@
-import type { FlowEdge, NodeId } from "@code2n8n/model";
+import type { FlowEdge, NodeId } from "@8n8/model";
 import { NODE_HEIGHT, NODE_WIDTH, type Position } from "./layout";
 
 interface Run {

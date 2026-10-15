@@ -1,4 +1,4 @@
-import type { FlowNode, NodeKind, NodeTitle } from "@code2n8n/model";
+import type { FlowNode, NodeKind, NodeTitle } from "@8n8/model";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type ExplainOrigin, fetchTitles } from "../../api";

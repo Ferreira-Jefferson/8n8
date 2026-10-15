@@ -1,4 +1,4 @@
-import type { FlowNode, Graph } from "@code2n8n/model";
+import type { FlowNode, Graph } from "@8n8/model";
 import type { Node, Tree } from "web-tree-sitter";
 
 /** 1-based lines of every ERROR and MISSING node. */

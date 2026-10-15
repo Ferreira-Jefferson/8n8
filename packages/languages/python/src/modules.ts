@@ -1,4 +1,4 @@
-import { childId, fileId, type NodeId } from "@code2n8n/model";
+import { childId, fileId, type NodeId } from "@8n8/model";
 import type { Node } from "web-tree-sitter";
 import { allocateTopLevel } from "./build-graph";
 import { importAliases } from "./imports";

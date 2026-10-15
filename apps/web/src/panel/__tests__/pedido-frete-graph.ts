@@ -1,6 +1,6 @@
-import type { Graph } from "@code2n8n/model";
+import type { Graph } from "@8n8/model";
 
-/** Graph of languages/python fixtures/pedido_frete.py, as @code2n8n/lang-python returns it. */
+/** Graph of languages/python fixtures/pedido_frete.py, as @8n8/lang-python returns it. */
 export const pedidoFreteGraph: Graph = {
   language: "python",
   empty: false,

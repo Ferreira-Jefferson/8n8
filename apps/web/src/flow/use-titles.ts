@@ -1,4 +1,4 @@
-import type { FlowNode, NodeId } from "@code2n8n/model";
+import type { FlowNode, NodeId } from "@8n8/model";
 import { useEffect, useRef, useState } from "react";
 import { type ExplainOrigin, fetchTitles } from "../api";
 

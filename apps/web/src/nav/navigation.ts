@@ -1,4 +1,4 @@
-import type { FlowNode, Graph, NodeId } from "@code2n8n/model";
+import type { FlowNode, Graph, NodeId } from "@8n8/model";
 
 /** An opened level; `via` is the card clicked on the level above. */
 export interface Opened {

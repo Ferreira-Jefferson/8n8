@@ -19,7 +19,7 @@ import {
 let dir: string;
 let cache: TitleCache;
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "code2n8n-titles-"));
+  dir = await mkdtemp(join(tmpdir(), "8n8-titles-"));
   cache = createTitleCache(dir);
 });
 afterEach(async () => {

@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import type { Graph, HistoryEntry, ProjectResponse } from "@code2n8n/model";
+import type { Graph, HistoryEntry, ProjectResponse } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { openHistory } from "../history";
 
@@ -127,7 +127,7 @@ describe("history", () => {
   });
 
   it("migrates a v1 file: the saved rows stay and start unstarred", () => {
-    const dir = mkdtempSync(join(tmpdir(), "code2n8n-history-v1-"));
+    const dir = mkdtempSync(join(tmpdir(), "8n8-history-v1-"));
     const path = join(dir, "history.db");
     try {
       const old = new DatabaseSync(path);

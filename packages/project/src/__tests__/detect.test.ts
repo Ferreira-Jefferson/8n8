@@ -1,4 +1,4 @@
-import type { LanguagePlugin } from "@code2n8n/model";
+import type { LanguagePlugin } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { detectLanguage, pluginForPath } from "../detect";
 import { fakePlugin } from "./fake-plugin";

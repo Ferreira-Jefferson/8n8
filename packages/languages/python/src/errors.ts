@@ -1,5 +1,5 @@
-import { markErrorLines } from "@code2n8n/lang-treesitter";
-import type { Graph } from "@code2n8n/model";
+import { markErrorLines } from "@8n8/lang-treesitter";
+import type { Graph } from "@8n8/model";
 import type { Node, Tree } from "web-tree-sitter";
 
 /**

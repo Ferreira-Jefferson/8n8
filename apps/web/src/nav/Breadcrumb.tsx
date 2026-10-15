@@ -1,4 +1,4 @@
-import type { Graph, NodeId } from "@code2n8n/model";
+import type { Graph, NodeId } from "@8n8/model";
 import { Fragment } from "react";
 import { provisionalLabel } from "../flow/card";
 import type { Opened } from "./navigation";

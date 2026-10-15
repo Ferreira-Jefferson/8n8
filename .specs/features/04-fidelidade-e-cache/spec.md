@@ -35,7 +35,7 @@ Depende de: 01-fatia-central.
 | Assumption / decision | Chosen default | Rationale | Confirmed? |
 | --------------------- | -------------- | --------- | ---------- |
 | Camadas de revisão | Duas camadas: (1) checagens determinísticas no código, sem LLM; (2) um revisor LLM que julga frase a frase e dá as linhas de evidência | A camada 1 pega invenções baratas e certas, como números, unidades e identificadores. A camada 2 pega afirmações que nenhuma regra fixa detecta. | y |
-| Modelo do revisor | `CODE2N8N_REVIEW_MODEL`. Sem a variável, usa o mesmo modelo de `CODE2N8N_MODEL`. | O pedido é barato e não exige mais configuração. | n |
+| Modelo do revisor | `APP8N8_REVIEW_MODEL`. Sem a variável, usa o mesmo modelo de `APP8N8_MODEL`. | O pedido é barato e não exige mais configuração. | n |
 | O que é "frase" | Cada frase do resumo, cada entrada, cada saída e cada sugestão (o comando e o motivo juntos) | São todos os textos do LLM que o usuário vê. | n |
 | Como as unidades casam | Unidades de uma letra (`g`, `t`, `m`, `l`, `s`, `h`) só contam logo depois de um número. As demais contam em qualquer lugar. A presença no código é checada por token inteiro, sem diferenciar maiúsculas, e identificadores são quebrados em `_` e na fronteira entre dígito e letra. Uma unidade de uma letra que aparece só dentro de uma palavra do código (`status`) não conta como presente. | Evita falso positivo em prosa comum e falso negativo por pedaço de texto. | y |
 | Unidades checadas na camada 1 | `kg`, `g`, `mg`, `t`, `km`, `m`, `cm`, `mm`, `l`, `ml`, `R$`, `US$`, `€`, `%`, `ms`, `s`, `seg`, `segundos`, `min`, `minutos`, `h`, `horas`, `dias`, `KB`, `MB`, `GB` | São as unidades mais comuns. A lista é extensível. | n |
@@ -44,7 +44,7 @@ Depende de: 01-fatia-central.
 | Vizinhos | Os nomes dos chamadores e dos chamados diretos, ordenados | É o mesmo contexto que o CORE-17 envia ao LLM. | n |
 | Normalização do código | Remove espaços no fim de cada linha e converte CRLF em LF antes do hash | Mudar só o editor ou o sistema operacional não deve gerar nova cobrança. | n |
 | Linhas no cache | Guardadas relativas ao início do nó e convertidas na leitura | O mesmo código em outra posição continua apontando as linhas certas. | n |
-| Validação E2E | Os fluxos FID e CACHE são cobertos por testes Playwright no navegador real, contra o servidor real. O servidor aponta para um falso OpenRouter local (`OPENROUTER_BASE_URL`), que dá respostas roteirizadas e conta as chamadas, e usa um cache isolado (`CODE2N8N_CACHE_DIR`). Só a troca de modelo ou de prompt fica apenas em teste unitário, porque exige reiniciar o servidor. | Pedido do usuário: validar com Playwright o pipeline de verdade. | y |
+| Validação E2E | Os fluxos FID e CACHE são cobertos por testes Playwright no navegador real, contra o servidor real. O servidor aponta para um falso OpenRouter local (`OPENROUTER_BASE_URL`), que dá respostas roteirizadas e conta as chamadas, e usa um cache isolado (`APP8N8_CACHE_DIR`). Só a troca de modelo ou de prompt fica apenas em teste unitário, porque exige reiniciar o servidor. | Pedido do usuário: validar com Playwright o pipeline de verdade. | y |
 
 **Open questions:** none. Todas foram resolvidas ou registradas acima.
 
@@ -79,7 +79,7 @@ Depende de: 01-fatia-central.
 12. WHEN o resumo é exibido THEN o sistema SHALL mostrar ao lado de cada frase as suas linhas de evidência (ex.: "L5" ou "L5–7").  <!-- FID-12 -->
 13. WHEN o usuário clica nas linhas de evidência de uma frase THEN o sistema SHALL destacar essas linhas no código do nó.  <!-- FID-13 -->
 14. WHEN o detalhe de um nó é exibido THEN o sistema SHALL listar, abaixo do resumo e sem usar o LLM, cada efeito externo do nó (passos HTTP, BANCO, ARQUIVO, E-MAIL e EXTERNO), com a chamada e a linha, tirados do grafo.  <!-- FID-14 -->
-15. The system SHALL usar o modelo de `CODE2N8N_REVIEW_MODEL` no revisor e, sem a variável, o mesmo modelo do resumo.  <!-- FID-15 -->
+15. The system SHALL usar o modelo de `APP8N8_REVIEW_MODEL` no revisor e, sem a variável, o mesmo modelo do resumo.  <!-- FID-15 -->
 
 **Independent Test**: Com um LLM falso cujo rascunho diz "pesa 5 kg" para um código sem "5" nem "kg", a frase deve ser cortada e aparecer o selo "Revisado com cortes". Com um rascunho fiel, deve aparecer "Revisado", e cada frase deve mostrar linhas que, ao clicar, ficam destacadas no código. Em `calcular_frete`, a lista de efeitos externos deve mostrar `requests.get` (HTTP) com a linha certa, sem nenhuma chamada ao LLM.
 

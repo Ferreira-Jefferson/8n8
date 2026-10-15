@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { TitleItem } from "@code2n8n/model";
+import type { TitleItem } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { buildTitlePrompt, parseTitles, titleMessage } from "../title-prompt";
 import { PY } from "./py";

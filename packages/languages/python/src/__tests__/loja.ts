@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import type { SourceFile } from "@code2n8n/model";
+import type { SourceFile } from "@8n8/model";
 
 /** The `.py` files of the `projeto-loja` fixture, in code order. */
 const LOJA_PATHS = [

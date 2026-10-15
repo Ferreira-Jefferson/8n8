@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { ExplainRequest, UpdateReason } from "@code2n8n/model";
+import type { ExplainRequest, UpdateReason } from "@8n8/model";
 
 /** Separate components so a change can be reported by reason (CACHE-01, CACHE-04). */
 export interface Fingerprint {

@@ -8,7 +8,7 @@ import {
   type NodeId,
   type ProjectResponse,
   type SnippetLanguage,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import {
   useCallback,
   useEffect,
@@ -110,7 +110,7 @@ function isEditable(target: EventTarget | null): boolean {
   );
 }
 
-const PANEL_WIDTH_KEY = "code2n8n.panelWidth";
+const PANEL_WIDTH_KEY = "8n8.panelWidth";
 
 /** The width the viewer last dragged the panel to; storage may be blocked. */
 function savedPanelWidth(): number | undefined {

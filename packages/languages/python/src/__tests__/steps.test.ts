@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import type { FlowNode, Graph } from "@code2n8n/model";
+import type { FlowNode, Graph } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { buildGraph } from "../build-graph";
 import { loadPythonParser } from "../parse";

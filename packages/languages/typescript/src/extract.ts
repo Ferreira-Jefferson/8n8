@@ -1,5 +1,5 @@
-import { markSyntaxErrors } from "@code2n8n/lang-treesitter";
-import type { Graph } from "@code2n8n/model";
+import { markSyntaxErrors } from "@8n8/lang-treesitter";
+import type { Graph } from "@8n8/model";
 import { buildGraph } from "./build-graph";
 import { parsers } from "./parse";
 

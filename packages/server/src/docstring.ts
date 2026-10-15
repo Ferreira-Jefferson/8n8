@@ -1,5 +1,5 @@
-import { docstringOmitted } from "@code2n8n/explain";
-import type { ExplainRequest, LineRange } from "@code2n8n/model";
+import { docstringOmitted } from "@8n8/explain";
+import type { ExplainRequest, LineRange } from "@8n8/model";
 
 /**
  * The code of a node with its docstring masked: same lines, docstring lines blank,

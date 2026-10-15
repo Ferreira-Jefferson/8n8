@@ -1,5 +1,5 @@
 {
-  "name": "@code2n8n/lang-python",
+  "name": "@8n8/lang-python",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -11,13 +11,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@code2n8n/lang-treesitter": "workspace:*",
-    "@code2n8n/model": "workspace:*",
+    "@8n8/lang-treesitter": "workspace:*",
+    "@8n8/model": "workspace:*",
     "tree-sitter-python": "0.25.0",
     "web-tree-sitter": "0.27.1"
   },
   "devDependencies": {
-    "@code2n8n/lang-testkit": "workspace:*",
+    "@8n8/lang-testkit": "workspace:*",
     "@types/node": "22.20.5"
   }
 }

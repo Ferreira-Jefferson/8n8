@@ -1,6 +1,6 @@
 import { readFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { Graph } from "@code2n8n/model";
+import type { Graph } from "@8n8/model";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { resetFake } from "./fake-llm";
 

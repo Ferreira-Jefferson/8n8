@@ -130,7 +130,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
   3. Vizinhos: mesmo arquivo → rótulo; outro arquivo → `<path>:<rótulo>` (por exemplo `frete/calculo.py:calcular_frete`), para distinguir nomes iguais (PROJ-09).
   4. `nodeId` enviado ao `explain` = `<root real POSIX>|<id do nó>`. É só a identidade de cache (AD-009); o `explain` não muda.
 - **PROJ-08**: o `serve` já usa `hostname: "127.0.0.1"`. Extrair `listenOptions(port)` para testar o `hostname` em unidade. A guarda de `Host` vale para a rota nova.
-- `package.json` do servidor declara `@code2n8n/input`.
+- `package.json` do servidor declara `@8n8/input`.
 
 ### C5. Web (`apps/web`) (PROJ-02, 03, 04, 05, 06, 09)
 
@@ -153,7 +153,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 ### C6. Fronteiras: `.dependency-cruiser.cjs` (AD-005)
 
 - Regra nova `input-only-model`: `^packages/input/` só importa `model`.
-- `extract-python-only-model` e `explain-only-model` já impedem `input`. `web-only-model` já impede `@code2n8n/input`.
+- `extract-python-only-model` e `explain-only-model` já impedem `input`. `web-only-model` já impede `@8n8/input`.
 - O comentário de `server-only-core-packages` passa a citar `input`.
 
 ---
@@ -226,7 +226,7 @@ loja/
 | `from . import x` gera o alias `..x` | `packages/extract-python/src/imports.ts:17` | Import relativo resolveria o nível errado | C3 corrige a junção quando o módulo termina em `.`; teste dedicado |
 | Explicação relê e extrai a pasta inteira a cada clique | `server/src/app.ts` (C4) | Lento em pasta grande | Medir na pasta real do usuário. Se passar de ~1 s, adotar a abordagem C só como cache em memória validado pelo sha256 do arquivo |
 | POST "simples" de outra página local (`text/plain`) passa pela guarda de `Host` | `server/src/app.ts:26` | Página maliciosa dispara leituras e gasto de LLM | As rotas `/api/project` e `/api/explain` exigem `content-type: application/json` (força preflight, que falha sem CORS) → `415` |
-| A guarda não cobre a pasta de cache dentro do repo | `server/src/main.ts` | Analisar o próprio repo do code2n8n escreve em `.cache/` dentro dele | Aceito: o cache é do app, não da pasta analisada, e fica em `.cache/` (fora do git) |
+| A guarda não cobre a pasta de cache dentro do repo | `server/src/main.ts` | Analisar o próprio repo do 8n8 escreve em `.cache/` dentro dele | Aceito: o cache é do app, não da pasta analisada, e fica em `.cache/` (fora do git) |
 | Colisão teórica de ID: pasta chamada `x.py` com arquivo `fn:y.py` | C1 | Dois nós com o mesmo ID | Impossível no Windows (`:` proibido). Aceito; `extractProject` lança erro se achar ID repetido |
 | Feature 04 em andamento edita `App.tsx`, `DetailPanel.tsx`, `api.test.ts` | `apps/web/src` | Conflito de merge | Agendar a fase web desta feature depois da T22 |
 

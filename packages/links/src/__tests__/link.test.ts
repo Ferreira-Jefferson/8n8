@@ -1,4 +1,4 @@
-import type { FlowNode } from "@code2n8n/model";
+import type { FlowNode } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { linkProject } from "../link";
 import { fileNode, innerNode, nodeId, offer, request } from "./helpers";

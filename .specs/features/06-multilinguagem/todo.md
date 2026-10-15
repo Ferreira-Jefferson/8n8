@@ -32,7 +32,7 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 
 ## Fase 2 — Montagem do projeto vira genérica
 
-- [x] 2.1 **[1ª]** Criar o pacote `@code2n8n/project`. Ele recebe os arquivos e os plugins e monta o `Graph` do projeto.
+- [x] 2.1 **[1ª]** Criar o pacote `@8n8/project`. Ele recebe os arquivos e os plugins e monta o `Graph` do projeto.
 - [x] 2.2 **[1ª]** Mover do `extract-python/src/project.ts` para o pacote novo: `layoutProject`, `folderNode`, a montagem do nó `file`, `lastLine`, a checagem de id duplicado e a deduplicação das arestas `imports`.
 - [x] 2.3 **[2ª]** Falha isolada por arquivo. Hoje um arquivo que o parser não lê lança erro e derruba o projeto inteiro (`project.ts`: `throw new Error(\`tree-sitter could not parse ...\`)`). O arquivo com falha vira um nó `file` com erro, e o resto do mapa aparece.
 - [x] 2.4 **[2ª]** Validar a saída de todo plugin antes de montar: id único, `parentId` existente, arestas com origem e destino existentes, linhas dentro do arquivo. Um plugin com bug gera erro claro, não uma tela quebrada.
@@ -40,10 +40,10 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 
 ## Fase 3 — Python vira um plugin
 
-- [x] 3.0 **[D2]** Mover `packages/extract-python` para `packages/languages/python` (pacote `@code2n8n/lang-python`). Acrescentar `packages/languages/*` ao `pnpm-workspace.yaml`. Fazer o move num commit só, sem mudar código, para o histórico do Git seguir os arquivos.
+- [x] 3.0 **[D2]** Mover `packages/extract-python` para `packages/languages/python` (pacote `@8n8/lang-python`). Acrescentar `packages/languages/*` ao `pnpm-workspace.yaml`. Fazer o move num commit só, sem mudar código, para o histórico do Git seguir os arquivos.
 - [x] 3.1 **[1ª]** O plugin exporta `pythonPlugin` e fica só com o que é de Python: `steps`, `build-graph`, `calls`, `bound`, `imports`, `modules`, `classify`.
 - [x] 3.2 **[2ª]** A tabela de `classify.ts` (requests, sqlite3, smtplib) fica no plugin. O enum `ExternalCategory` fica no `model`, porque vale para qualquer linguagem.
-- [x] 3.3 **[2ª]** `markSyntaxErrors` e `Parser.init()` vão para um pacote auxiliar de Tree-sitter, opcional (`@code2n8n/treesitter`). Hoje `Parser.init()` roda por gramática. Com dois plugins, o init roda uma vez só, e a versão do `web-tree-sitter` fica uma só.
+- [x] 3.3 **[2ª]** `markSyntaxErrors` e `Parser.init()` vão para um pacote auxiliar de Tree-sitter, opcional (`@8n8/treesitter`). Hoje `Parser.init()` roda por gramática. Com dois plugins, o init roda uma vez só, e a versão do `web-tree-sitter` fica uma só.
 - [x] 3.4 **[2ª]** Mudar a regra do dependency-cruiser de `extract-python` para `packages/languages/*`: um plugin importa só `model` (e o auxiliar de Tree-sitter), nunca outro plugin.
 - [x] 3.5 **[1ª]** Os snapshots e testes do Python passam sem mudança.
 
@@ -79,7 +79,7 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 
 ## Fase 8 — Prova e documentação para open source
 
-- [x] 8.1 **[D1]** Plugin `packages/languages/typescript` (`@code2n8n/lang-typescript`): funções, classes, chamadas, imports, condições, laços e retornos. Passa na suíte de conformidade (2.5). Nenhum arquivo do core muda para ele entrar. Feito, com 219 testes próprios. Falta ligar a suíte de conformidade (2.5) quando `@code2n8n/lang-testkit` entrar.
+- [x] 8.1 **[D1]** Plugin `packages/languages/typescript` (`@8n8/lang-typescript`): funções, classes, chamadas, imports, condições, laços e retornos. Passa na suíte de conformidade (2.5). Nenhum arquivo do core muda para ele entrar. Feito, com 219 testes próprios. Falta ligar a suíte de conformidade (2.5) quando `@8n8/lang-testkit` entrar.
 - [x] 8.2 **[1ª]** Guia `docs/adicionar-linguagem.md`: o contrato, o passo a passo, a suíte de conformidade e um exemplo.
 - [x] 8.3 **[2ª]** O repositório não tem `README.md` nem `CONTRIBUTING.md`. Para o lançamento open source, os dois precisam existir.
 - [x] 8.4 **[2ª]** O `CLAUDE.md` e as ADs falam só de Python em alguns pontos. Atualizar.
@@ -94,7 +94,7 @@ O plugin não conhece outra linguagem. Ele só declara dois tipos de dado neutro
 - **Pedido:** o que o arquivo procura. Exemplos: `requests.post(".../api/frete")` em Python, `subprocess.run(["node", "b.ts"])`.
 
 - [x] 9.1 Tipos `Offer` e `Request` no `model`, com o nó e a linha de origem. Mesma regra da AD-001: só parsing, sem LLM.
-- [x] 9.2 Pacote `packages/links` (`@code2n8n/links`). Importa só o `model`. Um arquivo por canal, todos com o mesmo contrato `Linker`:
+- [x] 9.2 Pacote `packages/links` (`@8n8/links`). Importa só o `model`. Um arquivo por canal, todos com o mesmo contrato `Linker`:
   - `http.ts`: um pedido a uma URL casa com a rota de mesmo método e caminho.
   - `process.ts`: um pedido que cita o caminho de um arquivo do projeto (`node b.ts`, `python a.py`) casa com esse arquivo.
   - `name.ts`: uma chamada a um nome que a própria linguagem não define casa com uma função de mesmo nome em outra linguagem.
@@ -109,7 +109,7 @@ O plugin não conhece outra linguagem. Ele só declara dois tipos de dado neutro
 O pipeline já fala com o LLM por uma interface só (`LlmClient.complete`), e os testes já usam um cliente falso. Isso fica. O problema: o conhecimento do provedor e do modelo está espalhado em quatro lugares.
 
 - [x] 10.1 O contrato `LlmClient` sai de `openrouter.ts` e vai para o `model`, como o `LanguagePlugin`. O `explain` passa a depender só do contrato, nunca de um provedor.
-- [x] 10.2 Pacote `packages/llm` (`@code2n8n/llm`), com um arquivo por provedor e o mesmo contrato `LlmProvider` (`id`, `create(config)`):
+- [x] 10.2 Pacote `packages/llm` (`@8n8/llm`), com um arquivo por provedor e o mesmo contrato `LlmProvider` (`id`, `create(config)`):
   - `openrouter.ts`: o cliente de hoje.
   - `openai-compatible.ts`: qualquer API compatível com a da OpenAI (OpenAI, Ollama, LM Studio), só com `baseURL` e chave. Para um projeto open source, permite rodar com um modelo local e de graça.
 - [x] 10.3 Os ajustes por modelo saem do código e vão para uma tabela de perfis no `llm`:
@@ -117,7 +117,7 @@ O pipeline já fala com o LLM por uma interface só (`LlmClient.complete`), e os
   - hoje, `review.ts:76` (`jsonMode`) decide o modo JSON pelo prefixo `google/`, dentro do pipeline.
   - O perfil diz: modo JSON, raciocínio, roteamento. O pipeline pergunta ao cliente e não conhece nenhum modelo.
 - [x] 10.4 Configuração única. Hoje o `main.ts` lê `OPENROUTER_API_KEY` e `OPENROUTER_BASE_URL` duas vezes (`composeExplain` e `composeTitles`) e cria dois clientes. Passa a existir uma função `resolveLlmConfig(env)` no `llm`, que devolve provedor, chave, URL, modelo e modelo do revisor. O servidor cria um cliente só e o passa aos dois.
-- [x] 10.5 Variável nova `CODE2N8N_LLM_PROVIDER` (padrão `openrouter`). As variáveis atuais continuam valendo, para não quebrar o `.env` de ninguém. Atualizar o `.env.example`.
+- [x] 10.5 Variável nova `APP8N8_LLM_PROVIDER` (padrão `openrouter`). As variáveis atuais continuam valendo, para não quebrar o `.env` de ninguém. Atualizar o `.env.example`.
 - [x] 10.6 `DEFAULT_MODEL` vira o padrão do provedor `openrouter`, não do sistema. Cada provedor tem o seu padrão.
 - [x] 10.7 Cache: o id do provedor entra na impressão digital. O mesmo nome de modelo em dois provedores pode dar respostas diferentes.
 - [x] 10.8 Regra no dependency-cruiser: `explain` não importa `llm`, e `llm` importa só o `model`. Só o servidor junta os dois.

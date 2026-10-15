@@ -3,7 +3,7 @@ import {
   fileId,
   type LinkRequest,
   type Offer,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import type { Node } from "web-tree-sitter";
 import { boundNames } from "./bound";
 import { dottedName } from "./calls";

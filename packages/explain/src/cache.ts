@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { Explanation, NodeId, ReviewStatus } from "@code2n8n/model";
+import type { Explanation, NodeId, ReviewStatus } from "@8n8/model";
 import { z } from "zod";
 import type { Fingerprint } from "./fingerprint";
 

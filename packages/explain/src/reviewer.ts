@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { ClaimId } from "@code2n8n/model";
+import type { ClaimId } from "@8n8/model";
 import { z } from "zod";
 import { type Problem, UNITS } from "./checks";
 import type { PromptLanguage } from "./language";

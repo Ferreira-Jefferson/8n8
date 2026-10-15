@@ -1,4 +1,4 @@
-import { lineRange } from "@code2n8n/lang-treesitter";
+import { lineRange } from "@8n8/lang-treesitter";
 import {
   childId,
   type FlowEdge,
@@ -7,7 +7,7 @@ import {
   type LineRange,
   type NodeId,
   topLevelId,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import type { Node, Tree } from "web-tree-sitter";
 import { boundNames } from "./bound";
 import type { CallContext } from "./calls";

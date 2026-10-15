@@ -62,7 +62,7 @@ sequenceDiagram
 
 ### Fronteiras e como o build as garante (AD-005)
 
-1. Cada `package.json` exporta só `"."` → `./src/index.ts`. Um import como `@code2n8n/model/src/ids` falha na resolução.
+1. Cada `package.json` exporta só `"."` → `./src/index.ts`. Um import como `@8n8/model/src/ids` falha na resolução.
 2. O pnpm cria um `node_modules` estrito. Um pacote só resolve as dependências que declara.
 3. O `.dependency-cruiser.cjs` roda em `pnpm check` e bloqueia:
    - ciclos;
@@ -76,7 +76,7 @@ Não usamos project references do TypeScript. Os pacotes exportam o código-font
 
 ## Code Reuse Analysis
 
-O code2n8n ainda não tem código. O reuso vem do roadmap.
+O 8n8 ainda não tem código. O reuso vem do roadmap.
 
 | Componente | Local | Como usar |
 | --- | --- | --- |
@@ -98,7 +98,7 @@ O code2n8n ainda não tem código. O reuso vem do roadmap.
 
 ## Components
 
-### model: `packages/model` (`@code2n8n/model`)
+### model: `packages/model` (`@8n8/model`)
 
 - **Purpose**: Tipos do grafo e da explicação, regras de ID e o contrato `Extractor`. Não faz I/O.
 - **Interfaces**:
@@ -111,7 +111,7 @@ O code2n8n ainda não tem código. O reuso vem do roadmap.
 - **Dependencies**: nenhuma.
 - **ACs**: CORE-04 (regras de ID), CORE-06 (texto do erro), CORE-14 (`sliceLines`).
 
-### extract-python: `packages/extract-python` (`@code2n8n/extract-python`)
+### extract-python: `packages/extract-python` (`@8n8/extract-python`)
 
 - **Purpose**: Converte código Python num `Graph` de forma determinística, sem LLM.
 - **Interfaces**:
@@ -137,17 +137,17 @@ O code2n8n ainda não tem código. O reuso vem do roadmap.
   5. Tabela, testada nesta ordem: HTTP (`requests`, `httpx`, `urllib`, `aiohttp`); BANCO (`sqlite3`, `psycopg`, `sqlalchemy`, `.execute`, `.commit`); ARQUIVO (`open`, `pathlib`); EMAIL (`smtplib`). O resto é EXTERNO.
   6. Fios `calls` ligam funções, métodos, classes e o `module` às funções e classes que eles chamam (CORE-02). Há um fio por par, sem repetição.
   7. Erros de sintaxe: cada nó `ERROR` ou `MISSING` marca `syntaxError.line` no nó mais interno do grafo que contém a linha. Fora de qualquer função, a marca vai para o `module`, que é criado se faltar (CORE-06). Grafo sem nós → `empty: true` (CORE-07).
-- **Dependencies**: `@code2n8n/model`, `web-tree-sitter`, `tree-sitter-python`.
+- **Dependencies**: `@8n8/model`, `web-tree-sitter`, `tree-sitter-python`.
 - **Reuses**: nada. É código novo.
 - **ACs**: CORE-01..13 e CORE-06/07.
 
-### explain: `packages/explain` (`@code2n8n/explain`)
+### explain: `packages/explain` (`@8n8/explain`)
 
 - **Purpose**: Gera a explicação de um nó com uma única chamada ao LLM, com cache em disco e filtro de linhas.
 - **Interfaces**:
   - `interface LlmClient { complete(req: { model: string; messages: ChatMessage[]; json: 'native' | 'prompt' }): Promise<string> }`;
   - `createOpenRouterClient(apiKey: string): LlmClient`: implementação real com o `openai` SDK, timeout de 60 s e `maxRetries: 0`;
-  - `resolveModel(env: Record<string, string | undefined>): string`: retorna `CODE2N8N_MODEL` ou `~deepseek/deepseek-v4-flash-latest` (CORE-21);
+  - `resolveModel(env: Record<string, string | undefined>): string`: retorna `APP8N8_MODEL` ou `~deepseek/deepseek-v4-flash-latest` (CORE-21);
   - `buildSystemPrompt(ptsRules: string): { text: string; version: string }`: o texto junta o papel, o formato JSON com exemplo e as regras do PTS. `version` = os primeiros 12 hex do sha256 do texto. Editar o PTS invalida o cache sozinho;
   - `createDiskCache(dir: string): ExplainCache`, com `get(key)` e `set(entry)`. A gravação é atômica: arquivo temporário e depois `rename`;
   - `explainNode(req: ExplainRequest, deps: ExplainDeps): Promise<ExplainResponse>`.
@@ -161,11 +161,11 @@ O code2n8n ainda não tem código. O reuso vem do roadmap.
   7. Grava o resultado no cache com linhas relativas. Converte para linhas absolutas (`line + range.start - 1`) e retorna.
 - **Por que linhas relativas**: a chave usa só o código. Se a mesma função muda de posição no trecho, o cache acerta e as linhas absolutas continuam corretas.
 - **Modo JSON**: `native` (`response_format: json_object`) para todo modelo que não começa com `google/`, e `prompt` para `google/*`. A regra copia o roadmap. O prompt de sistema sempre pede "responda só com JSON", porque o DeepSeek exige a palavra "JSON" no prompt.
-- **Dependencies**: `@code2n8n/model`, `openai`, `zod`, `node:crypto`, `node:fs`.
+- **Dependencies**: `@8n8/model`, `openai`, `zod`, `node:crypto`, `node:fs`.
 - **Reuses**: o padrão do `llm.ts` do roadmap, reduzido.
 - **ACs**: CORE-16..18, CORE-19 (status), CORE-20 (status), CORE-21, CORE-22.
 
-### server: `packages/server` (`@code2n8n/server`)
+### server: `packages/server` (`@8n8/server`)
 
 - **Purpose**: Raiz de composição. Lê o ambiente, liga o extrator ao explain e expõe a API em `127.0.0.1`.
 - **Interfaces**:
@@ -177,10 +177,10 @@ O code2n8n ainda não tem código. O reuso vem do roadmap.
   - o corpo de cada requisição é validado com zod;
   - um middleware recusa todo `Host` diferente de `127.0.0.1:4317` ou `localhost:4317`, contra DNS rebinding;
   - os vizinhos de um nó saem dos fios `calls` do grafo extraído pelo próprio servidor, nunca da web.
-- **Dependencies**: `@code2n8n/model`, `@code2n8n/extract-python`, `@code2n8n/explain`, `hono`, `@hono/node-server`, `zod`.
+- **Dependencies**: `@8n8/model`, `@8n8/extract-python`, `@8n8/explain`, `hono`, `@hono/node-server`, `zod`.
 - **ACs**: CORE-05 (o grafo não passa pelo explain), CORE-17 (o servidor monta o pedido), CORE-19 (cliente opcional), CORE-20 (502).
 
-### web: `apps/web` (`@code2n8n/web`)
+### web: `apps/web` (`@8n8/web`)
 
 - **Purpose**: Cola o trecho, desenha um nível do grafo por vez, navega pelos níveis e mostra o painel do nó.
 - **Interfaces e módulos**:
@@ -193,14 +193,14 @@ O code2n8n ainda não tem código. O reuso vem do roadmap.
   - `panel/DetailPanel.tsx`: mostra o intervalo de linhas e o `CodeView` do nó (CORE-14). Para `function` e `class`, busca a explicação ao abrir. Mostra o resumo, as entradas, as saídas e as sugestões. Para `no-key`, mostra "Configure OPENROUTER_API_KEY para ver resumos". Para `error`, mostra "Resumo indisponível" com o botão "Tentar de novo" (CORE-16, 19, 20);
   - `panel/CodeView.tsx`: um `<pre>` com o número de cada linha. Um clique numa sugestão marca a linha dela (CORE-24).
 - **Estado**: as explicações ficam num `Map<NodeId, Explanation>` na memória da sessão. O selo aparece depois que o nó tem explicação, seja do LLM ou do cache.
-- **Dependencies**: `@code2n8n/model` (só tipos), `react`, `react-dom`, `@xyflow/react`, `@dagrejs/dagre`. O Vite faz proxy de `/api` para `127.0.0.1:4317`.
+- **Dependencies**: `@8n8/model` (só tipos), `react`, `react-dom`, `@xyflow/react`, `@dagrejs/dagre`. O Vite faz proxy de `/api` para `127.0.0.1:4317`.
 - **ACs**: CORE-01..03 e CORE-07 (desenho), CORE-08..15, CORE-19, 20, 23, 24 (interface).
 
 ---
 
 ## Data Models
 
-### Grafo (`@code2n8n/model`)
+### Grafo (`@8n8/model`)
 
 ```typescript
 type NodeId = string
@@ -369,13 +369,13 @@ A fixture do vídeo precisa ter:
 ## Layout do monorepo
 
 ```
-code2n8n/
+8n8/
 ├── package.json                # scripts: dev, start, test, check (biome + depcruise), typecheck
 ├── pnpm-workspace.yaml         # apps/*, packages/*
 ├── tsconfig.base.json
 ├── biome.json
 ├── .dependency-cruiser.cjs
-├── .env                        # OPENROUTER_API_KEY, CODE2N8N_MODEL (fora do git)
+├── .env                        # OPENROUTER_API_KEY, APP8N8_MODEL (fora do git)
 ├── .gitignore                  # .env, .cache/, node_modules, dist
 ├── .cache/explain/             # criado em tempo de execução
 ├── docs/portugues-tecnico-simplificado.md

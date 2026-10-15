@@ -414,7 +414,7 @@ interface TitleCacheEntry {
 ### B9. Composição: `main.ts`
 
 - `composeExplain` passa `stepPrompt: buildStepPrompt(ptsRules)`.
-- `composeTitles(env, deps)` usa as mesmas regras de chave, `OPENROUTER_BASE_URL`, modelos e `CODE2N8N_CACHE_DIR` de `composeExplain`. O cache de títulos fica em `<pasta do cache>/titles`. `main()` passa `titles` ao `createApp`.
+- `composeTitles(env, deps)` usa as mesmas regras de chave, `OPENROUTER_BASE_URL`, modelos e `APP8N8_CACHE_DIR` de `composeExplain`. O cache de títulos fica em `<pasta do cache>/titles`. `main()` passa `titles` ao `createApp`.
 
 ---
 

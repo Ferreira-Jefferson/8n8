@@ -1,13 +1,9 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { pythonPlugin } from "@code2n8n/lang-python";
-import type {
-  ExplainRequest,
-  ProjectResponse,
-  SourceFile,
-} from "@code2n8n/model";
-import { buildProject } from "@code2n8n/project";
+import { pythonPlugin } from "@8n8/lang-python";
+import type { ExplainRequest, ProjectResponse, SourceFile } from "@8n8/model";
+import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 import { fakeLang } from "./fake-lang";

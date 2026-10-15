@@ -1,5 +1,5 @@
 {
-  "name": "@code2n8n/links",
+  "name": "@8n8/links",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -11,6 +11,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@code2n8n/model": "workspace:*"
+    "@8n8/model": "workspace:*"
   }
 }

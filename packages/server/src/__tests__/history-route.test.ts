@@ -1,4 +1,4 @@
-import type { Graph, ProjectResponse } from "@code2n8n/model";
+import type { Graph, ProjectResponse } from "@8n8/model";
 import { describe, expect, it, vi } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 import { type History, openHistory } from "../history";

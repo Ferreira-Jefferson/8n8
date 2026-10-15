@@ -1,4 +1,4 @@
-import type { LanguagePlugin } from "@code2n8n/model";
+import type { LanguagePlugin } from "@8n8/model";
 import { analyzeFiles } from "./analyze";
 import { detectTypescript } from "./detect";
 import { extractSnippet } from "./extract";

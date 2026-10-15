@@ -1,4 +1,4 @@
-import type { LanguagePlugin, SourceFile } from "@code2n8n/model";
+import type { LanguagePlugin, SourceFile } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { analysisProblems, graphProblems } from "./check";
 

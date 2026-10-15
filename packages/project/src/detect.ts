@@ -1,4 +1,4 @@
-import type { LanguagePlugin } from "@code2n8n/model";
+import type { LanguagePlugin } from "@8n8/model";
 import { baseName } from "./layout";
 
 /** A best score under this is a guess: the screen warns "linguagem incerta". */

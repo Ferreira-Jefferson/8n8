@@ -1,4 +1,4 @@
-import type { ExternalEffect, Graph, NodeId } from "@code2n8n/model";
+import type { ExternalEffect, Graph, NodeId } from "@8n8/model";
 
 /** External steps below a node in the graph, by line, without the LLM (FID-14). */
 export function externalEffects(

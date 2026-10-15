@@ -10,7 +10,7 @@ import {
   type NodeId,
   type Offer,
   type SourceFile,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import { pluginForPath } from "./detect";
 import { baseName, byCode, dirOf, lastLine, layoutProject } from "./layout";
 import { validateAnalysis } from "./validate";

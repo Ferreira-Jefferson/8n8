@@ -1,4 +1,4 @@
-import type { Graph } from "@code2n8n/model";
+import type { Graph } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
 import { fakeLang } from "./fake-lang";

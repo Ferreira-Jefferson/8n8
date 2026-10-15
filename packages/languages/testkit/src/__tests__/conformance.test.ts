@@ -1,4 +1,4 @@
-import type { FlowNode, Graph, LanguagePlugin } from "@code2n8n/model";
+import type { FlowNode, Graph, LanguagePlugin } from "@8n8/model";
 import { describeLanguagePlugin } from "../index";
 
 /** A line `def name` is a function; the whole file is a `file` node. */

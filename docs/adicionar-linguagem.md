@@ -86,7 +86,7 @@ Copie `packages/languages/typescript` para `packages/languages/<id>` e ajuste. T
 
 ```json
 {
-  "name": "@code2n8n/lang-typescript",
+  "name": "@8n8/lang-typescript",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -98,19 +98,19 @@ Copie `packages/languages/typescript` para `packages/languages/<id>` e ajuste. T
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@code2n8n/lang-treesitter": "workspace:*",
-    "@code2n8n/model": "workspace:*",
+    "@8n8/lang-treesitter": "workspace:*",
+    "@8n8/model": "workspace:*",
     "tree-sitter-typescript": "0.23.2",
     "web-tree-sitter": "0.27.1"
   },
   "devDependencies": {
-    "@code2n8n/lang-testkit": "workspace:*",
+    "@8n8/lang-testkit": "workspace:*",
     "@types/node": "22.20.5"
   }
 }
 ```
 
-O pacote exporta só `"."`, o `src/index.ts`. Chame o pacote de `@code2n8n/lang-<id>`.
+O pacote exporta só `"."`, o `src/index.ts`. Chame o pacote de `@8n8/lang-<id>`.
 
 `tsconfig.json`:
 
@@ -157,7 +157,7 @@ Você pode usar outro parser. Só o `lang-treesitter` é um auxiliar pronto.
 
 ### 3. Use o `lang-treesitter` (opcional)
 
-O pacote `@code2n8n/lang-treesitter` (`packages/languages/treesitter`) guarda o que toda gramática Tree-sitter repete:
+O pacote `@8n8/lang-treesitter` (`packages/languages/treesitter`) guarda o que toda gramática Tree-sitter repete:
 
 - `loadParser(wasmPath)`: inicia o Tree-sitter e devolve um parser com a gramática do arquivo `.wasm`. Carrega cada gramática uma vez por processo.
 - `loadLanguage(wasmPath)`: o mesmo, mas devolve só a `Language`.
@@ -192,11 +192,11 @@ Veja a seção [Detecção do trecho colado](#detecção-do-trecho-colado).
 
 ### 6. Rode a suíte de conformidade
 
-O pacote `@code2n8n/lang-testkit` (`packages/languages/testkit`) exporta `describeLanguagePlugin(plugin, fixtures)`. Toda linguagem roda a mesma suíte. Exemplo real, de `packages/languages/typescript/src/__tests__/plugin.test.ts`:
+O pacote `@8n8/lang-testkit` (`packages/languages/testkit`) exporta `describeLanguagePlugin(plugin, fixtures)`. Toda linguagem roda a mesma suíte. Exemplo real, de `packages/languages/typescript/src/__tests__/plugin.test.ts`:
 
 ```ts
 import { readFileSync } from "node:fs";
-import { describeLanguagePlugin } from "@code2n8n/lang-testkit";
+import { describeLanguagePlugin } from "@8n8/lang-testkit";
 import { typescriptPlugin } from "../index";
 import { lojaFiles } from "./loja";
 
@@ -234,7 +234,7 @@ A suíte confere:
 Rode só o pacote novo:
 
 ```bash
-pnpm --filter @code2n8n/lang-<id> test
+pnpm --filter @8n8/lang-<id> test
 ```
 
 A suíte não prova que o grafo é útil. Escreva também testes do que é próprio da linguagem: funções, classes, chamadas, imports, condições, laços e retornos. O plugin TypeScript tem esses testes em `packages/languages/typescript/src/__tests__/`.
@@ -246,14 +246,14 @@ Dois ajustes, e só neles.
 Em `packages/server/package.json`, acrescente a dependência junto das outras linguagens:
 
 ```json
-"@code2n8n/lang-<id>": "workspace:*",
+"@8n8/lang-<id>": "workspace:*",
 ```
 
 Em `packages/server/src/main.ts`, importe o plugin e inclua na lista `languagePlugins`:
 
 ```ts
-import { pythonPlugin } from "@code2n8n/lang-python";
-import { typescriptPlugin } from "@code2n8n/lang-typescript";
+import { pythonPlugin } from "@8n8/lang-python";
+import { typescriptPlugin } from "@8n8/lang-typescript";
 
 /** The languages the server knows; a new language is one more entry. */
 export const languagePlugins: LanguagePlugin[] = [
@@ -275,7 +275,7 @@ Depois do registro, o servidor passa a:
 
 O `pnpm check` roda o `dependency-cruiser` com as regras de `.dependency-cruiser.cjs`. Duas regras valem para plugins:
 
-- `languages-only-model`: um plugin importa só `@code2n8n/model`, `@code2n8n/lang-testkit` e `@code2n8n/lang-treesitter`. Ele não importa `explain`, `llm`, `server` nem `apps`.
+- `languages-only-model`: um plugin importa só `@8n8/model`, `@8n8/lang-testkit` e `@8n8/lang-treesitter`. Ele não importa `explain`, `llm`, `server` nem `apps`.
 - `languages-do-not-import-each-other`: um plugin **nunca** importa outro plugin. Só o `lang-testkit` e o `lang-treesitter` são comuns. Código que dois plugins precisam fica no `lang-treesitter` ou no `model`. Se for pouco, copie.
 
 Outras regras valem para todo pacote: sem ciclos, e nenhum caminho relativo sai da pasta do pacote (`../../packages/...`).

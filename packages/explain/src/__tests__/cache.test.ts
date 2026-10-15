@@ -47,7 +47,7 @@ const entry = (
 
 let root: string;
 beforeEach(async () => {
-  root = await mkdtemp(join(tmpdir(), "code2n8n-cache-"));
+  root = await mkdtemp(join(tmpdir(), "8n8-cache-"));
 });
 afterEach(async () => {
   await rm(root, { recursive: true, force: true });

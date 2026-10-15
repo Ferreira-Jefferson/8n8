@@ -1,4 +1,4 @@
-import type { ClaimId } from "@code2n8n/model";
+import type { ClaimId } from "@8n8/model";
 import type { DraftClaim } from "./sentences";
 
 /** Units checked by layer one (spec, "Unidades checadas na camada 1"). Changing it changes the reviewer version. */

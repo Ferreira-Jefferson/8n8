@@ -13,7 +13,7 @@ import { connect } from "node:net";
 import { networkInterfaces, tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ProjectResponse } from "@code2n8n/model";
+import type { ProjectResponse } from "@8n8/model";
 import { expect, type Page, test } from "@playwright/test";
 
 // Feature 02-pasta-local, end to end: real build, real server on 4317 with no key,
@@ -49,7 +49,7 @@ function makeLoja(loja: string): void {
 }
 
 test.beforeAll(() => {
-  tmp = mkdtempSync(join(tmpdir(), "code2n8n-pasta-local-"));
+  tmp = mkdtempSync(join(tmpdir(), "8n8-pasta-local-"));
   LOJA = join(tmp, "loja");
   makeLoja(LOJA);
 });

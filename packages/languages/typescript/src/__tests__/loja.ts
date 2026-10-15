@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { SourceFile } from "@code2n8n/model";
+import type { SourceFile } from "@8n8/model";
 
 const ROOT = fileURLToPath(new URL("./fixtures/projeto-loja", import.meta.url));
 

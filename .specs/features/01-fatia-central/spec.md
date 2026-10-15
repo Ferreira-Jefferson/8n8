@@ -4,7 +4,7 @@
 
 Ler código, principalmente código gerado por IA, leva mais tempo do que escrevê-lo. Falta uma vista que comece ampla, mostre como as partes se conectam e deixe descer até as linhas reais.
 
-Esta feature entrega a menor fatia demonstrável do code2n8n:
+Esta feature entrega a menor fatia demonstrável do 8n8:
 - colar um trecho Python;
 - ver as funções como nós e fios;
 - abrir um nó até o código;
@@ -45,8 +45,8 @@ Esta feature entrega a menor fatia demonstrável do code2n8n:
 | Linguagem | Python 3 | Resposta do usuário. | y |
 | Forma do app | Web local: servidor Node só em `127.0.0.1` e front React | Resposta do usuário. Mesma stack do roadmap (AD-004). | y |
 | Sugestões no MVP | Sim, na mesma chamada do resumo | Resposta do usuário. Uma chamada só custa menos. | y |
-| Modelo | `~deepseek/deepseek-v4-flash-latest`, trocável por `CODE2N8N_MODEL` | Tier barato já usado no roadmap (AD-002). | y |
-| Origem da chave | `OPENROUTER_API_KEY` num `.env` do code2n8n, copiada do roadmap e ignorada pelo git | O usuário pediu para usar a chave do roadmap. | n |
+| Modelo | `~deepseek/deepseek-v4-flash-latest`, trocável por `APP8N8_MODEL` | Tier barato já usado no roadmap (AD-002). | y |
+| Origem da chave | `OPENROUTER_API_KEY` num `.env` do 8n8, copiada do roadmap e ignorada pelo git | O usuário pediu para usar a chave do roadmap. | n |
 | Quando chamar o LLM | Só ao abrir o detalhe de um nó de função ou classe | Controla o custo. | n |
 | Chave do cache | Hash do código do nó + modelo + versão do prompt, em disco, sem expiração | Código mudou → nova chamada. | n |
 | Agrupamento de passos | Instruções seguidas sem chamada e sem controle de fluxo viram um nó "Código" | Evita um nó por linha. | n |
@@ -94,7 +94,7 @@ Esta feature entrega a menor fatia demonstrável do code2n8n:
 18. WHEN um nó já explicado é aberto de novo, com o mesmo código, modelo e versão de prompt THEN o sistema SHALL usar o cache em disco e não SHALL chamar o LLM. A feature 04-fidelidade-e-cache amplia esta regra: a mudança nos vizinhos também invalida o cache.  <!-- CORE-18 -->
 19. IF `OPENROUTER_API_KEY` não está definida THEN o sistema SHALL mostrar o mapa normalmente e "Configure OPENROUTER_API_KEY para ver resumos" no painel do nó.  <!-- CORE-19 -->
 20. IF a chamada ao LLM falha THEN o sistema SHALL mostrar "Resumo indisponível" com um botão "Tentar de novo", e o mapa SHALL continuar utilizável.  <!-- CORE-20 -->
-21. The system SHALL usar o modelo de `CODE2N8N_MODEL` ou, sem a variável, `~deepseek/deepseek-v4-flash-latest`.  <!-- CORE-21 -->
+21. The system SHALL usar o modelo de `APP8N8_MODEL` ou, sem a variável, `~deepseek/deepseek-v4-flash-latest`.  <!-- CORE-21 -->
 22. IF uma sugestão aponta uma linha fora do intervalo do nó THEN o sistema SHALL descartá-la.  <!-- CORE-22 -->
 23. WHEN um nó tem sugestões THEN o sistema SHALL mostrar no nó um selo com a quantidade.  <!-- CORE-23 -->
 24. WHEN o usuário clica numa sugestão THEN o sistema SHALL destacar a linha de origem no código do nó.  <!-- CORE-24 -->
@@ -124,4 +124,4 @@ Esta feature entrega a menor fatia demonstrável do code2n8n:
 
 - [ ] O exemplo do vídeo de conceito funciona do começo ao fim, como descrito no Independent Test.
 - [ ] Nenhuma sugestão exibida aponta uma linha fora do nó.
-- [ ] Trocar o modelo exige mudar só `CODE2N8N_MODEL`.
+- [ ] Trocar o modelo exige mudar só `APP8N8_MODEL`.

@@ -1,9 +1,4 @@
-import type {
-  Explanation,
-  FlowNode,
-  NodeId,
-  Suggestion,
-} from "@code2n8n/model";
+import type { Explanation, FlowNode, NodeId, Suggestion } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { projectLevel } from "../project-level";
 import { highlighted, suggestionCards } from "../suggestion-cards";

@@ -15,7 +15,7 @@ module.exports = {
       severity: "error",
       comment: "model não importa nenhum pacote do workspace.",
       from: { path: "^packages/model/" },
-      to: { path: ["^packages/(?!model/)", "^apps/", "@code2n8n/(?!model)"] },
+      to: { path: ["^packages/(?!model/)", "^apps/", "@8n8/(?!model)"] },
     },
     {
       name: "languages-only-model",
@@ -27,7 +27,7 @@ module.exports = {
         path: [
           "^packages/(?!languages/|model/)",
           "^apps/",
-          "@code2n8n/(?!model|lang-testkit|lang-treesitter)",
+          "@8n8/(?!model|lang-testkit|lang-treesitter)",
         ],
       },
     },
@@ -56,7 +56,7 @@ module.exports = {
         path: [
           "^packages/(?!project/|model/)",
           "^apps/",
-          "@code2n8n/(?!model|project)",
+          "@8n8/(?!model|project)",
         ],
       },
     },
@@ -67,11 +67,7 @@ module.exports = {
         "input importa só model (leitura de pasta, sem extract-* nem explain).",
       from: { path: "^packages/input/" },
       to: {
-        path: [
-          "^packages/(?!input/|model/)",
-          "^apps/",
-          "@code2n8n/(?!model|input)",
-        ],
+        path: ["^packages/(?!input/|model/)", "^apps/", "@8n8/(?!model|input)"],
       },
     },
     {
@@ -81,11 +77,7 @@ module.exports = {
         "links importa só model (casa ofertas e pedidos sem conhecer linguagem).",
       from: { path: "^packages/links/" },
       to: {
-        path: [
-          "^packages/(?!links/|model/)",
-          "^apps/",
-          "@code2n8n/(?!model|links)",
-        ],
+        path: ["^packages/(?!links/|model/)", "^apps/", "@8n8/(?!model|links)"],
       },
     },
     {
@@ -97,7 +89,7 @@ module.exports = {
         path: [
           "^packages/(?!explain/|model/)",
           "^apps/",
-          "@code2n8n/(?!model|explain)",
+          "@8n8/(?!model|explain)",
         ],
       },
     },
@@ -107,11 +99,7 @@ module.exports = {
       comment: "llm importa só model (provedores e perfis de modelo).",
       from: { path: "^packages/llm/" },
       to: {
-        path: [
-          "^packages/(?!llm/|model/)",
-          "^apps/",
-          "@code2n8n/(?!model|llm)",
-        ],
+        path: ["^packages/(?!llm/|model/)", "^apps/", "@8n8/(?!model|llm)"],
       },
     },
     {
@@ -120,7 +108,7 @@ module.exports = {
       comment:
         "explain não importa llm: o pipeline só conhece o contrato LlmClient do model.",
       from: { path: "^packages/explain/" },
-      to: { path: ["^packages/llm/", "@code2n8n/llm"] },
+      to: { path: ["^packages/llm/", "@8n8/llm"] },
     },
     {
       name: "server-only-core-packages",
@@ -135,7 +123,7 @@ module.exports = {
       severity: "error",
       comment: "apps/web importa só model.",
       from: { path: "^apps/web/" },
-      to: { path: ["^packages/(?!model/)", "@code2n8n/(?!model)"] },
+      to: { path: ["^packages/(?!model/)", "@8n8/(?!model)"] },
     },
     {
       name: "no-node-core-in-model-and-web",

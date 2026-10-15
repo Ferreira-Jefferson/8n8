@@ -54,8 +54,8 @@ export default defineConfig({
       workers: 1,
     },
     // Measurements, not checks: kept out of `pnpm e2e`. Run them with
-    // CODE2N8N_PERF=1 pnpm exec playwright test --project performance
-    ...(process.env.CODE2N8N_PERF
+    // APP8N8_PERF=1 pnpm exec playwright test --project performance
+    ...(process.env.APP8N8_PERF
       ? [
           {
             name: "performance",
@@ -86,10 +86,10 @@ export default defineConfig({
         OPENROUTER_API_KEY: "",
         // A cache dir of its own (<repo>/.cache/e2e-offline), apart from the user's entries;
         // with no key the server never writes.
-        CODE2N8N_CACHE_DIR: cacheDir("e2e-offline"),
+        APP8N8_CACHE_DIR: cacheDir("e2e-offline"),
         // The history lives apart: the specs wipe the cache dir, never this one.
-        CODE2N8N_HISTORY_DIR: cacheDir("e2e-offline-history"),
-        CODE2N8N_MODEL: "e2e/offline",
+        APP8N8_HISTORY_DIR: cacheDir("e2e-offline-history"),
+        APP8N8_MODEL: "e2e/offline",
       },
     },
     {
@@ -100,15 +100,15 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 180_000,
       env: {
-        CODE2N8N_PORT: "4319",
+        APP8N8_PORT: "4319",
         // A fake key and a local base URL: no request ever reaches openrouter.ai.
         OPENROUTER_API_KEY: "e2e-fake-key",
         OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
-        CODE2N8N_MODEL: "e2e/drafter",
-        CODE2N8N_REVIEW_MODEL: "e2e/reviewer",
+        APP8N8_MODEL: "e2e/drafter",
+        APP8N8_REVIEW_MODEL: "e2e/reviewer",
         // Isolated cache, wiped by the specs before each test.
-        CODE2N8N_CACHE_DIR: cacheDir("e2e-real"),
-        CODE2N8N_HISTORY_DIR: cacheDir("e2e-real-history"),
+        APP8N8_CACHE_DIR: cacheDir("e2e-real"),
+        APP8N8_HISTORY_DIR: cacheDir("e2e-real-history"),
       },
     },
     {
@@ -118,15 +118,15 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 180_000,
       env: {
-        CODE2N8N_PORT: "4320",
+        APP8N8_PORT: "4320",
         OPENROUTER_API_KEY: "e2e-fake-key",
         OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
         // Set and empty: process.loadEnvFile keeps them, so .env never supplies a model,
         // and an empty value counts as absent.
-        CODE2N8N_MODEL: "",
-        CODE2N8N_REVIEW_MODEL: "",
-        CODE2N8N_CACHE_DIR: cacheDir("e2e-default-model"),
-        CODE2N8N_HISTORY_DIR: cacheDir("e2e-default-model-history"),
+        APP8N8_MODEL: "",
+        APP8N8_REVIEW_MODEL: "",
+        APP8N8_CACHE_DIR: cacheDir("e2e-default-model"),
+        APP8N8_HISTORY_DIR: cacheDir("e2e-default-model-history"),
       },
     },
     {
@@ -137,11 +137,11 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 180_000,
       env: {
-        CODE2N8N_PORT: "4321",
+        APP8N8_PORT: "4321",
         OPENROUTER_API_KEY: "",
-        CODE2N8N_CACHE_DIR: cacheDir("e2e-history-offline"),
-        CODE2N8N_HISTORY_DIR: cacheDir("e2e-history"),
-        CODE2N8N_MODEL: "e2e/offline",
+        APP8N8_CACHE_DIR: cacheDir("e2e-history-offline"),
+        APP8N8_HISTORY_DIR: cacheDir("e2e-history"),
+        APP8N8_MODEL: "e2e/offline",
       },
     },
   ],

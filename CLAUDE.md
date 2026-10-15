@@ -1,4 +1,4 @@
-# code2n8n
+# 8n8
 
 Ferramenta que recebe código (um arquivo, uma pasta ou um trecho) e mostra como ele se conecta, como nós e fios no estilo n8n. A visão começa ampla, você abre um nó para ver o fluxo interno dele e vai descendo até as linhas reais de código. Há também sugestões de melhoria presas a cada nó.
 

@@ -1,4 +1,4 @@
-import type { LanguageInfo, SnippetLanguage } from "@code2n8n/model";
+import type { LanguageInfo, SnippetLanguage } from "@8n8/model";
 
 /** ".py", ".py e .ts", ".py, .ts e .js": the list in order, with the word before the last one. */
 export function listExtensions(

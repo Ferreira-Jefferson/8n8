@@ -17,16 +17,16 @@ import {
   buildSystemPrompt,
   buildTitlePrompt,
   buildTitleReviewerPrompt,
-} from "@code2n8n/explain";
-import { type ReadFilter, readSourceFolder } from "@code2n8n/input";
-import { pythonPlugin } from "@code2n8n/lang-python";
-import { typescriptPlugin } from "@code2n8n/lang-typescript";
+} from "@8n8/explain";
+import { type ReadFilter, readSourceFolder } from "@8n8/input";
+import { pythonPlugin } from "@8n8/lang-python";
+import { typescriptPlugin } from "@8n8/lang-typescript";
 import type {
   ExplainRequest,
   LanguagePlugin,
   ProjectResponse,
   TitleRequest,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import { afterAll, describe, expect, it } from "vitest";
 import { createApp } from "../app";
 import {
@@ -46,7 +46,7 @@ const ptsRules = readFileSync(
   ),
   "utf8",
 );
-const cacheDir = mkdtempSync(join(tmpdir(), "code2n8n-main-"));
+const cacheDir = mkdtempSync(join(tmpdir(), "8n8-main-"));
 afterAll(() => rmSync(cacheDir, { recursive: true, force: true }));
 
 const req: ExplainRequest = {
@@ -169,15 +169,12 @@ describe("composeExplain", () => {
     expect(f.keys).toEqual(["k-123"]);
   });
 
-  it("CODE2N8N_MODEL=x/y reaches the client; the default applies without it (CORE-21)", async () => {
+  it("APP8N8_MODEL=x/y reaches the client; the default applies without it (CORE-21)", async () => {
     const withModel = fakeFactory();
     await composeExplain(
-      { OPENROUTER_API_KEY: "k", CODE2N8N_MODEL: "x/y" },
+      { OPENROUTER_API_KEY: "k", APP8N8_MODEL: "x/y" },
       {
-        llm: llmOf(
-          { OPENROUTER_API_KEY: "k", CODE2N8N_MODEL: "x/y" },
-          withModel,
-        ),
+        llm: llmOf({ OPENROUTER_API_KEY: "k", APP8N8_MODEL: "x/y" }, withModel),
         ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("c"),
@@ -215,20 +212,20 @@ describe("composeExplain", () => {
     expect(ptsRules.length).toBeGreaterThan(100);
   });
 
-  it("CODE2N8N_REVIEW_MODEL=r/x goes to the reviewer and the summary model to the draft (FID-15)", async () => {
+  it("APP8N8_REVIEW_MODEL=r/x goes to the reviewer and the summary model to the draft (FID-15)", async () => {
     const f = fakeFactory();
     const res = await composeExplain(
       {
         OPENROUTER_API_KEY: "k",
-        CODE2N8N_MODEL: "x/y",
-        CODE2N8N_REVIEW_MODEL: "r/x",
+        APP8N8_MODEL: "x/y",
+        APP8N8_REVIEW_MODEL: "r/x",
       },
       {
         llm: llmOf(
           {
             OPENROUTER_API_KEY: "k",
-            CODE2N8N_MODEL: "x/y",
-            CODE2N8N_REVIEW_MODEL: "r/x",
+            APP8N8_MODEL: "x/y",
+            APP8N8_REVIEW_MODEL: "r/x",
           },
           f,
         ),
@@ -242,15 +239,15 @@ describe("composeExplain", () => {
     expect(f.reviews().map((s) => s.model)).toEqual(["r/x"]);
   });
 
-  it("without CODE2N8N_REVIEW_MODEL (or empty) the reviewer uses the summary model (FID-15)", async () => {
+  it("without APP8N8_REVIEW_MODEL (or empty) the reviewer uses the summary model (FID-15)", async () => {
     for (const [name, env] of [
-      ["g", { OPENROUTER_API_KEY: "k", CODE2N8N_MODEL: "x/y" }],
+      ["g", { OPENROUTER_API_KEY: "k", APP8N8_MODEL: "x/y" }],
       [
         "h",
         {
           OPENROUTER_API_KEY: "k",
-          CODE2N8N_MODEL: "x/y",
-          CODE2N8N_REVIEW_MODEL: "",
+          APP8N8_MODEL: "x/y",
+          APP8N8_REVIEW_MODEL: "",
         },
       ],
     ] as const) {
@@ -292,13 +289,13 @@ describe("composeExplain", () => {
     expect(empty.baseURLs).toEqual([undefined]);
   });
 
-  it("CODE2N8N_CACHE_DIR replaces deps.cacheDir; unset or empty keeps deps.cacheDir", async () => {
+  it("APP8N8_CACHE_DIR replaces deps.cacheDir; unset or empty keeps deps.cacheDir", async () => {
     const custom = join(cacheDir, "x");
     await composeExplain(
-      { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: custom },
+      { OPENROUTER_API_KEY: "k", APP8N8_CACHE_DIR: custom },
       {
         llm: llmOf(
-          { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: custom },
+          { OPENROUTER_API_KEY: "k", APP8N8_CACHE_DIR: custom },
           fakeFactory(),
         ),
         ptsRules,
@@ -311,7 +308,7 @@ describe("composeExplain", () => {
 
     for (const [name, env] of [
       ["k", { OPENROUTER_API_KEY: "k" }],
-      ["l", { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: "" }],
+      ["l", { OPENROUTER_API_KEY: "k", APP8N8_CACHE_DIR: "" }],
     ] as const) {
       await composeExplain(env, {
         llm: llmOf(env, fakeFactory()),
@@ -370,16 +367,16 @@ describe("composeTitles (VID-14, VID-17)", () => {
       {
         OPENROUTER_API_KEY: "k-1",
         OPENROUTER_BASE_URL: "http://127.0.0.1:9/v1",
-        CODE2N8N_MODEL: "x/y",
-        CODE2N8N_REVIEW_MODEL: "r/x",
+        APP8N8_MODEL: "x/y",
+        APP8N8_REVIEW_MODEL: "r/x",
       },
       {
         llm: llmOf(
           {
             OPENROUTER_API_KEY: "k-1",
             OPENROUTER_BASE_URL: "http://127.0.0.1:9/v1",
-            CODE2N8N_MODEL: "x/y",
-            CODE2N8N_REVIEW_MODEL: "r/x",
+            APP8N8_MODEL: "x/y",
+            APP8N8_REVIEW_MODEL: "r/x",
           },
           f,
         ),
@@ -410,16 +407,16 @@ describe("composeTitles (VID-14, VID-17)", () => {
       {
         OPENROUTER_API_KEY: "k",
         OPENROUTER_BASE_URL: "",
-        CODE2N8N_MODEL: "",
-        CODE2N8N_REVIEW_MODEL: "",
+        APP8N8_MODEL: "",
+        APP8N8_REVIEW_MODEL: "",
       },
       {
         llm: llmOf(
           {
             OPENROUTER_API_KEY: "k",
             OPENROUTER_BASE_URL: "",
-            CODE2N8N_MODEL: "",
-            CODE2N8N_REVIEW_MODEL: "",
+            APP8N8_MODEL: "",
+            APP8N8_REVIEW_MODEL: "",
           },
           f,
         ),
@@ -435,13 +432,13 @@ describe("composeTitles (VID-14, VID-17)", () => {
     ]);
   });
 
-  it("keeps titles in <CODE2N8N_CACHE_DIR>/titles, or <deps.cacheDir>/titles when unset or empty", async () => {
+  it("keeps titles in <APP8N8_CACHE_DIR>/titles, or <deps.cacheDir>/titles when unset or empty", async () => {
     const custom = join(cacheDir, "t-x");
     await composeTitles(
-      { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: custom },
+      { OPENROUTER_API_KEY: "k", APP8N8_CACHE_DIR: custom },
       {
         llm: llmOf(
-          { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: custom },
+          { OPENROUTER_API_KEY: "k", APP8N8_CACHE_DIR: custom },
           fakeFactory(),
         ),
         ptsRules,
@@ -454,7 +451,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
 
     for (const [name, env] of [
       ["t-e", { OPENROUTER_API_KEY: "k" }],
-      ["t-f", { OPENROUTER_API_KEY: "k", CODE2N8N_CACHE_DIR: "" }],
+      ["t-f", { OPENROUTER_API_KEY: "k", APP8N8_CACHE_DIR: "" }],
     ] as const) {
       const f = fakeFactory();
       const titles = composeTitles(env, {
@@ -477,7 +474,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
 describe("composeLlm (LLM config, one client)", () => {
   it("resolves the config from the environment and builds the client once", () => {
     const f = fakeFactory();
-    const setup = llmOf({ OPENROUTER_API_KEY: "k", CODE2N8N_MODEL: "x/y" }, f);
+    const setup = llmOf({ OPENROUTER_API_KEY: "k", APP8N8_MODEL: "x/y" }, f);
     expect(setup.config).toEqual({
       provider: "openrouter",
       apiKey: "k",
@@ -517,9 +514,9 @@ describe("composeLlm (LLM config, one client)", () => {
       "complete",
     );
     const local = composeLlm({
-      CODE2N8N_LLM_PROVIDER: "openai-compatible",
-      CODE2N8N_LLM_BASE_URL: "http://localhost:11434/v1",
-      CODE2N8N_MODEL: "llama3",
+      APP8N8_LLM_PROVIDER: "openai-compatible",
+      APP8N8_LLM_BASE_URL: "http://localhost:11434/v1",
+      APP8N8_MODEL: "llama3",
     });
     expect(local.client).toHaveProperty("complete");
     expect(local.config).toMatchObject({
@@ -531,13 +528,13 @@ describe("composeLlm (LLM config, one client)", () => {
   });
 
   it("an unknown provider fails at startup, naming the known ones", () => {
-    expect(() => composeLlm({ CODE2N8N_LLM_PROVIDER: "nope" })).toThrow(
+    expect(() => composeLlm({ APP8N8_LLM_PROVIDER: "nope" })).toThrow(
       /desconhecido.*openrouter, openai-compatible/,
     );
   });
 
   it("without a client both pipelines answer no-key, whatever the provider", async () => {
-    const env = { CODE2N8N_LLM_PROVIDER: "openai-compatible" };
+    const env = { APP8N8_LLM_PROVIDER: "openai-compatible" };
     const llm = llmOf(env, fakeFactory());
     expect(llm.client).toBeUndefined();
     expect(
@@ -559,11 +556,11 @@ describe("composeLlm (LLM config, one client)", () => {
   });
 
   it("the provider id reaches the cache: another provider regenerates the same node", async () => {
-    const same = { CODE2N8N_MODEL: "x/y", OPENROUTER_API_KEY: "k" };
+    const same = { APP8N8_MODEL: "x/y", OPENROUTER_API_KEY: "k" };
     const other = {
-      CODE2N8N_MODEL: "x/y",
-      CODE2N8N_LLM_PROVIDER: "openai-compatible",
-      CODE2N8N_LLM_API_KEY: "k",
+      APP8N8_MODEL: "x/y",
+      APP8N8_LLM_PROVIDER: "openai-compatible",
+      APP8N8_LLM_API_KEY: "k",
     };
     const run = async (env: Env) => {
       const f = fakeFactory();
@@ -584,17 +581,17 @@ describe("composeLlm (LLM config, one client)", () => {
 });
 
 describe("resolvePort", () => {
-  it("is 4317 without CODE2N8N_PORT or when it is empty", () => {
+  it("is 4317 without APP8N8_PORT or when it is empty", () => {
     expect(resolvePort({})).toBe(4317);
-    expect(resolvePort({ CODE2N8N_PORT: "" })).toBe(4317);
+    expect(resolvePort({ APP8N8_PORT: "" })).toBe(4317);
   });
 
-  it("reads a valid port from CODE2N8N_PORT", () => {
-    expect(resolvePort({ CODE2N8N_PORT: "4319" })).toBe(4319);
+  it("reads a valid port from APP8N8_PORT", () => {
+    expect(resolvePort({ APP8N8_PORT: "4319" })).toBe(4319);
   });
 
   it("falls back to 4317 for a value that is not a port", () => {
-    expect(resolvePort({ CODE2N8N_PORT: "abc" })).toBe(4317);
+    expect(resolvePort({ APP8N8_PORT: "abc" })).toBe(4317);
   });
 });
 
@@ -605,7 +602,7 @@ const fixtureSrc = new URL(
 
 /** Fixture copy in os.tmpdir() plus an oversized file and a latin-1 file. */
 function makeLoja(): string {
-  const base = mkdtempSync(join(tmpdir(), "code2n8n-loja-"));
+  const base = mkdtempSync(join(tmpdir(), "8n8-loja-"));
   const loja = join(base, "loja");
   cpSync(fixtureSrc, loja, { recursive: true });
   writeFileSync(join(loja, "grande.py"), "#".repeat(1_048_576 + 1));

@@ -1,5 +1,5 @@
 {
-  "name": "@code2n8n/server",
+  "name": "@8n8/server",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -11,14 +11,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@code2n8n/explain": "workspace:*",
-    "@code2n8n/lang-python": "workspace:*",
-    "@code2n8n/lang-typescript": "workspace:*",
-    "@code2n8n/links": "workspace:*",
-    "@code2n8n/input": "workspace:*",
-    "@code2n8n/llm": "workspace:*",
-    "@code2n8n/model": "workspace:*",
-    "@code2n8n/project": "workspace:*",
+    "@8n8/explain": "workspace:*",
+    "@8n8/lang-python": "workspace:*",
+    "@8n8/lang-typescript": "workspace:*",
+    "@8n8/links": "workspace:*",
+    "@8n8/input": "workspace:*",
+    "@8n8/llm": "workspace:*",
+    "@8n8/model": "workspace:*",
+    "@8n8/project": "workspace:*",
     "@hono/node-server": "2.1.5",
     "hono": "4.13.13",
     "zod": "4.6.7"

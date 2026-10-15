@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import type { LinkChannel, LinkRequest, Offer } from "@code2n8n/model";
+import type { LinkChannel, LinkRequest, Offer } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { pythonPlugin } from "../index";
 

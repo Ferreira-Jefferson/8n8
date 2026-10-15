@@ -21,7 +21,7 @@ let tmp = "";
 let LOJA = "";
 
 test.beforeAll(() => {
-  tmp = mkdtempSync(join(tmpdir(), "code2n8n-historico-"));
+  tmp = mkdtempSync(join(tmpdir(), "8n8-historico-"));
   LOJA = join(tmp, "loja");
   cpSync(FIXTURE, LOJA, { recursive: true });
 });

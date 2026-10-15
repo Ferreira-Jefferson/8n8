@@ -12,7 +12,7 @@
 ### AD-002 — OpenRouter como gateway de LLM
 - **Date:** 2026-10-13
 - **Context:** O projeto roadmap já usa o OpenRouter com uma chave ativa.
-- **Decision:** Todas as chamadas de LLM passam pelo OpenRouter via API compatível com OpenAI (`openai` SDK, `baseURL: https://openrouter.ai/api/v1`). A chave fica em `OPENROUTER_API_KEY`. O modelo padrão é `~deepseek/deepseek-v4-flash-latest`, o mesmo tier "medium" do roadmap: bom e barato. A variável `CODE2N8N_MODEL` troca o modelo.
+- **Decision:** Todas as chamadas de LLM passam pelo OpenRouter via API compatível com OpenAI (`openai` SDK, `baseURL: https://openrouter.ai/api/v1`). A chave fica em `OPENROUTER_API_KEY`. O modelo padrão é `~deepseek/deepseek-v4-flash-latest`, o mesmo tier "medium" do roadmap: bom e barato. A variável `APP8N8_MODEL` troca o modelo.
 - **Consequence:** Um único cliente de LLM, isolado no módulo de explicação.
 
 ### AD-003 — Modularização por responsabilidade
@@ -47,7 +47,7 @@
 ### AD-008 — Todo texto do LLM passa por revisão em duas camadas e carrega evidência
 - **Date:** 2026-10-13
 - **Context:** Feature 04. O resumo inventou "kg". Um texto do LLM sem verificação destrói a confiança.
-- **Decision:** O pacote `explain` só devolve ou grava texto do LLM depois de duas camadas: (1) regras determinísticas puras sobre o código do nó e os nomes dos vizinhos; (2) um revisor LLM com contrato JSON validado por zod que julga cada item e dá as linhas de evidência. Cada item exibido (`Claim`) tem `id`, `text` e `lines`. O revisor usa o mesmo gateway (AD-002), e `CODE2N8N_REVIEW_MODEL` escolhe o modelo, com `CODE2N8N_MODEL` como padrão.
+- **Decision:** O pacote `explain` só devolve ou grava texto do LLM depois de duas camadas: (1) regras determinísticas puras sobre o código do nó e os nomes dos vizinhos; (2) um revisor LLM com contrato JSON validado por zod que julga cada item e dá as linhas de evidência. Cada item exibido (`Claim`) tem `id`, `text` e `lines`. O revisor usa o mesmo gateway (AD-002), e `APP8N8_REVIEW_MODEL` escolhe o modelo, com `APP8N8_MODEL` como padrão.
 - **Consequence:** Uma abertura sem cache custa de 2 a 6 chamadas. Todo texto novo gerado por LLM (por exemplo, em features futuras) segue o mesmo contrato `Claim`.
 
 ### AD-009 — Cache de explicação por identidade de nó, com impressão digital por componentes
@@ -152,7 +152,7 @@
 - **01, 04 e 02:** verificadas (PASS). Detalhes no `validation.md` de cada uma.
 - **05-mapa-do-video:**
   - T1–T48 feitas e mescladas no master (merge e7ed837). T49–T50 (imagens de referência) canceladas pelo usuário em 2026-10-14. O usuário também cancelou a página de comparação com o vídeo.
-  - Gate no master em e7ed837: typecheck, check, 830 unitários e 83 E2E verdes. O E2E passou 3 vezes seguidas na feat/05d. O projeto `performance` (`CODE2N8N_PERF=1 pnpm exec playwright test --project performance`) passa 9/9.
+  - Gate no master em e7ed837: typecheck, check, 830 unitários e 83 E2E verdes. O E2E passou 3 vezes seguidas na feat/05d. O projeto `performance` (`APP8N8_PERF=1 pnpm exec playwright test --project performance`) passa 9/9.
   - Medidas de desempenho: o mapa aparece em cerca de 45 ms, a animação termina em cerca de 3 s, abrir um nó leva cerca de 1,2 s (0,13 s sem animação), Voltar leva cerca de 20–80 ms e uma pasta de 300 arquivos leva cerca de 0,2 s.
   - O bug do canvas em branco foi corrigido em 089e3a6. O "em branco" que restou na porta 4319 era erro de medição do teste de desempenho, corrigido em f75feb6, com teste de guarda em 632b943.
   - **Aprovada pelo usuário em 2026-10-14** (UAT: "parecido ao vídeo de referência"). O Verifier independente não foi rodado e o `validation.md` não foi escrito.
@@ -161,6 +161,6 @@
   - O pnpm 12.6.0 global foi reinstalado em 2026-10-13 com os scripts de instalação ligados e agora roda o binário nativo (`pnpm.exe`). Se ele voltar a dizer "pnpm is running through Node.js", reinstale com `npm install -g pnpm@12.6.0 --foreground-scripts`.
   - O Playwright precisa de `C:\Windows\System32` no PATH para chamar o `taskkill`.
 - **Pendências não bloqueantes:**
-  - Os worktrees `../code2n8n-f02`, `../code2n8n-05a`, `05b`, `05c` e `05d` e seus branches continuam existindo. Não apagar sem pedido.
+  - Os worktrees `../8n8-f02`, `../8n8-05a`, `05b`, `05c` e `05d` e seus branches continuam existindo. Não apagar sem pedido.
   - Preencher a seção "Comandos" do CLAUDE.md.
   - Lições candidatas L-015..L-017 esperam confirmação de outra feature.

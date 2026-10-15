@@ -1,4 +1,4 @@
-import type { Severity } from "@code2n8n/model";
+import type { Severity } from "@8n8/model";
 import { z } from "zod";
 
 const MAX_SUGGESTIONS = 5;

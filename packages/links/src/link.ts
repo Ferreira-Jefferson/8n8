@@ -1,4 +1,4 @@
-import type { FlowEdge, LinkRequest, Offer } from "@code2n8n/model";
+import type { FlowEdge, LinkRequest, Offer } from "@8n8/model";
 import { httpLinker } from "./http";
 import { nameLinker } from "./name";
 import { processLinker } from "./process";

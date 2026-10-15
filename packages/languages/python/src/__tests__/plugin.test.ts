@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { describeLanguagePlugin } from "@code2n8n/lang-testkit";
+import { describeLanguagePlugin } from "@8n8/lang-testkit";
 import { describe, expect, it } from "vitest";
 import { pythonPlugin } from "../index";
 import { lojaFiles } from "./loja";

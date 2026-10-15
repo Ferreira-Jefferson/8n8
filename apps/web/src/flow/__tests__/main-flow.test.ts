@@ -1,10 +1,4 @@
-import type {
-  FlowEdge,
-  FlowNode,
-  Graph,
-  NodeId,
-  NodeKind,
-} from "@code2n8n/model";
+import type { FlowEdge, FlowNode, Graph, NodeId, NodeKind } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { mainFlowRows } from "../main-flow";
 import { videoGraph } from "./video-graph";

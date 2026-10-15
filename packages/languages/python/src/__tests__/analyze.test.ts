@@ -1,4 +1,4 @@
-import type { FlowEdge, FlowNode, SourceFile } from "@code2n8n/model";
+import type { FlowEdge, FlowNode, SourceFile } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import type { Parser } from "web-tree-sitter";
 import { analyzeFiles } from "../analyze";

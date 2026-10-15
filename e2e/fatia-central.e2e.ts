@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { ExplainResponse, Explanation, Graph } from "@code2n8n/model";
+import type { ExplainResponse, Explanation, Graph } from "@8n8/model";
 import {
   expect,
   type Locator,

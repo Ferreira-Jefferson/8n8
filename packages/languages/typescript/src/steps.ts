@@ -1,11 +1,11 @@
-import { lineRange } from "@code2n8n/lang-treesitter";
+import { lineRange } from "@8n8/lang-treesitter";
 import {
   childId,
   type EdgeKind,
   type FlowEdge,
   type FlowNode,
   type NodeId,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import type { Node } from "web-tree-sitter";
 import { type CallContext, resolveCall } from "./calls";
 import { isRequireDeclaration } from "./imports";

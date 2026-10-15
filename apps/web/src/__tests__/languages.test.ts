@@ -1,4 +1,4 @@
-import type { LanguageInfo } from "@code2n8n/model";
+import type { LanguageInfo } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import {
   listExtensions,

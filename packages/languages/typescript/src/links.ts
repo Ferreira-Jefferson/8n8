@@ -1,4 +1,4 @@
-import { innermost } from "@code2n8n/lang-treesitter";
+import { innermost } from "@8n8/lang-treesitter";
 import {
   childId,
   fileId,
@@ -6,7 +6,7 @@ import {
   type LinkRequest,
   type NodeId,
   type Offer,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import type { Node } from "web-tree-sitter";
 import { boundNames } from "./bound";
 import { allocateTopLevel } from "./build-graph";

@@ -163,7 +163,7 @@ interface Fingerprint {
 
 ### C8. Configuração: `model-env.ts` e `server/src/main.ts` (FID-15)
 
-- `resolveReviewModel(env) = env.CODE2N8N_REVIEW_MODEL || resolveModel(env)`. Uma string vazia conta como ausente, igual a `CODE2N8N_MODEL`.
+- `resolveReviewModel(env) = env.APP8N8_REVIEW_MODEL || resolveModel(env)`. Uma string vazia conta como ausente, igual a `APP8N8_MODEL`.
 - `composeExplain` passa `reviewModel` e `reviewer: buildReviewerPrompt()`.
 - O prompt do resumo passa a pedir identificadores entre crases e proíbe números e unidades que não estão no código. A versão muda sozinha.
 
@@ -244,7 +244,7 @@ interface CacheEntryV2 {
 
 ## E2E (Playwright, `/api/explain` interceptado)
 
-> **Substituído pelo orquestrador.** O E2E desta feature roda contra o servidor real. Esse servidor aponta para um falso OpenRouter local (`e2e/fake-llm.ts`, via `OPENROUTER_BASE_URL`), usa um cache isolado (`CODE2N8N_CACHE_DIR`) e roda na sua própria porta (`CODE2N8N_PORT`). Os detalhes estão em `tasks.md`, T23–T26. O texto abaixo vale só para os testes de interface que continuam interceptados.
+> **Substituído pelo orquestrador.** O E2E desta feature roda contra o servidor real. Esse servidor aponta para um falso OpenRouter local (`e2e/fake-llm.ts`, via `OPENROUTER_BASE_URL`), usa um cache isolado (`APP8N8_CACHE_DIR`) e roda na sua própria porta (`APP8N8_PORT`). Os detalhes estão em `tasks.md`, T23–T26. O texto abaixo vale só para os testes de interface que continuam interceptados.
 
 Seletores estáveis que os testes vão usar (o `/api/graph` é real):
 
@@ -299,7 +299,7 @@ O revisor recebe só o código e uma lista curta, então seu custo fica abaixo d
 | A camada 1 corta sugestões que propõem valores novos ("timeout de 10 s") | `checks.ts` | Menos sugestões úteis | O prompt do resumo proíbe números ausentes do código. É o comportamento pedido por FID-02/03. |
 | Lista de unidades com uma letra gera falso positivo em texto comum | `checks.ts` | Corte indevido | Uma unidade de uma letra só conta depois de um número. Cada regra tem fixtures próprias. |
 | Duas aberturas simultâneas do mesmo nó | `cache.ts` | Duas gerações. A última gravação vence | Aceito. O `rename` atômico evita um arquivo corrompido. |
-| Revisor no mesmo modelo do redator tende a concordar consigo mesmo | `reviewer.ts` | Invenções sutis passam | A camada 1 pega o que é verificável. `CODE2N8N_REVIEW_MODEL` permite outro modelo (FID-15). |
+| Revisor no mesmo modelo do redator tende a concordar consigo mesmo | `reviewer.ts` | Invenções sutis passam | A camada 1 pega o que é verificável. `APP8N8_REVIEW_MODEL` permite outro modelo (FID-15). |
 
 ---
 

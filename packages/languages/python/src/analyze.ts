@@ -1,4 +1,4 @@
-import { lastLine } from "@code2n8n/lang-treesitter";
+import { lastLine } from "@8n8/lang-treesitter";
 import {
   type FlowEdge,
   type FlowNode,
@@ -7,7 +7,7 @@ import {
   type Graph,
   type LanguageAnalysis,
   type SourceFile,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import type { Node, Parser, Tree } from "web-tree-sitter";
 import { allocateTopLevel, buildGraph } from "./build-graph";
 import { markSyntaxErrors } from "./errors";

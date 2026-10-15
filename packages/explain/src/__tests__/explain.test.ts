@@ -9,11 +9,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  type ExplainRequest,
-  type LlmClient,
-  sliceLines,
-} from "@code2n8n/model";
+import { type ExplainRequest, type LlmClient, sliceLines } from "@8n8/model";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildReviewerPrompt,
@@ -118,7 +114,7 @@ const explained = (start: number) => {
 let dir: string;
 let cache: ExplainCache;
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "code2n8n-explain-"));
+  dir = await mkdtemp(join(tmpdir(), "8n8-explain-"));
   cache = createDiskCache(dir);
 });
 afterEach(async () => {

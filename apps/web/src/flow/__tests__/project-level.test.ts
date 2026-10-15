@@ -1,10 +1,4 @@
-import type {
-  EdgeKind,
-  FlowEdge,
-  FlowNode,
-  Graph,
-  NodeKind,
-} from "@code2n8n/model";
+import type { EdgeKind, FlowEdge, FlowNode, Graph, NodeKind } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { type Level, projectLevel, ROOT_HUB } from "../project-level";
 import { lojaGraph } from "./loja-graph";

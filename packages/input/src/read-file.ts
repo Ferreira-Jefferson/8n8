@@ -1,4 +1,4 @@
-import type { IgnoredFile, SourceFile } from "@code2n8n/model";
+import type { IgnoredFile, SourceFile } from "@8n8/model";
 import { lstat, readFile } from "./fs-read";
 
 const MAX_FILE_BYTES = 1_048_576;

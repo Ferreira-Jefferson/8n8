@@ -1,4 +1,4 @@
-import { lastLine, markSyntaxErrors } from "@code2n8n/lang-treesitter";
+import { lastLine, markSyntaxErrors } from "@8n8/lang-treesitter";
 import {
   type FlowEdge,
   type FlowNode,
@@ -7,7 +7,7 @@ import {
   type Graph,
   type LanguageAnalysis,
   type SourceFile,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import type { Tree } from "web-tree-sitter";
 import { buildGraph } from "./build-graph";
 import { moduleSpecifiers } from "./imports";

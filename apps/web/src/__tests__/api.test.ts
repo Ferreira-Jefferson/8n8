@@ -3,7 +3,7 @@ import type {
   Graph,
   NodeTitle,
   ProjectResponse,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   fetchExplanation,

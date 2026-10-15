@@ -1,4 +1,4 @@
-import type { FlowNode, NodeKind } from "@code2n8n/model";
+import type { FlowNode, NodeKind } from "@8n8/model";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { afterEach, describe, expect, it, vi } from "vitest";

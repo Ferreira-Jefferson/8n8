@@ -1,4 +1,4 @@
-import type { FlowNode, NodeKind } from "@code2n8n/model";
+import type { FlowNode, NodeKind } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { lojaGraph } from "../../flow/__tests__/loja-graph";
 import {

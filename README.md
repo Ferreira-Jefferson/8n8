@@ -46,7 +46,7 @@ Para usar sem recarga, construa a tela e suba tudo em um servidor só:
 pnpm start
 ```
 
-Abra `http://127.0.0.1:4317`. A porta muda com a variável `CODE2N8N_PORT`.
+Abra `http://127.0.0.1:4317`. A porta muda com a variável `APP8N8_PORT`.
 
 ### A chave do LLM
 
@@ -56,10 +56,10 @@ Os resumos e as sugestões pedem um provedor de LLM. Copie `.env.example` para `
 cp .env.example .env
 ```
 
-- `CODE2N8N_LLM_PROVIDER`: `openrouter` (o padrão) ou `openai-compatible` (OpenAI, Ollama, LM Studio).
+- `APP8N8_LLM_PROVIDER`: `openrouter` (o padrão) ou `openai-compatible` (OpenAI, Ollama, LM Studio).
 - `OPENROUTER_API_KEY`: a chave do provedor `openrouter`.
-- `CODE2N8N_LLM_BASE_URL` e `CODE2N8N_LLM_API_KEY`: a URL e a chave do provedor `openai-compatible`. Em servidor local, a chave é opcional.
-- `CODE2N8N_MODEL` e `CODE2N8N_REVIEW_MODEL`: o modelo do resumo e o do revisor. Vazio usa o padrão do provedor.
+- `APP8N8_LLM_BASE_URL` e `APP8N8_LLM_API_KEY`: a URL e a chave do provedor `openai-compatible`. Em servidor local, a chave é opcional.
+- `APP8N8_MODEL` e `APP8N8_REVIEW_MODEL`: o modelo do resumo e o do revisor. Vazio usa o padrão do provedor.
 
 **Sem chave, o mapa funciona.** Só os textos (resumos e sugestões) ficam de fora. A estrutura não depende do LLM.
 

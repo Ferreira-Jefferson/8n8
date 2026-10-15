@@ -13,7 +13,7 @@ import {
 } from "./mapa";
 
 // Measurements, not checks (no spec thresholds). Run them apart from the suite:
-//   CODE2N8N_PERF=1 pnpm exec playwright test --project performance
+//   APP8N8_PERF=1 pnpm exec playwright test --project performance
 // Each prints a table. The only assertions are loose sanity bounds (30 s), so
 // the file never flakes on a slow machine.
 

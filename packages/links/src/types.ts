@@ -4,7 +4,7 @@ import type {
   LinkChannel,
   LinkRequest,
   Offer,
-} from "@code2n8n/model";
+} from "@8n8/model";
 
 /** Where a node lives: its file path (POSIX, relative to the root) and its language. */
 export interface FileInfo {

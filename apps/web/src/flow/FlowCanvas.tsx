@@ -4,7 +4,7 @@ import type {
   FlowNode,
   Graph,
   NodeId,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import {
   type NodeChange,
   ReactFlow,

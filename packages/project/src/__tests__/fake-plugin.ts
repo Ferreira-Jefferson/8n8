@@ -5,7 +5,7 @@ import type {
   LanguageAnalysis,
   LanguagePlugin,
   SourceFile,
-} from "@code2n8n/model";
+} from "@8n8/model";
 
 /** A line `def name` becomes a function node; a line `use path` becomes an `imports` wire to that file. */
 export function fileGraph(file: SourceFile, id: string): Graph {

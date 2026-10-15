@@ -1,4 +1,4 @@
-import type { FlowEdge, FlowNode } from "@code2n8n/model";
+import type { FlowEdge, FlowNode } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import type { Position } from "../layout";
 import { schedule } from "../motion";

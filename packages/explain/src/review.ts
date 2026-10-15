@@ -3,7 +3,7 @@ import type {
   Explanation,
   LlmClient,
   ReviewStatus,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import { layerOne, type Problem } from "./checks";
 import {
   applyVerdicts,

@@ -14,20 +14,12 @@ import {
   type PromptLanguage,
   type TitleDeps,
   titleNodes,
-} from "@code2n8n/explain";
-import {
-  type FolderRead,
-  type ReadFilter,
-  readSourceFolder,
-} from "@code2n8n/input";
-import { pythonPlugin } from "@code2n8n/lang-python";
-import { typescriptPlugin } from "@code2n8n/lang-typescript";
-import { linkProject } from "@code2n8n/links";
-import {
-  createLlmClient,
-  type LlmConfig,
-  resolveLlmConfig,
-} from "@code2n8n/llm";
+} from "@8n8/explain";
+import { type FolderRead, type ReadFilter, readSourceFolder } from "@8n8/input";
+import { pythonPlugin } from "@8n8/lang-python";
+import { typescriptPlugin } from "@8n8/lang-typescript";
+import { linkProject } from "@8n8/links";
+import { createLlmClient, type LlmConfig, resolveLlmConfig } from "@8n8/llm";
 import type {
   ExplainRequest,
   ExplainResponse,
@@ -36,8 +28,8 @@ import type {
   TitleItem,
   TitleRequest,
   TitlesResponse,
-} from "@code2n8n/model";
-import { analyzeProject } from "@code2n8n/project";
+} from "@8n8/model";
+import { analyzeProject } from "@8n8/project";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { createApp, type ProjectRead } from "./app";
@@ -75,7 +67,7 @@ export function composeExplain(
   deps: ComposeDeps,
 ): (req: ExplainRequest) => Promise<ExplainResponse> {
   const { client, config } = deps.llm;
-  const cache = createDiskCache(env.CODE2N8N_CACHE_DIR || deps.cacheDir);
+  const cache = createDiskCache(env.APP8N8_CACHE_DIR || deps.cacheDir);
   // One set of prompts per language: a request picks its set by `language` (6.1-6.3).
   const byLanguage = new Map<string, ExplainDeps>(
     deps.plugins.map((plugin) => {
@@ -108,7 +100,7 @@ export function composeTitles(
   deps: ComposeDeps,
 ): (req: TitleRequest) => Promise<TitlesResponse> {
   const { client, config } = deps.llm;
-  const cache = createTitleCache(env.CODE2N8N_CACHE_DIR || deps.cacheDir);
+  const cache = createTitleCache(env.APP8N8_CACHE_DIR || deps.cacheDir);
   const byLanguage = new Map<string, TitleDeps>(
     deps.plugins.map((plugin) => {
       const lang = promptLanguageOf(plugin);
@@ -179,9 +171,9 @@ function mergeTitles(
   return { status: "ok", titles };
 }
 
-/** Port from CODE2N8N_PORT when it is a valid port number, else 4317. */
+/** Port from APP8N8_PORT when it is a valid port number, else 4317. */
 export function resolvePort(env: Record<string, string | undefined>): number {
-  const raw = env.CODE2N8N_PORT ?? "";
+  const raw = env.APP8N8_PORT ?? "";
   const port = Number(raw);
   return /^\d+$/.test(raw) && port >= 1 && port <= 65535 ? port : DEFAULT_PORT;
 }
@@ -265,10 +257,7 @@ async function main(): Promise<void> {
     // The history is user data, not explain cache: it has its own folder, so wiping
     // the cache never meets the open database file (Windows refuses that delete).
     history: openHistoryOrWarn(
-      join(
-        process.env.CODE2N8N_HISTORY_DIR || compose.cacheDir,
-        "historico.db",
-      ),
+      join(process.env.APP8N8_HISTORY_DIR || compose.cacheDir, "historico.db"),
     ),
     port,
   });

@@ -1,4 +1,4 @@
-import type { ChatMessage } from "@code2n8n/model";
+import type { ChatMessage } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { openaiCompatible } from "../openai-compatible";
 import { fakeFetch } from "./fake-fetch";

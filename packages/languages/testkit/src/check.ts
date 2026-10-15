@@ -4,7 +4,7 @@ import type {
   LanguageAnalysis,
   NodeId,
   SourceFile,
-} from "@code2n8n/model";
+} from "@8n8/model";
 
 /** Number of lines of a source, not counting the empty one after a final newline; at least 1. */
 export function lineCount(source: string): number {

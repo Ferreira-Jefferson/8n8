@@ -48,7 +48,7 @@ HEAD (`890dfe3`) is green. The two red commits are recorded as a process deviati
 | FID-12 | Evidence lines next to each claim, e.g. "L5" or "L5–7" | `apps/web/src/panel/__tests__/format-lines.test.ts` - `[5,6,7]` gives `"L5–7"` and `[5,6,7,9]` gives `"L5–7, L9"`; `DetailPanel.test.tsx:296-301` - a button named `"L8–9"` inside `[data-claim-id="s2"]`; `e2e/fidelidade.e2e.ts:104-106` - `["L5"]`, `["L8–9"]`, `["L9, L11"]` | ✅ PASS |
 | FID-13 | Clicking the evidence highlights those lines in the code | `DetailPanel.test.tsx:299,303` - `marked(container)` `toEqual(["8","9"])`, then `["4"]`; `CodeView.test.tsx:47`; `e2e/fidelidade.e2e.ts:114-117` - 0 marked before the click, 2 after, `["8","9"]` | ✅ PASS |
 | FID-14 | Below the summary, without the LLM, each external effect (HTTP, BANCO, ARQUIVO, E-MAIL, EXTERNO) with its call and line, taken from the graph | `effects.test.ts:29` - `requests.get` on line 5 for `calcular_frete`; `:41,61,81` - nested, class and order cases; `DetailPanel.test.tsx:368-385` - `["requests.get (HTTP, linha 5)"]`; `:387-403` - `resumo.compareDocumentPosition(efeitos) & Node.DOCUMENT_POSITION_FOLLOWING` `toBeTruthy()`, so the "Efeitos externos" heading follows the `Resumo` list; `:405-474` - shown under no effects, no-key, error and loading; `e2e/fidelidade.e2e.ts:139-157` - offline server, item `"requests.get (HTTP, linha 5)"`, `fakeLog()` `toEqual([])` | ✅ PASS. The position is asserted, and M24 (effects rendered above the summary) is killed. |
-| FID-15 | `CODE2N8N_REVIEW_MODEL` for the reviewer, else the summary model | `model-env.test.ts:22-49` - `"r/x"`, then the fallback to `CODE2N8N_MODEL` and to the default, with an empty value treated as unset; `main.test.ts:127,142` - wired through `composeExplain`; `review.test.ts:250-272` - the reviewer request carries `reviewModel`; `e2e/fidelidade.e2e.ts:126-127` - draft model `["e2e/drafter"]`, review model `["e2e/reviewer"]` | ✅ PASS |
+| FID-15 | `APP8N8_REVIEW_MODEL` for the reviewer, else the summary model | `model-env.test.ts:22-49` - `"r/x"`, then the fallback to `APP8N8_MODEL` and to the default, with an empty value treated as unset; `main.test.ts:127,142` - wired through `composeExplain`; `review.test.ts:250-272` - the reviewer request carries `reviewModel`; `e2e/fidelidade.e2e.ts:126-127` - draft model `["e2e/drafter"]`, review model `["e2e/reviewer"]` | ✅ PASS |
 
 ### P2: Cache (CACHE-01..07)
 
@@ -153,7 +153,7 @@ M4b matters because single-letter units (`s`, `m`, `t`, `l`, `g`, `h`) occur as 
 | --------- | ------ |
 | Minimum code | ✅ Small modules (`checks`, `sentences`, `reviewer`, `review`, `fingerprint`, `cache`), with no speculative options |
 | Surgical changes | ✅ Feature-01 code touched only where the contract changed (`schema.ts`, `prompt.ts`, `app.ts` +2 lines, `CodeView` set of lines) |
-| No scope creep | ✅ `CODE2N8N_PORT`, `OPENROUTER_BASE_URL` and `CODE2N8N_CACHE_DIR` exist only to run the E2E against the fake LLM, as the spec assumption requires |
+| No scope creep | ✅ `APP8N8_PORT`, `OPENROUTER_BASE_URL` and `APP8N8_CACHE_DIR` exist only to run the E2E against the fake LLM, as the spec assumption requires |
 | Matches patterns | ✅ zod at the boundaries, atomic temp+rename writes, Biome and depcruise clean |
 | Spec-anchored outcome check | ✅ Exact texts asserted ("Revisado com cortes", "Resumo atualizado: …", "Não foi possível gerar um resumo fiel.") |
 | Per-layer coverage | ✅ Domain ACs 1:1 in unit tests; route covers ok/no-key/unfaithful/error/404/400; both Independent Tests in E2E against the real pipeline |
@@ -193,7 +193,7 @@ All fix plans below are closed: Fix 1 by `81cc767`, Fix 2 by `60c6243`, and the 
 
 - **Root cause**: no `checkUnits` case has a letter unit that appears in the code only inside a longer identifier.
 - **Fix task**: in `packages/explain/src/__tests__/checks.test.ts` (FID-03 block), add `expect(checkUnits("Espera 30 s.", ctx("status = 30"))).not.toBeNull()` and `expect(checkUnits("Mede 2 m.", ctx("item = 2"))).not.toBeNull()`. No production change.
-- **Done when**: M4b (`const present = lowerCode.includes(unit.toLowerCase())` for letter units) is killed, and `pnpm --filter @code2n8n/explain test` is green.
+- **Done when**: M4b (`const present = lowerCode.includes(unit.toLowerCase())` for letter units) is killed, and `pnpm --filter @8n8/explain test` is green.
 
 ### Fix 2: FID-14 position not asserted - ✅ closed
 

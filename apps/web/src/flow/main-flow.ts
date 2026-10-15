@@ -1,4 +1,4 @@
-import type { FlowNode, Graph, NodeId } from "@code2n8n/model";
+import type { FlowNode, Graph, NodeId } from "@8n8/model";
 
 /** One row of the main flow: an entry and its commands with a call (VID-10). */
 export interface MainRow {

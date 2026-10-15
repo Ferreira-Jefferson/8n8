@@ -1,4 +1,4 @@
-import type { FlowEdge, FlowNode, NodeId } from "@code2n8n/model";
+import type { FlowEdge, FlowNode, NodeId } from "@8n8/model";
 import type { Position } from "./layout";
 
 /** Milliseconds from the moment a level appears (values from the video). */

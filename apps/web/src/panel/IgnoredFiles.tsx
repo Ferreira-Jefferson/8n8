@@ -1,4 +1,4 @@
-import type { IgnoredFile, IgnoreReason } from "@code2n8n/model";
+import type { IgnoredFile, IgnoreReason } from "@8n8/model";
 
 const REASONS: Record<IgnoreReason, string> = {
   "too-large": "maior que 1 MB",

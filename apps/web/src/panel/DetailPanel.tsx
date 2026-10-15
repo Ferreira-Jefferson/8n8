@@ -7,7 +7,7 @@ import {
   type FlowNode,
   type NodeId,
   type UpdateReason,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import { Fragment, useEffect, useState } from "react";
 import {
   type ExplainOrigin,

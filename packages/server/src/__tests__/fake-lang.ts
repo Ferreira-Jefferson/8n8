@@ -3,7 +3,7 @@ import type {
   LanguageAnalysis,
   LanguagePlugin,
   SourceFile,
-} from "@code2n8n/model";
+} from "@8n8/model";
 
 const NO_ANALYSIS: LanguageAnalysis = {
   files: [],

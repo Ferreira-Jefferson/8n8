@@ -1,4 +1,4 @@
-import type { FlowNode, Graph } from "@code2n8n/model";
+import type { FlowNode, Graph } from "@8n8/model";
 import { expect } from "vitest";
 import { typescriptPlugin } from "../index";
 

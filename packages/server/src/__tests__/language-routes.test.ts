@@ -6,7 +6,7 @@ import type {
   LanguagePlugin,
   LanguagesResponse,
   TitleRequest,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import { describe, expect, it, vi } from "vitest";
 import { type AppDeps, createApp, type ProjectRead } from "../app";
 import { openHistory } from "../history";

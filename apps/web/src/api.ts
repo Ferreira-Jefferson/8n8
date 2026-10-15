@@ -8,7 +8,7 @@ import type {
   NodeTitle,
   ProjectResponse,
   TitlesResponse,
-} from "@code2n8n/model";
+} from "@8n8/model";
 
 export type ExplainResult = ExplainResponse | { status: "stale" };
 

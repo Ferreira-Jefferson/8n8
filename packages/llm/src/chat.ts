@@ -1,4 +1,4 @@
-import type { LlmClient } from "@code2n8n/model";
+import type { LlmClient } from "@8n8/model";
 import OpenAI from "openai";
 import { type ModelProfile, profileOf } from "./profiles";
 

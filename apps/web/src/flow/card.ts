@@ -1,4 +1,4 @@
-import type { ExternalCategory, FlowNode } from "@code2n8n/model";
+import type { ExternalCategory, FlowNode } from "@8n8/model";
 
 const CODE_LINE_MAX = 32;
 

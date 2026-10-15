@@ -1,4 +1,4 @@
-import type { FlowEdge } from "@code2n8n/model";
+import type { FlowEdge } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { wireLanes } from "../lanes";
 import {

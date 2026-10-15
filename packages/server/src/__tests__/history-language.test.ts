@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { gzipSync } from "node:zlib";
-import type { Graph, HistoryEntry } from "@code2n8n/model";
+import type { Graph, HistoryEntry } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { openHistory } from "../history";
 
@@ -86,7 +86,7 @@ describe("history by language (5.5, 5.6)", () => {
   });
 
   it("an old database opens: its rows count as python, and the same Python snippet joins the old row", () => {
-    const dir = mkdtempSync(join(tmpdir(), "code2n8n-oldhist-"));
+    const dir = mkdtempSync(join(tmpdir(), "8n8-oldhist-"));
     const path = join(dir, "historico.db");
     writeOldDatabase(path, "x = 1");
     const h = openHistory(path);

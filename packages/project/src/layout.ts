@@ -1,9 +1,4 @@
-import {
-  type FlowNode,
-  folderId,
-  type Graph,
-  type NodeId,
-} from "@code2n8n/model";
+import { type FlowNode, folderId, type Graph, type NodeId } from "@8n8/model";
 
 export function byCode(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;

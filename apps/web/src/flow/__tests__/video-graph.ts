@@ -1,4 +1,4 @@
-import type { FlowEdge, FlowNode, Graph } from "@code2n8n/model";
+import type { FlowEdge, FlowNode, Graph } from "@8n8/model";
 
 /**
  * Graph of languages/python fixtures/pedido_video.py, built by hand from the

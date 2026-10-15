@@ -1,7 +1,7 @@
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { LlmClient, TitleItem, TitlesResponse } from "@code2n8n/model";
+import type { LlmClient, TitleItem, TitlesResponse } from "@8n8/model";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import * as api from "../index";
 import {
@@ -118,7 +118,7 @@ const ITEMS = [PROCESSAR, CALCULAR, HTTP];
 let dir: string;
 let cache: TitleCache;
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "code2n8n-titles-"));
+  dir = await mkdtemp(join(tmpdir(), "8n8-titles-"));
   cache = createTitleCache(dir);
 });
 afterEach(async () => {

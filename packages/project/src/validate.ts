@@ -6,7 +6,7 @@ import {
   type LanguagePlugin,
   type NodeId,
   type SourceFile,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import { dirOf, lastLine } from "./layout";
 
 /** The parent a file node must have: its folder, or none for a file in the root. */

@@ -1,4 +1,4 @@
-import type { ExternalCategory, NodeId } from "@code2n8n/model";
+import type { ExternalCategory, NodeId } from "@8n8/model";
 import type { Node } from "web-tree-sitter";
 import { classify, classifyUnknown } from "./classify";
 import type { Binding } from "./imports";

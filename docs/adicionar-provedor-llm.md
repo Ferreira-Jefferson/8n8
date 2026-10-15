@@ -26,8 +26,8 @@ Cada provedor implementa `LlmProvider`, em `packages/llm/src/provider.ts`:
 
 | Campo | O que faz |
 |---|---|
-| `id` | O nome do provedor. É o valor de `CODE2N8N_LLM_PROVIDER`. Entra na impressão digital do cache. |
-| `defaultModel` | O modelo usado quando `CODE2N8N_MODEL` está vazia. |
+| `id` | O nome do provedor. É o valor de `APP8N8_LLM_PROVIDER`. Entra na impressão digital do cache. |
+| `defaultModel` | O modelo usado quando `APP8N8_MODEL` está vazia. |
 | `env` | Os nomes das variáveis de chave (`apiKey`) e de URL (`baseURL`). |
 | `isConfigured(config)` | Retorna `false` se falta chave ou URL. Então o painel mostra "sem chave". |
 | `create(config, options)` | Retorna o `LlmClient`. `options.fetch` serve aos testes. |

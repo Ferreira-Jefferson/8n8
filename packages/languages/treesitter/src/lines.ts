@@ -1,4 +1,4 @@
-import type { LineRange } from "@code2n8n/model";
+import type { LineRange } from "@8n8/model";
 import type { Node } from "web-tree-sitter";
 
 /** 1-based, inclusive lines of a tree-sitter node. */

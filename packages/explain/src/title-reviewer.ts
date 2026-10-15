@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { TITLE_MAX_WORDS } from "@code2n8n/model";
+import { TITLE_MAX_WORDS } from "@8n8/model";
 import {
   type CheckContext,
   checkIdentifiers,

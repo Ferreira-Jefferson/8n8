@@ -1,9 +1,4 @@
-import type {
-  FlowNode,
-  Graph,
-  LanguageAnalysis,
-  SourceFile,
-} from "@code2n8n/model";
+import type { FlowNode, Graph, LanguageAnalysis, SourceFile } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { analysisProblems, graphProblems, lineCount } from "../check";
 

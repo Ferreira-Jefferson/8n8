@@ -1,4 +1,4 @@
-import type { FlowNode } from "@code2n8n/model";
+import type { FlowNode } from "@8n8/model";
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import { isOpenable, provisionalLabel, tagOf } from "./card";
 

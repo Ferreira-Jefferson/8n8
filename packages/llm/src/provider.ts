@@ -1,4 +1,4 @@
-import type { LlmClient } from "@code2n8n/model";
+import type { LlmClient } from "@8n8/model";
 
 /** Everything a provider needs to build a client; `resolveLlmConfig` fills it from the environment. */
 export interface LlmConfig {
@@ -14,7 +14,7 @@ export interface LlmConfig {
 /** One file per provider implements this contract; the registry in `providers.ts` lists them. */
 export interface LlmProvider {
   id: string;
-  /** Model used when CODE2N8N_MODEL is unset or empty. */
+  /** Model used when APP8N8_MODEL is unset or empty. */
   defaultModel: string;
   /** Environment variables that hold the key and the base URL of this provider. */
   env: { apiKey: string; baseURL: string };

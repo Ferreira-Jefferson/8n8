@@ -12,8 +12,8 @@ import {
   type TitleItem,
   type TitleRequest,
   type TitlesResponse,
-} from "@code2n8n/model";
-import { detectLanguage, pluginForPath } from "@code2n8n/project";
+} from "@8n8/model";
+import { detectLanguage, pluginForPath } from "@8n8/project";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
 import { maskDocstring } from "./docstring";

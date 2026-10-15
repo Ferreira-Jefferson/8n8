@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { loadParser } from "@code2n8n/lang-treesitter";
+import { loadParser } from "@8n8/lang-treesitter";
 import type { Parser } from "web-tree-sitter";
 
 const wasm = createRequire(import.meta.url).resolve(

@@ -1,10 +1,4 @@
-import type {
-  EdgeKind,
-  FlowEdge,
-  FlowNode,
-  Graph,
-  NodeId,
-} from "@code2n8n/model";
+import type { EdgeKind, FlowEdge, FlowNode, Graph, NodeId } from "@8n8/model";
 import { hasCommands, mainFlowRows } from "./main-flow";
 
 export interface Level {

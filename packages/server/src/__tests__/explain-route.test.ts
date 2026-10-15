@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
-import { pythonPlugin } from "@code2n8n/lang-python";
-import type { ExplainRequest, ExplainResponse } from "@code2n8n/model";
-import { buildProject } from "@code2n8n/project";
+import { pythonPlugin } from "@8n8/lang-python";
+import type { ExplainRequest, ExplainResponse } from "@8n8/model";
+import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
 

@@ -39,7 +39,7 @@ let tmp = "";
 let APP = "";
 
 test.beforeAll(() => {
-  tmp = mkdtempSync(join(tmpdir(), "code2n8n-no-pai-"));
+  tmp = mkdtempSync(join(tmpdir(), "8n8-no-pai-"));
   APP = join(tmp, "app");
   mkdirSync(APP);
   writeFileSync(join(APP, "acesso.py"), ACESSO);

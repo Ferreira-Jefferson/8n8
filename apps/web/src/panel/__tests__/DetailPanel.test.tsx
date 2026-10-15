@@ -1,4 +1,4 @@
-import type { Explanation, ExternalEffect, FlowNode } from "@code2n8n/model";
+import type { Explanation, ExternalEffect, FlowNode } from "@8n8/model";
 import {
   cleanup,
   fireEvent,

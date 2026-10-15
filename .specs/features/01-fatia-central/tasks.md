@@ -30,13 +30,13 @@ Regras que valem para toda task:
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | `model`: tipos, contrato `Extractor` e `index.ts` | none | - (build gate only: typecheck) | - | `pnpm typecheck && pnpm check` |
-| `model`: funções puras (`ids.ts`, `lines.ts`) | unit | Todos os ramos; 1:1 com CORE-04, CORE-06 e CORE-14 | `packages/model/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/model test` |
-| `extract-python`: carga do parser, tabela, imports, chamadas, grafo, passos, erros | unit (Node, wasm real, fixtures `.py`) | Todos os ramos das regras de extração; 1:1 com CORE-01..13; uma fixture por classe de erro de sintaxe; a fixture do vídeo cobre o Independent Test 1-3 | `packages/extract-python/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/extract-python test` |
-| `explain`: modelo, prompt, schema, cache, cliente, `explainNode` | unit (`LlmClient` falso, `fetch` falso, diretório temporário) | Todos os ramos; 1:1 com CORE-16..22; todo caminho da tabela de erros do design (rede, JSON inválido, cache corrompido, falha ao gravar) | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/explain test` |
-| `server`: rotas e middleware (`app.ts`) | integration (`app.request()`, sem porta) | Toda rota: caminho feliz + cada caso de borda + cada erro (400, 403, 404, 502) | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/server test` |
-| `server`: composição (`main.ts`) | unit | Ramos de ambiente: com e sem chave, com e sem `CODE2N8N_MODEL` | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/server test` |
-| `web`: lógica pura (`api.ts`, `navigation.ts`, `project-level.ts`, `layout.ts`) | unit (jsdom) | Todos os ramos; 1:1 com as ACs de interface (CORE-01..03, 08..11, 15) | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @code2n8n/web test` |
-| `web`: componentes (`StepNode`, `Breadcrumb`, `CodeView`, `DetailPanel`, `App`) | unit (componente leve: jsdom + Testing Library, sem `<ReactFlow>`) | Cada texto e cada interação das ACs (CORE-06, 07, 14, 15, 19, 20, 23, 24) | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @code2n8n/web test` |
+| `model`: funções puras (`ids.ts`, `lines.ts`) | unit | Todos os ramos; 1:1 com CORE-04, CORE-06 e CORE-14 | `packages/model/src/__tests__/*.test.ts` | `pnpm --filter @8n8/model test` |
+| `extract-python`: carga do parser, tabela, imports, chamadas, grafo, passos, erros | unit (Node, wasm real, fixtures `.py`) | Todos os ramos das regras de extração; 1:1 com CORE-01..13; uma fixture por classe de erro de sintaxe; a fixture do vídeo cobre o Independent Test 1-3 | `packages/extract-python/src/__tests__/*.test.ts` | `pnpm --filter @8n8/extract-python test` |
+| `explain`: modelo, prompt, schema, cache, cliente, `explainNode` | unit (`LlmClient` falso, `fetch` falso, diretório temporário) | Todos os ramos; 1:1 com CORE-16..22; todo caminho da tabela de erros do design (rede, JSON inválido, cache corrompido, falha ao gravar) | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @8n8/explain test` |
+| `server`: rotas e middleware (`app.ts`) | integration (`app.request()`, sem porta) | Toda rota: caminho feliz + cada caso de borda + cada erro (400, 403, 404, 502) | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
+| `server`: composição (`main.ts`) | unit | Ramos de ambiente: com e sem chave, com e sem `APP8N8_MODEL` | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
+| `web`: lógica pura (`api.ts`, `navigation.ts`, `project-level.ts`, `layout.ts`) | unit (jsdom) | Todos os ramos; 1:1 com as ACs de interface (CORE-01..03, 08..11, 15) | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
+| `web`: componentes (`StepNode`, `Breadcrumb`, `CodeView`, `DetailPanel`, `App`) | unit (componente leve: jsdom + Testing Library, sem `<ReactFlow>`) | Cada texto e cada interação das ACs (CORE-06, 07, 14, 15, 19, 20, 23, 24) | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/web test` |
 | `web`: `FlowCanvas.tsx` (só monta `<ReactFlow>`) | none | - (build gate + checagem manual no Independent Test; o design tira o canvas do jsdom) | - | `pnpm typecheck && pnpm check` |
 | Config, scaffold de pacote, fixtures, scripts | none | - (build gate only) | - | `pnpm typecheck && pnpm check && pnpm test` |
 
@@ -46,7 +46,7 @@ Regras que valem para toda task:
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | Task com testes unit de um pacote | `pnpm --filter @code2n8n/<pacote> test` |
+| Quick | Task com testes unit de um pacote | `pnpm --filter @8n8/<pacote> test` |
 | Full | Task com testes integration (rotas do servidor) | `pnpm test` (roda `vitest run` em todos os pacotes) |
 | Build | Fim de fase e tasks de config, tipos ou scaffold | `pnpm typecheck && pnpm check && pnpm test` |
 
@@ -234,12 +234,12 @@ T48 → T49
 **Done when**:
 
 - [x] `tsconfig.base.json`: `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `moduleResolution: bundler`, como no roadmap.
-- [x] `packages/model/package.json`: nome `@code2n8n/model`, `"type": "module"`, `exports: { ".": "./src/index.ts" }`, scripts `test: vitest run` e `typecheck: tsc --noEmit`, sem dependências.
+- [x] `packages/model/package.json`: nome `@8n8/model`, `"type": "module"`, `exports: { ".": "./src/index.ts" }`, scripts `test: vitest run` e `typecheck: tsc --noEmit`, sem dependências.
 - [x] `vitest.config.ts`: `environment: node`, testes em `src/__tests__/`.
-- [x] `pnpm --filter @code2n8n/model typecheck` passa.
+- [x] `pnpm --filter @8n8/model typecheck` passa.
 
 **Tests**: none (config)
-**Gate**: build · `pnpm --filter @code2n8n/model typecheck && pnpm --filter @code2n8n/model exec vitest run --passWithNoTests`
+**Gate**: build · `pnpm --filter @8n8/model typecheck && pnpm --filter @8n8/model exec vitest run --passWithNoTests`
 
 **Commit**: `chore(model): add tsconfig base and vitest on model skeleton`
 
@@ -258,11 +258,11 @@ T48 → T49
 
 **Done when**:
 
-- [x] O arquivo tem exatamente `OPENROUTER_API_KEY=` e `CODE2N8N_MODEL=`, sem valor.
+- [x] O arquivo tem exatamente `OPENROUTER_API_KEY=` e `APP8N8_MODEL=`, sem valor.
 - [x] O arquivo entra no git: `git check-ignore .env.example` sai com código 1.
 
 **Tests**: none (config)
-**Gate**: build · `grep -cE '^(OPENROUTER_API_KEY|CODE2N8N_MODEL)=$' .env.example` imprime `2`
+**Gate**: build · `grep -cE '^(OPENROUTER_API_KEY|APP8N8_MODEL)=$' .env.example` imprime `2`
 
 **Commit**: `chore(repo): add env example with empty llm variables`
 
@@ -281,7 +281,7 @@ T48 → T49
 
 **Done when**:
 
-- [x] Regras: sem ciclos; `model` não importa nenhum `@code2n8n/*`; `extract-python` e `explain` importam só `model`; `server` importa `model`, `extract-python` e `explain`; `apps/web` importa só `model`.
+- [x] Regras: sem ciclos; `model` não importa nenhum `@8n8/*`; `extract-python` e `explain` importam só `model`; `server` importa `model`, `extract-python` e `explain`; `apps/web` importa só `model`.
 - [x] Bloqueia `node:*` em `packages/model` e em `apps/web`.
 - [x] Bloqueia caminho relativo que sai da pasta do pacote (`../../packages/...`).
 - [x] A sintaxe das regras foi conferida no dependency-cruiser 18 (item incerto do design).
@@ -340,7 +340,7 @@ T48 → T49
 - [x] Sem I/O e sem imports.
 
 **Tests**: none (tipos)
-**Gate**: build · `pnpm --filter @code2n8n/model typecheck && pnpm check`
+**Gate**: build · `pnpm --filter @8n8/model typecheck && pnpm check`
 
 **Commit**: `feat(model): add graph types and Extractor contract`
 
@@ -363,7 +363,7 @@ T48 → T49
 - [x] `ExplainRequest.nodeKind` aceita só `function` e `class`.
 
 **Tests**: none (tipos)
-**Gate**: build · `pnpm --filter @code2n8n/model typecheck && pnpm check`
+**Gate**: build · `pnpm --filter @8n8/model typecheck && pnpm check`
 
 **Commit**: `feat(model): add explanation types`
 
@@ -389,7 +389,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/model test`
+**Gate**: quick · `pnpm --filter @8n8/model test`
 
 **Commit**: `feat(model): add structural node id rules`
 
@@ -414,7 +414,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 5 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/model test`
+**Gate**: quick · `pnpm --filter @8n8/model test`
 
 **Commit**: `feat(model): add sliceLines for exact node source`
 
@@ -439,7 +439,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes em `lines.test.ts` (nenhum de T11 sumiu).
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/model test`
+**Gate**: quick · `pnpm --filter @8n8/model test`
 
 **Commit**: `feat(model): add syntax error label`
 
@@ -474,7 +474,7 @@ T48 → T49
 
 ### T14: Scaffold do `extract-python`
 
-**What**: Criar o pacote `@code2n8n/extract-python` com package.json, tsconfig e vitest.config.
+**What**: Criar o pacote `@8n8/extract-python` com package.json, tsconfig e vitest.config.
 **Where**: `packages/extract-python/package.json`, `packages/extract-python/tsconfig.json`, `packages/extract-python/vitest.config.ts`
 **Depends on**: T6, T7, T13
 **Requirement**: base de CORE-01..13
@@ -483,13 +483,13 @@ T48 → T49
 
 **Done when**:
 
-- [x] Dependências: `@code2n8n/model` (`workspace:*`), `web-tree-sitter@0.27.1`, `tree-sitter-python@0.25.0`.
+- [x] Dependências: `@8n8/model` (`workspace:*`), `web-tree-sitter@0.27.1`, `tree-sitter-python@0.25.0`.
 - [x] O script de build nativo de `tree-sitter-python` não roda no `pnpm install`.
 - [x] `exports` só `"."` → `./src/index.ts` (o `index.ts` nasce em T25; até lá o typecheck cobre `src/`).
 - [x] `pnpm install` e `pnpm check` passam.
 
 **Tests**: none (scaffold)
-**Gate**: build · `pnpm install && pnpm --filter @code2n8n/extract-python typecheck && pnpm check`
+**Gate**: build · `pnpm install && pnpm --filter @8n8/extract-python typecheck && pnpm check`
 
 **Commit**: `chore(extract-python): scaffold package with tree-sitter deps`
 
@@ -516,7 +516,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): load python grammar wasm once`
 
@@ -542,7 +542,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 14 testes (ou um teste por linha numa tabela `it.each`).
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): classify external calls by prefix table`
 
@@ -568,7 +568,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): map import aliases to full names`
 
@@ -596,7 +596,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 12 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): resolve local and external calls`
 
@@ -629,7 +629,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 8 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): build top-level graph nodes`
 
@@ -660,7 +660,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 7 testes novos; os de T19 continuam passando.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): build linear steps with code grouping`
 
@@ -689,7 +689,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 5 testes novos; nenhum anterior sumiu.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): add condition nodes with labeled branches`
 
@@ -717,7 +717,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes novos; nenhum anterior sumiu.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): add loop and block nodes`
 
@@ -746,7 +746,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 5 testes novos; nenhum anterior sumiu.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): add deduplicated calls edges`
 
@@ -775,7 +775,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 5 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): mark syntax errors on innermost node`
 
@@ -804,7 +804,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 4 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test && pnpm check`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test && pnpm check`
 
 **Commit**: `feat(extract-python): expose deterministic python extractor`
 
@@ -816,7 +816,7 @@ T48 → T49
 
 ### T26: Scaffold do `explain`
 
-**What**: Criar o pacote `@code2n8n/explain` com package.json, tsconfig e vitest.config.
+**What**: Criar o pacote `@8n8/explain` com package.json, tsconfig e vitest.config.
 **Where**: `packages/explain/package.json`, `packages/explain/tsconfig.json`, `packages/explain/vitest.config.ts`
 **Depends on**: T13
 **Requirement**: base de CORE-16..22
@@ -825,12 +825,12 @@ T48 → T49
 
 **Done when**:
 
-- [x] Dependências: `@code2n8n/model` (`workspace:*`), `openai@7.32.0`, `zod@4.6.7`.
+- [x] Dependências: `@8n8/model` (`workspace:*`), `openai@7.32.0`, `zod@4.6.7`.
 - [x] `exports` só `"."`; scripts `test` e `typecheck`.
 - [x] `pnpm install` e `pnpm check` passam.
 
 **Tests**: none (scaffold)
-**Gate**: build · `pnpm install && pnpm --filter @code2n8n/explain typecheck && pnpm check`
+**Gate**: build · `pnpm install && pnpm --filter @8n8/explain typecheck && pnpm check`
 
 **Commit**: `chore(explain): scaffold package with openai and zod`
 
@@ -840,7 +840,7 @@ T48 → T49
 
 ### T27: Escolha do modelo
 
-**What**: Implementar `resolveModel(env)`, que devolve `CODE2N8N_MODEL` ou `~deepseek/deepseek-v4-flash-latest`.
+**What**: Implementar `resolveModel(env)`, que devolve `APP8N8_MODEL` ou `~deepseek/deepseek-v4-flash-latest`.
 **Where**: `packages/explain/src/model-env.ts`
 **Depends on**: T26
 **Requirement**: CORE-21
@@ -851,11 +851,11 @@ T48 → T49
 
 **Done when**:
 
-- [x] Testes: com `CODE2N8N_MODEL=google/gemini-x` → `google/gemini-x`; sem a variável → o padrão; com a variável vazia (como no `.env.example`) → o padrão.
+- [x] Testes: com `APP8N8_MODEL=google/gemini-x` → `google/gemini-x`; sem a variável → o padrão; com a variável vazia (como no `.env.example`) → o padrão.
 - [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): resolve model from env with default`
 
@@ -883,7 +883,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 4 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): build versioned system prompt from PTS rules`
 
@@ -913,7 +913,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): parse llm json and drop out-of-range suggestions`
 
@@ -943,7 +943,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): add atomic disk cache for explanations`
 
@@ -973,7 +973,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): add openrouter client with json mode`
 
@@ -1007,7 +1007,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 11 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test && pnpm check`
+**Gate**: quick · `pnpm --filter @8n8/explain test && pnpm check`
 
 **Commit**: `feat(explain): explain node with single cached llm call`
 
@@ -1019,7 +1019,7 @@ T48 → T49
 
 ### T33: Scaffold do `server`
 
-**What**: Criar o pacote `@code2n8n/server` com package.json, tsconfig e vitest.config.
+**What**: Criar o pacote `@8n8/server` com package.json, tsconfig e vitest.config.
 **Where**: `packages/server/package.json`, `packages/server/tsconfig.json`, `packages/server/vitest.config.ts`
 **Depends on**: T25, T32
 **Requirement**: base de CORE-05, CORE-17, CORE-19, CORE-20
@@ -1028,11 +1028,11 @@ T48 → T49
 
 **Done when**:
 
-- [x] Dependências: `@code2n8n/model`, `@code2n8n/extract-python`, `@code2n8n/explain` (`workspace:*`), `hono@4.13.13`, `@hono/node-server@2.1.5`, `zod@4.6.7`.
+- [x] Dependências: `@8n8/model`, `@8n8/extract-python`, `@8n8/explain` (`workspace:*`), `hono@4.13.13`, `@hono/node-server@2.1.5`, `zod@4.6.7`.
 - [x] `pnpm install` e `pnpm check` passam.
 
 **Tests**: none (scaffold)
-**Gate**: build · `pnpm install && pnpm --filter @code2n8n/server typecheck && pnpm check`
+**Gate**: build · `pnpm install && pnpm --filter @8n8/server typecheck && pnpm check`
 
 **Commit**: `chore(server): scaffold package with hono`
 
@@ -1144,9 +1144,9 @@ T48 → T49
 
 - [x] Teste (CORE-19): sem `OPENROUTER_API_KEY`, a fábrica do cliente não é chamada e o `explain` devolve `no-key`.
 - [x] Teste: com a chave, a fábrica é chamada uma vez com ela.
-- [x] Teste (CORE-21): com `CODE2N8N_MODEL=x/y`, o cliente falso recebe `model: 'x/y'`; sem a variável, recebe o padrão.
+- [x] Teste (CORE-21): com `APP8N8_MODEL=x/y`, o cliente falso recebe `model: 'x/y'`; sem a variável, recebe o padrão.
 - [x] Teste: o prompt de sistema enviado contém o texto do `docs/portugues-tecnico-simplificado.md` lido do disco.
-- [x] Checagem manual: `pnpm --filter @code2n8n/server exec tsx src/main.ts` sobe em `127.0.0.1:4317`; com a porta ocupada, termina com uma mensagem clara.
+- [x] Checagem manual: `pnpm --filter @8n8/server exec tsx src/main.ts` sobe em `127.0.0.1:4317`; com a porta ocupada, termina com uma mensagem clara.
 - [x] Gate passa. Test count: ≥ 4 testes novos.
 
 **Tests**: unit
@@ -1171,13 +1171,13 @@ T48 → T49
 
 **Done when**:
 
-- [x] Dependências: `@code2n8n/model` (`workspace:*`, só tipos), `react@19.3.0`, `react-dom@19.3.0`, `@xyflow/react@12.12.0`, `@dagrejs/dagre@3.1.1`; dev: `vite@8.3.4`, `@vitejs/plugin-react@6.1.2`, `jsdom@30.1.2`, `@testing-library/react@16.3.3`.
+- [x] Dependências: `@8n8/model` (`workspace:*`, só tipos), `react@19.3.0`, `react-dom@19.3.0`, `@xyflow/react@12.12.0`, `@dagrejs/dagre@3.1.1`; dev: `vite@8.3.4`, `@vitejs/plugin-react@6.1.2`, `jsdom@30.1.2`, `@testing-library/react@16.3.3`.
 - [x] O peer de `@testing-library/react` 16.3.3 com React 19.3 foi conferido (item incerto do design). Se falhar, registrar e escolher a versão que aceita.
 - [x] Scripts `dev`, `build`, `test`, `typecheck`.
 - [x] `pnpm check` passa: a web não importa `explain`, `extract-python`, `server` nem `node:*`.
 
 **Tests**: none (scaffold)
-**Gate**: build · `pnpm install && pnpm --filter @code2n8n/web typecheck && pnpm --filter @code2n8n/web build && pnpm check`
+**Gate**: build · `pnpm install && pnpm --filter @8n8/web typecheck && pnpm --filter @8n8/web build && pnpm check`
 
 **Commit**: `chore(web): scaffold vite react app with api proxy`
 
@@ -1206,7 +1206,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): add api client for graph and explain`
 
@@ -1236,7 +1236,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): add navigation reducer for drill-down`
 
@@ -1265,7 +1265,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): project one graph level with lifted calls edges`
 
@@ -1293,7 +1293,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 4 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): add left-to-right dagre layout`
 
@@ -1323,7 +1323,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 5 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): add step node with category and badges`
 
@@ -1374,7 +1374,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): add clickable breadcrumb`
 
@@ -1401,7 +1401,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 3 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): add numbered code view with line highlight`
 
@@ -1432,7 +1432,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 7 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): add detail panel with explanation states`
 
@@ -1462,7 +1462,7 @@ T48 → T49
 - [x] Gate passa. Test count: ≥ 6 testes.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): wire app with paste, map, breadcrumb and panel`
 

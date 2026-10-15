@@ -169,7 +169,7 @@ importers:
       '@biomejs/biome':
         specifier: 2.5.15
         version: 2.5.15
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:packages/model
       '@playwright/test':
@@ -193,7 +193,7 @@ importers:
 
   apps/web:
     dependencies:
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../../packages/model
       '@dagrejs/dagre':
@@ -239,7 +239,7 @@ importers:
 
   packages/explain:
     dependencies:
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../model
       zod:
@@ -252,7 +252,7 @@ importers:
 
   packages/input:
     dependencies:
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../model
     devDependencies:
@@ -262,10 +262,10 @@ importers:
 
   packages/languages/python:
     dependencies:
-      '@code2n8n/lang-treesitter':
+      '@8n8/lang-treesitter':
         specifier: workspace:*
         version: link:../treesitter
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../../model
       tree-sitter-python:
@@ -275,7 +275,7 @@ importers:
         specifier: 0.27.1
         version: 0.27.1
     devDependencies:
-      '@code2n8n/lang-testkit':
+      '@8n8/lang-testkit':
         specifier: workspace:*
         version: link:../testkit
       '@types/node':
@@ -284,13 +284,13 @@ importers:
 
   packages/languages/testkit:
     dependencies:
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../../model
 
   packages/languages/treesitter:
     dependencies:
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../../model
       web-tree-sitter:
@@ -309,10 +309,10 @@ importers:
 
   packages/languages/typescript:
     dependencies:
-      '@code2n8n/lang-treesitter':
+      '@8n8/lang-treesitter':
         specifier: workspace:*
         version: link:../treesitter
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../../model
       tree-sitter-typescript:
@@ -322,7 +322,7 @@ importers:
         specifier: 0.27.1
         version: 0.27.1
     devDependencies:
-      '@code2n8n/lang-testkit':
+      '@8n8/lang-testkit':
         specifier: workspace:*
         version: link:../testkit
       '@types/node':
@@ -331,13 +331,13 @@ importers:
 
   packages/links:
     dependencies:
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../model
 
   packages/llm:
     dependencies:
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../model
       openai:
@@ -352,34 +352,34 @@ importers:
 
   packages/project:
     dependencies:
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../model
 
   packages/server:
     dependencies:
-      '@code2n8n/explain':
+      '@8n8/explain':
         specifier: workspace:*
         version: link:../explain
-      '@code2n8n/input':
+      '@8n8/input':
         specifier: workspace:*
         version: link:../input
-      '@code2n8n/lang-python':
+      '@8n8/lang-python':
         specifier: workspace:*
         version: link:../languages/python
-      '@code2n8n/lang-typescript':
+      '@8n8/lang-typescript':
         specifier: workspace:*
         version: link:../languages/typescript
-      '@code2n8n/links':
+      '@8n8/links':
         specifier: workspace:*
         version: link:../links
-      '@code2n8n/llm':
+      '@8n8/llm':
         specifier: workspace:*
         version: link:../llm
-      '@code2n8n/model':
+      '@8n8/model':
         specifier: workspace:*
         version: link:../model
-      '@code2n8n/project':
+      '@8n8/project':
         specifier: workspace:*
         version: link:../project
       '@hono/node-server':

@@ -1,4 +1,4 @@
-import type { NodeId } from "@code2n8n/model";
+import type { NodeId } from "@8n8/model";
 import { NODE_HEIGHT, NODE_WIDTH, type Position } from "./layout";
 
 /** Below this zoom the card text is too small to read (VID-03). */

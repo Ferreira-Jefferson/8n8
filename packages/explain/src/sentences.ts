@@ -1,4 +1,4 @@
-import type { ClaimId } from "@code2n8n/model";
+import type { ClaimId } from "@8n8/model";
 import type { Draft } from "./schema";
 
 export interface DraftClaim {

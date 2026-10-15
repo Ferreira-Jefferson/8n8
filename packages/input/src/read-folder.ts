@@ -1,5 +1,5 @@
 import { basename, join, resolve } from "node:path";
-import type { IgnoredFile, SourceFile } from "@code2n8n/model";
+import type { IgnoredFile, SourceFile } from "@8n8/model";
 import { readdir, realpath, stat } from "./fs-read";
 import { readSourceFile } from "./read-file";
 

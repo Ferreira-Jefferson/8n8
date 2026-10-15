@@ -1,4 +1,4 @@
-import type { Graph } from "@code2n8n/model";
+import type { Graph } from "@8n8/model";
 
 /**
  * Graph of languages/python fixtures/projeto-loja, as `extractProject` returns it,

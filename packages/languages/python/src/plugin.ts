@@ -1,4 +1,4 @@
-import type { Extractor, LanguagePlugin } from "@code2n8n/model";
+import type { Extractor, LanguagePlugin } from "@8n8/model";
 import { analyzeFiles } from "./analyze";
 import { buildGraph } from "./build-graph";
 import { detectPython } from "./detect";

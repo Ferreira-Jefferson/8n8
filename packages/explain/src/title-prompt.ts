@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { TITLE_MAX_WORDS, type TitleItem } from "@code2n8n/model";
+import { TITLE_MAX_WORDS, type TitleItem } from "@8n8/model";
 import { z } from "zod";
 import { KIND_LABEL } from "./explain";
 import type { PromptLanguage } from "./language";

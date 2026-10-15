@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { pythonPlugin } from "@code2n8n/lang-python";
+import { pythonPlugin } from "@8n8/lang-python";
 import type {
   ExplainRequest,
   FlowNode,
@@ -12,8 +12,8 @@ import type {
   Offer,
   SourceFile,
   TitleRequest,
-} from "@code2n8n/model";
-import { buildProject } from "@code2n8n/project";
+} from "@8n8/model";
+import { buildProject } from "@8n8/project";
 import { afterAll, describe, expect, it } from "vitest";
 import {
   composeExplain,
@@ -23,7 +23,7 @@ import {
 } from "../main";
 import { fakeLang } from "./fake-lang";
 
-const cacheDir = mkdtempSync(join(tmpdir(), "code2n8n-langs-"));
+const cacheDir = mkdtempSync(join(tmpdir(), "8n8-langs-"));
 afterAll(() => rmSync(cacheDir, { recursive: true, force: true }));
 let n = 0;
 const freshDir = () => join(cacheDir, `c${n++}`);

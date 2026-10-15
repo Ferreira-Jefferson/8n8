@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import type { FlowNode, Graph } from "@code2n8n/model";
+import type { FlowNode, Graph } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import type { Tree } from "web-tree-sitter";
 import {

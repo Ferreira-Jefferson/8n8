@@ -6,7 +6,7 @@ import {
   explainStyle,
   type LlmClient,
   STEP_SENTENCE_LIMIT,
-} from "@code2n8n/model";
+} from "@8n8/model";
 import type { ExplainCache } from "./cache";
 import { diffReasons, fingerprintOf, normalizeCode } from "./fingerprint";
 import { type ReviewOutcome, reviewedDraft } from "./review";

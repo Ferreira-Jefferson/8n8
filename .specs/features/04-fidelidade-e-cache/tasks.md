@@ -32,14 +32,14 @@ Regras que valem para toda task:
 
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
-| `model`: tipos (`explanation.ts`, `index.ts`) | none | - (build gate only: typecheck) | - | `pnpm --filter @code2n8n/model typecheck` |
-| `explain`: funções puras (`schema`, `prompt`, `sentences`, `checks`, `fingerprint`, `reviewer`, `model-env`) | unit | Todos os ramos; 1:1 com FID-02..07, FID-15, CACHE-01, CACHE-03, CACHE-04; fixtures próprias por regra da camada 1 (números, unidades de 1 letra e de 2+, símbolos, identificadores, crases, vizinhos) | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/explain test` |
-| `explain`: cliente OpenRouter (`openrouter.ts`) | unit (`fetch` falso) | URL padrão e configurada; papel `assistant` enviado | `packages/explain/src/__tests__/openrouter.test.ts` | `pnpm --filter @code2n8n/explain test` |
-| `explain`: pipeline, cache e orquestração (`review`, `cache`, `explain`) | unit (`LlmClient` falso roteirizado, diretório temporário) | Todos os ramos; 1:1 com FID-01, FID-08..11, CACHE-02..07; toda linha da tabela de erros do design (JSON inválido, revisor omite ID, nada sobrevive, entrada corrompida ou v1, falha ao gravar); o "5 kg" do Independent Test P1 e o +3 linhas do Independent Test P2 | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/explain test` |
-| `server`: rotas (`app.ts`) | integration (`app.request()`, sem porta) | `/api/explain`: caminho feliz + `unfaithful` (200) + todos os casos da feature 01 (400, 403, 404, 502) | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/server test` |
-| `server`: composição (`main.ts`) | unit | Ramos de ambiente: chave, `CODE2N8N_MODEL`, `CODE2N8N_REVIEW_MODEL`, `OPENROUTER_BASE_URL`, `CODE2N8N_CACHE_DIR`, `CODE2N8N_PORT`, com e sem cada um, string vazia como ausente | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @code2n8n/server test` |
-| `web`: lógica pura (`effects.ts`, `format-lines.ts`, `api.ts`) | unit | Todos os ramos; 1:1 com FID-12 e FID-14 | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @code2n8n/web test` |
-| `web`: componentes (`CodeView`, `DetailPanel`, `App`) | unit (jsdom + Testing Library) | Cada texto e cada interação de FID-09..14 e CACHE-04; os testes da feature 01 continuam passando com a mesma intenção | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @code2n8n/web test` |
+| `model`: tipos (`explanation.ts`, `index.ts`) | none | - (build gate only: typecheck) | - | `pnpm --filter @8n8/model typecheck` |
+| `explain`: funções puras (`schema`, `prompt`, `sentences`, `checks`, `fingerprint`, `reviewer`, `model-env`) | unit | Todos os ramos; 1:1 com FID-02..07, FID-15, CACHE-01, CACHE-03, CACHE-04; fixtures próprias por regra da camada 1 (números, unidades de 1 letra e de 2+, símbolos, identificadores, crases, vizinhos) | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @8n8/explain test` |
+| `explain`: cliente OpenRouter (`openrouter.ts`) | unit (`fetch` falso) | URL padrão e configurada; papel `assistant` enviado | `packages/explain/src/__tests__/openrouter.test.ts` | `pnpm --filter @8n8/explain test` |
+| `explain`: pipeline, cache e orquestração (`review`, `cache`, `explain`) | unit (`LlmClient` falso roteirizado, diretório temporário) | Todos os ramos; 1:1 com FID-01, FID-08..11, CACHE-02..07; toda linha da tabela de erros do design (JSON inválido, revisor omite ID, nada sobrevive, entrada corrompida ou v1, falha ao gravar); o "5 kg" do Independent Test P1 e o +3 linhas do Independent Test P2 | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @8n8/explain test` |
+| `server`: rotas (`app.ts`) | integration (`app.request()`, sem porta) | `/api/explain`: caminho feliz + `unfaithful` (200) + todos os casos da feature 01 (400, 403, 404, 502) | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
+| `server`: composição (`main.ts`) | unit | Ramos de ambiente: chave, `APP8N8_MODEL`, `APP8N8_REVIEW_MODEL`, `OPENROUTER_BASE_URL`, `APP8N8_CACHE_DIR`, `APP8N8_PORT`, com e sem cada um, string vazia como ausente | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @8n8/server test` |
+| `web`: lógica pura (`effects.ts`, `format-lines.ts`, `api.ts`) | unit | Todos os ramos; 1:1 com FID-12 e FID-14 | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
+| `web`: componentes (`CodeView`, `DetailPanel`, `App`) | unit (jsdom + Testing Library) | Cada texto e cada interação de FID-09..14 e CACHE-04; os testes da feature 01 continuam passando com a mesma intenção | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/web test` |
 | E2E: LLM falso (`e2e/fake-llm.ts`) | none | - (build gate: `tsc -p e2e`; exercitado pelos specs de T25 e T26) | - | `pnpm typecheck` |
 | E2E: `playwright.config.ts` | e2e (regressão) | A suíte da feature 01 continua verde com os três servidores no ar | `e2e/*.e2e.ts` | `pnpm e2e` |
 | E2E: specs (`e2e/*.e2e.ts`) | e2e (Playwright, servidor real + LLM falso) | Cada passo dos Independent Tests de P1 e P2, com textos exatos e contagem exata de chamadas ao LLM falso | `e2e/*.e2e.ts` | `pnpm e2e` |
@@ -50,8 +50,8 @@ Regras que valem para toda task:
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | Task com testes unit de um pacote | `pnpm --filter @code2n8n/<pacote> test` |
-| Full | Task com testes integration (rotas do servidor) | `pnpm --filter @code2n8n/server test` |
+| Quick | Task com testes unit de um pacote | `pnpm --filter @8n8/<pacote> test` |
+| Full | Task com testes integration (rotas do servidor) | `pnpm --filter @8n8/server test` |
 | E2E | Task de config ou spec Playwright | `pnpm e2e` |
 | Build (parcial) | Fim das fases 1 a 4 e tasks só de tipos | `pnpm --filter <pacotes migrados> typecheck && pnpm check && pnpm --filter <pacotes migrados> test` |
 | Build (final) | Fim das fases 5 e 6 | `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` |
@@ -60,10 +60,10 @@ Regras que valem para toda task:
 
 | Fim da fase | Pacotes migrados (`<pacotes migrados>`) |
 | ----------- | --------------------------------------- |
-| 1 | `--filter @code2n8n/model --filter @code2n8n/extract-python` |
+| 1 | `--filter @8n8/model --filter @8n8/extract-python` |
 | 2 | os mesmos da fase 1 (o `explain` só fecha o typecheck em T12; os testes do `explain` rodam e passam, porque o Vitest não checa tipos) |
-| 3 | fase 1 + `--filter @code2n8n/explain` |
-| 4 | fase 3 + `--filter @code2n8n/server` |
+| 3 | fase 1 + `--filter @8n8/explain` |
+| 4 | fase 3 + `--filter @8n8/server` |
 
 A partir do fim da fase 5, o build final vale sem exceção. O script `typecheck` da raiz inclui `tsc -p e2e`, então `e2e/fatia-central.e2e.ts` precisa estar migrado (T22) para a fase 5 fechar.
 
@@ -152,7 +152,7 @@ T24 → T26
 - [x] Gate parcial da fase 1 passa.
 
 **Tests**: none (tipos)
-**Gate**: build (parcial) · `pnpm --filter @code2n8n/model --filter @code2n8n/extract-python typecheck && pnpm check && pnpm --filter @code2n8n/model --filter @code2n8n/extract-python test`
+**Gate**: build (parcial) · `pnpm --filter @8n8/model --filter @8n8/extract-python typecheck && pnpm check && pnpm --filter @8n8/model --filter @8n8/extract-python test`
 
 **Commit**: `feat(model)!: add claim-based explanation contract with review and update`
 **Status**: ✅ Complete
@@ -178,7 +178,7 @@ T24 → T26
 - [x] Gate passa; nenhuma contagem de testes cai.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `refactor(explain): type the parsed llm output as Draft`
 **Status**: ✅ Complete
@@ -203,7 +203,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): ask for backticked identifiers and forbid absent numbers and units`
 **Status**: ✅ Complete
@@ -230,7 +230,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): split drafts into claims with positional ids`
 **Status**: ✅ Complete
@@ -256,7 +256,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): add deterministic layer-one checks for numbers, units and identifiers`
 **Status**: ✅ Complete
@@ -282,7 +282,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): add component fingerprint with ordered update reasons`
 **Status**: ✅ Complete
@@ -291,7 +291,7 @@ T24 → T26
 
 ### T7: Modelo do revisor (`resolveReviewModel`)
 
-**What**: Acrescentar `resolveReviewModel(env) = env.CODE2N8N_REVIEW_MODEL || resolveModel(env)` em `model-env.ts`.
+**What**: Acrescentar `resolveReviewModel(env) = env.APP8N8_REVIEW_MODEL || resolveModel(env)` em `model-env.ts`.
 **Where**: `packages/explain/src/model-env.ts`
 **Depends on**: None
 **Reuses**: `resolveModel`
@@ -301,14 +301,14 @@ T24 → T26
 
 **Done when**:
 
-- [x] Com `CODE2N8N_REVIEW_MODEL=r/x` devolve `r/x`.
-- [x] Sem a variável devolve o mesmo que `resolveModel` (com e sem `CODE2N8N_MODEL`).
+- [x] Com `APP8N8_REVIEW_MODEL=r/x` devolve `r/x`.
+- [x] Sem a variável devolve o mesmo que `resolveModel` (com e sem `APP8N8_MODEL`).
 - [x] String vazia conta como ausente.
 - [x] `model-env.test.ts` (feature 01): os testes atuais passam sem mudança.
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): resolve the reviewer model with summary model fallback`
 **Status**: ✅ Complete
@@ -333,7 +333,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): accept assistant messages and a configurable base url`
 **Status**: ✅ Complete
@@ -363,7 +363,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): add llm reviewer with zod verdicts and evidence range check`
 **Status**: ✅ Complete
@@ -393,7 +393,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): add review pipeline with redrafts, cuts and unfaithful outcome`
 **Status**: ✅ Complete
@@ -419,7 +419,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain)!: store one v2 cache entry per node identity`
 **Status**: ✅ Complete
@@ -449,7 +449,7 @@ T24 → T26
 - [x] Gate parcial da fase 3 passa (typecheck do `explain` volta a verde).
 
 **Tests**: unit
-**Gate**: build (parcial) · `pnpm --filter @code2n8n/model --filter @code2n8n/extract-python --filter @code2n8n/explain typecheck && pnpm check && pnpm --filter @code2n8n/model --filter @code2n8n/extract-python --filter @code2n8n/explain test`
+**Gate**: build (parcial) · `pnpm --filter @8n8/model --filter @8n8/extract-python --filter @8n8/explain typecheck && pnpm check && pnpm --filter @8n8/model --filter @8n8/extract-python --filter @8n8/explain test`
 
 **Commit**: `feat(explain): orchestrate cache, review pipeline and update reasons`
 **Status**: ✅ Complete
@@ -476,16 +476,16 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: integration
-**Gate**: full · `pnpm --filter @code2n8n/server test`
+**Gate**: full · `pnpm --filter @8n8/server test`
 
 **Commit**: `feat(server): pass node id to explain and answer unfaithful with 200`
 **Status**: ✅ Complete
 
 ---
 
-### T14: Composição com revisor, `OPENROUTER_BASE_URL` e `CODE2N8N_CACHE_DIR`
+### T14: Composição com revisor, `OPENROUTER_BASE_URL` e `APP8N8_CACHE_DIR`
 
-**What**: Em `composeExplain`, passar `reviewModel: resolveReviewModel(env)` e `reviewer: buildReviewerPrompt()`; passar `env.OPENROUTER_BASE_URL` (vazia conta como ausente) para `createClient(apiKey, baseURL)`; usar `env.CODE2N8N_CACHE_DIR` no lugar de `deps.cacheDir` quando definida. `main()` passa `baseURL` a `createOpenRouterClient`.
+**What**: Em `composeExplain`, passar `reviewModel: resolveReviewModel(env)` e `reviewer: buildReviewerPrompt()`; passar `env.OPENROUTER_BASE_URL` (vazia conta como ausente) para `createClient(apiKey, baseURL)`; usar `env.APP8N8_CACHE_DIR` no lugar de `deps.cacheDir` quando definida. `main()` passa `baseURL` a `createOpenRouterClient`.
 **Where**: `packages/server/src/main.ts`
 **Depends on**: None
 **Reuses**: `composeExplain` e `fakeFactory` de `main.test.ts`
@@ -496,22 +496,22 @@ T24 → T26
 **Done when**:
 
 - [x] `main.test.ts` (feature 01) migra assim: o `req` ganha `nodeId`; o cliente falso responde rascunho ou veredictos conforme o prompt de sistema; "factory chamada uma vez com a chave", CORE-19 (`no-key` sem cliente), CORE-21 (o modelo chega ao pedido do rascunho) e "o prompt de sistema traz o PTS" continuam com as mesmas asserções, agora sobre o pedido do rascunho.
-- [x] FID-15: com `CODE2N8N_REVIEW_MODEL=r/x`, o pedido do revisor usa `r/x` e o do rascunho usa o modelo do resumo; sem ela, os dois usam o mesmo modelo.
+- [x] FID-15: com `APP8N8_REVIEW_MODEL=r/x`, o pedido do revisor usa `r/x` e o do rascunho usa o modelo do resumo; sem ela, os dois usam o mesmo modelo.
 - [x] Com `OPENROUTER_BASE_URL=http://127.0.0.1:9/v1`, `createClient` recebe essa URL; sem ela ou vazia, recebe `undefined` (o cliente usa o padrão de T8).
-- [x] Com `CODE2N8N_CACHE_DIR=<tmp>/x`, a entrada é gravada em `<tmp>/x/nodes/`; sem ela, em `deps.cacheDir`.
+- [x] Com `APP8N8_CACHE_DIR=<tmp>/x`, a entrada é gravada em `<tmp>/x/nodes/`; sem ela, em `deps.cacheDir`.
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/server test`
+**Gate**: quick · `pnpm --filter @8n8/server test`
 
 **Commit**: `feat(server): wire reviewer model, base url and cache dir from env`
 **Status**: ✅ Complete
 
 ---
 
-### T15: Porta configurável (`CODE2N8N_PORT`)
+### T15: Porta configurável (`APP8N8_PORT`)
 
-**What**: Exportar `resolvePort(env)` de `main.ts` (`CODE2N8N_PORT` inteiro válido ou `4317`) e usá-lo no `serve`, no `createApp({ port })` e na mensagem de início. O E2E sobe um segundo servidor, com chave falsa, na 4319.
+**What**: Exportar `resolvePort(env)` de `main.ts` (`APP8N8_PORT` inteiro válido ou `4317`) e usá-lo no `serve`, no `createApp({ port })` e na mensagem de início. O E2E sobe um segundo servidor, com chave falsa, na 4319.
 **Where**: `packages/server/src/main.ts`
 **Depends on**: T14
 **Reuses**: a constante `PORT` atual vira o padrão
@@ -526,9 +526,9 @@ T24 → T26
 - [x] Gate parcial da fase 4 passa.
 
 **Tests**: unit
-**Gate**: build (parcial) · `pnpm --filter @code2n8n/model --filter @code2n8n/extract-python --filter @code2n8n/explain --filter @code2n8n/server typecheck && pnpm check && pnpm --filter @code2n8n/model --filter @code2n8n/extract-python --filter @code2n8n/explain --filter @code2n8n/server test`
+**Gate**: build (parcial) · `pnpm --filter @8n8/model --filter @8n8/extract-python --filter @8n8/explain --filter @8n8/server typecheck && pnpm check && pnpm --filter @8n8/model --filter @8n8/extract-python --filter @8n8/explain --filter @8n8/server test`
 
-**Commit**: `feat(server): read the listening port from CODE2N8N_PORT`
+**Commit**: `feat(server): read the listening port from APP8N8_PORT`
 **Status**: ✅ Complete
 
 ---
@@ -540,14 +540,14 @@ T24 → T26
 **What**: Criar `externalEffects(graph, nodeId): ExternalEffect[]` conforme C10: descendentes pelo `parentId` com `kind === "external"`, ordenados por `range.start`, como `{ callee, category, line: range.start }`.
 **Where**: `apps/web/src/panel/effects.ts`
 **Depends on**: T1
-**Reuses**: tipos `Graph` e `ExternalEffect` de `@code2n8n/model`
+**Reuses**: tipos `Graph` e `ExternalEffect` de `@8n8/model`
 **Requirement**: FID-14 (AD-010)
 
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
 
-- [x] Independent Test P1: no grafo real da fixture `pedido_frete.py` (gerado com `@code2n8n/extract-python` no teste ou em JSON fixo), `fn:calcular_frete` dá `[{ callee: "requests.get", category: "HTTP", line: 5 }]`.
+- [x] Independent Test P1: no grafo real da fixture `pedido_frete.py` (gerado com `@8n8/extract-python` no teste ou em JSON fixo), `fn:calcular_frete` dá `[{ callee: "requests.get", category: "HTTP", line: 5 }]`.
 - [x] `fn:processar_pedido` dá `[]`.
 - [x] Efeitos dentro de condição e laço (netos) entram; efeitos de outro nó não.
 - [x] Uma classe lista os efeitos dos métodos.
@@ -555,7 +555,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): derive external effects of a node from the graph`
 
@@ -581,7 +581,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `test(web): cover the reviewed explain contract and unfaithful in api`
 
@@ -605,7 +605,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): format evidence lines as compact ranges`
 
@@ -630,7 +630,7 @@ T24 → T26
 - [x] Gate passa (o typecheck de `DetailPanel.tsx` fica vermelho até T20).
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): highlight a set of lines in the code view`
 
@@ -660,7 +660,7 @@ T24 → T26
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): show reviewed claims with evidence, badges, updates and effects`
 
@@ -682,10 +682,10 @@ T24 → T26
 
 - [x] A migração das fixtures de `App.test.tsx` foi para T20 (decisão do orquestrador). Aqui o `effects={[]}` provisório vira `externalEffects(graph, selected.id)`.
 - [x] Teste novo: ao selecionar `calcular_frete` com `fetch` de explain respondendo `no-key`, o painel mostra `requests.get (HTTP, linha 5)`.
-- [x] Gate passa. `pnpm --filter @code2n8n/web typecheck` volta a verde; o typecheck da raiz só fecha em T22, por causa de `e2e/`.
+- [x] Gate passa. `pnpm --filter @8n8/web typecheck` volta a verde; o typecheck da raiz só fecha em T22, por causa de `e2e/`.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): pass graph-derived external effects to the detail panel`
 
@@ -760,7 +760,7 @@ Roteiro, decidido pelo conteúdo do pedido:
 
 ### T24: Playwright com três servidores
 
-**What**: Trocar `webServer` por uma lista: (1) LLM falso `tsx e2e/fake-llm.ts`, url `http://127.0.0.1:4318/__log`; (2) o servidor sem chave da feature 01 (`pnpm start`, 4317), agora com `CODE2N8N_CACHE_DIR=<repo>/.cache/e2e-offline`; (3) o servidor com o pipeline real, `tsx packages/server/src/main.ts start`, url `http://127.0.0.1:4319`, com `CODE2N8N_PORT=4319`, `OPENROUTER_API_KEY=e2e-fake-key`, `OPENROUTER_BASE_URL=http://127.0.0.1:4318/v1`, `CODE2N8N_MODEL=e2e/drafter`, `CODE2N8N_REVIEW_MODEL=e2e/reviewer` e `CODE2N8N_CACHE_DIR=<repo>/.cache/e2e-real`. Todos com `reuseExistingServer: false`.
+**What**: Trocar `webServer` por uma lista: (1) LLM falso `tsx e2e/fake-llm.ts`, url `http://127.0.0.1:4318/__log`; (2) o servidor sem chave da feature 01 (`pnpm start`, 4317), agora com `APP8N8_CACHE_DIR=<repo>/.cache/e2e-offline`; (3) o servidor com o pipeline real, `tsx packages/server/src/main.ts start`, url `http://127.0.0.1:4319`, com `APP8N8_PORT=4319`, `OPENROUTER_API_KEY=e2e-fake-key`, `OPENROUTER_BASE_URL=http://127.0.0.1:4318/v1`, `APP8N8_MODEL=e2e/drafter`, `APP8N8_REVIEW_MODEL=e2e/reviewer` e `APP8N8_CACHE_DIR=<repo>/.cache/e2e-real`. Todos com `reuseExistingServer: false`.
 **Where**: `playwright.config.ts`
 **Depends on**: T23
 **Reuses**: a config atual
@@ -1003,6 +1003,6 @@ Só as dependências dentro da mesma fase têm seta; as de fases anteriores são
 ## Open Points for Approval
 
 - A spec ("Validação E2E") e o design (seção "E2E") preveem `/api/explain` interceptado. Estas tasks usam o pipeline real com um LLM falso, por pedido do usuário. As duas linhas devem ser atualizadas na spec e no design.
-- `CODE2N8N_PORT` (T15) não está no design. Ele é necessário para manter o servidor sem chave da feature 01 na 4317 e subir o servidor com chave na 4319.
+- `APP8N8_PORT` (T15) não está no design. Ele é necessário para manter o servidor sem chave da feature 01 na 4317 e subir o servidor com chave na 4319.
 - O formato `- <id>: <texto>` de `reviewerMessage` (T9) vira contrato com o LLM falso (T23). Se o formato mudar, T23 muda junto.
 - Tools: nenhuma MCP ou skill é necessária além do `tlc-spec-driven`. Confirmar antes do Execute.

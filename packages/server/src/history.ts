@@ -8,7 +8,7 @@ import type {
   HistoryEntry,
   HistoryItem,
   ProjectResponse,
-} from "@code2n8n/model";
+} from "@8n8/model";
 
 export interface History {
   /** Inserts the map, or, when the same content is already saved, bumps its opened_at and open_count. */

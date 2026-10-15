@@ -1,5 +1,5 @@
 // biome-ignore-all lint/suspicious/noTemplateCurlyInString: the strings are TypeScript sources under test
-import type { SourceFile } from "@code2n8n/model";
+import type { SourceFile } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { typescriptPlugin } from "../index";
 import { expectWellFormed, lines, node } from "./helpers";

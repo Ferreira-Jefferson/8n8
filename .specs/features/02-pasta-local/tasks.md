@@ -17,7 +17,7 @@ Regras que valem para toda task:
 
 - **Fases 1 a 5 não tocam nenhum arquivo em `apps/web/` nem em `e2e/`.** Elas podem rodar num git worktree separado enquanto a fase web da feature 04 termina. Cada task dessas fases fecha com o próprio gate verde e vira um commit sozinha.
 - **Fases 6 a 8 só começam depois do merge da feature 04** (fase web e E2E dela concluídas). O mapa de conflitos do design aponta `App.tsx`, `DetailPanel.tsx`, `api.ts` e os testes deles. A fase 6 começa rebaseada na `main` com a feature 04.
-- **Janela de typecheck da web.** T1 acrescenta `folder` e `file` a `NodeKind`. `ICONS: Record<NodeKind, string>` em `apps/web/src/flow/StepNode.tsx` fica incompleto, então `pnpm --filter @code2n8n/web typecheck` fica vermelho de T1 até T21. Por isso as fases 1 a 5 usam o build não-web. O Vitest não checa tipos: `pnpm test` continua verde. O branch das fases 1 a 5 só entra na `main` junto com a fase 6, e T21 é a primeira task depois do merge.
+- **Janela de typecheck da web.** T1 acrescenta `folder` e `file` a `NodeKind`. `ICONS: Record<NodeKind, string>` em `apps/web/src/flow/StepNode.tsx` fica incompleto, então `pnpm --filter @8n8/web typecheck` fica vermelho de T1 até T21. Por isso as fases 1 a 5 usam o build não-web. O Vitest não checa tipos: `pnpm test` continua verde. O branch das fases 1 a 5 só entra na `main` junto com a fase 6, e T21 é a primeira task depois do merge.
 - AD-016 vale para toda a API: o 415 cobre todo `POST /api/*` (`/api/graph`, `/api/explain`, `/api/project`), não só as duas rotas citadas em C4.
 - Nenhum teste lê uma pasta real do usuário. Árvores de teste vivem em `os.tmpdir()` (`mkdtemp`) ou em memória. A fixture comprometida é `packages/extract-python/src/__tests__/fixtures/projeto-loja/` (criada em T14).
 - Os testes nascem das ACs e do comportamento visível. Eles conferem saída, nunca chamadas internas.
@@ -35,16 +35,16 @@ Regras que valem para toda task:
 
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
-| `model`: tipos (`graph.ts`, tipos de `project.ts`) | none | - (build gate: typecheck) | - | `pnpm --filter @code2n8n/model typecheck` |
-| `model`: funções puras (`ids.ts`, `fileNodeOf`) | unit | Todos os ramos; formatos de ID da AD-013 | `packages/model/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/model test` |
-| `input`: leitura da pasta (`fs-read`, `read-file`, `read-folder`) | unit (árvores em `os.tmpdir()`, `vi.mock` de `node:fs/promises` para erros) | Todos os ramos; 1:1 com PROJ-01, 05, 06, 07; cada caso de borda de C2 (pasta ignorada em qualquer profundidade, 1 048 576 entra e +1 sai, UTF-8 inválido, BOM, `EACCES`, link, ordem por código, `not-found` para caminho ausente e para arquivo, varredura de APIs de escrita) | `packages/input/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/input test` |
-| `extract-python`: resolução (`imports`, `modules`, `calls`) | unit | Todos os ramos; 1:1 com PROJ-04 e PROJ-09; relativo nível 1 e 2, acima da raiz, `__init__.py` e reexportação, ciclo de reexportação, fallback da pasta do script, `import *`, `mod.Classe.metodo`; regressão do `..x` | `packages/extract-python/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/extract-python test` |
-| `extract-python`: grafo de projeto (`build-graph`, `project`, `index`) | unit (fixture `projeto-loja`) | 1:1 com PROJ-02, 03, 04, 09; IDs estáveis em duas execuções; snapshot do trecho sem mudança; erro de sintaxe por arquivo; pasta vazia; ID repetido lança erro | `packages/extract-python/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/extract-python test` |
+| `model`: tipos (`graph.ts`, tipos de `project.ts`) | none | - (build gate: typecheck) | - | `pnpm --filter @8n8/model typecheck` |
+| `model`: funções puras (`ids.ts`, `fileNodeOf`) | unit | Todos os ramos; formatos de ID da AD-013 | `packages/model/src/__tests__/*.test.ts` | `pnpm --filter @8n8/model test` |
+| `input`: leitura da pasta (`fs-read`, `read-file`, `read-folder`) | unit (árvores em `os.tmpdir()`, `vi.mock` de `node:fs/promises` para erros) | Todos os ramos; 1:1 com PROJ-01, 05, 06, 07; cada caso de borda de C2 (pasta ignorada em qualquer profundidade, 1 048 576 entra e +1 sai, UTF-8 inválido, BOM, `EACCES`, link, ordem por código, `not-found` para caminho ausente e para arquivo, varredura de APIs de escrita) | `packages/input/src/__tests__/*.test.ts` | `pnpm --filter @8n8/input test` |
+| `extract-python`: resolução (`imports`, `modules`, `calls`) | unit | Todos os ramos; 1:1 com PROJ-04 e PROJ-09; relativo nível 1 e 2, acima da raiz, `__init__.py` e reexportação, ciclo de reexportação, fallback da pasta do script, `import *`, `mod.Classe.metodo`; regressão do `..x` | `packages/extract-python/src/__tests__/*.test.ts` | `pnpm --filter @8n8/extract-python test` |
+| `extract-python`: grafo de projeto (`build-graph`, `project`, `index`) | unit (fixture `projeto-loja`) | 1:1 com PROJ-02, 03, 04, 09; IDs estáveis em duas execuções; snapshot do trecho sem mudança; erro de sintaxe por arquivo; pasta vazia; ID repetido lança erro | `packages/extract-python/src/__tests__/*.test.ts` | `pnpm --filter @8n8/extract-python test` |
 | Fronteiras (`.dependency-cruiser.cjs`) | none | - (build gate: `pnpm check`) | - | `pnpm check` |
-| `server`: rotas (`app.ts`) | integration (`app.request()`, sem porta) | `/api/project`: 200, 404, 400, 403, 415. `/api/explain` de projeto: pedido montado com o código do arquivo, `nodeId` com escopo, vizinhos qualificados, 404 (pasta ou nó ausente), 400 (pasta, arquivo). Todos os casos atuais de `/api/graph` e `/api/explain` continuam | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/server test` |
-| `server`: composição (`main.ts`) | integration (cópia da fixture em `os.tmpdir()`) | `composeReadProject` ok e `not-found`; releitura do disco entre o mapa e a explicação; pasta intacta; `listenOptions` (PROJ-08) | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @code2n8n/server test` |
-| `web`: lógica pura (`project-level`, `navigation`, `api`, `toFlowEdges`) | unit | Todos os ramos; níveis de topo, pasta, arquivo e trecho; `ancestry`, `jump`; `fetchProject` 200/404/erro; `origin` `{source}` e `{root}` | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @code2n8n/web test` |
-| `web`: componentes (`StepNode`, `Breadcrumb`, `IgnoredFiles`, `DetailPanel`, `App`) | unit (jsdom + Testing Library) | Cada texto exato de C5 (rótulos, mensagens, motivos); cada interação (abrir pasta, salto entre arquivos, painel de pasta e de arquivo); os testes das features 01 e 04 continuam passando com a mesma intenção | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @code2n8n/web test` |
+| `server`: rotas (`app.ts`) | integration (`app.request()`, sem porta) | `/api/project`: 200, 404, 400, 403, 415. `/api/explain` de projeto: pedido montado com o código do arquivo, `nodeId` com escopo, vizinhos qualificados, 404 (pasta ou nó ausente), 400 (pasta, arquivo). Todos os casos atuais de `/api/graph` e `/api/explain` continuam | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
+| `server`: composição (`main.ts`) | integration (cópia da fixture em `os.tmpdir()`) | `composeReadProject` ok e `not-found`; releitura do disco entre o mapa e a explicação; pasta intacta; `listenOptions` (PROJ-08) | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @8n8/server test` |
+| `web`: lógica pura (`project-level`, `navigation`, `api`, `toFlowEdges`) | unit | Todos os ramos; níveis de topo, pasta, arquivo e trecho; `ancestry`, `jump`; `fetchProject` 200/404/erro; `origin` `{source}` e `{root}` | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
+| `web`: componentes (`StepNode`, `Breadcrumb`, `IgnoredFiles`, `DetailPanel`, `App`) | unit (jsdom + Testing Library) | Cada texto exato de C5 (rótulos, mensagens, motivos); cada interação (abrir pasta, salto entre arquivos, painel de pasta e de arquivo); os testes das features 01 e 04 continuam passando com a mesma intenção | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/web test` |
 | E2E: `e2e/pasta-local.e2e.ts` | e2e (Playwright, servidor real na 4317 sem chave, fixture copiada para `os.tmpdir()`) | Independent Test inteiro e cada item da seção E2E do design, com textos e contagens exatos | `e2e/*.e2e.ts` | `pnpm e2e` |
 | E2E: regressão (`fatia-central.e2e.ts` e specs da feature 04) | e2e | Passam sem mudança | `e2e/*.e2e.ts` | `pnpm e2e` |
 
@@ -54,8 +54,8 @@ Regras que valem para toda task:
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | Task com testes unit de um pacote | `pnpm --filter @code2n8n/<pacote> test` |
-| Full | Task com testes integration do servidor | `pnpm --filter @code2n8n/server test` |
+| Quick | Task com testes unit de um pacote | `pnpm --filter @8n8/<pacote> test` |
+| Full | Task com testes integration do servidor | `pnpm --filter @8n8/server test` |
 | Build (não-web) | Tasks de tipos ou config e fim das fases 1 a 5 | `pnpm --filter "./packages/*" typecheck && pnpm exec tsc -p e2e && pnpm check && pnpm test` |
 | Build (web) | Fim das fases 6 e 7 | `pnpm typecheck && pnpm check && pnpm test` |
 | E2E | Task de spec Playwright | `pnpm e2e` |
@@ -189,7 +189,7 @@ T31 → T32
 - [x] Gate passa; nenhuma contagem de testes cai.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/model test`
+**Gate**: quick · `pnpm --filter @8n8/model test`
 
 **Commit**: `feat(model): add folder and file id helpers`
 **Status**: ✅ Complete
@@ -213,7 +213,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/model test`
+**Gate**: quick · `pnpm --filter @8n8/model test`
 
 **Commit**: `feat(model): add the project contract and fileNodeOf`
 **Status**: ✅ Complete
@@ -224,7 +224,7 @@ T31 → T32
 
 ### T4: Pacote `input` com acesso ao disco num módulo só
 
-**What**: Criar o pacote `@code2n8n/input` (`package.json` com `test` e `typecheck`, `tsconfig.json`, `src/index.ts`), no molde de `packages/model`. Criar `src/fs-read.ts`, o único arquivo que importa `node:fs/promises`, reexportando só `realpath`, `stat`, `lstat`, `readdir` e `readFile`. Exportar de `src/scan.ts` uma função pura `forbiddenUses(text)`. Rodar `pnpm install` e comprometer o `pnpm-lock.yaml`.
+**What**: Criar o pacote `@8n8/input` (`package.json` com `test` e `typecheck`, `tsconfig.json`, `src/index.ts`), no molde de `packages/model`. Criar `src/fs-read.ts`, o único arquivo que importa `node:fs/promises`, reexportando só `realpath`, `stat`, `lstat`, `readdir` e `readFile`. Exportar de `src/scan.ts` uma função pura `forbiddenUses(text)`. Rodar `pnpm install` e comprometer o `pnpm-lock.yaml`.
 **Where**: `packages/input/src/fs-read.ts`
 **Depends on**: T3
 **Reuses**: `package.json` e `tsconfig.json` de `packages/model`
@@ -236,11 +236,11 @@ T31 → T32
 
 - [x] `forbiddenUses` acha `writeFile`, `appendFile`, `mkdir`, `rm`, `rename`, `unlink`, `copyFile`, `chmod`, `open(` e `child_process` num texto de amostra, e não acha nada em `readFile(p)`.
 - [x] `read-only.test.ts` lê todo `.ts` de `packages/input/src` fora de `__tests__`: `forbiddenUses` volta vazio para cada um, e só `fs-read.ts` importa `node:fs`.
-- [x] `pnpm --filter @code2n8n/input typecheck` passa.
+- [x] `pnpm --filter @8n8/input typecheck` passa.
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/input test`
+**Gate**: quick · `pnpm --filter @8n8/input test`
 
 **Commit**: `feat(input): add read-only input package with disk access in one module`
 **Status**: ✅ Complete
@@ -260,7 +260,7 @@ T31 → T32
 **Done when**:
 
 - [x] `pnpm check` passa.
-- [x] Prova manual (não comprometida): um `import "@code2n8n/extract-python"` em `packages/input/src/index.ts` faz `pnpm check` falhar citando `input-only-model`. O import é revertido.
+- [x] Prova manual (não comprometida): um `import "@8n8/extract-python"` em `packages/input/src/index.ts` faz `pnpm check` falhar citando `input-only-model`. O import é revertido.
 - [x] Build não-web passa.
 
 **Tests**: none (config)
@@ -292,7 +292,7 @@ T31 → T32
 - [x] Gate passa; `read-only.test.ts` continua verde.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/input test`
+**Gate**: quick · `pnpm --filter @8n8/input test`
 
 **Commit**: `feat(input): read one source file with size, encoding and link checks`
 **Status**: ✅ Complete
@@ -322,7 +322,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/input test`
+**Gate**: quick · `pnpm --filter @8n8/input test`
 
 **Commit**: `feat(input): walk a source folder skipping ignored dirs and links`
 **Status**: ✅ Complete
@@ -351,7 +351,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `fix(extract-python): stop doubling the dot in relative from-import aliases`
 **Status**: ✅ Complete
@@ -376,7 +376,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): derive module names and relative import bases from paths`
 **Status**: ✅ Complete
@@ -400,7 +400,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `refactor(extract-python): extract top-level id allocation from buildGraph`
 **Status**: ✅ Complete
@@ -429,7 +429,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): index project modules and resolve imported names`
 **Status**: ✅ Complete
@@ -456,7 +456,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): resolve project calls through imports and flag unimported project names`
 **Status**: ✅ Complete
@@ -483,7 +483,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): build graphs under a file prefix with an import resolver`
 **Status**: ✅ Complete
@@ -512,7 +512,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): extract a project graph with folder and file nodes`
 **Status**: ✅ Complete
@@ -538,7 +538,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): wire imports between project files`
 **Status**: ✅ Complete
@@ -562,7 +562,7 @@ T31 → T32
 - [x] Build não-web passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): expose extractProject on the python extractor`
 **Status**: ✅ Complete
@@ -591,7 +591,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: integration
-**Gate**: full · `pnpm --filter @code2n8n/server test`
+**Gate**: full · `pnpm --filter @8n8/server test`
 
 **Commit**: `feat(server): add the project route behind the host guard`
 **Status**: ✅ Complete
@@ -618,7 +618,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: integration
-**Gate**: full · `pnpm --filter @code2n8n/server test`
+**Gate**: full · `pnpm --filter @8n8/server test`
 
 **Commit**: `feat(server): refuse non-json posts with 415`
 **Status**: ✅ Complete
@@ -645,7 +645,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: integration
-**Gate**: full · `pnpm --filter @code2n8n/server test`
+**Gate**: full · `pnpm --filter @8n8/server test`
 
 **Commit**: `feat(server): explain project nodes by re-reading the folder`
 **Status**: ✅ Complete
@@ -654,7 +654,7 @@ T31 → T32
 
 ### T20: Composição com `input` e `listenOptions`
 
-**What**: Em `main.ts`, criar `composeReadProject(read, extractor)`: chama `readSourceFolder(path, ".py")`, repassa `not-found`, extrai com `extractProject(files)`, põe `graph.project = { name }` e devolve `{ kind: "ok", root, response: { name, graph, files, ignored } }`. Extrair `listenOptions(port)` = `{ port, hostname: "127.0.0.1" }` e usá-lo no `serve`. Declarar `@code2n8n/input` no `package.json` do servidor e rodar `pnpm install`.
+**What**: Em `main.ts`, criar `composeReadProject(read, extractor)`: chama `readSourceFolder(path, ".py")`, repassa `not-found`, extrai com `extractProject(files)`, põe `graph.project = { name }` e devolve `{ kind: "ok", root, response: { name, graph, files, ignored } }`. Extrair `listenOptions(port)` = `{ port, hostname: "127.0.0.1" }` e usá-lo no `serve`. Declarar `@8n8/input` no `package.json` do servidor e rodar `pnpm install`.
 **Where**: `packages/server/src/main.ts`
 **Depends on**: T7, T16, T19
 **Reuses**: `readSourceFolder` (T7), `createPythonExtractor` (T16), `createApp`
@@ -673,7 +673,7 @@ T31 → T32
 - [x] Build não-web passa (fim das fases 1 a 5).
 
 **Tests**: integration
-**Gate**: full · `pnpm --filter @code2n8n/server test`
+**Gate**: full · `pnpm --filter @8n8/server test`
 
 **Commit**: `feat(server): compose folder reading with project extraction`
 **Status**: ✅ Complete
@@ -700,7 +700,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test && pnpm typecheck`
+**Gate**: quick · `pnpm --filter @8n8/web test && pnpm typecheck`
 
 **Commit**: `feat(web): add folder and file glyphs to step nodes`
 **Status**: ✅ Complete
@@ -726,7 +726,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): lift wires by kind on project levels`
 **Status**: ✅ Complete
@@ -753,7 +753,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): jump to a node's ancestry across files`
 **Status**: ✅ Complete
@@ -780,7 +780,7 @@ T31 → T32
 **Ajuste na execução**: a assinatura nova quebra o tipo da chamada em `DetailPanel.tsx`, que hoje é `fetchExplanation(source, node.id)`. Para o typecheck seguir verde, a chamada passa a `fetchExplanation({ source }, node.id)` já aqui; a prop `origin` continua em T27. Por isso duas asserções mudam nesta task, só no formato do primeiro argumento: `DetailPanel.test.tsx` ("fetches once for a function and shows summary, inputs, outputs and suggestions (CORE-16)") e `App.test.tsx` ("passes the suggestion count 2 to the canvas after the node is explained (CORE-23)") passam de `toHaveBeenCalledWith(source, "fn:calcular_frete")` para `toHaveBeenCalledWith({ source }, "fn:calcular_frete")`. A intenção é a mesma: a explicação do trecho é pedida com o código do trecho e o ID do nó.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): fetch projects and explain by source or root`
 **Status**: ✅ Complete
@@ -805,7 +805,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): start the breadcrumb with the project name`
 **Status**: ✅ Complete
@@ -829,7 +829,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): list ignored files with their reason`
 **Status**: ✅ Complete
@@ -857,7 +857,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): show folder, file and project nodes in the detail panel`
 
@@ -881,7 +881,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): draw import wires dashed`
 
@@ -910,7 +910,7 @@ T31 → T32
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): open a local folder as a project map`
 
@@ -936,7 +936,7 @@ T31 → T32
 - [x] Build (web) passa (fim das fases 6 e 7).
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): jump across files when opening a project call`
 

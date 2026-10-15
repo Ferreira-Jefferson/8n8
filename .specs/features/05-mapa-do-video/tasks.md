@@ -15,11 +15,11 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 Regras que valem para toda task:
 
 - **Trilhas paralelas.** Depois da Fase 0, as trilhas A, B e C rodam em paralelo, cada uma num worktree e branch próprios, criados a partir do commit que fecha a Fase 0:
-  - A: `../code2n8n-05a`, branch `feat/05-a-extrator`;
-  - B: `../code2n8n-05b`, branch `feat/05-b-explicacao`;
-  - C: `../code2n8n-05c`, branch `feat/05-c-web`.
+  - A: `../8n8-05a`, branch `feat/05-a-extrator`;
+  - B: `../8n8-05b`, branch `feat/05-b-explicacao`;
+  - C: `../8n8-05c`, branch `feat/05-c-web`.
 
-  Cada trilha só mexe nos arquivos da tabela "Dono de cada arquivo". A trilha D começa depois da mescla das três. Não apague o worktree `../code2n8n-f02` nem o branch `feat/02-pasta-local`.
+  Cada trilha só mexe nos arquivos da tabela "Dono de cada arquivo". A trilha D começa depois da mescla das três. Não apague o worktree `../8n8-f02` nem o branch `feat/02-pasta-local`.
 - **Janela do E2E.** Entre o fim da Fase 0 e o fim da Fase 7, `pnpm e2e` pode ficar vermelho, porque o E2E testa o app inteiro. Por isso as trilhas A, B e C usam o gate da própria trilha (unit, typecheck e check). O E2E inteiro volta ao gate na Fase 7.
 - **Testes que mudam.** Um teste existente só muda quando a spec muda o comportamento dele, e na trilha dona desse comportamento (tabela "Testes existentes que mudam"). A mudança mantém a intenção da AC original e nunca afrouxa a asserção. Nenhum teste é apagado ou pulado para a suíte passar.
 - **Testes da trilha B.** Os testes novos do servidor usam `pedido_frete.py` e só os IDs `fn:calcular_frete`, `fn:calcular_frete/s0` (HTTP) e `fn:calcular_frete/s1` (código), que a trilha A não muda.
@@ -36,17 +36,17 @@ Regras que valem para toda task:
 
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
-| `model`: tipos | none | - (build gate: typecheck) | - | `pnpm --filter @code2n8n/model typecheck` |
-| `model`: funções puras (`explainStyle`) | unit | Cada `ExplainKind` mapeado | `packages/model/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/model test` |
+| `model`: tipos | none | - (build gate: typecheck) | - | `pnpm --filter @8n8/model typecheck` |
+| `model`: funções puras (`explainStyle`) | unit | Cada `ExplainKind` mapeado | `packages/model/src/__tests__/*.test.ts` | `pnpm --filter @8n8/model test` |
 | Fixture `.py` | none | - (usado pelos testes de A, C e D) | - | build gate |
-| `extract-python`: `bound`, `classify`, `calls`, `steps`, `build-graph` | unit (parser real) | Todos os ramos; 1:1 com VID-13, VID-20, VID-24 (flag `openable`); cada regra de ligação de nome; cada passo (a)..(d) da VID-13 com fronteira (segmento inteiro × substring, maiúsculas); RETORNO em ramo, laço e com chamada | `packages/extract-python/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/extract-python test` |
-| `explain`: prompts, camada 1 de título, revisor de título, leitura de títulos | unit | Todos os ramos; 1:1 com VID-14, VID-16, VID-28; limite de 6 palavras na fronteira (6 passa, 7 cai); ID desconhecido ignorado | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/explain test` |
-| `explain`: pipeline, caches e orquestração (`review`, `explain`, `title-cache`, `titles`) | unit (`LlmClient` falso, diretório temporário) | Todos os ramos; 1:1 com VID-14, 16, 17, 28; toda linha da tabela de erros do design; contagem exata de chamadas (0 com cache, 2 sem cache) | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/explain test` |
-| `server`: rotas (`app.ts`) | integration (`app.request()`) | `/api/titles`: caminho feliz, trecho e projeto, ID desconhecido, pasta e arquivo descartados, mais de 200 IDs, corpo inválido, 404, 415, 403; `/api/explain`: cada `ExplainKind` aceito, pasta e arquivo com 400 | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @code2n8n/server test` |
-| `server`: composição (`main.ts`) | unit | `composeTitles` com e sem chave, pasta de cache, modelos; `composeExplain` com `stepPrompt` | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @code2n8n/server test` |
-| `web`: lógica pura (`card`, `main-flow`, `project-level`, `layout`, `motion`, `suggestion-cards`, `navigation`, `api`) | unit | Todos os ramos; 1:1 com as VIDs de cada módulo; cada caso de borda (entrada sem chamada, recursão, título fora do pedido, passo sem entrada e saída) | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @code2n8n/web test` |
-| `web`: componentes e hooks (`StepNode`, `WireEdge`, `SuggestionCard`, `FlowCanvas`, `Breadcrumb`, `DetailPanel`, `use-titles`, `App`) | unit (jsdom + Testing Library) | Cada texto, atributo e interação das VIDs; os testes atuais continuam com a mesma intenção | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @code2n8n/web test` |
-| `web`: CSS e fontes | none | - (build gate: `vite build`; os valores visíveis são provados no E2E) | - | `pnpm --filter @code2n8n/web build` |
+| `extract-python`: `bound`, `classify`, `calls`, `steps`, `build-graph` | unit (parser real) | Todos os ramos; 1:1 com VID-13, VID-20, VID-24 (flag `openable`); cada regra de ligação de nome; cada passo (a)..(d) da VID-13 com fronteira (segmento inteiro × substring, maiúsculas); RETORNO em ramo, laço e com chamada | `packages/extract-python/src/__tests__/*.test.ts` | `pnpm --filter @8n8/extract-python test` |
+| `explain`: prompts, camada 1 de título, revisor de título, leitura de títulos | unit | Todos os ramos; 1:1 com VID-14, VID-16, VID-28; limite de 6 palavras na fronteira (6 passa, 7 cai); ID desconhecido ignorado | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @8n8/explain test` |
+| `explain`: pipeline, caches e orquestração (`review`, `explain`, `title-cache`, `titles`) | unit (`LlmClient` falso, diretório temporário) | Todos os ramos; 1:1 com VID-14, 16, 17, 28; toda linha da tabela de erros do design; contagem exata de chamadas (0 com cache, 2 sem cache) | `packages/explain/src/__tests__/*.test.ts` | `pnpm --filter @8n8/explain test` |
+| `server`: rotas (`app.ts`) | integration (`app.request()`) | `/api/titles`: caminho feliz, trecho e projeto, ID desconhecido, pasta e arquivo descartados, mais de 200 IDs, corpo inválido, 404, 415, 403; `/api/explain`: cada `ExplainKind` aceito, pasta e arquivo com 400 | `packages/server/src/__tests__/*.test.ts` | `pnpm --filter @8n8/server test` |
+| `server`: composição (`main.ts`) | unit | `composeTitles` com e sem chave, pasta de cache, modelos; `composeExplain` com `stepPrompt` | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @8n8/server test` |
+| `web`: lógica pura (`card`, `main-flow`, `project-level`, `layout`, `motion`, `suggestion-cards`, `navigation`, `api`) | unit | Todos os ramos; 1:1 com as VIDs de cada módulo; cada caso de borda (entrada sem chamada, recursão, título fora do pedido, passo sem entrada e saída) | `apps/web/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
+| `web`: componentes e hooks (`StepNode`, `WireEdge`, `SuggestionCard`, `FlowCanvas`, `Breadcrumb`, `DetailPanel`, `use-titles`, `App`) | unit (jsdom + Testing Library) | Cada texto, atributo e interação das VIDs; os testes atuais continuam com a mesma intenção | `apps/web/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/web test` |
+| `web`: CSS e fontes | none | - (build gate: `vite build`; os valores visíveis são provados no E2E) | - | `pnpm --filter @8n8/web build` |
 | E2E: LLM falso (`e2e/fake-llm.ts`) | none | - (build gate: `tsc -p e2e`; exercitado pelos specs) | - | `pnpm typecheck` |
 | E2E: `playwright.config.ts` | e2e (regressão) | A suíte inteira roda com as imagens de referência configuradas | `e2e/*.e2e.ts` | `pnpm e2e` |
 | E2E: specs (`e2e/*.e2e.ts`) | e2e (Playwright, servidor real) | Cada VID com ao menos um teste; cada passo dos 3 Independent Tests; cada caso de borda da spec; estilos conferidos por `getComputedStyle` com o valor exato da spec | `e2e/*.e2e.ts` | `pnpm exec playwright test <arquivo>` e `pnpm e2e` |
@@ -58,13 +58,13 @@ Regras que valem para toda task:
 
 | Gate Level | When to Use | Command |
 | ---------- | ----------- | ------- |
-| Quick | Task com testes unit de um pacote | `pnpm --filter @code2n8n/<pacote> test` |
-| Full (server) | Task com testes integration de rota | `pnpm --filter @code2n8n/server test` |
+| Quick | Task com testes unit de um pacote | `pnpm --filter @8n8/<pacote> test` |
+| Full (server) | Task com testes integration de rota | `pnpm --filter @8n8/server test` |
 | E2E (arquivo) | Task de spec Playwright | `pnpm exec playwright test e2e/<arquivo>.e2e.ts` |
 | Build Fase 0 | Fim da Fase 0 | `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` |
-| Build A | Fim da Fase 1 | `pnpm --filter @code2n8n/model --filter @code2n8n/extract-python typecheck && pnpm check && pnpm --filter @code2n8n/model --filter @code2n8n/extract-python test` |
-| Build B | Fim das Fases 2 e 3 | `pnpm --filter @code2n8n/explain --filter @code2n8n/server typecheck && pnpm check && pnpm --filter @code2n8n/explain --filter @code2n8n/server test` |
-| Build C | Fim das Fases 4, 5 e 6, e a task de fontes | `pnpm --filter @code2n8n/web typecheck && pnpm check && pnpm --filter @code2n8n/web test && pnpm --filter @code2n8n/web build` |
+| Build A | Fim da Fase 1 | `pnpm --filter @8n8/model --filter @8n8/extract-python typecheck && pnpm check && pnpm --filter @8n8/model --filter @8n8/extract-python test` |
+| Build B | Fim das Fases 2 e 3 | `pnpm --filter @8n8/explain --filter @8n8/server typecheck && pnpm check && pnpm --filter @8n8/explain --filter @8n8/server test` |
+| Build C | Fim das Fases 4, 5 e 6, e a task de fontes | `pnpm --filter @8n8/web typecheck && pnpm check && pnpm --filter @8n8/web test && pnpm --filter @8n8/web build` |
 | Mescla | Depois de mesclar A, B e C, antes da Fase 7 | `pnpm install && pnpm typecheck && pnpm check && pnpm test` |
 | Build final | Fim das Fases 7, 8 e 9 | `pnpm typecheck && pnpm check && pnpm test && pnpm e2e` |
 
@@ -162,7 +162,7 @@ T34 → T35 → T36
 
 1. Mescle no `master`, nesta ordem: `feat/05-a-extrator`, `feat/05-b-explicacao` e `feat/05-c-web`. Um conflito indica arquivo fora do dono: pare e avise.
 2. Rode o gate "Mescla". Um teste unit vermelho volta para a trilha dona do arquivo, como task de correção.
-3. Remova só os worktrees `../code2n8n-05a`, `05b` e `05c`.
+3. Remova só os worktrees `../8n8-05a`, `05b` e `05c`.
 
 ### Phase 7: Trilha D, LLM falso, configuração e E2E existentes
 
@@ -240,7 +240,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/model test && pnpm typecheck`
+**Gate**: quick · `pnpm --filter @8n8/model test && pnpm typecheck`
 
 **Commit**: `feat(model): add explain kinds, step style and title contracts`
 **Status**: ✅ Complete
@@ -291,7 +291,7 @@ T49 → T50
 - [x] Gate passa; a contagem do pacote não cai.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): collect the names bound in a file`
 **Status**: ✅ Complete (162 unit = 139 + 23)
@@ -319,7 +319,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): classify calls to names the snippet does not define`
 **Status**: ✅ Complete (180 unit = 162 + 18)
@@ -347,7 +347,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): turn calls to undefined names into categorized steps`
 **Status**: ✅ Complete (191 unit = 180 + 11)
@@ -377,7 +377,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/extract-python test`
+**Gate**: quick · `pnpm --filter @8n8/extract-python test`
 
 **Commit**: `feat(extract-python): add a return step with no outgoing wire`
 **Status**: ✅ Complete (200 unit = 191 + 9; errors.test e project.test também mudam pela VID-20)
@@ -431,7 +431,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): add the step summary prompt`
 
@@ -456,7 +456,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): cut a step summary to two sentences before review`
 
@@ -482,7 +482,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): explain steps with the step prompt and the sentence limit`
 
@@ -507,7 +507,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): add the title prompt and parser`
 
@@ -533,7 +533,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): review titles in two layers`
 
@@ -558,7 +558,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/explain test`
+**Gate**: quick · `pnpm --filter @8n8/explain test`
 
 **Commit**: `feat(explain): cache titles per node`
 
@@ -585,7 +585,7 @@ T49 → T50
 - [x] Um ID `n9` não pedido é ignorado (VID-14, borda).
 - [x] Sem `llm`: `no-key` com os acertos de cache. Uma exceção no LLM: `error` com os acertos e nada gravado.
 - [x] `index.ts` exporta `titleNodes`, `createTitleCache`, `buildTitlePrompt`, `buildTitleReviewerPrompt` e `buildStepPrompt`.
-- [x] O gate Build B passa para o `explain` (fecha a fase): `pnpm --filter @code2n8n/explain typecheck && pnpm check && pnpm --filter @code2n8n/explain test`.
+- [x] O gate Build B passa para o `explain` (fecha a fase): `pnpm --filter @8n8/explain typecheck && pnpm check && pnpm --filter @8n8/explain test`.
 
 **Tests**: unit
 **Gate**: build · Build B (só `explain`)
@@ -617,7 +617,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: integration
-**Gate**: full · `pnpm --filter @code2n8n/server test`
+**Gate**: full · `pnpm --filter @8n8/server test`
 
 **Commit**: `feat(server): explain any node with code`
 
@@ -644,7 +644,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: integration
-**Gate**: full · `pnpm --filter @code2n8n/server test`
+**Gate**: full · `pnpm --filter @8n8/server test`
 
 **Commit**: `feat(server): add the titles route`
 
@@ -664,8 +664,8 @@ T49 → T50
 **Done when**:
 
 - [x] Sem `OPENROUTER_API_KEY`: `composeTitles` retorna `no-key` sem criar cliente.
-- [x] Com chave: o cliente usa `OPENROUTER_BASE_URL` e os modelos de `CODE2N8N_MODEL` e `CODE2N8N_REVIEW_MODEL`. Uma string vazia conta como ausente.
-- [x] O cache de títulos fica em `<CODE2N8N_CACHE_DIR>/titles`, e o padrão é `.cache/explain/titles`.
+- [x] Com chave: o cliente usa `OPENROUTER_BASE_URL` e os modelos de `APP8N8_MODEL` e `APP8N8_REVIEW_MODEL`. Uma string vazia conta como ausente.
+- [x] O cache de títulos fica em `<APP8N8_CACHE_DIR>/titles`, e o padrão é `.cache/explain/titles`.
 - [x] `composeExplain` usa `buildStepPrompt` num pedido de passo.
 - [x] O gate Build B passa (fecha a trilha B).
 
@@ -692,7 +692,7 @@ T49 → T50
 **Done when**:
 
 - [x] `package.json` lista `@fontsource/archivo-black`, `@fontsource/space-grotesk` e `@fontsource/dm-mono` na versão `5.3.0`, sem `^`.
-- [x] `pnpm --filter @code2n8n/web build` gera arquivos `.woff2` em `apps/web/dist/assets`. O `index.html` gerado não aponta para outro host.
+- [x] `pnpm --filter @8n8/web build` gera arquivos `.woff2` em `apps/web/dist/assets`. O `index.html` gerado não aponta para outro host.
 - [x] Gate passa.
 
 **Tests**: none (dependência; o E2E de T43 prova as fontes)
@@ -722,7 +722,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): derive card tag, provisional name and code line`
 
@@ -753,7 +753,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): compute the main flow rows`
 
@@ -778,7 +778,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): show the main flow as the first level of a snippet`
 
@@ -803,7 +803,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): lay out rows and keep the yes branch on top`
 
@@ -829,7 +829,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): schedule node entry, wire drawing and pulses`
 
@@ -856,7 +856,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): anchor suggestion cards to the visible nodes`
 
@@ -937,7 +937,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): draw nodes as three-line cards`
 
@@ -962,7 +962,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): draw wires with pulse and branch labels`
 
@@ -986,7 +986,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): add the suggestion card`
 
@@ -1041,7 +1041,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): show the main flow and the opened titles in the breadcrumb`
 
@@ -1069,7 +1069,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): lay out the detail panel like the video`
 
@@ -1093,7 +1093,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): fetch the titles of a level`
 
@@ -1120,7 +1120,7 @@ T49 → T50
 - [x] Gate passa.
 
 **Tests**: unit
-**Gate**: quick · `pnpm --filter @code2n8n/web test`
+**Gate**: quick · `pnpm --filter @8n8/web test`
 
 **Commit**: `feat(web): request titles once per level`
 
