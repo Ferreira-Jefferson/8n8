@@ -246,7 +246,7 @@ describe("one call (CC-03, CC-04, CC-05, CC-06)", () => {
 
   it.each([
     [
-      { exit: 1, stdout: "Prompt: Código..." },
+      { exit: 1, stdout: "Prompt: def f()", stderr: "erro em def f()" },
       "O Claude Code falhou (código 1).",
     ],
     [
@@ -298,9 +298,12 @@ describe("one call (CC-03, CC-04, CC-05, CC-06)", () => {
 describe("limits (CC-07)", () => {
   it("kills a process that does not answer in time", async () => {
     const { deps, runs } = fake({ never: true }, { timeoutMs: 20 });
+    const started = Date.now();
     await expect(ask(deps)).rejects.toThrow(
       "O Claude Code não respondeu em 0 s.",
     );
+    // The timer fires at the given limit, not much later.
+    expect(Date.now() - started).toBeLessThan(1000);
     expect(runs[0]?.killed).toBe(true);
   });
 
@@ -336,6 +339,12 @@ describe("the conversation through stdin (CC-08)", () => {
     );
   });
 
+  it("refuses a model that would read as a flag", () => {
+    expect(() => claudeArgs("--bare", "S")).toThrow(
+      "Modelo inválido para o Claude Code.",
+    );
+  });
+
   it("leaves --system-prompt out when there is no system message", () => {
     expect(claudeArgs("haiku", "")).not.toContain("--system-prompt");
   });
@@ -367,7 +376,7 @@ describe.skipIf(process.env.APP8N8_CLAUDE_SMOKE !== "1")(
         json: "native",
       });
       expect(text).toContain('"ok"');
-      expect(existsSync(dir)).toBe(true);
+      expect(existsSync(join(tmpdir(), "8n8-claude"))).toBe(true);
     }, 120_000);
   },
 );

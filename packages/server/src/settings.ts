@@ -73,7 +73,15 @@ const patchSchema = z
       .optional(),
     apiKey: z.string().trim().min(1).max(512).nullable().optional(),
     baseURL: z.string().max(2048).refine(isHttpUrl).nullable().optional(),
-    model: z.string().trim().min(1).max(256).nullable().optional(),
+    // A model id, never something a program could read as a flag (CC-03): it may start
+    // with a letter, a digit or `~` (OpenRouter), then only id characters.
+    model: z
+      .string()
+      .trim()
+      .max(256)
+      .regex(/^[A-Za-z0-9~][\w.:/~@+-]*$/)
+      .nullable()
+      .optional(),
     autoSummary: z.boolean().optional(),
     autoSuggestions: z.boolean().optional(),
   })

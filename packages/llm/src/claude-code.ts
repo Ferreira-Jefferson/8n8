@@ -122,6 +122,9 @@ export function conversationText(messages: ChatMessage[]): string {
 
 /** Print mode, JSON out, no tools, no session, user settings only, no MCP, no slash commands (CC-03). */
 export function claudeArgs(model: string, system: string): string[] {
+  // A model from the environment is not validated by the settings: never let it read as a flag.
+  if (model.startsWith("-"))
+    throw new Error("Modelo inválido para o Claude Code.");
   return [
     "-p",
     "--output-format",

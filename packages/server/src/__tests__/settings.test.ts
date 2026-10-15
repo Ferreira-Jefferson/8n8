@@ -170,6 +170,11 @@ describe("update (CFG-13, CFG-14)", () => {
     ["an empty key", { apiKey: "" }],
     ["a blank key", { apiKey: "   " }],
     ["a mode that is not a boolean", { autoSummary: "sim" }],
+    [
+      "a model that reads as a flag",
+      { model: "--dangerously-skip-permissions" },
+    ],
+    ["a model with a space", { model: "sonnet --bare" }],
     ["a body that is not an object", "texto"],
     ["no body", null],
   ])("refuses %s and stores nothing", async (_, patch) => {
@@ -188,6 +193,20 @@ describe("update (CFG-13, CFG-14)", () => {
       service.update({ autoSummary: true }),
     ]);
     expect(mem.current()).toEqual({ model: "a/1", autoSummary: true });
+  });
+});
+
+describe("model ids the patch accepts", () => {
+  it.each([
+    "sonnet",
+    "claude-sonnet-4-6",
+    "~deepseek/deepseek-v4-flash-latest",
+    "openai/gpt-4o-mini",
+    "llama3.1:8b",
+  ])("accepts %s", async (model) => {
+    const mem = memoryStore();
+    await createSettingsService({}, mem.store).update({ model });
+    expect(mem.current().model).toBe(model);
   });
 });
 

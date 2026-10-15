@@ -31,6 +31,7 @@ async function resetSettings(page: Page): Promise<void> {
   const res = await page.request.put(`${SETTINGS}/api/settings`, {
     headers: HEADERS,
     data: {
+      provider: "openrouter",
       apiKey: null,
       baseURL: null,
       autoSummary: false,
@@ -185,6 +186,7 @@ test.describe("Configurações e LLM sob demanda", () => {
     await expect(dialog.getByText("Configurações salvas.")).toBeVisible();
     await expect(dialog.getByText(/Chave guardada/)).toHaveCount(0);
     expect(JSON.parse(readFileSync(CONFIG, "utf8"))).toEqual({
+      provider: "openrouter",
       autoSummary: false,
       autoSuggestions: false,
       baseURL: FAKE_URL,
@@ -207,5 +209,27 @@ test.describe("Configurações e LLM sob demanda", () => {
       dialog.getByText("Não foi possível salvar. Confira a URL e a chave."),
     ).toBeVisible();
     await expect(dialog.getByLabel("URL")).toHaveValue("ftp://127.0.0.1/v1");
+  });
+
+  test("CC-01: choosing claude-code hides the key and the URL and says the subscription is enough", async ({
+    page,
+  }) => {
+    await page.goto(`${SETTINGS}/`);
+    await page.getByRole("button", { name: "Configurações" }).click();
+    const dialog = page.getByRole("dialog", { name: "Configurações" });
+    await expect(dialog.getByLabel("Chave de API")).toBeVisible();
+    await dialog.getByLabel("Provedor").selectOption("claude-code");
+    await expect(dialog.getByLabel("Chave de API")).toHaveCount(0);
+    await expect(dialog.getByLabel("URL")).toHaveCount(0);
+    await expect(
+      dialog.getByText(
+        "O Claude Code usa a sua assinatura. Não precisa de chave.",
+      ),
+    ).toBeVisible();
+    await dialog.getByRole("button", { name: "Salvar" }).click();
+    await expect(dialog.getByText("Configurações salvas.")).toBeVisible();
+    expect(JSON.parse(readFileSync(CONFIG, "utf8"))).toMatchObject({
+      provider: "claude-code",
+    });
   });
 });
