@@ -45,6 +45,11 @@ const SPAWN =
 const importOf = (from: string, to: string) =>
   `import { probe as target } from "${posix.relative(posix.dirname(from), to)}";\n\nexport const probe = target;\n`;
 
+const VSCODE =
+  'import * as vscode from "vscode";\n\nexport const probe = vscode;\n';
+const importing = (module: string) =>
+  `import * as m from "${module}";\n\nexport const probe = m;\n`;
+
 /** Clean files every case starts from: one per workspace, the import targets and the two exemptions. */
 const BASE: Record<string, string> = {
   ...Object.fromEntries(
@@ -55,6 +60,8 @@ const BASE: Record<string, string> = {
   "apps/cli/src/open-browser.ts": SPAWN,
   "packages/llm/src/claude-code.ts": SPAWN,
   "apps/cli/src/__tests__/guards.test.ts": SPAWN,
+  // The extension may import vscode (VSC-13).
+  "apps/vscode/src/editor.ts": VSCODE,
 };
 
 const temps: string[] = [];
@@ -190,6 +197,35 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
         ),
       ).not.toEqual([]);
     }
+    expect(status).not.toBe(0);
+  });
+
+  it("fails vscode outside the extension, and a port inside it (VSC-09, VSC-13)", () => {
+    const outside = [
+      "packages/server/src/probe-vscode.ts",
+      "packages/model/src/probe-vscode.ts",
+      "apps/web/src/probe-vscode.ts",
+      "apps/cli/src/probe-vscode.ts",
+    ];
+    const ports = ["@hono/node-server", "node:http", "node:https", "node:net"];
+    const files: Record<string, string> = Object.fromEntries([
+      ...outside.map((f) => [f, VSCODE]),
+      ...ports.map((m, i) => [
+        `apps/vscode/src/probe-port${i}.ts`,
+        importing(m),
+      ]),
+    ]);
+    const { status, out } = check(files);
+    const found = cruiseFindings(out);
+    for (const file of outside) {
+      expect(found).toContain(`error only-vscode-host-imports-vscode: ${file}`);
+    }
+    for (const i of ports.keys()) {
+      expect(found).toContain(
+        `error vscode-opens-no-port: apps/vscode/src/probe-port${i}.ts`,
+      );
+    }
+    expect(found.join("\n")).not.toContain("apps/vscode/src/editor.ts");
     expect(status).not.toBe(0);
   });
 });

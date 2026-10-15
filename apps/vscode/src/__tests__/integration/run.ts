@@ -7,7 +7,7 @@ import { build } from "esbuild";
 
 // Opens a real VS Code on a copy of the loja fixture, with a user data folder and
 // an extensions folder of its own: the user's editor is never touched (VSC-08).
-const extRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
+const extRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const repoRoot = join(extRoot, "../..");
 const tmp = mkdtempSync(join(tmpdir(), "8n8-vscode-it-"));
 const workspace = join(tmp, "loja");
@@ -22,7 +22,7 @@ cpSync(
 
 const suite = join(tmp, "suite.cjs");
 await build({
-  entryPoints: [join(extRoot, "src/test/suite.ts")],
+  entryPoints: [join(extRoot, "src/__tests__/integration/suite.ts")],
   outfile: suite,
   bundle: true,
   platform: "node",

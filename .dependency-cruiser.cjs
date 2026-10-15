@@ -143,6 +143,22 @@ module.exports = {
       to: { dependencyTypes: ["core"], path: "^(node:)?child_process$" },
     },
     {
+      name: "only-vscode-host-imports-vscode",
+      severity: "error",
+      comment:
+        "Só a embalagem apps/vscode importa o módulo vscode; o núcleo e a tela não conhecem o editor (AD-022, VSC-13).",
+      from: { pathNot: "^apps/vscode/" },
+      to: { path: "^vscode$" },
+    },
+    {
+      name: "vscode-opens-no-port",
+      severity: "error",
+      comment:
+        "A extensão chama o núcleo por app.fetch e nunca abre porta (VSC-09).",
+      from: { path: "^apps/vscode/" },
+      to: { path: ["@hono[/+]node-server", "^(node:)?(http|https|net)$"] },
+    },
+    {
       name: "hosts-do-not-import-each-other",
       severity: "error",
       comment:

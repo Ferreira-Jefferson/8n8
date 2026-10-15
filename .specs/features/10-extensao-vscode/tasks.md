@@ -223,8 +223,8 @@ T7 → T8
 
 **Done when**:
 
-- [ ] Um import de `vscode` fora de `apps/vscode` e um de `node:http` dentro dela fazem o check falhar
-- [ ] Gate check passes: `pnpm --filter @8n8/cli test && pnpm check`
+- [x] Um import de `vscode` fora de `apps/vscode` e um de `node:http` dentro dela fazem o check falhar
+- [x] Gate check passes: `pnpm --filter @8n8/cli test && pnpm check`
 
 **Tests**: unit
 **Gate**: quick

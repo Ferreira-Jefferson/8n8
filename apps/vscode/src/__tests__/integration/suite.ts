@@ -1,7 +1,7 @@
 // Runs inside a real VS Code (VSC-08): the command opens the panel, the page loads
 // under the content policy, and the screen maps the workspace through the bridge.
 import * as vscode from "vscode";
-import type { ExtensionApi } from "../extension";
+import type { ExtensionApi } from "../../extension";
 
 async function waitFor(
   check: () => boolean,
