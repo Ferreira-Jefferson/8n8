@@ -239,7 +239,9 @@ describe("source scan: what the check cannot see (DIST-23)", () => {
       (e) => {
         const path = `${dir}/${e.name}`;
         if (e.isDirectory()) {
-          return ["node_modules", "dist", ".cache"].includes(e.name)
+          return ["node_modules", "dist", ".cache", ".vscode-test"].includes(
+            e.name,
+          )
             ? []
             : walk(path);
         }
