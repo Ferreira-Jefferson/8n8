@@ -85,4 +85,4 @@ Os resumos, as sugestões e a documentação usam Português Técnico Simplifica
 
 ## Licença
 
-Ao contribuir, você concorda que o seu código fica sob a licença do projeto, a GNU General Public License versão 3 ([LICENSE](LICENSE)).
+O projeto usa a GNU General Public License versão 3 ([LICENSE](LICENSE)).
