@@ -132,6 +132,11 @@ describe("readSourceFile for a file the person added (CLEAN-06)", () => {
     const at = join(dir, "twenty.py");
     await writeFile(at, Buffer.alloc(20 * 1_048_576, 0x61));
     expect((await readSourceFile(at, "twenty.py", true)).kind).toBe("ok");
+    // Not added yet: exactly 20 MB still offers "Adicionar ao mapa".
+    expect(await readSourceFile(at, "twenty.py")).toEqual({
+      kind: "ignored",
+      ignored: { path: "twenty.py", reason: "too-large", addable: true },
+    });
     const over = join(dir, "over.py");
     await writeFile(over, Buffer.alloc(20 * 1_048_576 + 1, 0x61));
     expect(await readSourceFile(over, "over.py", true)).toEqual({

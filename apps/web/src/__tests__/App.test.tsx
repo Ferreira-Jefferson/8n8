@@ -372,6 +372,46 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     ).toEqual(["grande.pymaior que 1 MB"]);
   });
 
+  it("a second large file put on the map keeps the first one (CLEAN-06, CLEAN-07)", async () => {
+    const big = (path: string) => ({
+      path,
+      reason: "too-large" as const,
+      addable: true,
+    });
+    projectMock
+      .mockResolvedValueOnce({ ...loja, ignored: [big("a.py"), big("b.py")] })
+      .mockResolvedValueOnce({ ...loja, ignored: [big("b.py")] })
+      .mockResolvedValueOnce(loja);
+    explainMock.mockResolvedValue({ status: "no-key" });
+    render(<App />);
+    openFolder();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "2 arquivos ignorados" }),
+    );
+    fireEvent.click(
+      screen.getAllByRole("button", {
+        name: "Adicionar ao mapa",
+      })[0] as HTMLElement,
+    );
+    // The list stays open after the re-read, with the file left.
+    await screen.findByRole("button", { name: "1 arquivo ignorado" });
+    fireEvent.click(screen.getByRole("button", { name: "Adicionar ao mapa" }));
+    await waitFor(() =>
+      expect(projectMock).toHaveBeenLastCalledWith(lojaRoot, ["a.py", "b.py"]),
+    );
+    await screen.findByTestId("canvas");
+    act(() =>
+      currentCanvas().onSelect("file:frete/calculo.py/fn:calcular_frete"),
+    );
+    await waitFor(() =>
+      expect(explainMock).toHaveBeenCalledWith(
+        { root: lojaRoot, include: ["a.py", "b.py"] },
+        "file:frete/calculo.py/fn:calcular_frete",
+        true,
+      ),
+    );
+  });
+
   it("puts a large file on the map: reads the folder again with it, and every request of the map carries it (CLEAN-06, CLEAN-07)", async () => {
     const grande = { path: "grande.py", source: "x = 1\n" };
     projectMock

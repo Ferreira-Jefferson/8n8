@@ -333,6 +333,25 @@ describe("readSourceFolder and .gitignore (CLEAN-01, CLEAN-02)", () => {
     ]);
   });
 
+  it("anchors a sub-folder's /pattern to that sub-folder, not to the root", async () => {
+    const root = await tree({
+      "lib/.gitignore": "/local.py\n",
+      "lib/local.py": "x = 1\n",
+      "lib/sub/local.py": "x = 1\n",
+    });
+    expect((await paths(root)).files).toEqual(["lib/sub/local.py"]);
+  });
+
+  it("never walks an ignored folder, so its own .gitignore cannot bring a file back", async () => {
+    const root = await tree({
+      ".gitignore": "gerado/\n",
+      "gerado/.gitignore": "!a.py\n",
+      "gerado/a.py": "x = 1\n",
+      "b.py": "x = 1\n",
+    });
+    expect((await paths(root)).files).toEqual(["b.py"]);
+  });
+
   it("supports ** and leaves a folder without .gitignore as before", async () => {
     const withRules = await tree({
       ".gitignore": "**/fixtures/**\n",

@@ -299,6 +299,42 @@ test.describe("Pasta local", () => {
     expect(list && side && list.x + list.width <= side.x).toBe(true);
   });
 
+  test("CLEAN-05: a long path wraps inside the list, and the list still ends before the panel", async ({
+    page,
+  }) => {
+    const loja = join(tmp, "caminho-longo", "loja");
+    makeLoja(loja);
+    const deep = join(
+      loja,
+      "uma_pasta_com_um_nome_bem_comprido",
+      "outra_pasta_com_um_nome_ainda_mais_comprido",
+    );
+    mkdirSync(deep, { recursive: true });
+    writeFileSync(
+      join(deep, "um_arquivo_grande_com_um_nome_muito_comprido_mesmo.py"),
+      Buffer.alloc(1_200_000, 0x61),
+    );
+
+    await openFolder(page, loja);
+    await clickCard(page, "file:main.py");
+    await expect(panel(page)).toBeVisible();
+    await page.getByRole("button", { name: "3 arquivos ignorados" }).click();
+    const section = page.getByRole("region", { name: "Arquivos ignorados" });
+    const long = section.locator(".ignored-path", {
+      hasText: "muito_comprido",
+    });
+    await expect(long).toBeVisible();
+    // Wrapped: no text runs past its box, and the box stays inside the list.
+    expect(await long.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+      true,
+    );
+    const box = await long.boundingBox();
+    const list = await section.boundingBox();
+    const side = await panel(page).boundingBox();
+    expect(box && list && box.x + box.width <= list.x + list.width).toBe(true);
+    expect(list && side && list.x + list.width <= side.x).toBe(true);
+  });
+
   test("CLEAN-06: Adicionar ao mapa puts grande.py on the map and takes it off the list; latin1.py has no such button", async ({
     page,
   }) => {

@@ -72,6 +72,7 @@ describe("the included files of a folder (CLEAN-06, CLEAN-07)", () => {
     ["a leading slash", ["/etc/passwd"]],
     ["a drive", ["C:/x.py"]],
     ["an empty path", [""]],
+    ["a path over 1024 characters", ["a".repeat(1025)]],
     ["a non-string", [42]],
     ["not an array", "a.py"],
     ["101 paths", Array.from({ length: 101 }, (_, i) => `f${i}.py`)],
@@ -89,6 +90,13 @@ describe("the included files of a folder (CLEAN-06, CLEAN-07)", () => {
       },
     );
   }
+
+  it("accepts a path of 1024 characters", async () => {
+    const { reads, post } = setup();
+    const include = ["a".repeat(1024)];
+    await post("/api/project", { path: "/loja", include });
+    expect(reads).toEqual([{ path: "/loja", include }]);
+  });
 
   it("accepts exactly 100 paths", async () => {
     const { reads, post } = setup();
