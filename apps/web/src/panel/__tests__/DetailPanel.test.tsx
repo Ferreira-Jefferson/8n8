@@ -890,6 +890,24 @@ describe("DetailPanel on demand (CFG-06..11)", () => {
     expect(screen.queryByText("Gerando resumo…")).toBeNull();
   });
 
+  it("shows both buttons at once, before the cache answers, and a late hit replaces the button (CFG-06)", async () => {
+    let answer: (r: SummaryResult) => void = () => {};
+    fetchMock.mockReturnValue(
+      new Promise((resolve) => {
+        answer = resolve;
+      }),
+    );
+    suggestMock.mockReturnValue(new Promise(() => {}));
+    render(panel());
+    expect(screen.getByRole("button", { name: "Gerar resumo" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Pedir sugestões" }),
+    ).toBeTruthy();
+    answer({ ...ok, fromCache: true } as SummaryResult);
+    expect(await screen.findByRole("list", { name: "Resumo" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Gerar resumo" })).toBeNull();
+  });
+
   it("shows a cache hit with no click (CFG-06)", async () => {
     fetchMock.mockResolvedValue({ ...ok, fromCache: true } as SummaryResult);
     suggestMock.mockResolvedValue({

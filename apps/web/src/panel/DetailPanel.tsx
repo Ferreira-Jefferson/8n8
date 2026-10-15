@@ -60,12 +60,8 @@ export interface PanelCache {
   suggestions: Map<NodeId, SuggestionsResult>;
 }
 
-/** `idle` waits for the button; `checking` asks the cache only, with nothing shown. */
-type Loaded<T> =
-  | ExplainResult<T>
-  | { status: "idle" }
-  | { status: "checking" }
-  | { status: "loading" };
+/** `idle` shows the button at once, while the cache is asked behind it. */
+type Loaded<T> = ExplainResult<T> | { status: "idle" } | { status: "loading" };
 type Mark = (lines: ReadonlySet<number>) => void;
 
 const MANUAL: Auto = { summary: false, suggestions: false };
@@ -225,8 +221,9 @@ const FETCH: Record<
 
 /**
  * One part of the node's explanation. On a new node: a hit of this map shows at
- * once; the automatic mode asks for real; otherwise the cache only, and a miss
- * waits for the button, which asks for real (CFG-05, CFG-06, CFG-07, CFG-08).
+ * once; the automatic mode asks for real; otherwise the button shows at once
+ * while the cache is asked, a hit replaces it, and a click asks for real
+ * (CFG-05, CFG-06, CFG-07, CFG-08).
  */
 function usePart<T>(
   part: ExplainPart,
@@ -235,7 +232,9 @@ function usePart<T>(
   cache: Map<NodeId, ExplainResult<T>> | undefined,
   onOk?: (id: NodeId, result: T) => void,
 ): { result: Loaded<T>; ask: () => void } {
-  const [result, setResult] = useState<Loaded<T>>({ status: "checking" });
+  const [result, setResult] = useState<Loaded<T>>({
+    status: auto ? "loading" : "idle",
+  });
   // A new origin object on each render must not refetch; its content decides.
   const originKey = JSON.stringify(origin);
   const target = `${originKey}|${node.id}`;
@@ -254,7 +253,7 @@ function usePart<T>(
       return;
     }
     let live = true;
-    setResult({ status: real ? "loading" : "checking" });
+    setResult({ status: real ? "loading" : "idle" });
     const ask = FETCH[part] as (
       origin: ExplainOrigin,
       nodeId: string,
