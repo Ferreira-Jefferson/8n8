@@ -121,29 +121,72 @@ test.describe("Histórico", () => {
     await expect(rows(page).first()).toContainText(item?.title ?? "never");
   });
 
-  test("reopening a row shows the same cards and calls neither /api/graph nor /api/project", async ({
+  test("reopening a snippet generates its map again from the saved text: same cards (CLEAN-09)", async ({
     page,
   }) => {
-    await generate(page, HISTORY, snippet("gama_unico"));
+    const code = snippet("gama_unico");
+    await generate(page, HISTORY, code);
     await expect(nodes(page).first()).toBeVisible();
     const before = await levelIds(page);
     expect(before.length).toBeGreaterThan(0);
     await saved(page, 1);
 
     await page.reload();
-    const calls: string[] = [];
+    const sent: unknown[] = [];
     await page.route(/\/api\/(graph|project)(\?|$)/, (route) => {
-      calls.push(route.request().url());
+      sent.push(route.request().postDataJSON());
       return route.continue();
     });
     await toggle(page).click();
     const entry = page.waitForResponse(/\/api\/history\/\d+$/);
     await rows(page).first().locator(".history-open").click();
-    await entry;
+    const body = (await (await entry).json()) as { entry: unknown };
+    expect(body.entry).toEqual({
+      kind: "snippet",
+      source: code,
+      language: "python",
+    });
 
     await expect(nodes(page).first()).toBeVisible();
     await expect.poll(() => levelIds(page)).toEqual(before);
-    expect(calls).toEqual([]);
+    expect(sent).toEqual([{ source: code }]);
+  });
+
+  test("reopening a folder reads it again by its path; a folder that is gone says so (CLEAN-08, CLEAN-09)", async ({
+    page,
+  }) => {
+    const pasta = join(tmp, "some-depois");
+    cpSync(FIXTURE, pasta, { recursive: true });
+    await openFolder(page, pasta);
+    await expect(nodes(page).first()).toBeVisible();
+    const before = await levelIds(page);
+    await saved(page, 1);
+
+    await page.goto("/");
+    const sent: unknown[] = [];
+    await page.route(/\/api\/project(\?|$)/, (route) => {
+      sent.push(route.request().postDataJSON());
+      return route.continue();
+    });
+    await toggle(page).click();
+    const entry = page.waitForResponse(/\/api\/history\/\d+$/);
+    await rows(page).first().locator(".history-open").click();
+    // Only the path is kept: no code and no graph come back.
+    expect(((await (await entry).json()) as { entry: unknown }).entry).toEqual({
+      kind: "project",
+      root: pasta,
+    });
+    await expect.poll(() => levelIds(page)).toEqual(before);
+    expect(sent).toEqual([{ path: pasta }]);
+
+    rmSync(pasta, { recursive: true, force: true });
+    await page.goto("/");
+    await toggle(page).click();
+    await rows(page).first().locator(".history-open").click();
+    await expect(page.getByRole("alert")).toHaveText(
+      `Pasta não encontrada: ${pasta}`,
+    );
+    await expect(nodes(page)).toHaveCount(0);
   });
 
   test("the same code generated twice leaves one row", async ({ page }) => {

@@ -266,18 +266,102 @@ test.describe("Pasta local", () => {
     }
   });
 
-  test("PROJ-06: Arquivos ignorados lists grande.py and latin1.py with their reasons, not .venv or dist", async ({
+  test("PROJ-06, CLEAN-04/05: an icon whose hover counts the ignored files; a click lists grande.py and latin1.py, beside the panel", async ({
     page,
   }) => {
     await openFolder(page, LOJA);
     await expect(nodes(page)).toHaveCount(5);
-
     const section = page.getByRole("region", { name: "Arquivos ignorados" });
-    await expect(section.getByRole("listitem")).toHaveText([
-      "grande.py — maior que 1 MB",
-      "latin1.py — não está em UTF-8",
+    await expect(section).toHaveCount(0);
+
+    const icon = page.getByRole("button", { name: "2 arquivos ignorados" });
+    const tip = icon.locator(".ignored-tip");
+    await expect(tip).toBeHidden();
+    await icon.hover();
+    await expect(tip).toBeVisible();
+    await expect(tip).toHaveText("2 arquivos ignorados");
+
+    await clickCard(page, "file:main.py");
+    await expect(panel(page)).toBeVisible();
+    await icon.click();
+    await expect(section.locator(".ignored-path")).toHaveText([
+      "grande.py",
+      "latin1.py",
+    ]);
+    await expect(section.locator(".ignored-reason")).toHaveText([
+      "maior que 1 MB",
+      "não está em UTF-8",
     ]);
     await expect(page.getByText(/\b[xy]\.py\b/)).toHaveCount(0);
+    // The list never covers the detail panel (CLEAN-05).
+    const list = await section.boundingBox();
+    const side = await panel(page).boundingBox();
+    expect(list && side && list.x + list.width <= side.x).toBe(true);
+  });
+
+  test("CLEAN-06: Adicionar ao mapa puts grande.py on the map and takes it off the list; latin1.py has no such button", async ({
+    page,
+  }) => {
+    await openFolder(page, LOJA);
+    await expect(nodes(page)).toHaveCount(5);
+    await page.getByRole("button", { name: "2 arquivos ignorados" }).click();
+    const section = page.getByRole("region", { name: "Arquivos ignorados" });
+    const add = section.getByRole("button", { name: "Adicionar ao mapa" });
+    await expect(add).toHaveCount(1);
+    await expect(
+      section
+        .locator("li", {
+          has: page.getByRole("button", { name: "Adicionar ao mapa" }),
+        })
+        .locator(".ignored-path"),
+    ).toHaveText("grande.py");
+
+    const sent = page.waitForRequest("**/api/project");
+    await add.click();
+    expect((await sent).postDataJSON()).toEqual({
+      path: LOJA,
+      include: ["grande.py"],
+    });
+    await expect(nodeById(page, "file:grande.py")).toBeVisible();
+    await expect(nodes(page)).toHaveCount(6);
+    await expect(
+      page.getByRole("button", { name: "1 arquivo ignorado" }),
+    ).toBeVisible();
+  });
+
+  test("CLEAN-01/02: what the .gitignore of the folder or of a subfolder ignores is neither on the map nor on the list", async ({
+    page,
+  }) => {
+    const loja = join(tmp, "com-gitignore", "loja");
+    makeLoja(loja);
+    writeFileSync(join(loja, ".gitignore"), "gerado/\n*.log.py\nlatin1.py\n");
+    mkdirSync(join(loja, "gerado"), { recursive: true });
+    writeFileSync(join(loja, "gerado", "z.py"), "def z():\n    return 3\n");
+    writeFileSync(
+      join(loja, "gerado", "grande2.py"),
+      Buffer.alloc(1_200_000, 35),
+    );
+    writeFileSync(join(loja, "rodada.log.py"), "def w():\n    return 4\n");
+    // A nested .gitignore, with a ! that brings one file back.
+    writeFileSync(join(loja, "pedidos", ".gitignore"), "*.py\n!pedidos.py\n");
+
+    await openFolder(page, loja);
+    await expect(nodes(page)).toHaveCount(5);
+    const top = await levelIds(page);
+    expect(top.join(" ")).not.toMatch(/gerado|rodada/);
+    await clickCard(page, "dir:pedidos");
+    await expect
+      .poll(() => levelIds(page))
+      .toEqual(["file:pedidos/pedidos.py"]);
+
+    // Only grande.py is left out: latin1.py, gerado/ and its large file are the project's choice.
+    const icon = page.getByRole("button", { name: "1 arquivo ignorado" });
+    await icon.click();
+    await expect(
+      page
+        .getByRole("region", { name: "Arquivos ignorados" })
+        .locator(".ignored-path"),
+    ).toHaveText(["grande.py"]);
   });
 
   test("PROJ-07: mapping, drilling, jumping and opening a panel leave the folder untouched", async ({

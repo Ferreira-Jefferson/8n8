@@ -319,16 +319,11 @@ body {
 
 /* The files left out: an icon above the node count; the list opens upward and
    stays inside the map area, so it never covers the detail panel (CLEAN-04, 05). */
-.map-area > .ignored {
+.ignored-btn {
   position: absolute;
   left: 24px;
   bottom: 64px;
   z-index: 20;
-  max-width: calc(100% - 48px);
-}
-
-.ignored-btn {
-  position: relative;
   padding: 8px 12px;
   display: flex;
   align-items: center;
@@ -361,13 +356,14 @@ body {
   visibility: visible;
 }
 
+/* The wrapper has no position: the list measures itself against the map area. */
 .ignored-list {
   position: absolute;
-  left: 0;
-  bottom: calc(100% + 8px);
+  left: 24px;
+  bottom: 116px;
+  z-index: 20;
   box-sizing: border-box;
-  width: 560px;
-  max-width: 100%;
+  width: min(560px, calc(100% - 48px));
   max-height: 50vh;
   overflow: auto;
   padding: 16px 20px;
