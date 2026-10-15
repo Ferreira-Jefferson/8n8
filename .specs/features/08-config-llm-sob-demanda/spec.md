@@ -109,6 +109,6 @@ Com a CLI instalada e sem nenhuma variável de ambiente, o usuário abre o mapa,
 
 | Requirement ID | Story | Status |
 | -------------- | ----- | ------ |
-| CFG-01..11 | P1: Resumo e sugestões só quando a pessoa pede | Pending |
-| CFG-12..22 | P1: Painel de configurações | Pending |
-| CFG-23..25 | P1 (segurança): A chave só entra | Pending |
+| CFG-01..11 | P1: Resumo e sugestões só quando a pessoa pede | Verified |
+| CFG-12..22 | P1: Painel de configurações | Verified |
+| CFG-23..25 | P1 (segurança): A chave só entra | Verified |

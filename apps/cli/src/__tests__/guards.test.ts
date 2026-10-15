@@ -203,6 +203,8 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
   it("fails vscode outside the extension, and a port inside it (VSC-09, VSC-13)", () => {
     const outside = [
       "packages/server/src/probe-vscode.ts",
+      // A .vscode-test folder anywhere else is code like any other.
+      "packages/server/.vscode-test/probe-vscode.ts",
       "packages/model/src/probe-vscode.ts",
       "apps/web/src/probe-vscode.ts",
       "apps/cli/src/probe-vscode.ts",
@@ -230,12 +232,10 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
   });
 });
 
-describe("source scan: what the check cannot see (DIST-23)", () => {
-  /** Files under packages/ and apps/, without dependencies and build output. */
-  const sources = ["packages", "apps"].flatMap(function walk(
-    dir: string,
-  ): string[] {
-    return readdirSync(join(repo, dir), { withFileTypes: true }).flatMap(
+/** Files under packages/ and apps/ of `root`, without dependencies and build output. */
+function sourcesOf(root: string): string[] {
+  return ["packages", "apps"].flatMap(function walk(dir: string): string[] {
+    return readdirSync(join(root, dir), { withFileTypes: true }).flatMap(
       (e) => {
         const path = `${dir}/${e.name}`;
         if (e.isDirectory()) {
@@ -249,6 +249,28 @@ describe("source scan: what the check cannot see (DIST-23)", () => {
       },
     );
   });
+}
+
+describe("source scan: what the check cannot see (DIST-23)", () => {
+  const sources = sourcesOf(repo);
+
+  it("walks a .vscode-test folder anywhere but the extension's download", () => {
+    const root = mkdtempSync(join(tmpdir(), "8n8-scan-"));
+    temps.push(root);
+    for (const file of [
+      "packages/server/.vscode-test/x.ts",
+      "apps/vscode/.vscode-test/y.ts",
+      "apps/vscode/src/z.ts",
+    ]) {
+      mkdirSync(join(root, dirname(file)), { recursive: true });
+      writeFileSync(join(root, file), "export {};\n");
+    }
+    expect(sourcesOf(root).sort()).toEqual([
+      "apps/vscode/src/z.ts",
+      "packages/server/.vscode-test/x.ts",
+    ]);
+  });
+
   // The code that ships lives in src/; tests and their fixtures do not ship.
   const shipped = sources.filter(
     (f) => f.includes("/src/") && !f.includes("/__tests__/"),

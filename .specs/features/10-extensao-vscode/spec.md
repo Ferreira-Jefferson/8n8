@@ -94,6 +94,6 @@ O usuário instala o `.vsix` gerado pelo repositório, abre uma pasta no VS Code
 
 | Requirement ID | Story | Status |
 | -------------- | ----- | ------ |
-| VSC-01..08 | P1: Abrir o mapa dentro do VS Code | Pending |
-| VSC-09..14 | P1 (segurança): A webview só fala com o núcleo | Pending |
-| VSC-15 | P2: Guia para outro editor | Pending |
+| VSC-01..08 | P1: Abrir o mapa dentro do VS Code | Verified |
+| VSC-09..14 | P1 (segurança): A webview só fala com o núcleo | Verified |
+| VSC-15 | P2: Guia para outro editor | Verified |

@@ -81,5 +81,5 @@ No diálogo de Configurações, o usuário escolhe o provedor `claude-code`, sal
 
 | Requirement ID | Story | Status |
 | -------------- | ----- | ------ |
-| CC-01..08 | P1: Usar a assinatura do Claude Code | Pending |
-| CC-09..12 | P1 (segurança): Só este arquivo inicia o Claude Code | Pending |
+| CC-01..08 | P1: Usar a assinatura do Claude Code | Verified |
+| CC-09..12 | P1 (segurança): Só este arquivo inicia o Claude Code | Verified |

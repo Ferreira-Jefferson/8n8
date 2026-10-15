@@ -14,6 +14,18 @@ Corroborated across multiple features. Safe to apply as guidance.
 - evidence: CORE-12 SP-2 (extract-python) (+1 more)
 - last seen: 2026-10-13T21:41:18Z
 
+### L-014 - State size limits in the spec as an exact byte count, since 1 MB can mean 1 000 000 or 1 048 576.
+- signal: `spec_precision_gap` · recurrence: 2 feature(s) · scope: `input` · harmful: 0
+- features: 02-pasta-local, 10-extensao-vscode
+- evidence: SP-1 / PROJ-06 / packages/input/src/read-file.ts:4 (input) (+1 more)
+- last seen: 2026-10-15T05:57:35Z
+
+### L-021 - Pin a rule exemption to its one file with a fixture of a sibling file that the rule must still reject, so widening the exemption fails a test.
+- signal: `surviving_mutant` · recurrence: 2 feature(s) · scope: `build-guards` · harmful: 0
+- features: 07-cli, 10-extensao-vscode
+- evidence: N6 / DIST-23 / .dependency-cruiser.cjs:136 (build-guards) (+1 more)
+- last seen: 2026-10-15T06:14:10Z
+
 ## Candidates (under observation - do NOT load as guidance yet)
 
 Seen once or not yet corroborated. Tracked, not trusted.
@@ -90,12 +102,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: SP-3 / PROJ-09 / packages/extract-python/src/calls.ts:61 (extract-python)
 - last seen: 2026-10-13T23:06:56Z
 
-### L-014 - State size limits in the spec as an exact byte count, since 1 MB can mean 1 000 000 or 1 048 576.
-- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `input` · harmful: 0
-- features: 02-pasta-local
-- evidence: SP-1 / PROJ-06 / packages/input/src/read-file.ts:4 (input)
-- last seen: 2026-10-13T23:06:56Z
-
 ### L-015 - Pin a file-extension filter with near-miss names such as .pyc and .pyi, so a substring match fails a test.
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `input` · harmful: 0
 - features: 02-pasta-local
@@ -131,12 +137,6 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: 07-cli
 - evidence: DIST-14 / apps/cli/src/__tests__/guards.test.ts:113 (build-guards)
 - last seen: 2026-10-15T02:21:29Z
-
-### L-021 - Pin a rule exemption to its one file with a fixture of a sibling file that the rule must still reject, so widening the exemption fails a test.
-- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `build-guards` · harmful: 0
-- features: 07-cli
-- evidence: N6 / DIST-23 / .dependency-cruiser.cjs:136 (build-guards)
-- last seen: 2026-10-15T02:27:28Z
 
 ### L-022 - When a test proves a lint or boundary rule fails the build, assert the violation has the severity that makes the command exit non-zero, not only that it is reported.
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `build-guards` · harmful: 0
@@ -209,6 +209,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - features: 09-provedor-claude-code
 - evidence: CC-02 packages/llm/src/claude-code.ts:89; CC-03 claude-code.ts:131 (spec)
 - last seen: 2026-10-15T04:56:19Z
+
+### L-034 - Assert the security options an editor host sets in activate (webview localResourceRoots, the final HTML free of the session token) through a test hook or a pure helper; a passing load test does not prove them.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `editor-host` · harmful: 0
+- features: 10-extensao-vscode
+- evidence: I2,I3 apps/vscode/src/extension.ts:70,110 (editor-host)
+- last seen: 2026-10-15T05:57:35Z
+
+### L-035 - Give an env-passthrough AC one observable outcome in the host's integration test, such as a variable set by the runner that changes an API answer.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `editor-host` · harmful: 0
+- features: 10-extensao-vscode
+- evidence: I5 apps/vscode/src/extension.ts:40 (editor-host)
+- last seen: 2026-10-15T05:57:35Z
+
+### L-036 - Anchor a location assertion to an independent source (the runner's user-data path), never to a value the code under test reports about itself.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `editor-host` · harmful: 0
+- features: 10-extensao-vscode
+- evidence: R6 apps/vscode/src/extension.ts:43 (editor-host)
+- last seen: 2026-10-15T06:08:27Z
+
+### L-037 - When a test-only hook is gated by a mode, test the gate in the non-test mode too, since the test harness only ever runs the open branch.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `editor-host` · harmful: 0
+- features: 10-extensao-vscode
+- evidence: R5 apps/vscode/src/extension.ts:152 (editor-host)
+- last seen: 2026-10-15T06:08:27Z
 
 ## Quarantined (failed when applied - ignore)
 

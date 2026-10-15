@@ -117,7 +117,7 @@ Num PowerShell novo, numa pasta qualquer fora do repositório, o usuário roda `
 
 | Requirement ID | Story | Status |
 | -------------- | ----- | ------ |
-| DIST-01..12 | P1: Abrir o mapa de uma pasta pela linha de comando | Pending |
-| DIST-16..17 | P1: Abrir o mapa de uma pasta pela linha de comando | Pending |
-| DIST-13..15 | P1 (estrutura): Núcleo separado da embalagem | Pending |
-| DIST-18..24 | P1 (segurança): Só o usuário usa os recursos dele | Pending |
+| DIST-01..12 | P1: Abrir o mapa de uma pasta pela linha de comando | Verified |
+| DIST-16..17 | P1: Abrir o mapa de uma pasta pela linha de comando | Verified |
+| DIST-13..15 | P1 (estrutura): Núcleo separado da embalagem | Verified |
+| DIST-18..24 | P1 (segurança): Só o usuário usa os recursos dele | Verified |
