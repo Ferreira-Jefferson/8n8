@@ -578,7 +578,16 @@ export function App({ initialFolder = null }: AppProps) {
           aria-expanded={false}
           onClick={() => setPanelCollapsed(false)}
         >
-          ‹
+          <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M15 6l-6 6 6 6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
       )}
       {panelNode && !panelCollapsed && (
@@ -589,7 +598,16 @@ export function App({ initialFolder = null }: AppProps) {
           aria-expanded={true}
           onClick={() => setPanelCollapsed(true)}
         >
-          ›
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M7 7l10 10M17 7L7 17"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
       )}
       {panelNode && !panelCollapsed && (
