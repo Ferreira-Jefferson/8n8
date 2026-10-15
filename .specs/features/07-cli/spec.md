@@ -40,7 +40,7 @@ Num PowerShell novo, numa pasta qualquer fora do repositório, o usuário roda `
 | Config de LLM na CLI | Só por variáveis de ambiente nesta feature. A feature 08 cria `~/.8n8/config.json`, gravado pelo painel de configurações | Evita um `~/.8n8/.env` que viraria um segundo formato de config para sempre. | y |
 | `pnpm dev` e `pnpm start` no repositório | Continuam lendo o `.env` da raiz do repositório, pela flag `--env-file-if-exists` do Node no script, sem código próprio para isso | Mantém o fluxo de desenvolvimento como está, sem um segundo caminho de config no código. | y |
 | Forma de instalar | `pnpm pack` gera o pacote, e `npm install -g <arquivo .tgz>` instala | Não precisa de registro. A publicação no npm fica para depois. | y |
-| Node mínimo da CLI | Node 22.13 | Primeira versão em que `node:sqlite` funciona sem flag. Não tenho certeza dessa versão: o design confirma na documentação do Node. | y |
+| Node mínimo da CLI | Node 22.13 | Primeira versão em que `node:sqlite` funciona sem flag (changelog oficial do módulo: v22.13.0 e v23.4.0). | y |
 | Porta | 4317, trocada por `APP8N8_PORT` (igual a hoje) | Sem mudança de comportamento. | y |
 | Abrir o navegador | Navegador padrão do sistema | O usuário trabalha com o navegador padrão. | y |
 
@@ -64,8 +64,8 @@ Num PowerShell novo, numa pasta qualquer fora do repositório, o usuário roda `
 4. The system SHALL aceitar o caminho com barra invertida (`C:\proj`) e com barra normal (`C:/proj`), no PowerShell e no Bash.  <!-- DIST-04 -->
 5. IF a pasta não existe ou não é uma pasta THEN o sistema SHALL escrever "Pasta não encontrada: <caminho>" no terminal, sair com código 1 e não abrir o navegador.  <!-- DIST-05 -->
 6. IF a porta já está em uso THEN o sistema SHALL escrever "A porta <porta> já está em uso. Feche o outro processo e tente de novo." e sair com código 1.  <!-- DIST-06 -->
-7. The system SHALL escrever "8n8 em http://127.0.0.1:<porta>" no terminal antes de abrir o navegador, para o usuário abrir o endereço à mão se o navegador não abrir.  <!-- DIST-07 -->
-8. WHEN o usuário roda `8n8 --help` THEN o sistema SHALL escrever o uso (`8n8 [pasta]`, as variáveis `APP8N8_PORT`, `APP8N8_CACHE_DIR` e `APP8N8_HISTORY_DIR` e as variáveis de LLM do `.env.example`) e sair com código 0, sem subir o servidor.  <!-- DIST-08 -->
+7. The system SHALL escrever "8n8 em http://127.0.0.1:<porta>/#t=<token>" no terminal antes de abrir o navegador, para o usuário abrir o endereço à mão se o navegador não abrir.  <!-- DIST-07 -->
+8. WHEN o usuário roda `8n8 --help` THEN o sistema SHALL escrever o uso (`8n8 [pasta]`, a opção `--no-open`, que sobe o servidor sem abrir o navegador, as variáveis `APP8N8_PORT`, `APP8N8_CACHE_DIR` e `APP8N8_HISTORY_DIR` e as variáveis de LLM do `.env.example`) e sair com código 0, sem subir o servidor.  <!-- DIST-08 -->
 9. The system SHALL gravar o cache em `~/.8n8/cache` e o histórico em `~/.8n8/historico.db`, salvo quando `APP8N8_CACHE_DIR` ou `APP8N8_HISTORY_DIR` indicam outra pasta.  <!-- DIST-09 -->
 10. The system SHALL nunca escrever na pasta analisada nem na pasta de instalação do pacote.  <!-- DIST-10 -->
 11. IF não há config de LLM THEN o sistema SHALL abrir o mapa normalmente, e o painel de explicação SHALL mostrar o aviso de falta de chave que já existe.  <!-- DIST-11 -->
