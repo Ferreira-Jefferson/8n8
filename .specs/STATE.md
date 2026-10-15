@@ -142,6 +142,20 @@
 - **Consequence:** Atualiza a AD-002: o OpenRouter é o provedor padrão, não o único.
 - **Status:** ativa.
 
+### AD-022 — Um núcleo, várias embalagens, sem site hospedado
+- **Date:** 2026-10-14
+- **Context:** O documento "Arquitetura — Visualizador de Fluxo de Código" define que o 8n8 vai para a comunidade como open source, sem site hospedado e sem monetização. Ele chega ao usuário como CLI (abre o navegador) e como extensão do VS Code. O LLM é opcional e usa o que a pessoa já tem. Testes no VS Code 1.141 (Electron 43, Node 24.21): `node:sqlite` e `web-tree-sitter` (WASM) funcionam no host de extensões. O Node não acha o `claude` pelo nome no Windows, porque ele é um atalho `.cmd`. A chamada direta ao `claude.exe`, com o prompt pelo stdin, funciona com a assinatura do usuário.
+- **Decision:** O pacote `server` é o núcleo: rotas e composição, expostas por `app.fetch`. Ele recebe config, pastas de dados, plugins e provedores por parâmetro, e nunca lê o ambiente, abre porta ou conhece a raiz do repositório. Cada forma de rodar é uma embalagem em `apps/<id>` (`cli`, depois `vscode`). A embalagem decide onde ficam a config e os dados e como a tela fala com o núcleo. Há três pontos de contribuição, cada um com uma pasta, uma entrada no registro, testes de conformidade e um guia em `docs/`: linguagem, provedor de LLM e editor. Uma embalagem não importa outra. O núcleo e a tela não importam `vscode`. Só entra o que o autor usa (VS Code, PowerShell, Bash, navegador, Python e TypeScript). O resto fica como ponto de extensão para a comunidade (KISS e YAGNI).
+- **Consequence:** Atualiza a AD-004: além do app web local, há a CLI e a extensão sobre o mesmo núcleo. O histórico em SQLite continua. O adaptador Claude Code acha o `.exe` e manda o código pelo stdin, nunca como argumento.
+- **Status:** ativa.
+
+### AD-023 — LLM sob demanda e configurações pela tela
+- **Date:** 2026-10-14
+- **Context:** A pessoa pode não ter LLM, e cada chamada gasta a chave ou a assinatura dela. Hoje o painel pede o resumo sozinho ao selecionar um nó, e uma única chamada devolve resumo, entradas, saídas e sugestões.
+- **Decision:** O título do nó é determinístico sem LLM e passa a ser traduzido de forma automática quando há LLM (AD-017 continua). O resumo (com entradas e saídas) e as sugestões viram dois pedidos separados, cada um com prompt, revisão (AD-008) e cache próprios. Por padrão, os dois só rodam quando a pessoa clica no botão. Um painel de configurações deixa a pessoa ligar o modo automático de cada um e escolher provedor, chave, URL e modelo padrão. O que já está no cache aparece sem clique, porque não gasta nada. A chave só entra e nunca sai em nenhuma rota. Trocar a URL do provedor apaga a chave guardada. Uma variável de ambiente ganha do painel. A CLI guarda a config em `~/.8n8/config.json`, e a extensão guarda a chave no `SecretStorage` do VS Code.
+- **Consequence:** Implementada na feature 08. Na CLI, a chave fica em texto puro dentro do perfil do usuário, porque o Node não acessa o cofre do Windows sem módulo nativo (e o DIST-16 da 07 proíbe scripts de instalação).
+- **Status:** ativa.
+
 ## Handoff
 
 *Pausado pelo usuário em 2026-10-14, durante a verificação da feature 05. Nada foi enviado ao remoto.*
