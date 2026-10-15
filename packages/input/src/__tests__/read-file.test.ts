@@ -40,7 +40,7 @@ describe("readSourceFile", () => {
     await writeFile(abs, Buffer.alloc(1_048_577, 0x61));
     expect(await readSourceFile(abs, "big.py")).toEqual({
       kind: "ignored",
-      ignored: { path: "big.py", reason: "too-large" },
+      ignored: { path: "big.py", reason: "too-large", addable: true },
     });
   });
 
@@ -117,5 +117,26 @@ describe("readSourceFile", () => {
     await writeFile(abs, "x = 1\n");
     const r = await readSourceFile(abs, String.raw`pedidos\itens.py`);
     expect(r.kind === "ok" && r.file.path).toBe("pedidos/itens.py");
+  });
+});
+
+describe("readSourceFile for a file the person added (CLEAN-06)", () => {
+  it("reads a file over 1 MB when it was added", async () => {
+    const abs = join(dir, "added.py");
+    await writeFile(abs, Buffer.alloc(1_048_577, 0x61));
+    const read = await readSourceFile(abs, "added.py", true);
+    expect(read.kind).toBe("ok");
+  });
+
+  it("reads exactly 20 MB when added, and refuses one byte more, not addable", async () => {
+    const at = join(dir, "twenty.py");
+    await writeFile(at, Buffer.alloc(20 * 1_048_576, 0x61));
+    expect((await readSourceFile(at, "twenty.py", true)).kind).toBe("ok");
+    const over = join(dir, "over.py");
+    await writeFile(over, Buffer.alloc(20 * 1_048_576 + 1, 0x61));
+    expect(await readSourceFile(over, "over.py", true)).toEqual({
+      kind: "ignored",
+      ignored: { path: "over.py", reason: "too-large", addable: false },
+    });
   });
 });

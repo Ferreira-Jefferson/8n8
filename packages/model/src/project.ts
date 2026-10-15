@@ -11,6 +11,8 @@ export type IgnoreReason = "too-large" | "not-utf8" | "unreadable" | "symlink";
 export interface IgnoredFile {
   path: string;
   reason: IgnoreReason;
+  /** A file over 1 MB and up to 20 MB: the screen offers to put it on the map (CLEAN-06). */
+  addable?: boolean;
 }
 
 export interface ProjectResponse {

@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@8n8/model": "workspace:*"
+    "@8n8/model": "workspace:*",
+    "ignore": "7.0.10"
   },
   "devDependencies": {
     "@types/node": "22.20.5"

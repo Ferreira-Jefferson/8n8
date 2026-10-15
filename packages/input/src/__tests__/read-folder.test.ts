@@ -141,7 +141,7 @@ describe("readSourceFolder", () => {
     const r = await readSourceFolder(dir, PY);
     if (r.kind !== "ok") throw new Error("expected ok");
     expect(r.ignored).toEqual([
-      { path: "grande.py", reason: "too-large" },
+      { path: "grande.py", reason: "too-large", addable: true },
       { path: "latin.py", reason: "not-utf8" },
     ]);
   });
@@ -279,5 +279,83 @@ describe("folderName", () => {
 
   it("returns the basename otherwise", () => {
     expect(folderName(join(tmpdir(), "loja"))).toBe("loja");
+  });
+});
+
+describe("readSourceFolder and .gitignore (CLEAN-01, CLEAN-02)", () => {
+  async function tree(files: Record<string, string | Buffer>): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), "input-gitignore-"));
+    made.push(root);
+    for (const [rel, data] of Object.entries(files)) {
+      await mkdir(join(root, rel, ".."), { recursive: true });
+      await writeFile(join(root, rel), data);
+    }
+    return root;
+  }
+  const paths = async (root: string, include: string[] = []) => {
+    const read = await readSourceFolder(root, { ...PY, include });
+    if (read.kind !== "ok") throw new Error("not-found");
+    return {
+      files: read.files.map((f) => f.path),
+      ignored: read.ignored.map((f) => f.path),
+    };
+  };
+
+  it("skips what the root .gitignore ignores, folders and files, and lists none of it", async () => {
+    const root = await tree({
+      ".gitignore": "gerado/\n*.log.py\n/so_na_raiz.py\n",
+      "gerado/a.py": "x = 1\n",
+      "gerado/grande.py": Buffer.alloc(1_048_577, 0x61),
+      "app/run.log.py": "x = 1\n",
+      "so_na_raiz.py": "x = 1\n",
+      "app/so_na_raiz.py": "x = 1\n",
+      "app/main.py": "x = 1\n",
+    });
+    expect(await paths(root)).toEqual({
+      files: ["app/main.py", "app/so_na_raiz.py"],
+      ignored: [],
+    });
+  });
+
+  it("applies a sub-folder's .gitignore below it only, and lets a deeper ! win", async () => {
+    const root = await tree({
+      ".gitignore": "*.gen.py\n",
+      "lib/.gitignore": "tmp/\n!keep.gen.py\n",
+      "lib/tmp/t.py": "x = 1\n",
+      "lib/keep.gen.py": "x = 1\n",
+      "lib/drop.gen.py": "x = 1\n",
+      "tmp/fora.py": "x = 1\n",
+      "outro.gen.py": "x = 1\n",
+    });
+    expect((await paths(root)).files).toEqual([
+      "lib/keep.gen.py",
+      "tmp/fora.py",
+    ]);
+  });
+
+  it("supports ** and leaves a folder without .gitignore as before", async () => {
+    const withRules = await tree({
+      ".gitignore": "**/fixtures/**\n",
+      "a/b/fixtures/f.py": "x = 1\n",
+      "a/b/c.py": "x = 1\n",
+    });
+    expect((await paths(withRules)).files).toEqual(["a/b/c.py"]);
+    const plain = await tree({ "fixtures/f.py": "x = 1\n" });
+    expect((await paths(plain)).files).toEqual(["fixtures/f.py"]);
+  });
+
+  it("puts an added file over 1 MB on the map and out of the list (CLEAN-06)", async () => {
+    const root = await tree({
+      "grande.py": Buffer.alloc(1_048_577, 0x61),
+      "a.py": "x = 1\n",
+    });
+    expect(await paths(root)).toEqual({
+      files: ["a.py"],
+      ignored: ["grande.py"],
+    });
+    expect(await paths(root, ["grande.py"])).toEqual({
+      files: ["a.py", "grande.py"],
+      ignored: [],
+    });
   });
 });
