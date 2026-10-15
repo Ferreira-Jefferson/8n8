@@ -47,4 +47,4 @@ Depende de: 10-extensao-vscode. Muda o VSC-01.
 
 | Requirement ID | Story | Status |
 | -------------- | ----- | ------ |
-| HOME-01..04 | P1: Só abre um mapa quem pede | Pending |
+| HOME-01..04 | P1: Só abre um mapa quem pede | Verified |
