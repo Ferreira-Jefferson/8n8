@@ -140,7 +140,11 @@ module.exports = {
           "^apps/cli/src/__tests__/guards\\.test\\.ts$",
         ],
       },
-      to: { dependencyTypes: ["core"], path: "^(node:)?child_process$" },
+      // cluster starts another Node process too (SEC-08).
+      to: {
+        dependencyTypes: ["core"],
+        path: "^(node:)?(child_process|cluster)$",
+      },
     },
     {
       name: "only-vscode-host-imports-vscode",

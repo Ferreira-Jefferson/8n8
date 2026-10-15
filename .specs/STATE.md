@@ -170,11 +170,18 @@
 - **Consequence:** As regras `only-vscode-host-imports-vscode` e `vscode-opens-no-port` entram no `pnpm check`. O teste de integração roda num VS Code real com pastas de usuário próprias.
 - **Status:** ativa.
 
+### AD-026 — CI e política de segurança no repositório
+- **Date:** 2026-10-15
+- **Context:** Feature 11. Sem CI, as guardas só protegem quem roda os testes; o `CODEOWNERS` só bloqueia com a proteção de branch.
+- **Decision:** O repositório traz `ci.yml` (install com lockfile congelado, typecheck, check, test, e2e e gitleaks do histórico), `codeql.yml` e `dependabot.yml`. Toda action fica fixada por SHA de commit, com `permissions: contents: read` no topo e sem `pull_request_target`. O `SECURITY.md` diz como avisar em privado e lista o que ligar no GitHub. A regra `no-child-process` recusa também `node:cluster`. Um teste prende a CI aos gates.
+- **Consequence:** Ligar a proteção de branch, o aviso privado e o Dependabot exige push e acesso ao GitHub: fica com o dono do projeto.
+- **Status:** ativa.
+
 ## Handoff
 
 *Atualizado em 2026-10-15. O usuário pediu execução sem paradas para aprovação até concluir o roteiro (08, 09, 10 e segurança do repositório). Nada foi enviado ao remoto.*
 
-- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda ✅ (Verifier PASS na rodada 2) → 09-provedor-claude-code ✅ (Verifier PASS na rodada 2) → 10-extensao-vscode (implementada, verificação em curso) → segurança do repositório.
+- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda ✅ (Verifier PASS na rodada 2) → 09-provedor-claude-code ✅ (Verifier PASS na rodada 2) → 10-extensao-vscode ✅ (Verifier PASS na rodada 3) → 11-seguranca-repositorio (implementada, verificação em curso).
 - **08:** resumo e sugestões em pedidos separados (`/api/summary`, `/api/suggestions`, `cachedOnly`), caches `nodes/` e `suggestions/` (schemaVersion 4), painel de configurações (`GET/PUT /api/settings`, `~/.8n8/config.json`), modos automáticos (`APP8N8_AUTO_SUMMARY`, `APP8N8_AUTO_SUGGESTIONS`). Gates: 1640+ unitários, 141 E2E.
 - **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 e bf90eb8 (T36) da 05 entraram com testes vermelhos. Na 08, os testes do `server` ficaram vermelhos entre a T4 e a T7 (registrado no tasks.md). O histórico não foi reescrito.
 - **Ambiente:**
@@ -185,4 +192,5 @@
 - **Pendências não bloqueantes:**
   - Os worktrees `../8n8-f02`, `../8n8-05a`, `05b`, `05c` e `05d` e seus branches continuam existindo. Não apagar sem pedido.
   - Lições candidatas L-015..L-024 esperam confirmação de outra feature.
-  - Bloquear `node:cluster` na regra `no-child-process` (limite conhecido da 07).
+  - Fazer push e ligar no GitHub o que o `SECURITY.md` lista (pede o ok do dono).
+  - O VS Code instalado estava se atualizando em 2026-10-15; o teste de integração rodou num VS Code baixado em `apps/vscode/.vscode-test`.

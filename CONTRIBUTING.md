@@ -49,6 +49,8 @@ Toda mudança precisa de verificação antes do commit.
 | `pnpm e2e` | Constrói a CLI e roda os testes de ponta a ponta (Playwright) contra ela. |
 | `pnpm --filter 8n8-vscode test:integration` | Constrói a extensão e roda o teste dela num VS Code de verdade, com pastas de usuário próprias. Usa o VS Code instalado, ou baixa um. |
 
+Num pull request, a CI (`.github/workflows/ci.yml`) roda os mesmos gates e o gitleaks sobre todo o histórico. Veja também o [SECURITY.md](SECURITY.md).
+
 Durante o trabalho, rode só o teste ligado à mudança. Por exemplo, `pnpm e2e e2e/<spec>.e2e.ts`. Rode a suíte inteira uma vez, antes do commit.
 
 ### Nota do Windows: `pnpm e2e` não termina

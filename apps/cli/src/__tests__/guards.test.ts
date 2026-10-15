@@ -147,6 +147,11 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
       "apps/cli/src/__tests__/other.test.ts": SPAWN,
       "packages/server/src/probe-dynamic.ts":
         'export const probe = () => import("node:child_process");\n',
+      // cluster.fork() starts a Node process without naming child_process (SEC-08).
+      "packages/server/src/probe-cluster.ts":
+        'import cluster from "node:cluster";\n\nexport const probe = cluster;\n',
+      "apps/vscode/src/probe-cluster.ts":
+        'import cluster from "cluster";\n\nexport const probe = cluster;\n',
     };
     for (const w of workspaces) files[`${w}/src/probe-spawn.ts`] = SPAWN;
     const { status, out } = check(files);

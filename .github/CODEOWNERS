@@ -31,4 +31,9 @@
 /.gitleaks.toml @Ferreira-Jefferson
 /.gitleaksignore @Ferreira-Jefferson
 
+# CI, análise e atualizações (SEC-07).
+/.github/workflows/ @Ferreira-Jefferson
+/.github/dependabot.yml @Ferreira-Jefferson
+/SECURITY.md @Ferreira-Jefferson
+
 /.github/CODEOWNERS @Ferreira-Jefferson
