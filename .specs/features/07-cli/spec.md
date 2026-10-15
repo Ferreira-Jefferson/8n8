@@ -87,7 +87,7 @@ Num PowerShell novo, numa pasta qualquer fora do repositório, o usuário roda `
 
 1. The `server` package SHALL receber a config de LLM, as pastas de cache e de histórico, as regras de PTS e os plugins por parâmetro, e SHALL nunca ler `process.env`, abrir uma porta ou montar caminhos a partir da raiz do repositório.  <!-- DIST-13 -->
 2. IF um pacote em `packages/` ou o app `apps/web` importa `apps/cli`, ou uma embalagem em `apps/` importa outra embalagem THEN `pnpm check` SHALL falhar.  <!-- DIST-14 -->
-3. WHEN o usuário roda `pnpm dev` ou `pnpm start` no repositório THEN o sistema SHALL funcionar como antes, lendo o `.env` da raiz do repositório.  <!-- DIST-15 -->
+3. WHEN o usuário roda `pnpm dev` ou `pnpm start` no repositório THEN o script SHALL rodar a CLI (`apps/cli/src/main.ts` no `dev:server`, `apps/cli/dist/8n8.mjs` no `start`) com a flag `--env-file-if-exists=.env` do Node, que lê o `.env` da raiz quando ele existe e segue sem ele quando não existe.  <!-- DIST-15 -->
 
 **Independent Test**: `pnpm check` falha com um import proibido de teste e passa sem ele; `pnpm test`, `pnpm typecheck` e `pnpm e2e` continuam verdes.
 
@@ -106,7 +106,7 @@ Num PowerShell novo, numa pasta qualquer fora do repositório, o usuário roda `
 3. IF uma requisição a `/api/*` chega sem o token ou com um token diferente THEN o sistema SHALL responder 401, sem ler arquivo, sem consultar o histórico e sem chamar o LLM. A comparação SHALL ser em tempo constante (`timingSafeEqual`).  <!-- DIST-20 -->
 4. The suíte de segurança SHALL listar as rotas registradas no app e falhar quando existe uma rota em `/api/*` que ela não ataca com: Host estranho (403, regra da AD-007), POST sem JSON (415), sem token (401) e token errado (401). Em cada ataque, a suíte SHALL provar com um dublê que o LLM, a leitura de pasta e o histórico não foram chamados.  <!-- DIST-21 -->
 5. The suíte de segurança SHALL subir o app com uma chave sentinela e falhar se o valor dela aparece no corpo ou nos cabeçalhos de qualquer resposta, ou na saída do terminal da CLI. Ela é a prova do DIST-17.  <!-- DIST-22 -->
-6. IF um arquivo importa `node:child_process`, ou o código usa `eval`, `new Function` ou `dangerouslySetInnerHTML` THEN `pnpm check` SHALL falhar. Nesta feature nenhum módulo tem permissão para `node:child_process`. A feature 09 libera só o provedor Claude Code.  <!-- DIST-23 -->
+6. IF um arquivo de `packages/` ou `apps/` (o código que vai no pacote) importa `node:child_process`, ou o código usa `eval`, `new Function` ou `dangerouslySetInnerHTML` THEN `pnpm check` SHALL falhar. A única exceção é `apps/cli/src/open-browser.ts`, que abre o navegador (design). As ferramentas de desenvolvimento em `scripts/` e os testes em `e2e/` ficam fora dessa regra. A feature 09 acrescenta só o provedor Claude Code como exceção.  <!-- DIST-23 -->
 7. The repositório SHALL ter um arquivo `.github/CODEOWNERS` que exige o dono do projeto como revisor dos arquivos de segurança: as guardas do `server`, a suíte de segurança, `.dependency-cruiser.cjs`, `biome.json`, `pnpm-workspace.yaml`, `.githooks/`, `.gitleaks.toml` e o próprio `CODEOWNERS`.  <!-- DIST-24 -->
 
 **Independent Test**: `pnpm test` roda a suíte de segurança e passa. Apagar uma guarda, registrar uma rota nova sem ataque na suíte ou importar `node:child_process` faz `pnpm test` ou `pnpm check` falhar.

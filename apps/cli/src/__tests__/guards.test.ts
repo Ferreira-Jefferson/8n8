@@ -45,8 +45,13 @@ describe("pnpm check guards (DIST-14, DIST-23)", () => {
     ).toEqual([]);
   });
 
-  it("fails the screen and another host that import apps/cli", async () => {
+  it("fails a package, the screen and another host that import apps/cli", async () => {
     const found = await violations();
+    expect(found).toContainEqual(
+      expect.stringMatching(
+        /packages\/model\/src\/uses-cli\.ts -> apps\/cli\/src\/run\.ts$/,
+      ),
+    );
     expect(found).toContainEqual(
       expect.stringMatching(
         /apps\/web\/src\/uses-cli\.ts -> apps\/cli\/src\/run\.ts$/,

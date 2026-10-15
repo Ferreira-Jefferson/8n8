@@ -51,6 +51,8 @@ let command = "";
 let server: ChildProcess | undefined;
 let url = "";
 const before = { loja: [] as string[], prefix: [] as string[] };
+/** Everything the installed CLI printed, stdout and stderr, in every run (DIST-22). */
+let terminal = "";
 
 /** path + sha256 of every file under `dir`: equal lists mean nothing was written. */
 function stamps(dir: string): string[] {
@@ -95,13 +97,18 @@ function cliEnv(): NodeJS.ProcessEnv {
 // arguments are temp paths with no spaces, quoted anyway.
 const quoted = (args: string[]) => (WINDOWS ? args.map((a) => `"${a}"`) : args);
 
+// Runs from the temp folder, never from the repository: the package must not lean on
+// any repository file (DIST-12).
 function run8n8(args: string[]): SpawnSyncReturns<string> {
-  return spawnSync(command, quoted(args), {
+  const r = spawnSync(command, quoted(args), {
+    cwd: tmp,
     env: cliEnv(),
     encoding: "utf8",
     shell: WINDOWS,
     timeout: 60_000,
   });
+  terminal += r.stdout + r.stderr;
+  return r;
 }
 
 function sh(cmd: string, args: string[]): string {
@@ -121,12 +128,17 @@ function start8n8(
 ): Promise<{ child: ChildProcess; url: string }> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, quoted(args), {
+      cwd: tmp,
       env: cliEnv(),
       shell: WINDOWS,
     });
     let printed = "";
+    child.stderr?.on("data", (chunk: Buffer) => {
+      terminal += chunk.toString();
+    });
     child.stdout?.on("data", (chunk: Buffer) => {
       printed += chunk.toString();
+      terminal += chunk.toString();
       const match = /8n8 em (\S+)/.exec(printed);
       if (match?.[1]) resolve({ child, url: match[1] });
     });
@@ -235,6 +247,14 @@ test("DIST-06: a second 8n8 on the same port prints the port message and exits 1
   expect(r.stderr.trim()).toBe(
     `A porta ${PORT} já está em uso. Feche o outro processo e tente de novo.`,
   );
+});
+
+test("DIST-22: no run of the installed CLI prints the API key, whole or by its start", () => {
+  // The server run, --help, the missing folder and the busy port all printed something.
+  expect(terminal).toContain("8n8 em http://127.0.0.1:4330/");
+  expect(terminal).toContain("Pasta não encontrada:");
+  expect(terminal).not.toContain("e2e-fake-key");
+  expect(terminal).not.toContain("e2e-fa");
 });
 
 test("DIST-10: the analysed folder and the install folder stay byte for byte the same", () => {
