@@ -74,6 +74,36 @@ describe("the CI runs every gate (SEC-01)", () => {
     expect(ci).not.toMatch(/continue-on-error/);
   });
 
+  it("is the secrets job exactly: a full checkout, a checksummed gitleaks, a full scan with .gitleaks.toml", () => {
+    // Line by line: nothing can be added around the checksum or the scan (SEC-01, SEC-05).
+    expect(jobBlock(ci, "secrets").split("\n")).toEqual([
+      "  secrets:",
+      "    runs-on: ubuntu-latest",
+      "    timeout-minutes: 10",
+      "    steps:",
+      "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1",
+      "        with:",
+      "          fetch-depth: 0",
+      "          persist-credentials: false",
+      "      # The gitleaks CLI at a fixed release, checked by its SHA-256, over every",
+      "      # commit of the history with the rules of .gitleaks.toml (SEC-01).",
+      "      - name: gitleaks",
+      "        env:",
+      "          GITLEAKS_VERSION: 8.30.1",
+      "          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb",
+      "        run: |",
+      '          curl -sSfL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"',
+      '          echo "${GITLEAKS_SHA256}  gitleaks.tgz" | sha256sum --check --strict',
+      "          tar -xzf gitleaks.tgz gitleaks",
+      "          ./gitleaks git --redact --verbose --no-banner .",
+      "",
+    ]);
+  });
+
+  it("gives no job more permissions than the top", () => {
+    expect(ci).not.toMatch(/^ {4}permissions:/m);
+  });
+
   it("scans every commit with the gitleaks CLI of a fixed release, checked by its SHA-256", () => {
     const secrets = jobBlock(ci, "secrets");
     expect(secrets).toMatch(/^ {10}fetch-depth: 0$/m);
