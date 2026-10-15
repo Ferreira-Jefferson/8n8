@@ -114,6 +114,48 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: N12 / PROJ-03 / packages/extract-python/src/project.ts:146 (extract-python)
 - last seen: 2026-10-13T23:48:15Z
 
+### L-018 - When the design grants an exception to a spec prohibition, amend the spec AC in the same change, and make the check scan every folder the prohibition names.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `build-guards` · harmful: 0
+- features: 07-cli
+- evidence: DIST-23 / .dependency-cruiser.cjs:136 / apps/cli/src/__tests__/guards.test.ts:107 (build-guards)
+- last seen: 2026-10-15T02:21:29Z
+
+### L-019 - Give a keep-working-as-before requirement one observable outcome and a test, such as a value read from .env that shows up in the output.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `dev-scripts` · harmful: 0
+- features: 07-cli
+- evidence: DIST-15 / package.json:16,18 (dev-scripts)
+- last seen: 2026-10-15T02:21:29Z
+
+### L-020 - Give every branch of an import-boundary AC its own violating fixture, not only some of the importers it names.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `build-guards` · harmful: 0
+- features: 07-cli
+- evidence: DIST-14 / apps/cli/src/__tests__/guards.test.ts:113 (build-guards)
+- last seen: 2026-10-15T02:21:29Z
+
+### L-021 - Pin a rule exemption to its one file with a fixture of a sibling file that the rule must still reject, so widening the exemption fails a test.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `build-guards` · harmful: 0
+- features: 07-cli
+- evidence: N6 / DIST-23 / .dependency-cruiser.cjs:136 (build-guards)
+- last seen: 2026-10-15T02:27:28Z
+
+### L-022 - When a test proves a lint or boundary rule fails the build, assert the violation has the severity that makes the command exit non-zero, not only that it is reported.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `build-guards` · harmful: 0
+- features: 07-cli
+- evidence: N8 / DIST-23 / apps/cli/src/__tests__/guards.test.ts:28 (build-guards)
+- last seen: 2026-10-15T02:31:37Z
+
+### L-023 - Teste uma guarda de build pela propriedade: rode o script real (pnpm check) com a config real sobre um arquivo que viola uma regra por vez, confira a falha e a gravidade, e varra o código pelo que a ferramenta não vê; ler valores da config não conta como teste.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `build-guards` · harmful: 0
+- features: 07-cli
+- evidence: N6,N8,M1-M16 (guards.test.ts) (build-guards)
+- last seen: 2026-10-15T02:55:49Z
+
+### L-024 - Scope a source-scan allowance to the exact text a file needs, never to the whole file, and scan for the loading mechanisms (getBuiltinModule, createRequire) as well as the module name.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `build-guards` · harmful: 0
+- features: 07-cli
+- evidence: P6, P9 / DIST-23 / apps/cli/src/__tests__/guards.test.ts:228-231 (build-guards)
+- last seen: 2026-10-15T03:00:30Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

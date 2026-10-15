@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 18,
+  "next_id": 25,
   "lessons": [
     {
       "id": "L-001",
@@ -312,6 +312,132 @@
       ],
       "created": "2026-10-13T23:48:15Z",
       "last_seen": "2026-10-13T23:48:15Z"
+    },
+    {
+      "id": "L-018",
+      "key": "ac_gap::when the design grants an exception to a spec prohibition amend the spec ac in the same change and make the check scan every folder the prohibition names",
+      "text": "When the design grants an exception to a spec prohibition, amend the spec AC in the same change, and make the check scan every folder the prohibition names.",
+      "signal": "ac_gap",
+      "scope": "build-guards",
+      "status": "candidate",
+      "features": [
+        "07-cli"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "DIST-23 / .dependency-cruiser.cjs:136 / apps/cli/src/__tests__/guards.test.ts:107 (build-guards)"
+      ],
+      "created": "2026-10-15T02:21:29Z",
+      "last_seen": "2026-10-15T02:21:29Z"
+    },
+    {
+      "id": "L-019",
+      "key": "spec_precision_gap::give a keep working as before requirement one observable outcome and a test such as a value read from env that shows up in the output",
+      "text": "Give a keep-working-as-before requirement one observable outcome and a test, such as a value read from .env that shows up in the output.",
+      "signal": "spec_precision_gap",
+      "scope": "dev-scripts",
+      "status": "candidate",
+      "features": [
+        "07-cli"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "DIST-15 / package.json:16,18 (dev-scripts)"
+      ],
+      "created": "2026-10-15T02:21:29Z",
+      "last_seen": "2026-10-15T02:21:29Z"
+    },
+    {
+      "id": "L-020",
+      "key": "ac_gap::give every branch of an import boundary ac its own violating fixture not only some of the importers it names",
+      "text": "Give every branch of an import-boundary AC its own violating fixture, not only some of the importers it names.",
+      "signal": "ac_gap",
+      "scope": "build-guards",
+      "status": "candidate",
+      "features": [
+        "07-cli"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "DIST-14 / apps/cli/src/__tests__/guards.test.ts:113 (build-guards)"
+      ],
+      "created": "2026-10-15T02:21:29Z",
+      "last_seen": "2026-10-15T02:21:29Z"
+    },
+    {
+      "id": "L-021",
+      "key": "surviving_mutant::pin a rule exemption to its one file with a fixture of a sibling file that the rule must still reject so widening the exemption fails a test",
+      "text": "Pin a rule exemption to its one file with a fixture of a sibling file that the rule must still reject, so widening the exemption fails a test.",
+      "signal": "surviving_mutant",
+      "scope": "build-guards",
+      "status": "candidate",
+      "features": [
+        "07-cli"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N6 / DIST-23 / .dependency-cruiser.cjs:136 (build-guards)"
+      ],
+      "created": "2026-10-15T02:27:28Z",
+      "last_seen": "2026-10-15T02:27:28Z"
+    },
+    {
+      "id": "L-022",
+      "key": "surviving_mutant::when a test proves a lint or boundary rule fails the build assert the violation has the severity that makes the command exit non zero not only that it is reported",
+      "text": "When a test proves a lint or boundary rule fails the build, assert the violation has the severity that makes the command exit non-zero, not only that it is reported.",
+      "signal": "surviving_mutant",
+      "scope": "build-guards",
+      "status": "candidate",
+      "features": [
+        "07-cli"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N8 / DIST-23 / apps/cli/src/__tests__/guards.test.ts:28 (build-guards)"
+      ],
+      "created": "2026-10-15T02:31:37Z",
+      "last_seen": "2026-10-15T02:31:37Z"
+    },
+    {
+      "id": "L-023",
+      "key": "surviving_mutant::teste uma guarda de build pela propriedade rode o script real pnpm check com a config real sobre um arquivo que viola uma regra por vez confira a falha e a gravidade e varra o codigo pelo que a ferramenta nao ve ler valores da config nao conta como teste",
+      "text": "Teste uma guarda de build pela propriedade: rode o script real (pnpm check) com a config real sobre um arquivo que viola uma regra por vez, confira a falha e a gravidade, e varra o código pelo que a ferramenta não vê; ler valores da config não conta como teste.",
+      "signal": "surviving_mutant",
+      "scope": "build-guards",
+      "status": "candidate",
+      "features": [
+        "07-cli"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "N6,N8,M1-M16 (guards.test.ts) (build-guards)"
+      ],
+      "created": "2026-10-15T02:55:49Z",
+      "last_seen": "2026-10-15T02:55:49Z"
+    },
+    {
+      "id": "L-024",
+      "key": "surviving_mutant::scope a source scan allowance to the exact text a file needs never to the whole file and scan for the loading mechanisms getbuiltinmodule createrequire as well as the module name",
+      "text": "Scope a source-scan allowance to the exact text a file needs, never to the whole file, and scan for the loading mechanisms (getBuiltinModule, createRequire) as well as the module name.",
+      "signal": "surviving_mutant",
+      "scope": "build-guards",
+      "status": "candidate",
+      "features": [
+        "07-cli"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "P6, P9 / DIST-23 / apps/cli/src/__tests__/guards.test.ts:228-231 (build-guards)"
+      ],
+      "created": "2026-10-15T03:00:30Z",
+      "last_seen": "2026-10-15T03:00:30Z"
     }
   ]
 }
