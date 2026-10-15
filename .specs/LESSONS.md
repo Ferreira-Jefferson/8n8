@@ -156,6 +156,36 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: P6, P9 / DIST-23 / apps/cli/src/__tests__/guards.test.ts:228-231 (build-guards)
 - last seen: 2026-10-15T03:00:30Z
 
+### L-025 - On Windows, retry fs.rename over an existing file on EPERM/EACCES/EBUSY with a short backoff; a just-written target can be briefly locked by antivirus or the indexer.
+- signal: `gate_fail` · recurrence: 1 feature(s) · scope: `fs-windows` · harmful: 0
+- features: 08-config-llm-sob-demanda
+- evidence: packages/server/src/settings-file.ts:272 (fs-windows)
+- last seen: 2026-10-15T04:26:42Z
+
+### L-026 - When a spec promises an atomic write (temp file + rename), test the mechanism itself: spy the fs calls or fail mid-write and assert the old file is intact.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `fs` · harmful: 0
+- features: 08-config-llm-sob-demanda
+- evidence: M15 settings-file.ts:267 (fs)
+- last seen: 2026-10-15T04:26:42Z
+
+### L-027 - When validation lives in a service, still add a route test asserting the exact HTTP status the spec names; a client that treats every non-ok alike hides a wrong status.
+- signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `server-routes` · harmful: 0
+- features: 08-config-llm-sob-demanda
+- evidence: M22 CFG-14 app.ts PUT /api/settings (server-routes)
+- last seen: 2026-10-15T04:26:42Z
+
+### L-028 - For a notice tied to a server state, say in the AC when it appears (on selection or after the click) when a cache-only request can answer before that state is known.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `web-panel` · harmful: 0
+- features: 08-config-llm-sob-demanda
+- evidence: CFG-09 (web-panel)
+- last seen: 2026-10-15T04:26:42Z
+
+### L-029 - In a failure path that handles a secret, log only the error code, never err.message, and cover the log with the same sentinel check used for responses.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `server-secrets` · harmful: 0
+- features: 08-config-llm-sob-demanda
+- evidence: packages/server/src/app.ts PUT /api/settings 500 log (CFG-23, dba6920) (server-secrets)
+- last seen: 2026-10-15T04:36:50Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

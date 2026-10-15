@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 25,
+  "next_id": 30,
   "lessons": [
     {
       "id": "L-001",
@@ -438,6 +438,96 @@
       ],
       "created": "2026-10-15T03:00:30Z",
       "last_seen": "2026-10-15T03:00:30Z"
+    },
+    {
+      "id": "L-025",
+      "key": "gate_fail::on windows retry fs rename over an existing file on eperm eacces ebusy with a short backoff a just written target can be briefly locked by antivirus or the indexer",
+      "text": "On Windows, retry fs.rename over an existing file on EPERM/EACCES/EBUSY with a short backoff; a just-written target can be briefly locked by antivirus or the indexer.",
+      "signal": "gate_fail",
+      "scope": "fs-windows",
+      "status": "candidate",
+      "features": [
+        "08-config-llm-sob-demanda"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "packages/server/src/settings-file.ts:272 (fs-windows)"
+      ],
+      "created": "2026-10-15T04:26:42Z",
+      "last_seen": "2026-10-15T04:26:42Z"
+    },
+    {
+      "id": "L-026",
+      "key": "surviving_mutant::when a spec promises an atomic write temp file rename test the mechanism itself spy the fs calls or fail mid write and assert the old file is intact",
+      "text": "When a spec promises an atomic write (temp file + rename), test the mechanism itself: spy the fs calls or fail mid-write and assert the old file is intact.",
+      "signal": "surviving_mutant",
+      "scope": "fs",
+      "status": "candidate",
+      "features": [
+        "08-config-llm-sob-demanda"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M15 settings-file.ts:267 (fs)"
+      ],
+      "created": "2026-10-15T04:26:42Z",
+      "last_seen": "2026-10-15T04:26:42Z"
+    },
+    {
+      "id": "L-027",
+      "key": "surviving_mutant::when validation lives in a service still add a route test asserting the exact http status the spec names a client that treats every non ok alike hides a wrong status",
+      "text": "When validation lives in a service, still add a route test asserting the exact HTTP status the spec names; a client that treats every non-ok alike hides a wrong status.",
+      "signal": "surviving_mutant",
+      "scope": "server-routes",
+      "status": "candidate",
+      "features": [
+        "08-config-llm-sob-demanda"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M22 CFG-14 app.ts PUT /api/settings (server-routes)"
+      ],
+      "created": "2026-10-15T04:26:42Z",
+      "last_seen": "2026-10-15T04:26:42Z"
+    },
+    {
+      "id": "L-028",
+      "key": "spec_precision_gap::for a notice tied to a server state say in the ac when it appears on selection or after the click when a cache only request can answer before that state is known",
+      "text": "For a notice tied to a server state, say in the AC when it appears (on selection or after the click) when a cache-only request can answer before that state is known.",
+      "signal": "spec_precision_gap",
+      "scope": "web-panel",
+      "status": "candidate",
+      "features": [
+        "08-config-llm-sob-demanda"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CFG-09 (web-panel)"
+      ],
+      "created": "2026-10-15T04:26:42Z",
+      "last_seen": "2026-10-15T04:26:42Z"
+    },
+    {
+      "id": "L-029",
+      "key": "ac_gap::in a failure path that handles a secret log only the error code never err message and cover the log with the same sentinel check used for responses",
+      "text": "In a failure path that handles a secret, log only the error code, never err.message, and cover the log with the same sentinel check used for responses.",
+      "signal": "ac_gap",
+      "scope": "server-secrets",
+      "status": "candidate",
+      "features": [
+        "08-config-llm-sob-demanda"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "packages/server/src/app.ts PUT /api/settings 500 log (CFG-23, dba6920) (server-secrets)"
+      ],
+      "created": "2026-10-15T04:36:50Z",
+      "last_seen": "2026-10-15T04:36:50Z"
     }
   ]
 }
