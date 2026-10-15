@@ -32,10 +32,32 @@ describe("styles: editor (VID-08)", () => {
 });
 
 describe("styles: card tag", () => {
-  it("paints the PASTA tag in the main green, so folders differ from files", () => {
-    expect(rule('.node[data-tag="PASTA"] .tag')).toContain(
-      "color: var(--main);",
-    );
+  /** The declarations of the rule whose selector list contains `selector`. */
+  function ruleWith(selector: string): string {
+    const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = css.match(new RegExp(`${escaped}[^{]*\\{([^}]*)\\}`));
+    if (!m?.[1]) throw new Error(`no rule with ${selector}`);
+    return m[1];
+  }
+
+  it("paints structure and the flow entry in the main green", () => {
+    for (const tag of ["GATILHO", "PASTA", "ARQUIVO", "CÓDIGO SOLTO"]) {
+      expect(ruleWith(`.node[data-tag="${tag}"] .tag`)).toContain(
+        "color: var(--main);",
+      );
+    }
+  });
+
+  it("paints the logic steps in the bright second colour", () => {
+    for (const tag of ["FUNÇÃO", "SE", "LAÇO", "BLOCO", "CÓDIGO", "RETORNO"]) {
+      expect(ruleWith(`.node[data-tag="${tag}"] .tag`)).toContain(
+        "color: var(--second);",
+      );
+    }
+  });
+
+  it("leaves the external bridges on the default grey tag", () => {
+    expect(rule(".node .tag")).toContain("color: var(--accent);");
   });
 });
 

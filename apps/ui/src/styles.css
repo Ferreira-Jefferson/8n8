@@ -505,9 +505,23 @@ body {
   color: var(--accent);
 }
 
-/* A folder is told apart from a file by its green tag. */
-.node[data-tag="PASTA"] .tag {
+/* The tag color groups the node by its role: structure and the flow entry
+   are green, the logic steps are bright, and the external bridges keep the
+   default grey of `.node .tag`. */
+.node[data-tag="GATILHO"] .tag,
+.node[data-tag="PASTA"] .tag,
+.node[data-tag="ARQUIVO"] .tag,
+.node[data-tag="CÓDIGO SOLTO"] .tag {
   color: var(--main);
+}
+
+.node[data-tag="FUNÇÃO"] .tag,
+.node[data-tag="SE"] .tag,
+.node[data-tag="LAÇO"] .tag,
+.node[data-tag="BLOCO"] .tag,
+.node[data-tag="CÓDIGO"] .tag,
+.node[data-tag="RETORNO"] .tag {
+  color: var(--second);
 }
 
 .node .name {
