@@ -21,14 +21,17 @@ export interface Suggestion {
   lines: number[];
 }
 
-export interface Explanation {
+/** The summary part of a node's explanation; the suggestions are a request of their own (CFG-01, CFG-02). */
+export interface Summary {
   /** The kept sentences joined by a space. */
   summary: string;
   sentences: Claim[];
   inputs: Claim[];
   outputs: Claim[];
-  suggestions: Suggestion[];
 }
+
+/** The two requests a node's explanation is made of (AD-023). */
+export type ExplainPart = "summary" | "suggestions";
 
 /** "full" = "Revisado"; "cut" = "Revisado com cortes". */
 export type ReviewStatus = "full" | "cut";
@@ -66,17 +69,22 @@ export interface ExplainRequest {
   calledBy: string[];
 }
 
-export type ExplainResponse =
+/** The answer to one part; `not-cached` answers a cache-only request without a hit (CFG-05). */
+export type ExplainResponse<T> =
   | {
       status: "ok";
-      explanation: Explanation;
+      result: T;
       fromCache: boolean;
       review: ReviewStatus;
       update?: UpdateReason[];
     }
+  | { status: "not-cached" }
   | { status: "unfaithful" }
   | { status: "no-key" }
   | { status: "error"; message: string };
+
+export type SummaryResponse = ExplainResponse<Summary>;
+export type SuggestionsResponse = ExplainResponse<Suggestion[]>;
 
 /** Um nó a titular, montado pelo servidor a partir do próprio grafo (AD-007, AD-015). */
 export interface TitleItem {

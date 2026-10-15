@@ -8,15 +8,18 @@ export type {
   Claim,
   ClaimId,
   ExplainKind,
+  ExplainPart,
   ExplainRequest,
   ExplainResponse,
   ExplainStyle,
-  Explanation,
   ExternalEffect,
   NodeTitle,
   ReviewStatus,
   Severity,
   Suggestion,
+  SuggestionsResponse,
+  Summary,
+  SummaryResponse,
   TitleItem,
   TitleRequest,
   TitlesResponse,
@@ -57,3 +60,9 @@ export type {
   SourceFile,
 } from "./project";
 export { fileNodeOf } from "./project";
+export type {
+  SettingsField,
+  SettingsPatch,
+  SettingsResponse,
+  StoredSettings,
+} from "./settings";

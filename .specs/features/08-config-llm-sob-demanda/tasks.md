@@ -75,8 +75,8 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Tipos exportados pelo `index.ts`
-- [ ] Gate check passes: `pnpm --filter @8n8/model test` (os consumidores quebram até a T4 e a T10; o typecheck do repositório volta na T10)
+- [x] Tipos exportados pelo `index.ts`
+- [x] Gate check passes: `pnpm --filter @8n8/model test` (os consumidores quebram até a T4 e a T10; o typecheck do repositório volta na T10)
 
 **Tests**: none
 **Gate**: quick
