@@ -119,6 +119,16 @@ describe("fetchProject (PROJ-05)", () => {
     expect(result).toEqual(project);
   });
 
+  it("posts the files put on the map as include (CLEAN-06)", async () => {
+    const fn = fakeFetch(200, project);
+    await fetchProject("C:/loja", ["dados/grande.py"]);
+    const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({
+      path: "C:/loja",
+      include: ["dados/grande.py"],
+    });
+  });
+
   it("returns not-found with the typed path on 404", async () => {
     fakeFetch(404, { error: "not-found", path: "./nao/existe" });
     expect(await fetchProject("./nao/existe")).toEqual({

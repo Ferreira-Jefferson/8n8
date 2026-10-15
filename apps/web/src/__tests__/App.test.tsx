@@ -299,7 +299,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     render(<App />);
     openFolder();
     await screen.findByTestId("canvas");
-    expect(projectMock).toHaveBeenCalledWith(lojaRoot);
+    expect(projectMock).toHaveBeenCalledWith(lojaRoot, []);
     const { graph, levelId } = currentCanvas();
     expect(projectLevel(graph, levelId).nodes.map((n) => n.id)).toEqual([
       "dir:frete",
@@ -315,7 +315,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     projectMock.mockResolvedValue(loja);
     render(<App initialFolder={lojaRoot} />);
     await screen.findByTestId("canvas");
-    expect(projectMock).toHaveBeenCalledWith(lojaRoot);
+    expect(projectMock).toHaveBeenCalledWith(lojaRoot, []);
     expect(breadcrumbItems()).toEqual(["loja"]);
   });
 
@@ -361,14 +361,58 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     });
     render(<App />);
     openFolder();
-    const section = await screen.findByRole("region", {
-      name: "Arquivos ignorados",
-    });
+    fireEvent.click(
+      await screen.findByRole("button", { name: "1 arquivo ignorado" }),
+    );
+    const section = screen.getByRole("region", { name: "Arquivos ignorados" });
     expect(
       within(section)
         .getAllByRole("listitem")
         .map((li) => li.textContent),
-    ).toEqual(["grande.py — maior que 1 MB"]);
+    ).toEqual(["grande.pymaior que 1 MB"]);
+  });
+
+  it("puts a large file on the map: reads the folder again with it, and every request of the map carries it (CLEAN-06, CLEAN-07)", async () => {
+    const grande = { path: "grande.py", source: "x = 1\n" };
+    projectMock
+      .mockResolvedValueOnce({
+        ...loja,
+        ignored: [{ path: "grande.py", reason: "too-large", addable: true }],
+      })
+      .mockResolvedValueOnce({ ...loja, files: [...loja.files, grande] });
+    explainMock.mockResolvedValue({ status: "no-key" });
+    render(<App />);
+    openFolder();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "1 arquivo ignorado" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Adicionar ao mapa" }));
+    await waitFor(() =>
+      expect(projectMock).toHaveBeenLastCalledWith(lojaRoot, ["grande.py"]),
+    );
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "1 arquivo ignorado" }),
+      ).toBeNull(),
+    );
+    const origin = { root: lojaRoot, include: ["grande.py"] };
+    // A level with functions asks for titles.
+    for (const id of ["dir:pedidos", "file:pedidos/pedidos.py"]) {
+      act(() => currentCanvas().onOpen(lojaNode(id)));
+    }
+    await waitFor(() =>
+      expect(titlesMock.mock.calls.at(-1)?.[0]).toEqual(origin),
+    );
+    act(() =>
+      currentCanvas().onSelect("file:frete/calculo.py/fn:calcular_frete"),
+    );
+    await waitFor(() =>
+      expect(explainMock).toHaveBeenCalledWith(
+        origin,
+        "file:frete/calculo.py/fn:calcular_frete",
+        true,
+      ),
+    );
   });
 
   it("replaces the folder map with a snippet map: Fluxo principal is back and Arquivos ignorados is gone", async () => {
@@ -379,7 +423,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     graphMock.mockResolvedValue(withLanguage(graph));
     render(<App />);
     openFolder();
-    await screen.findByRole("region", { name: "Arquivos ignorados" });
+    await screen.findByRole("button", { name: "1 arquivo ignorado" });
     fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
     fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
     fireEvent.change(screen.getByLabelText("Trecho de código"), {
@@ -388,7 +432,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Gerar mapa" }));
     await waitFor(() => expect(breadcrumbItems()).toEqual(["Fluxo principal"]));
     expect(
-      screen.queryByRole("region", { name: "Arquivos ignorados" }),
+      screen.queryByRole("button", { name: "1 arquivo ignorado" }),
     ).toBeNull();
     expect(currentCanvas().graph).toEqual(graph);
   });
@@ -931,8 +975,8 @@ describe("App: history", () => {
     fireEvent.click(
       await within(drawer()).findByRole("button", { name: /^loja/ }),
     );
-    await screen.findByRole("region", { name: "Arquivos ignorados" });
-    expect(projectMock).toHaveBeenCalledWith("C:/codigo/loja");
+    await screen.findByRole("button", { name: "1 arquivo ignorado" });
+    expect(projectMock).toHaveBeenCalledWith("C:/codigo/loja", []);
     expect(screen.getByRole("button", { name: "Histórico" })).toBeTruthy();
   });
 
@@ -958,7 +1002,9 @@ describe("App: history", () => {
     expect((await screen.findByRole("alert")).textContent).toBe(
       "Pasta não encontrada: C:/codigo/loja",
     );
-    expect(screen.queryByRole("region", { name: "Recentes" })).toBeTruthy();
+    expect(
+      await screen.findByRole("region", { name: "Recentes" }),
+    ).toBeTruthy();
   });
 });
 

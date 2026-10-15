@@ -56,7 +56,13 @@ type Mapped =
       /** Absent in a saved map: the history keeps no language. */
       language?: SnippetLanguage | undefined;
     }
-  | { kind: "project"; root: string; response: ProjectResponse };
+  | {
+      kind: "project";
+      root: string;
+      response: ProjectResponse;
+      /** Files over 1 MB the person put on the map (CLEAN-06). */
+      include: string[];
+    };
 
 interface PanelInput {
   source: string;
@@ -69,8 +75,9 @@ function graphOf(mapped: Mapped): Graph {
 }
 
 function originOf(mapped: Mapped): ExplainOrigin {
-  return mapped.kind === "snippet"
-    ? { source: mapped.source }
+  if (mapped.kind === "snippet") return { source: mapped.source };
+  return mapped.include.length > 0
+    ? { root: mapped.root, include: mapped.include }
     : { root: mapped.root };
 }
 
@@ -275,13 +282,13 @@ export function App({ initialFolder = null }: AppProps) {
     }
   }
 
-  async function openFolder(path = folder) {
+  async function openFolder(path = folder, include: string[] = []) {
     setFailed(false);
     setNotFound(null);
     try {
-      const result = await fetchProject(path);
+      const result = await fetchProject(path, include);
       if ("error" in result) fail(result.path);
-      else show({ kind: "project", root: path, response: result });
+      else show({ kind: "project", root: path, response: result, include });
     } catch {
       fail(null);
     }
@@ -507,7 +514,10 @@ export function App({ initialFolder = null }: AppProps) {
         />
         <SettingsButton onOpen={openSettings} />
         {mapped.kind === "project" && (
-          <IgnoredFiles ignored={mapped.response.ignored} />
+          <IgnoredFiles
+            ignored={mapped.response.ignored}
+            onAdd={(path) => openFolder(mapped.root, [...mapped.include, path])}
+          />
         )}
         {mapped.kind === "snippet" && mapped.language && (
           <p className="snippet-language">

@@ -317,18 +317,101 @@ body {
   color: var(--accent);
 }
 
-.ignored-files {
+/* The files left out: an icon above the node count; the list opens upward and
+   stays inside the map area, so it never covers the detail panel (CLEAN-04, 05). */
+.map-area > .ignored {
   position: absolute;
-  left: 160px;
-  top: 80px;
-  z-index: 10;
-  color: var(--accent);
-  font-size: 18px;
+  left: 24px;
+  bottom: 64px;
+  z-index: 20;
+  max-width: calc(100% - 48px);
 }
 
-.ignored-files h3 {
+.ignored-btn {
+  position: relative;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  color: var(--accent);
+}
+
+.ignored-btn[aria-expanded="true"],
+.ignored-btn:hover {
+  color: var(--second);
+}
+
+.ignored-tip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--panel-bg);
+  color: var(--second);
+  font: 400 16px var(--font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.ignored-btn:hover .ignored-tip,
+.ignored-btn:focus-visible .ignored-tip {
+  visibility: visible;
+}
+
+.ignored-list {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  box-sizing: border-box;
+  width: 560px;
+  max-width: 100%;
+  max-height: 50vh;
+  overflow: auto;
+  padding: 16px 20px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel-bg);
+  box-shadow: 0 8px 24px var(--shadow-strong);
+}
+
+.ignored-list h3 {
+  margin: 0 0 12px;
+  font: 500 18px var(--font-sans);
+  color: var(--second);
+}
+
+.ignored-list ul {
   margin: 0;
-  font-size: 18px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.ignored-list li {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+
+.ignored-path {
+  font: 400 16px var(--font-mono);
+  color: var(--second);
+  overflow-wrap: anywhere;
+}
+
+.ignored-reason {
+  font: 400 15px var(--font-sans);
+  color: var(--accent);
+}
+
+.ignored-add {
+  margin-top: 4px;
+  padding: 6px 12px;
+  font-size: 16px;
 }
 
 /* ---- Canvas (VID-01) ---- */

@@ -70,16 +70,27 @@ export type ProjectResult =
   | ProjectResponse
   | { error: "not-found"; path: string };
 
-/** Opens a local folder; `not-found` carries the path as typed (PROJ-05). */
-export async function fetchProject(path: string): Promise<ProjectResult> {
-  const res = await post("/api/project", { path });
+/** Opens a local folder; `not-found` carries the path as typed (PROJ-05). `include`: files over 1 MB put on the map (CLEAN-06). */
+export async function fetchProject(
+  path: string,
+  include: string[] = [],
+): Promise<ProjectResult> {
+  const res = await post("/api/project", {
+    path,
+    ...(include.length > 0 ? { include } : {}),
+  });
   if (res.status === 404) return { error: "not-found", path };
   if (!res.ok) throw new Error(`Falha ao abrir a pasta (HTTP ${res.status})`);
   return (await res.json()) as ProjectResponse;
 }
 
-/** Where the server reads the code to explain: the snippet or the project root (AD-015). */
-export type ExplainOrigin = { source: string } | { root: string };
+/**
+ * Where the server reads the code to explain: the snippet, or the project root with the
+ * files over 1 MB put on the map, so it reads the folder the screen shows (AD-015, CLEAN-07).
+ */
+export type ExplainOrigin =
+  | { source: string }
+  | { root: string; include?: string[] };
 
 /** One part of a node's explanation; `cachedOnly` asks the cache and never spends the LLM (CFG-05). */
 async function fetchPart<T>(
