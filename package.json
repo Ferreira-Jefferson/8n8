@@ -15,6 +15,7 @@
     "dev:server": "tsx watch --env-file-if-exists=.env apps/cli/src/main.ts --no-open",
     "dev:ui": "pnpm --filter @8n8/ui dev",
     "start": "pnpm --filter @8n8/cli build && node --env-file-if-exists=.env apps/cli/dist/8n8.mjs --no-open",
+    "prints": "pnpm --filter @8n8/cli build && node scripts/prints-readme.mjs",
     "e2e": "pnpm --filter @8n8/cli build && playwright test",
     "prepare": "git config core.hooksPath .githooks"
   },

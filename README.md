@@ -1,8 +1,43 @@
 # 8n8
 
+[![CI](https://github.com/Ferreira-Jefferson/8n8/actions/workflows/ci.yml/badge.svg)](https://github.com/Ferreira-Jefferson/8n8/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Ferreira-Jefferson/8n8/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ferreira-Jefferson/8n8/actions/workflows/codeql.yml)
+[![Licença: GPL-3.0](https://img.shields.io/github/license/Ferreira-Jefferson/8n8)](LICENSE)
+[![Contribuidores](https://img.shields.io/github/contributors/Ferreira-Jefferson/8n8)](https://github.com/Ferreira-Jefferson/8n8/graphs/contributors)
+[![Último commit](https://img.shields.io/github/last-commit/Ferreira-Jefferson/8n8)](https://github.com/Ferreira-Jefferson/8n8/commits)
+[![Issues abertas](https://img.shields.io/github/issues/Ferreira-Jefferson/8n8)](https://github.com/Ferreira-Jefferson/8n8/issues)
+[![Estrelas](https://img.shields.io/github/stars/Ferreira-Jefferson/8n8?style=flat)](https://github.com/Ferreira-Jefferson/8n8/stargazers)
+[![Node 22.13+](https://img.shields.io/badge/node-%3E%3D22.13-3c873a)](https://nodejs.org)
+[![PRs bem-vindos](https://img.shields.io/badge/PRs-bem--vindos-3dbfa8)](CONTRIBUTING.md)
+
 O 8n8 é um mapa visual de código. Você aponta um arquivo, uma pasta ou um trecho, e ele mostra como as partes se conectam, como nós ligados por arestas.
 
 O mapa começa amplo. Você abre um nó para ver o fluxo interno dele e vai descendo, até as linhas reais de código. Cada nó traz um resumo e sugestões de melhoria.
+
+## Como fica
+
+**1. Você aponta uma pasta ou cola um trecho.**
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/imagens/inicio-dark.png">
+  <img src="docs/imagens/inicio-light.png" alt="Tela inicial do 8n8: abrir uma pasta ou colar um trecho de código">
+</picture>
+
+**2. O mapa começa amplo:** a pasta, os arquivos (de linguagens diferentes) e como eles se ligam.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/imagens/pasta-dark.png">
+  <img src="docs/imagens/pasta-light.png" alt="Mapa de uma pasta: a pasta loja, arquivos .py e .ts e a subpasta servicos">
+</picture>
+
+**3. Você abre um nó e vê o fluxo por dentro:** funções, um `if`, uma chamada HTTP, o banco e o retorno.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/imagens/fluxo-dark.png">
+  <img src="docs/imagens/fluxo-light.png" alt="Fluxo interno de uma função: três funções, um SE, uma chamada HTTP, o banco e o retorno">
+</picture>
+
+O código de exemplo está em [docs/imagens/exemplo](docs/imagens/exemplo). Para refazer as imagens: `pnpm prints`.
 
 Em `apps/` há três pastas. Uma é a tela e duas são as formas de rodar o 8n8, sobre o mesmo núcleo:
 
@@ -168,6 +203,21 @@ Abra o endereço que o terminal mostrar (`http://127.0.0.1:4317/#t=...`). O `#t=
 ### Como contribuir
 
 Veja [CONTRIBUTING.md](CONTRIBUTING.md): ambiente, segredos (o hook do gitleaks), comandos de verificação, regras de fronteira entre pacotes e estilo de commit.
+
+## Pix do Café
+
+O 8n8 é livre e gratuito. Se ele ajuda você, uma doação por Pix mantém o projeto vivo. Ela é opcional e não libera nada a mais. A tela também mostra o QR em **Configurações → Pix do Café**.
+
+<img src="docs/doacao-pix.svg" alt="QR Code Pix para doação" width="200">
+
+<details>
+<summary>Pix copia e cola</summary>
+
+```
+00020126580014br.gov.bcb.pix013667f4532c-acee-4994-9724-19923f3dbab65204000053039865802BR5911CRJE89778416009Sao Paulo610901227-20062230519daqr22034254699182663041B30
+```
+
+</details>
 
 ## Licença
 
