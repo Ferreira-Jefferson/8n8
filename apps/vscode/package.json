@@ -1,0 +1,67 @@
+{
+  "name": "8n8-vscode",
+  "displayName": "8n8",
+  "description": "Mostra como o código se conecta, em nós e fios, ao lado do editor.",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "ferreira-jefferson",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ferreira-Jefferson/8n8.git"
+  },
+  "engines": {
+    "vscode": "^1.138.0"
+  },
+  "categories": [
+    "Visualization"
+  ],
+  "main": "./dist/extension.cjs",
+  "contributes": {
+    "commands": [
+      {
+        "command": "8n8.abrirMapa",
+        "title": "Abrir mapa",
+        "category": "8n8"
+      },
+      {
+        "command": "8n8.abrirMapaDaPasta",
+        "title": "8n8: Abrir mapa desta pasta"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "8n8.abrirMapaDaPasta",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@90"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "8n8.abrirMapaDaPasta",
+          "when": "false"
+        }
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "pnpm --filter @8n8/web build && tsx src/build.ts",
+    "test:integration": "pnpm run build && tsx src/test/run.ts",
+    "package": "pnpm run build && vsce package --no-dependencies --skip-license"
+  },
+  "devDependencies": {
+    "@8n8/server": "workspace:*",
+    "@types/node": "22.20.5",
+    "@types/vscode": "1.138.0",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2",
+    "hono": "4.13.13"
+  }
+}

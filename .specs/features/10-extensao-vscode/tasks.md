@@ -97,8 +97,8 @@ T7 → T8
 
 **Done when**:
 
-- [ ] A chave vai só para o `SecretStorage`; apagar a chave apaga o segredo; o `globalState` nunca tem a chave
-- [ ] Gate check passes: `pnpm --filter @8n8/vscode test && pnpm typecheck`
+- [x] A chave vai só para o `SecretStorage`; apagar a chave apaga o segredo; o `globalState` nunca tem a chave
+- [x] Gate check passes: `pnpm --filter @8n8/vscode test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick
