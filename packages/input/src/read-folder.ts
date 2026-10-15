@@ -47,7 +47,23 @@ export async function readSourceFolder(
   let root: string;
   try {
     root = await realpath(resolve(path));
-    if (!(await stat(root)).isDirectory()) return { kind: "not-found" };
+    const info = await stat(root);
+    // A file is a map of one file: its own path is the root, so a re-read finds only it.
+    if (info.isFile()) {
+      const name = basename(root);
+      if (!wanted.some((e) => name.toLowerCase().endsWith(e))) {
+        return { kind: "not-found" };
+      }
+      const read = await readSourceFile(root, name, added.has(name));
+      return {
+        kind: "ok",
+        name,
+        root,
+        files: read.kind === "ok" ? [read.file] : [],
+        ignored: read.kind === "ok" ? [] : [read.ignored],
+      };
+    }
+    if (!info.isDirectory()) return { kind: "not-found" };
   } catch {
     return { kind: "not-found" };
   }

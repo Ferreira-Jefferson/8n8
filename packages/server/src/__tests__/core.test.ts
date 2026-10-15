@@ -666,13 +666,19 @@ describe("composeReadProject", () => {
     ]);
   });
 
-  it("gives not-found for a missing path and for a file path (PROJ-05)", async () => {
+  it("gives not-found for a missing path (PROJ-05)", async () => {
     const loja = makeLoja();
     const missing = await readProject(join(loja, "nao-existe"));
-    const file = await readProject(join(loja, "main.py"));
     rmSync(join(loja, ".."), { recursive: true, force: true });
     expect(missing).toEqual({ kind: "not-found" });
-    expect(file).toEqual({ kind: "not-found" });
+  });
+
+  it("maps a single file: the project holds only that file", async () => {
+    const loja = makeLoja();
+    const file = await readProject(join(loja, "main.py"));
+    rmSync(join(loja, ".."), { recursive: true, force: true });
+    if (file.kind !== "ok") throw new Error("expected ok");
+    expect(file.response.files.map((f) => f.path)).toEqual(["main.py"]);
   });
 
   it("explain re-reads the disk: a new line in calculo.py reaches the explain call (AD-015)", async () => {

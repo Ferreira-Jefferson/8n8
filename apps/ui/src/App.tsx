@@ -22,6 +22,7 @@ import {
   type ExplainOrigin,
   fetchGraph,
   fetchLanguages,
+  fetchPick,
   fetchProject,
   fetchSettings,
 } from "./api";
@@ -311,6 +312,18 @@ export function App({ initialFolder = null }: AppProps) {
     }
   }
 
+  /** The system chooser; a chosen path fills the field and maps at once. */
+  async function pick(kind: "folder" | "file") {
+    try {
+      const path = await fetchPick(kind);
+      if (path === null) return;
+      setFolder(path);
+      await openFolder(path);
+    } catch {
+      fail(null);
+    }
+  }
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs once, for the folder the page was opened with
   useEffect(() => {
     if (initialFolder === null) return;
@@ -436,6 +449,7 @@ export function App({ initialFolder = null }: AppProps) {
             folder={folder}
             onFolderChange={setFolder}
             onOpenFolder={() => openFolder()}
+            onPick={pick}
             onPaste={() => {
               setFailed(false);
               setNotFound(null);

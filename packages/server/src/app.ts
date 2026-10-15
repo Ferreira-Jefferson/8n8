@@ -18,6 +18,7 @@ import { type Context, Hono } from "hono";
 import { z } from "zod";
 import { maskDocstring } from "./docstring";
 import type { History, MadeMap } from "./history";
+import type { PickPath } from "./pick-path";
 import { InvalidSettings, type SettingsService } from "./settings";
 import { sameToken } from "./token";
 
@@ -44,6 +45,8 @@ export interface AppDeps {
   history?: History | undefined;
   /** The LLM settings; absent in tests that do not need them (CFG-12, CFG-13). */
   settings?: Pick<SettingsService, "view" | "update"> | undefined;
+  /** The system's file or folder chooser; absent in tests that do not need it. */
+  pick?: PickPath | undefined;
 }
 
 /** Files over 1 MB put on the map: relative POSIX paths, never outside the folder (CLEAN-07). */
@@ -64,6 +67,7 @@ const include = z
   .max(100)
   .optional();
 const projectBody = z.object({ path: z.string().min(1), include });
+const pickBody = z.object({ kind: z.enum(["folder", "file"]) });
 const graphBody = z.object({ source: z.string() });
 const starBody = z.object({ starred: z.boolean() });
 // Extra fields from the client (code, calls...) are dropped: the server builds the request (CORE-17).
@@ -285,6 +289,20 @@ export function createApp(deps: AppDeps): Hono {
       });
     }
     return c.json(read.response);
+  });
+
+  // The server runs on the person's machine, so the chooser opens on their screen.
+  app.post("/api/pick", async (c) => {
+    const body = pickBody.safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json({ error: "invalid body" }, 400);
+    if (!deps.pick) return c.json({ error: "not-found" }, 404);
+    try {
+      const extensions = deps.plugins.flatMap((p) => p.extensions);
+      return c.json({ path: await deps.pick(body.data.kind, extensions) });
+    } catch (err) {
+      console.error("seletor: não abriu", (err as Error).message);
+      return c.json({ error: "pick-failed" }, 500);
+    }
   });
 
   app.get("/api/history", (c) => {

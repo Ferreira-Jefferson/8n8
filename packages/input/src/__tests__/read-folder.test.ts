@@ -128,11 +128,8 @@ describe("readSourceFolder", () => {
     }
   });
 
-  it("returns not-found for a missing path and for a file path (PROJ-05)", async () => {
+  it("returns not-found for a missing path (PROJ-05)", async () => {
     expect(await readSourceFolder(join(dir, "nao-existe"), PY)).toEqual({
-      kind: "not-found",
-    });
-    expect(await readSourceFolder(join(dir, "a.py"), PY)).toEqual({
       kind: "not-found",
     });
   });
@@ -376,5 +373,27 @@ describe("readSourceFolder and .gitignore (CLEAN-01, CLEAN-02)", () => {
       files: ["a.py", "grande.py"],
       ignored: [],
     });
+  });
+});
+
+describe("readSourceFolder with a file path", () => {
+  it("reads that one file as the whole map, with the file as root", async () => {
+    const root = await makeTree();
+    const file = join(root, "pkg", "a.py");
+    await mkdir(join(root, "pkg"), { recursive: true });
+    await writeFile(file, "x = 1\n");
+    const read = await readSourceFolder(file, PY);
+    expect(read.kind).toBe("ok");
+    if (read.kind !== "ok") return;
+    expect(read.name).toBe("a.py");
+    expect(read.files).toEqual([{ path: "a.py", source: "x = 1\n" }]);
+    expect(read.root.endsWith("a.py")).toBe(true);
+  });
+
+  it("does not know a file of another language", async () => {
+    const root = await makeTree();
+    const file = join(root, "notas.txt");
+    await writeFile(file, "oi");
+    expect(await readSourceFolder(file, PY)).toEqual({ kind: "not-found" });
   });
 });

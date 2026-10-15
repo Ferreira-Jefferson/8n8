@@ -1165,6 +1165,12 @@ body {
   cursor: pointer;
 }
 
+.home-choose {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .home-btn:focus-visible,
 .home-paste:focus-visible,
 .home-open:focus-visible,

@@ -60,6 +60,7 @@ function setup(props: Partial<Parameters<typeof Home>[0]> = {}) {
   const handlers = {
     onFolderChange: vi.fn(),
     onOpenFolder: vi.fn(),
+    onPick: vi.fn(),
     onPaste: vi.fn(),
     onOpenEntry: vi.fn(),
     onShowHistory: vi.fn(),
@@ -185,6 +186,16 @@ describe("Home", () => {
     fireEvent.click(screen.getByRole("button", { name: "Mapear pasta" }));
     fireEvent.submit(field);
     expect(onOpenFolder).toHaveBeenCalledTimes(2);
+  });
+
+  it("offers the system chooser for a folder or a file when the field is empty", async () => {
+    listMock.mockResolvedValue([]);
+    const { onOpenFolder, onPick } = setup({ folder: "" });
+    fireEvent.click(screen.getByRole("button", { name: "Mapear pasta" }));
+    expect(onOpenFolder).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Escolher arquivo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Escolher pasta" }));
+    expect(onPick.mock.calls).toEqual([["file"], ["folder"]]);
   });
 
   it("shows the sentence it gets about what the folder reads", async () => {

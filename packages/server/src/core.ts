@@ -33,6 +33,7 @@ import { analyzeProject } from "@8n8/project";
 import type { Hono } from "hono";
 import { createApp, type ProjectRead } from "./app";
 import { type History, openHistory } from "./history";
+import { createPicker } from "./pick-path";
 import {
   createSettingsService,
   type LlmSetup,
@@ -274,6 +275,7 @@ export function createCore(options: CoreOptions): Hono {
     explain: composeExplain(options.env, compose),
     titles: composeTitles(options.env, compose),
     readProject: composeReadProject(readSourceFolder, languagePlugins),
+    pick: createPicker(),
     history:
       options.historyFile === undefined
         ? undefined

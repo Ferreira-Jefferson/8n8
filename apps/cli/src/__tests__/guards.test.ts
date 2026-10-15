@@ -142,7 +142,7 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
     },
   );
 
-  it("fails node:child_process anywhere but open-browser.ts, claude-code.ts and this test (CC-09)", () => {
+  it("fails node:child_process anywhere but open-browser.ts, claude-code.ts, pick-path.ts and this test (CC-09)", () => {
     const files: Record<string, string> = {
       "apps/cli/src/spawns.ts": SPAWN,
       "apps/cli/src/__tests__/other.test.ts": SPAWN,
@@ -288,12 +288,13 @@ describe("source scan: what the check cannot see (DIST-23)", () => {
 
   // Pinned by line, not by file: a new line in links.ts (getBuiltinModule, a
   // createRequire of child_process) fails here even though the file is listed.
-  it("only open-browser.ts and claude-code.ts reach child_process; links.ts only names it as analysed code (CC-10)", () => {
+  it("only open-browser.ts, claude-code.ts and pick-path.ts reach child_process; links.ts only names it as analysed code (CC-10)", () => {
     const lines = shipped
       .filter(
         (f) =>
           f !== "apps/cli/src/open-browser.ts" &&
-          f !== "packages/llm/src/claude-code.ts",
+          f !== "packages/llm/src/claude-code.ts" &&
+          f !== "packages/server/src/pick-path.ts",
       )
       .flatMap((f) =>
         text(f)

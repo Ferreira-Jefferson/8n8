@@ -84,6 +84,15 @@ export async function fetchProject(
   return (await res.json()) as ProjectResponse;
 }
 
+/** Opens the system's chooser on this machine; `null` when the person cancels. */
+export async function fetchPick(
+  kind: "folder" | "file",
+): Promise<string | null> {
+  const res = await post("/api/pick", { kind });
+  if (!res.ok) throw new Error(`Falha ao abrir o seletor (HTTP ${res.status})`);
+  return ((await res.json()) as { path: string | null }).path;
+}
+
 /**
  * Where the server reads the code to explain: the snippet, or the project root with the
  * files over 1 MB put on the map, so it reads the folder the screen shows (AD-015, CLEAN-07).
