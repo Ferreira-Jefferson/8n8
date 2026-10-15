@@ -224,6 +224,7 @@ describe("settings (CFG-12, CFG-13, CFG-21)", () => {
     model: "m/x",
     autoSummary: false,
     autoSuggestions: true,
+    theme: "system",
     hasKey: true,
     providers: [{ id: "openrouter", defaultModel: "m/x", usesKey: true }],
     env: {},

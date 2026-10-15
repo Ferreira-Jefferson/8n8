@@ -45,6 +45,7 @@ describe("view (CFG-12)", () => {
       model: DEFAULT_MODEL,
       autoSummary: false,
       autoSuggestions: false,
+      theme: "system",
       hasKey: false,
       providers: PROVIDERS.map(({ id, defaultModel, usesKey }) => ({
         id,
@@ -101,6 +102,17 @@ describe("view (CFG-12)", () => {
       hasKey: true,
     });
     expect(JSON.stringify(view)).not.toContain(KEY);
+  });
+
+  it("stores the theme, and rejects one that does not exist", async () => {
+    const mem = memoryStore();
+    const service = createSettingsService({}, mem.store);
+    expect(await service.update({ theme: "light" })).toMatchObject({
+      theme: "light",
+    });
+    expect(mem.current()).toEqual({ theme: "light" });
+    await expect(service.update({ theme: "neon" })).rejects.toThrow();
+    expect(mem.current()).toEqual({ theme: "light" });
   });
 
   it("lets the environment flags win over the stored modes: 1/true and 0/false", async () => {

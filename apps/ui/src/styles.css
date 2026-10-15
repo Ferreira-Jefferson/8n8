@@ -24,9 +24,10 @@
 }
 
 /* The manual's light theme (Papel, Tinta, Pedra escura, Petróleo escuro),
-   when the system asks for it. Petróleo claro never sits on Papel (2.0:1). */
+   when the system asks for it or the settings choose it (data-theme on <html>;
+   no attribute means "follow the system"). Petróleo claro never sits on Papel (2.0:1). */
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     --ground: #f2f3f0;
     --main: #0f7a6b;
     --second: #12292a;
@@ -40,6 +41,21 @@
     --shadow-strong: rgba(18, 41, 42, 0.14);
     color-scheme: light;
   }
+}
+
+:root[data-theme="light"] {
+  --ground: #f2f3f0;
+  --main: #0f7a6b;
+  --second: #12292a;
+  --accent: #5b6d6a;
+  --card-bg: #ffffff;
+  --card-border: #d3d8d5;
+  --panel-bg: #f8f9f7;
+  --panel-border: #d3d8d5;
+  --dim: #8f9a98;
+  --shadow: rgba(18, 41, 42, 0.1);
+  --shadow-strong: rgba(18, 41, 42, 0.14);
+  color-scheme: light;
 }
 
 body {

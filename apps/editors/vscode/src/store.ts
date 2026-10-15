@@ -20,6 +20,7 @@ export const STATE_KEY = "8n8.settings";
 
 const TEXT_FIELDS = ["provider", "model"] as const;
 const FLAG_FIELDS = ["autoSummary", "autoSuggestions"] as const;
+const THEMES = ["system", "light", "dark"] as const;
 
 /** Only the known fields of the right type: a stray value in the state is dropped. */
 function known(value: unknown): Stored {
@@ -34,6 +35,8 @@ function known(value: unknown): Stored {
     const v = raw[field];
     if (typeof v === "boolean") out[field] = v;
   }
+  const theme = THEMES.find((t) => t === raw.theme);
+  if (theme) out.theme = theme;
   return out;
 }
 

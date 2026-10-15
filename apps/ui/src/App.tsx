@@ -245,6 +245,15 @@ export function App({ initialFolder = null }: AppProps) {
       alive = false;
     };
   }, []);
+  // The chosen theme reaches every screen through <html>; "system" leaves the attribute off.
+  const theme = settings?.theme;
+  useEffect(() => {
+    if (!theme || theme === "system") {
+      delete document.documentElement.dataset.theme;
+    } else {
+      document.documentElement.dataset.theme = theme;
+    }
+  }, [theme]);
   const openSettings = useCallback(() => setSettingsOpen(true), []);
   const settingsDialog = settingsOpen && (
     <SettingsDialog

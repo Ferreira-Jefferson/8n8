@@ -6,12 +6,13 @@ import {
   providerOf,
   resolveLlmConfig,
 } from "@8n8/llm";
-import type {
-  LlmClient,
-  SettingsField,
-  SettingsPatch,
-  SettingsResponse,
-  StoredSettings,
+import {
+  type LlmClient,
+  type SettingsField,
+  type SettingsPatch,
+  type SettingsResponse,
+  type StoredSettings,
+  THEMES,
 } from "@8n8/model";
 import { z } from "zod";
 
@@ -74,6 +75,7 @@ const patchSchema = z
       .optional(),
     autoSummary: z.boolean().optional(),
     autoSuggestions: z.boolean().optional(),
+    theme: z.enum(THEMES).optional(),
   })
   .strict();
 
@@ -99,6 +101,7 @@ export function applyPatch(
   if (patch.autoSuggestions !== undefined) {
     next.autoSuggestions = patch.autoSuggestions;
   }
+  if (patch.theme !== undefined) next.theme = patch.theme;
   return next;
 }
 
@@ -152,6 +155,7 @@ export function createSettingsService(
       model: config.model,
       autoSummary: modes.summary,
       autoSuggestions: modes.suggestions,
+      theme: s.theme ?? "system",
       hasKey: config.apiKey !== undefined,
       providers: PROVIDERS.map(({ id, defaultModel, usesKey }) => ({
         id,

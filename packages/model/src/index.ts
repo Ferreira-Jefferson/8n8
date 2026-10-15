@@ -65,4 +65,6 @@ export type {
   SettingsPatch,
   SettingsResponse,
   StoredSettings,
+  Theme,
 } from "./settings";
+export { THEMES } from "./settings";

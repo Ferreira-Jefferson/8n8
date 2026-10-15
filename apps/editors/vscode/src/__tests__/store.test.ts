@@ -67,6 +67,13 @@ describe("createVscodeSettingsStore (VSC-05)", () => {
     expect(await e.store.read()).toEqual({ provider: "openrouter" });
   });
 
+  it("keeps a valid theme and drops an unknown one", async () => {
+    expect(await editor({ theme: "dark" }).store.read()).toEqual({
+      theme: "dark",
+    });
+    expect(await editor({ theme: "neon" }).store.read()).toEqual({});
+  });
+
   it("reads a globalState that is not an object as empty", async () => {
     expect(await editor("texto").store.read()).toEqual({});
     expect(await editor(null).store.read()).toEqual({});

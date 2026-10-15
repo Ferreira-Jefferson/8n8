@@ -1202,10 +1202,25 @@ describe("App settings (CFG-08, CFG-20)", () => {
     model: "m/x",
     autoSummary: true,
     autoSuggestions: false,
+    theme: "light" as const,
     hasKey: true,
     providers: [{ id: "openrouter", defaultModel: "m/x", usesKey: true }],
     env: {},
   };
+
+  it("puts the chosen theme on <html>, and takes it off for the system's", async () => {
+    settingsMock.mockResolvedValueOnce(view);
+    render(<App />);
+    await waitFor(() =>
+      expect(document.documentElement.dataset.theme).toBe("light"),
+    );
+    cleanup();
+    settingsMock.mockResolvedValueOnce({ ...view, theme: "system" });
+    render(<App />);
+    await waitFor(() =>
+      expect(document.documentElement.dataset.theme).toBeUndefined(),
+    );
+  });
 
   it("opens the settings dialog from the start screen", async () => {
     render(<App />);

@@ -1,7 +1,9 @@
-import type {
-  SettingsField,
-  SettingsPatch,
-  SettingsResponse,
+import {
+  type SettingsField,
+  type SettingsPatch,
+  type SettingsResponse,
+  THEMES,
+  type Theme,
 } from "@8n8/model";
 import { useEffect, useId, useState } from "react";
 import { saveSettings } from "../api";
@@ -21,7 +23,14 @@ interface Form {
   model: string;
   autoSummary: boolean;
   autoSuggestions: boolean;
+  theme: Theme;
 }
+
+const THEME_LABELS: Record<Theme, string> = {
+  system: "Seguir o sistema",
+  light: "Claro",
+  dark: "Escuro",
+};
 
 const defaultModelOf = (settings: SettingsResponse, provider: string) =>
   settings.providers.find((p) => p.id === provider)?.defaultModel ?? "";
@@ -41,6 +50,7 @@ function formOf(settings: SettingsResponse): Form {
         : settings.model,
     autoSummary: settings.autoSummary,
     autoSuggestions: settings.autoSuggestions,
+    theme: settings.theme,
   };
 }
 
@@ -58,6 +68,7 @@ export function patchOf(before: Form, after: Form): SettingsPatch {
   if (after.autoSuggestions !== before.autoSuggestions) {
     patch.autoSuggestions = after.autoSuggestions;
   }
+  if (after.theme !== before.theme) patch.theme = after.theme;
   return patch;
 }
 
@@ -134,6 +145,19 @@ export function SettingsDialog({
               save(patchOf(formOf(settings), form));
             }}
           >
+            <label>
+              Tema
+              <select
+                value={form.theme}
+                onChange={(e) => set("theme", e.target.value as Theme)}
+              >
+                {THEMES.map((t) => (
+                  <option key={t} value={t}>
+                    {THEME_LABELS[t]}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label>
               Provedor
               <select

@@ -22,6 +22,7 @@ const view = (over: Partial<SettingsResponse> = {}): SettingsResponse => ({
   model: DEFAULT_MODEL,
   autoSummary: false,
   autoSuggestions: false,
+  theme: "system",
   hasKey: false,
   providers: [
     { id: "openrouter", defaultModel: DEFAULT_MODEL, usesKey: true },
@@ -191,10 +192,18 @@ describe("patchOf", () => {
     model: "m/x",
     autoSummary: false,
     autoSuggestions: false,
+    theme: "system" as const,
   };
 
   it("erases a cleared model with null", () => {
     expect(patchOf(base, { ...base, model: " " })).toEqual({ model: null });
+  });
+
+  it("sends the theme only when it changed", () => {
+    expect(patchOf(base, base)).toEqual({});
+    expect(patchOf(base, { ...base, theme: "light" })).toEqual({
+      theme: "light",
+    });
   });
 
   it("ignores a blank key and keeps a changed provider", () => {

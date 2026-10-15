@@ -34,6 +34,7 @@ async function resetSettings(page: Page): Promise<void> {
       apiKey: null,
       autoSummary: false,
       autoSuggestions: false,
+      theme: "system",
     },
   });
   expect(res.status()).toBe(200);
@@ -66,6 +67,41 @@ test.describe("Configurações e LLM sob demanda", () => {
     await resetSettings(page);
     rmSync(CACHE, { recursive: true, force: true });
     await resetFake();
+  });
+
+  test("o tema escolhido nas configurações vale para a tela inicial e o mapa, e sobrevive ao recarregar", async ({
+    page,
+  }) => {
+    const GROUND_LIGHT = "rgb(242, 243, 240)";
+    const GROUND_DARK = "rgb(22, 24, 24)";
+    const bg = () =>
+      page
+        .locator("body")
+        .evaluate((el) => getComputedStyle(el).backgroundColor);
+
+    // The system is dark (playwright.config.ts).
+    await page.goto(SETTINGS);
+    expect(await bg()).toBe(GROUND_DARK);
+
+    await saveInDialog(page, async (dialog) => {
+      await dialog.getByLabel("Tema").selectOption("light");
+    });
+    expect(await bg()).toBe(GROUND_LIGHT);
+
+    // The choice is stored by the server, so a reload keeps it.
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+    expect(await bg()).toBe(GROUND_LIGHT);
+
+    // The map screen has the same theme.
+    await generate(page, SETTINGS, CONTAGEM);
+    expect(await bg()).toBe(GROUND_LIGHT);
+
+    await saveInDialog(page, async (dialog) => {
+      await dialog.getByLabel("Tema").selectOption("system");
+    });
+    await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+    expect(await bg()).toBe(GROUND_DARK);
   });
 
   test("the settings end with a Pix do Café section: the Pix QR opens and the code is copyable", async ({
@@ -203,6 +239,7 @@ test.describe("Configurações e LLM sob demanda", () => {
       provider: "anthropic",
       autoSummary: false,
       autoSuggestions: false,
+      theme: "system",
     });
   });
 
