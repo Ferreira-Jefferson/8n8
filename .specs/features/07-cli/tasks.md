@@ -107,10 +107,10 @@ T10 → T11
 
 **Done when**:
 
-- [ ] Fragmento `#t=abc&pasta=C%3A%5Cproj` → `{ token: "abc", folder: "C:\\proj" }`, token em `sessionStorage`, `history.replaceState` sem fragmento
-- [ ] Sem fragmento → token lido do `sessionStorage` (recarregar a página mantém a sessão), `folder: null`
-- [ ] Nada em `localStorage`
-- [ ] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
+- [x] Fragmento `#t=abc&pasta=C%3A%5Cproj` → `{ token: "abc", folder: "C:\\proj" }`, token em `sessionStorage`, `history.replaceState` sem fragmento
+- [x] Sem fragmento → token lido do `sessionStorage` (recarregar a página mantém a sessão), `folder: null`
+- [x] Nada em `localStorage`
+- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick
