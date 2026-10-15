@@ -83,7 +83,7 @@ Para acrescentar um provedor, veja [docs/adicionar-provedor-llm.md](docs/adicion
 
 ## Como contribuir
 
-Veja [CONTRIBUTING.md](CONTRIBUTING.md): ambiente, comandos de verificação, regras de fronteira entre pacotes e estilo de commit.
+Veja [CONTRIBUTING.md](CONTRIBUTING.md): ambiente, segredos (o hook do gitleaks), comandos de verificação, regras de fronteira entre pacotes e estilo de commit.
 
 ## Licença
 

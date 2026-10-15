@@ -6,6 +6,7 @@ Obrigado por querer ajudar. Este guia mostra como preparar o ambiente, como veri
 
 - Node 22.12 ou mais novo (`engines` do `package.json`).
 - pnpm (o `package.json` fixa a versão em `packageManager`).
+- [gitleaks](https://github.com/gitleaks/gitleaks), que procura chaves e senhas antes de cada commit (veja "Segredos").
 
 ```bash
 pnpm install
@@ -13,6 +14,28 @@ pnpm dev
 ```
 
 O [README](README.md) explica como rodar o app e como configurar a chave do LLM. Sem chave, o mapa funciona.
+
+## Segredos
+
+O 8n8 lida com a chave de API e com a assinatura de LLM de quem usa. Uma chave no repositório deixa qualquer pessoa gastar os recursos de outra. Por isso, nenhum commit leva chave de API, token ou senha, nem em teste, fixture, documentação ou exemplo.
+
+O `pnpm install` liga a pasta `.githooks`. O hook `pre-commit` roda o gitleaks no que está staged e bloqueia o commit quando acha um segredo. Ele também bloqueia o commit quando o gitleaks não está instalado.
+
+Instale o gitleaks uma vez e abra um terminal novo:
+
+| Sistema | Comando |
+|---|---|
+| Windows | `winget install Gitleaks.Gitleaks` |
+| macOS | `brew install gitleaks` |
+| Linux | veja a [instalação do gitleaks](https://github.com/gitleaks/gitleaks#installing) |
+
+As regras ficam em [.gitleaks.toml](.gitleaks.toml): as regras padrão do gitleaks, mais uma para chaves do OpenRouter, que o padrão não cobre. Um provedor de LLM novo com formato próprio de chave ganha uma regra nesse arquivo.
+
+- Em teste, use uma chave falsa e óbvia, como `e2e-fake-key`.
+- Nunca pule o hook com `git commit --no-verify`.
+- Se um segredo entrar num commit, revogue a chave no provedor. Apagar num commit novo não basta: ela continua no histórico.
+
+Você pode usar o mesmo hook nos seus projetos: copie `.githooks/pre-commit` e rode `git config core.hooksPath .githooks`.
 
 ## Verificação
 
