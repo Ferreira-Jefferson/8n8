@@ -129,6 +129,22 @@ module.exports = {
       },
     },
     {
+      name: "no-child-process",
+      severity: "error",
+      comment:
+        "Só apps/cli/src/open-browser.ts inicia processos (DIST-23). Um provedor que precise disso entra como exceção nesta regra, com revisão do CODEOWNERS.",
+      from: { pathNot: "^apps/cli/src/open-browser\\.ts$" },
+      to: { dependencyTypes: ["core"], path: "^(node:)?child_process$" },
+    },
+    {
+      name: "hosts-do-not-import-each-other",
+      severity: "error",
+      comment:
+        "Uma embalagem em apps/ (cli, web, vscode...) não importa outra (AD-022).",
+      from: { path: "^apps/([^/]+)/" },
+      to: { path: "^apps/", pathNot: "^apps/$1/" },
+    },
+    {
       name: "web-only-model",
       severity: "error",
       comment: "apps/web importa só model.",
@@ -158,6 +174,9 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: "node_modules" },
+    // Test fixtures are input code (code to analyse, or rule breakers for guards.test.ts),
+    // and dist/ is build output: neither is code of 8n8.
+    exclude: { path: "(__tests__/fixtures/|/dist/)" },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: "tsconfig.base.json" },
     enhancedResolveOptions: {

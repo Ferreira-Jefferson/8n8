@@ -347,11 +347,11 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `cruise()` (API do dependency-cruiser) numa fixture com `import "node:child_process"` → violação; o mesmo import em `open-browser.ts` → sem violação
-- [ ] `cruise()` numa fixture onde `packages/` ou `apps/web` importa `apps/cli` → violação
-- [ ] `biome.json` tem `noGlobalEval`, `noDangerouslySetInnerHtml` e a restrição do global `Function` como `"error"`; o teste lê e confere
-- [ ] As fixtures ficam fora do `pnpm check` normal
-- [ ] Gate check passes: `pnpm typecheck && pnpm check && pnpm test`
+- [x] `cruise()` (API do dependency-cruiser) numa fixture com `import "node:child_process"` → violação; o mesmo import em `open-browser.ts` → sem violação
+- [x] `cruise()` numa fixture onde `packages/` ou `apps/web` importa `apps/cli` → violação
+- [x] `biome.json` tem `noGlobalEval`, `noDangerouslySetInnerHtml` e a restrição do global `Function` como `"error"`; o teste lê e confere
+- [x] As fixtures ficam fora do `pnpm check` normal. O cruise também deixou de ler `dist/` e as fixtures de código analisado (a do plugin TypeScript chama `child_process` de propósito). A restrição do global `Function` fica desligada só em `e2e/`: o teste de desempenho usa `new Function` dentro do navegador e não vai no pacote
+- [x] Gate check passes: `pnpm typecheck && pnpm check && pnpm test`
 
 **Tests**: unit
 **Gate**: build
