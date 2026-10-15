@@ -69,20 +69,47 @@ describe("the CI runs every gate (SEC-01)", () => {
     expect(ci).toMatch(new RegExp(`^\\s*- run: ${command}$`, "m"));
   });
 
-  it("scans the whole history with gitleaks", () => {
-    expect(ci).toMatch(/uses: gitleaks\/gitleaks-action@[0-9a-f]{40}/);
-    expect(ci).toMatch(/fetch-depth: 0/);
+  it("never skips a step nor lets a job fail quietly", () => {
+    expect(ci).not.toMatch(/^\s*if:/m);
+    expect(ci).not.toMatch(/continue-on-error/);
+  });
+
+  it("scans every commit with the gitleaks CLI of a fixed release, checked by its SHA-256", () => {
+    const secrets = jobBlock(ci, "secrets");
+    expect(secrets).toMatch(/^ {10}fetch-depth: 0$/m);
+    expect(secrets).toMatch(/GITLEAKS_VERSION: \d+\.\d+\.\d+$/m);
+    expect(secrets).toMatch(/GITLEAKS_SHA256: [0-9a-f]{64}$/m);
+    expect(secrets).toMatch(/sha256sum --check --strict/);
+    // A full scan of the repository, never a log range.
+    expect(secrets).toMatch(
+      /\.\/gitleaks git --redact --verbose --no-banner \.$/m,
+    );
+    expect(secrets).not.toMatch(/log-opts/);
+    expect(ci).not.toMatch(/gitleaks\/gitleaks-action/);
   });
 });
+
+/** The lines of one job, from `  <name>:` to the next job. */
+function jobBlock(text: string, name: string): string {
+  const lines = text.split(/\r?\n/);
+  const start = lines.indexOf(`  ${name}:`);
+  if (start < 0) return "";
+  const end = lines.findIndex((l, i) => i > start && /^ {2}\S/.test(l));
+  return lines.slice(start, end < 0 ? undefined : end).join("\n");
+}
 
 describe("CodeQL and Dependabot (SEC-03, SEC-04)", () => {
   const codeql = read(".github/workflows/codeql.yml");
 
   it("analyses JavaScript and TypeScript on pull requests, pushes to main and every week", () => {
     expect(codeql).toMatch(/languages: javascript-typescript/);
-    expect(topBlock(codeql, "on")).toEqual(
-      expect.arrayContaining(["pull_request:", "push:", "schedule:"]),
-    );
+    expect(topBlock(codeql, "on")).toEqual([
+      "pull_request:",
+      "push:",
+      "branches: [main]",
+      "schedule:",
+      '- cron: "17 6 * * 1"',
+    ]);
     expect(codeql).toMatch(/uses: github\/codeql-action\/analyze@/);
   });
 
@@ -115,6 +142,10 @@ describe("the security policy and its owners (SEC-06, SEC-07)", () => {
       "Claude Code",
       "porta",
       "no-child-process",
+      "fora da pasta analisada",
+      "## Versão suportada",
+      "exija pull request",
+      "status checks",
       "CODEOWNERS",
       "force push",
     ]) {

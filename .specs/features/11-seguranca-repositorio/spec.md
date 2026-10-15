@@ -43,11 +43,11 @@ O repositório tem os workflows de CI e CodeQL, a config do Dependabot e o `SECU
 
 **Acceptance Criteria**:
 
-1. The repositório SHALL ter `.github/workflows/ci.yml`, disparado por `pull_request` e por `push` na `main`, que roda `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm check`, `pnpm test` e `pnpm e2e`, e o gitleaks sobre todo o histórico.  <!-- SEC-01 -->
+1. The repositório SHALL ter `.github/workflows/ci.yml`, disparado por `pull_request` e por `push` na `main`, que roda `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm check`, `pnpm test` e `pnpm e2e`, e o gitleaks sobre todo o histórico. O gitleaks SHALL ser o binário de uma versão fixa, conferido pelo SHA-256 antes de rodar, com `gitleaks git` sobre o repositório inteiro (a action do gitleaks varre só o trecho novo de um PR ou push).  <!-- SEC-01 -->
 2. The workflows SHALL declarar `permissions: contents: read` no topo, nunca usar `pull_request_target`, e fixar cada action por um SHA de commit de 40 caracteres.  <!-- SEC-02 -->
 3. The repositório SHALL ter `.github/workflows/codeql.yml`, que analisa JavaScript e TypeScript em `pull_request`, em `push` na `main` e uma vez por semana, com `security-events: write` só no job da análise.  <!-- SEC-03 -->
 4. The repositório SHALL ter `.github/dependabot.yml` com atualizações semanais para `npm` (na raiz do workspace) e para `github-actions`.  <!-- SEC-04 -->
-5. The teste do repositório SHALL falhar se um workflow perde um dos gates do SEC-01, usa uma action sem SHA, ganha permissão no topo ou usa `pull_request_target`.  <!-- SEC-05 -->
+5. The teste do repositório SHALL falhar se um workflow perde um dos gates do SEC-01, usa uma action sem SHA, ganha permissão no topo, usa `pull_request_target`, ganha um `if:` ou um `continue-on-error`, ou deixa de buscar o histórico inteiro no job do gitleaks.  <!-- SEC-05 -->
 
 **Independent Test**: tirar o `pnpm check` do `ci.yml`, ou trocar um SHA por `@v7`, faz `pnpm test` falhar.
 
