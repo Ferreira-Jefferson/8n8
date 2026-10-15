@@ -186,10 +186,11 @@
 
 ## Handoff
 
-*Atualizado em 2026-10-15. O roteiro pedido pelo usuário (08, 09, 10 e segurança do repositório) está concluído e verificado. Nada foi enviado ao remoto.*
+*Atualizado em 2026-10-15. O roteiro pedido pelo usuário (08 a 12) está concluído e verificado. Nada foi enviado ao remoto.*
 
-- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda ✅ (Verifier PASS na rodada 2) → 09-provedor-claude-code ✅ (Verifier PASS na rodada 2) → 10-extensao-vscode ✅ (Verifier PASS na rodada 3) → 11-seguranca-repositorio ✅ (Verifier PASS na rodada 5).
-- **08–11:** detalhes no `validation.md` de cada feature e nas AD-023 a AD-026.
+- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda ✅ (Verifier PASS na rodada 2) → 09-provedor-claude-code ✅ (Verifier PASS na rodada 2) → 10-extensao-vscode ✅ (Verifier PASS na rodada 3) → 11-seguranca-repositorio ✅ (Verifier PASS na rodada 5) → 12-pasta-limpa ✅ (Verifier PASS na rodada 2, commits c39b567..425c47d).
+- **08–12:** detalhes no `validation.md` de cada feature e nas AD-023 a AD-027.
+- **12:** a migração v3 do histórico apaga o código guardado; cada entrada fica só com o caminho (pasta) ou o texto (trecho).
 - **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 e bf90eb8 (T36) da 05 entraram com testes vermelhos. Na 08, os testes do `server` ficaram vermelhos entre a T4 e a T7 (registrado no tasks.md). O histórico não foi reescrito.
 - **Ambiente:**
   - O pnpm 12.6.0 global roda o binário nativo (`pnpm.exe`). Se ele voltar a dizer "pnpm is running through Node.js", reinstale com `npm install -g pnpm@12.6.0 --foreground-scripts`.
@@ -200,4 +201,5 @@
   - Os worktrees `../8n8-f02`, `../8n8-05a`, `05b`, `05c` e `05d` e seus branches continuam existindo. Não apagar sem pedido.
   - Lições candidatas L-015..L-024 esperam confirmação de outra feature.
   - Fazer push e ligar no GitHub o que o `SECURITY.md` lista (pede o ok do dono).
+  - A pasta `C:w12` (worktree do Verifier da 12, ~263 MB) ficou no disco; apague à mão.
   - O VS Code instalado estava se atualizando em 2026-10-15; o teste de integração rodou num VS Code baixado em `apps/vscode/.vscode-test`.

@@ -77,6 +77,6 @@ Ao abrir a pasta do 8n8, nada de `.vscode-test`, `node_modules` nem `dist` apare
 
 | Requirement ID | Story | Status |
 | -------------- | ----- | ------ |
-| CLEAN-01..03 | P1: O mapa só tem o código do projeto | Pending |
-| CLEAN-04..07 | P1: Arquivos ignorados num ícone | Pending |
-| CLEAN-08..10 | P1: O histórico guarda só o caminho | Pending |
+| CLEAN-01..03 | P1: O mapa só tem o código do projeto | Verified |
+| CLEAN-04..07 | P1: Arquivos ignorados num ícone | Verified |
+| CLEAN-08..10 | P1: O histórico guarda só o caminho | Verified |
