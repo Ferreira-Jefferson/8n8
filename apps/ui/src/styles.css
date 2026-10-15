@@ -288,6 +288,8 @@ body {
   z-index: 10;
   box-sizing: border-box;
   width: 60px;
+  height: 60px;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1308,6 +1310,8 @@ body {
   z-index: 10;
   box-sizing: border-box;
   width: 60px;
+  height: 60px;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;

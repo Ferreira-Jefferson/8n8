@@ -15,7 +15,7 @@ export function HistoryButton({
       data-history-toggle=""
       onClick={onToggle}
     >
-      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true">
         <g
           fill="none"
           stroke="currentColor"

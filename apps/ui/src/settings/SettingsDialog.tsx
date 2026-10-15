@@ -264,37 +264,17 @@ export function SettingsButton({ onOpen }: { onOpen: () => void }) {
       aria-label="Configurações"
       onClick={onOpen}
     >
-      <svg width="28" height="22" viewBox="0 0 28 22" aria-hidden="true">
-        <path
-          d="M2 4h24M2 11h24M2 18h24"
+      <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
+        <g
+          fill="none"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="1.8"
           strokeLinecap="round"
-        />
-        <circle
-          cx="9"
-          cy="4"
-          r="3"
-          fill="var(--panel-bg)"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <circle
-          cx="19"
-          cy="11"
-          r="3"
-          fill="var(--panel-bg)"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <circle
-          cx="12"
-          cy="18"
-          r="3"
-          fill="var(--panel-bg)"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
+          strokeLinejoin="round"
+        >
+          <path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z" />
+          <circle cx="12" cy="12" r="3" />
+        </g>
       </svg>
     </button>
   );
