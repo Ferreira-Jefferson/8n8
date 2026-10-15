@@ -464,7 +464,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     render(<App />);
     openFolder();
     await screen.findByRole("button", { name: "1 arquivo ignorado" });
-    fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
+    fireEvent.click(screen.getByRole("button", { name: "Início" }));
     fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
     fireEvent.change(screen.getByLabelText("Trecho de código"), {
       target: { value: source },
@@ -685,10 +685,11 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     );
   });
 
-  it("swaps the editor for the map, and Novo código goes back with the text kept", async () => {
+  it("swaps the editor for the map, and Novo código goes back with the text kept (HOME-04)", async () => {
     await mapVideo();
     expect(screen.queryByLabelText("Trecho de código")).toBeNull();
     expect(screen.queryByRole("region", { name: "Editor" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Início" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
     expect(screen.queryByTestId("canvas")).toBeNull();
     expect(
@@ -696,15 +697,33 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     ).toBe(videoSource);
   });
 
-  it("keeps the folder field when Novo código goes back to the launcher", async () => {
+  it("a folder map has Início, not Novo código, and it goes back to the launcher with the folder kept (HOME-03)", async () => {
     projectMock.mockResolvedValue(loja);
     render(<App />);
     openFolder();
     await screen.findByTestId("canvas");
-    fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
+    expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Início" }));
+    expect(screen.queryByTestId("canvas")).toBeNull();
     expect(
       (screen.getByLabelText("Caminho da pasta") as HTMLInputElement).value,
     ).toBe(lojaRoot);
+  });
+
+  it("Início leaves a folder map from an inner level too, and a new map starts at the top (HOME-03)", async () => {
+    projectMock.mockResolvedValue(loja);
+    render(<App initialFolder={lojaRoot} />);
+    await screen.findByTestId("canvas");
+    for (const id of ["dir:pedidos", "file:pedidos/pedidos.py"]) {
+      act(() => currentCanvas().onOpen(lojaNode(id)));
+    }
+    expect(currentCanvas().depth).toBe(2);
+    fireEvent.click(screen.getByRole("button", { name: "Início" }));
+    expect(screen.queryByTestId("canvas")).toBeNull();
+    expect(screen.getByRole("button", { name: "Mapear pasta" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Mapear pasta" }));
+    await screen.findByTestId("canvas");
+    expect(currentCanvas().depth).toBe(0);
   });
 
   it("stays in the editor for an empty graph (CORE-07)", async () => {

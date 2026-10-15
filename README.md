@@ -126,7 +126,7 @@ pnpm --filter 8n8-vscode package
 code --install-extension apps/vscode/8n8-vscode-0.0.1.vsix
 ```
 
-Depois, com uma pasta aberta, rode **8n8: Abrir mapa** na paleta de comandos. Para mapear uma subpasta, clique nela com o botão direito no Explorer e escolha **8n8: Abrir mapa desta pasta**.
+Depois, rode **8n8: Abrir mapa** na paleta de comandos. Ele abre a tela inicial, sem mapa: lá você digita a pasta ou cola um trecho. Para mapear uma pasta direto, clique nela com o botão direito no Explorer e escolha **8n8: Abrir mapa desta pasta**. No mapa de uma pasta, o botão **Início** volta à tela inicial.
 
 A extensão não abre porta: a página do painel fala com o núcleo por mensagens do próprio VS Code, e nenhum outro programa da máquina alcança a API. A chave de API fica no cofre do VS Code (`SecretStorage`). O cache e o histórico ficam na pasta de dados da extensão. As variáveis de ambiente valem como na CLI.
 

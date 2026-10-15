@@ -315,7 +315,7 @@ export function App({ initialFolder = null }: AppProps) {
     }
   }
 
-  /** A snippet map goes back to its text; a folder map goes back to the launcher. */
+  /** A snippet map goes back to its text ("Novo código"); a folder map goes back to the launcher ("Início", HOME-03). */
   function newCode() {
     const from = mapped?.kind;
     clearMap();
@@ -506,7 +506,7 @@ export function App({ initialFolder = null }: AppProps) {
           }}
         />
         <button type="button" className="btn-ghost new-code" onClick={newCode}>
-          Novo código
+          {mapped.kind === "project" ? "Início" : "Novo código"}
         </button>
         <HistoryButton
           open={historyOpen}

@@ -38,11 +38,28 @@ export async function run(): Promise<void> {
   const workspace = vscode.workspace.workspaceFolders?.[0]?.uri;
   if (!workspace) throw new Error("O teste abre o VS Code sem pasta.");
 
-  // VSC-01: the palette command maps the first workspace folder.
+  // HOME-01: the palette opens the start screen and maps no folder, even with one open.
   await vscode.commands.executeCommand("8n8.abrirMapa");
   await waitFor(
     () => api.readyCount() >= 1,
     "a página não avisou que carregou",
+  );
+  await waitFor(
+    () => api.calls().some((c) => c.path === "/api/history"),
+    "a tela inicial não leu o histórico",
+  );
+  if (api.calls().some((c) => c.path === "/api/project")) {
+    throw new Error("A paleta mapeou uma pasta sem a pessoa pedir.");
+  }
+  if (api.lastHtml().includes('name="8n8-folder"')) {
+    throw new Error("A paleta mandou uma pasta para a página.");
+  }
+
+  // HOME-02: the Explorer command maps the folder it was given.
+  await vscode.commands.executeCommand("8n8.abrirMapaDaPasta", workspace);
+  await waitFor(
+    () => api.readyCount() >= 2,
+    "a página do mapa não avisou que carregou",
   );
   await waitFor(
     () =>
@@ -154,7 +171,7 @@ export async function run(): Promise<void> {
     "8n8.abrirMapaDaPasta",
     vscode.Uri.joinPath(workspace, "frete"),
   );
-  await waitFor(() => api.readyCount() >= 2, "a página nova não carregou");
+  await waitFor(() => api.readyCount() >= 3, "a página nova não carregou");
   await waitFor(
     () =>
       api

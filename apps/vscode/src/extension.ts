@@ -5,7 +5,6 @@ import { pathToFileURL } from "node:url";
 import type { createCore } from "@8n8/server";
 import * as vscode from "vscode";
 import { BRIDGE_PORT, createBridge } from "./bridge";
-import { folderToOpen } from "./folder";
 import { dataPaths, panelOptions } from "./panel";
 import { createVscodeSettingsStore } from "./store";
 import { newNonce, webviewHtml } from "./webview-html";
@@ -74,7 +73,7 @@ export function activate(
   let ready = 0;
   const calls: { method: string; path: string; status: number }[] = [];
 
-  const show = (folder: string) => {
+  const show = (folder: string | null) => {
     if (panel) {
       panel.reveal(vscode.ViewColumn.Beside);
     } else {
@@ -127,22 +126,8 @@ export function activate(
     );
   };
 
-  const open = async (uri?: vscode.Uri) => {
-    const folder = await folderToOpen(
-      uri?.fsPath,
-      (vscode.workspace.workspaceFolders ?? []).map((f) => f.uri.fsPath),
-      async () =>
-        (
-          await vscode.window.showOpenDialog({
-            canSelectFiles: false,
-            canSelectFolders: true,
-            canSelectMany: false,
-            openLabel: "Abrir mapa",
-          })
-        )?.[0]?.fsPath,
-    );
-    if (folder !== null) show(folder);
-  };
+  // Only the Explorer names a folder; the palette opens the start screen (HOME-01, HOME-02).
+  const open = (uri?: vscode.Uri) => show(uri?.fsPath ?? null);
 
   context.subscriptions.push(
     vscode.commands.registerCommand("8n8.abrirMapa", open),

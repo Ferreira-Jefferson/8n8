@@ -254,6 +254,23 @@ test.describe("Pasta local", () => {
     await expect(edges(page)).toHaveCount(0);
   });
 
+  test("HOME-03: Início, not Novo código, leaves a folder map from an inner level; the field keeps the folder", async ({
+    page,
+  }) => {
+    await openFolder(page, LOJA);
+    await clickCard(page, "dir:pedidos");
+    await clickCard(page, "file:pedidos/pedidos.py");
+    await expect(page.getByRole("button", { name: "Novo código" })).toHaveCount(
+      0,
+    );
+    await page.getByRole("button", { name: "Início" }).click();
+    await expect(nodes(page)).toHaveCount(0);
+    await expect(page.getByLabel("Caminho da pasta")).toHaveValue(LOJA);
+    await page.getByRole("button", { name: "Mapear pasta" }).click();
+    await expect(nodes(page)).toHaveCount(5);
+    expect(await levelIds(page)).toContain("dir:pedidos");
+  });
+
   test("PROJ-05: a missing path and a file path both say Pasta não encontrada", async ({
     page,
   }) => {

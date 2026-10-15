@@ -293,7 +293,7 @@ test.describe("Histórico", () => {
     await expect(nodes(page).first()).toBeVisible();
     const before = await levelIds(page);
     await saved(page, 1);
-    await page.getByRole("button", { name: "Novo código" }).click();
+    await page.getByRole("button", { name: "Início" }).click();
 
     const recent = page.getByRole("region", { name: "Recentes" });
     const favorites = page.getByRole("region", { name: "Favoritos" });
