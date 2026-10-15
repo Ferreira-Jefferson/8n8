@@ -10,6 +10,7 @@
 
 # Único ponto que inicia processos, e as guardas de build.
 /apps/cli/src/open-browser.ts @Ferreira-Jefferson
+/packages/llm/src/claude-code.ts @Ferreira-Jefferson
 /apps/cli/src/__tests__/guards.test.ts @Ferreira-Jefferson
 /.dependency-cruiser.cjs @Ferreira-Jefferson
 /biome.json @Ferreira-Jefferson

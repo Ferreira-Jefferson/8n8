@@ -132,10 +132,11 @@ module.exports = {
       name: "no-child-process",
       severity: "error",
       comment:
-        "Só apps/cli/src/open-browser.ts inicia processos (DIST-23). O teste das guardas também, para rodar o check de verdade. Um provedor que precise disso entra como exceção nesta regra, com revisão do CODEOWNERS.",
+        "Só apps/cli/src/open-browser.ts e packages/llm/src/claude-code.ts iniciam processos (DIST-23, CC-09). O teste das guardas também, para rodar o check de verdade. Uma exceção nova entra nesta regra, com revisão do CODEOWNERS.",
       from: {
         pathNot: [
           "^apps/cli/src/open-browser\\.ts$",
+          "^packages/llm/src/claude-code\\.ts$",
           "^apps/cli/src/__tests__/guards\\.test\\.ts$",
         ],
       },

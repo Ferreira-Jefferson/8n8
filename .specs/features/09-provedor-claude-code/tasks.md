@@ -108,8 +108,8 @@ T1 → T2 → T3 → T4
 
 **Done when**:
 
-- [ ] `packages/llm/src/other.ts` com `node:child_process` falha o check; `claude-code.ts` passa
-- [ ] Gate check passes: `pnpm --filter @8n8/cli test && pnpm check`
+- [x] `packages/llm/src/other.ts` com `node:child_process` falha o check; `claude-code.ts` passa
+- [x] Gate check passes: `pnpm --filter @8n8/cli test && pnpm check`
 
 **Tests**: unit
 **Gate**: quick

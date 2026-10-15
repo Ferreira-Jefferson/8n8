@@ -53,6 +53,7 @@ const BASE: Record<string, string> = {
   "apps/cli/src/run.ts": "export const probe = 1;\n",
   "apps/web/src/target.ts": "export const probe = 1;\n",
   "apps/cli/src/open-browser.ts": SPAWN,
+  "packages/llm/src/claude-code.ts": SPAWN,
   "apps/cli/src/__tests__/guards.test.ts": SPAWN,
 };
 
@@ -106,7 +107,7 @@ function cruiseFindings(out: string): string[] {
 }
 
 describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", () => {
-  it("passes the clean base, open-browser.ts and this test included", () => {
+  it("passes the clean base, open-browser.ts, claude-code.ts and this test included", () => {
     const { status, out } = check({});
     expect(out).not.toMatch(/error|×/i);
     expect(status).toBe(0);
@@ -133,7 +134,7 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
     },
   );
 
-  it("fails node:child_process anywhere but open-browser.ts and this test", () => {
+  it("fails node:child_process anywhere but open-browser.ts, claude-code.ts and this test (CC-09)", () => {
     const files: Record<string, string> = {
       "apps/cli/src/spawns.ts": SPAWN,
       "apps/cli/src/__tests__/other.test.ts": SPAWN,
@@ -146,7 +147,9 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
     for (const file of Object.keys(files)) {
       expect(found).toContain(`error no-child-process: ${file}`);
     }
-    expect(found.join("\n")).not.toMatch(/open-browser|guards\.test/);
+    expect(found.join("\n")).not.toMatch(
+      /open-browser|claude-code|guards\.test/,
+    );
     expect(status).not.toBe(0);
   });
 
@@ -222,9 +225,13 @@ describe("source scan: what the check cannot see (DIST-23)", () => {
 
   // Pinned by line, not by file: a new line in links.ts (getBuiltinModule, a
   // createRequire of child_process) fails here even though the file is listed.
-  it("only open-browser.ts reaches child_process; links.ts only names it as analysed code", () => {
+  it("only open-browser.ts and claude-code.ts reach child_process; links.ts only names it as analysed code (CC-10)", () => {
     const lines = shipped
-      .filter((f) => f !== "apps/cli/src/open-browser.ts")
+      .filter(
+        (f) =>
+          f !== "apps/cli/src/open-browser.ts" &&
+          f !== "packages/llm/src/claude-code.ts",
+      )
       .flatMap((f) =>
         text(f)
           .split("\n")
