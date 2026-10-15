@@ -39,6 +39,14 @@ describe("pnpm check guards (DIST-14, DIST-23)", () => {
     );
   });
 
+  it("fails any other apps/cli file that imports node:child_process", async () => {
+    expect(await violations()).toContainEqual(
+      expect.stringMatching(
+        /^no-child-process: apps\/cli\/src\/spawns\.ts -> /,
+      ),
+    );
+  });
+
   it("lets apps/cli/src/open-browser.ts import node:child_process", async () => {
     expect(
       (await violations()).filter((v) => v.includes("open-browser")),
