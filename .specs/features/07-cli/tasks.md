@@ -221,17 +221,17 @@ T10 → T11
 
 **Done when**:
 
-- [ ] `apps/cli/package.json` (`@8n8/cli`), `tsconfig.json`, `src/main.ts`; regra do dependency-cruiser para `apps/cli`
-- [ ] Sem pasta → URL só com `#t=`; com pasta relativa → resolvida pelo `cwd`; `C:\p` e `C:/p` → o mesmo caminho
-- [ ] Pasta inexistente → `Pasta não encontrada: <caminho>`, código 1, `openBrowser` não chamado
-- [ ] Porta em uso → mensagem exata do DIST-06, código 1
-- [ ] Saída `8n8 em http://127.0.0.1:<porta>/#t=<token>` antes de `openBrowser`; `--no-open` não chama `openBrowser`
-- [ ] `--help` → uso com `--no-open`, `APP8N8_PORT`, `APP8N8_CACHE_DIR`, `APP8N8_HISTORY_DIR` e as variáveis de LLM; código 0; `serve` não chamado
-- [ ] Pastas padrão `~/.8n8/cache` e `~/.8n8/historico.db`; as variáveis trocam as duas
-- [ ] Sem config de LLM → sobe normalmente (a resposta `no-key` do núcleo segue a mesma)
-- [ ] `APP8N8_TOKEN` com menos de 32 caracteres → erro e código 1
-- [ ] Sentinela em `OPENROUTER_API_KEY` não aparece em `out` nem `err`
-- [ ] Gate check passes: `pnpm --filter @8n8/cli test && pnpm typecheck`
+- [x] `apps/cli/package.json` (`@8n8/cli`), `tsconfig.json`, `src/listen.ts`; regra `cli-only-server` no dependency-cruiser. Desvio: `src/main.ts` foi para a T7, porque usa o `openBrowser`
+- [x] Sem pasta → URL só com `#t=`; com pasta relativa → resolvida pelo `cwd`; `C:\p` e `C:/p` → o mesmo caminho
+- [x] Pasta inexistente → `Pasta não encontrada: <caminho>`, código 1, `openBrowser` não chamado
+- [x] Porta em uso → mensagem exata do DIST-06, código 1
+- [x] Saída `8n8 em http://127.0.0.1:<porta>/#t=<token>` antes de `openBrowser`; `--no-open` não chama `openBrowser`
+- [x] `--help` → uso com `--no-open`, `APP8N8_PORT`, `APP8N8_CACHE_DIR`, `APP8N8_HISTORY_DIR` e as variáveis de LLM; código 0; `serve` não chamado
+- [x] Pastas padrão `~/.8n8/historico.db` e `APP8N8_HISTORY_DIR` testadas aqui. A pasta padrão `~/.8n8/cache` só é escrita quando o LLM responde: a prova foi para o E2E da T9
+- [x] Sem config de LLM → sobe normalmente (a resposta `no-key` do núcleo segue a mesma)
+- [x] `APP8N8_TOKEN` com menos de 32 caracteres → erro e código 1
+- [x] Sentinela em `OPENROUTER_API_KEY` não aparece em `out` nem `err`
+- [x] Gate check passes: `pnpm --filter @8n8/cli test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick
@@ -314,6 +314,7 @@ T10 → T11
 - [ ] Os webServers do Playwright rodam `node apps/cli/dist/8n8.mjs --no-open`
 - [ ] E2E: `pnpm pack` + `npm install -g --prefix <temp>`; `8n8 <fixture> --no-open` numa porta própria; a página com `#t=...&pasta=...` mostra os nós da fixture
 - [ ] E2E: pasta inexistente → código 1 e mensagem; porta ocupada → código 1 e mensagem
+- [ ] E2E: com a pasta pessoal apontada para uma pasta temporária e o LLM falso, a explicação grava em `<home>/.8n8/cache` (DIST-09)
 - [ ] E2E: a fixture e a pasta de instalação ficam iguais antes e depois (lista de arquivos e conteúdo)
 - [ ] E2E: abrir só com `#t=` (sem `extraHTTPHeaders`) carrega a tela e chama a API com sucesso
 - [ ] `pnpm dev` sobe e a tela chama a API (conferido à mão)

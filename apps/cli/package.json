@@ -1,0 +1,25 @@
+{
+  "name": "@8n8/cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "8n8": "dist/8n8.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@8n8/server": "workspace:*",
+    "@hono/node-server": "2.1.5",
+    "@types/node": "22.20.5",
+    "hono": "4.13.13"
+  }
+}

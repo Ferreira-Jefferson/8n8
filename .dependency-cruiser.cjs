@@ -119,6 +119,16 @@ module.exports = {
       to: { path: ["^apps/"] },
     },
     {
+      name: "cli-only-server",
+      severity: "error",
+      comment:
+        "apps/cli importa só o núcleo (server); quem monta as peças é o núcleo (AD-022).",
+      from: { path: "^apps/cli/" },
+      to: {
+        path: ["^packages/(?!server/)", "^apps/(?!cli/)", "@8n8/(?!server)"],
+      },
+    },
+    {
       name: "web-only-model",
       severity: "error",
       comment: "apps/web importa só model.",
