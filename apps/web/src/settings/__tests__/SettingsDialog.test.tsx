@@ -24,8 +24,8 @@ const view = (over: Partial<SettingsResponse> = {}): SettingsResponse => ({
   autoSuggestions: false,
   hasKey: false,
   providers: [
-    { id: "openrouter", defaultModel: DEFAULT_MODEL },
-    { id: "openai-compatible", defaultModel: "gpt-4o-mini" },
+    { id: "openrouter", defaultModel: DEFAULT_MODEL, usesKey: true },
+    { id: "openai-compatible", defaultModel: "gpt-4o-mini", usesKey: true },
   ],
   env: {},
   ...over,
@@ -186,5 +186,40 @@ describe("patchOf", () => {
     expect(
       patchOf(base, { ...base, apiKey: "   ", provider: "openai-compatible" }),
     ).toEqual({ provider: "openai-compatible" });
+  });
+});
+
+describe("SettingsDialog with claude-code (CC-01)", () => {
+  const withClaude = (over: Partial<SettingsResponse> = {}) =>
+    view({
+      providers: [
+        { id: "openrouter", defaultModel: DEFAULT_MODEL, usesKey: true },
+        { id: "claude-code", defaultModel: "sonnet", usesKey: false },
+      ],
+      ...over,
+    });
+
+  it("hides the key and the URL and says the subscription is enough", () => {
+    open(withClaude({ provider: "claude-code", model: "sonnet" }));
+    expect(screen.queryByLabelText("Chave de API")).toBeNull();
+    expect(screen.queryByLabelText("URL")).toBeNull();
+    expect(
+      screen.getByText(
+        "O Claude Code usa a sua assinatura. Não precisa de chave.",
+      ),
+    ).toBeTruthy();
+    expect(field("Modelo").placeholder).toBe("sonnet");
+  });
+
+  it("switches to claude-code and sends only the provider", async () => {
+    saveMock.mockResolvedValue(withClaude({ provider: "claude-code" }));
+    open(withClaude());
+    fireEvent.change(screen.getByLabelText("Provedor"), {
+      target: { value: "claude-code" },
+    });
+    expect(screen.queryByLabelText("Chave de API")).toBeNull();
+    save();
+    await screen.findByText("Configurações salvas.");
+    expect(saveMock).toHaveBeenCalledWith({ provider: "claude-code" });
   });
 });

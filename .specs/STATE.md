@@ -156,11 +156,18 @@
 - **Consequence:** Implementada na feature 08. Na CLI, a chave fica em texto puro dentro do perfil do usuário, porque o Node não acessa o cofre do Windows sem módulo nativo (e o DIST-16 da 07 proíbe scripts de instalação).
 - **Status:** ativa.
 
+### AD-024 — Claude Code como provedor isolado
+- **Date:** 2026-10-15
+- **Context:** Feature 09. Em `-p`, o Claude Code pula o diálogo de confiança da pasta. Na pasta analisada, ele carregaria hooks, `.claude/settings.json` e `CLAUDE.md` de um código que pode ser de terceiros.
+- **Decision:** O provedor `claude-code` (`packages/llm/src/claude-code.ts`) roda o executável sem shell, numa pasta vazia própria (`<tmp>/8n8-claude`), com `--tools ""`, `--setting-sources user`, `--strict-mcp-config`, `--disable-slash-commands` e `--no-session-persistence`, o código pelo stdin, 180 s e 5 MB no máximo. O executável vem de `APP8N8_CLAUDE_PATH` ou do lugar de instalação conhecido, nunca da API local. O arquivo é a segunda exceção da regra `no-child-process`.
+- **Consequence:** O provedor recebe o ambiente do host por `ProviderOptions.env`. `LlmProvider` ganha `usesKey`.
+- **Status:** ativa.
+
 ## Handoff
 
 *Atualizado em 2026-10-15. O usuário pediu execução sem paradas para aprovação até concluir o roteiro (08, 09, 10 e segurança do repositório). Nada foi enviado ao remoto.*
 
-- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda (implementada, verificação em curso) → 09 provedor Claude Code → 10 extensão VS Code → segurança do repositório.
+- **Ordem das features:** 01 ✅ → 04 ✅ → 02 ✅ → 05 (aprovada pelo usuário, sem Verifier) → 06 ✅ → 07-cli ✅ (Verifier PASS na rodada 5) → 08-config-llm-sob-demanda ✅ (Verifier PASS na rodada 2) → 09-provedor-claude-code (implementada, verificação em curso) → 10 extensão VS Code → segurança do repositório.
 - **08:** resumo e sugestões em pedidos separados (`/api/summary`, `/api/suggestions`, `cachedOnly`), caches `nodes/` e `suggestions/` (schemaVersion 4), painel de configurações (`GET/PUT /api/settings`, `~/.8n8/config.json`), modos automáticos (`APP8N8_AUTO_SUMMARY`, `APP8N8_AUTO_SUGGESTIONS`). Gates: 1640+ unitários, 141 E2E.
 - **Desvio registrado:** os commits 7efa6d5 (T11) e 7743bc4 (T13) da 04 e bf90eb8 (T36) da 05 entraram com testes vermelhos. Na 08, os testes do `server` ficaram vermelhos entre a T4 e a T7 (registrado no tasks.md). O histórico não foi reescrito.
 - **Ambiente:**

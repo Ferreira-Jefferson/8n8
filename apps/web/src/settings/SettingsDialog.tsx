@@ -26,6 +26,10 @@ interface Form {
 const defaultModelOf = (settings: SettingsResponse, provider: string) =>
   settings.providers.find((p) => p.id === provider)?.defaultModel ?? "";
 
+/** A provider with no key and no URL (Claude Code) shows neither field (CC-01). */
+const usesKey = (settings: SettingsResponse, provider: string) =>
+  settings.providers.find((p) => p.id === provider)?.usesKey ?? true;
+
 function formOf(settings: SettingsResponse): Form {
   return {
     provider: settings.provider,
@@ -143,43 +147,51 @@ export function SettingsDialog({
               </select>
             </label>
             {lockNote("provider")}
-            <label>
-              Chave de API
-              <input
-                type="password"
-                autoComplete="off"
-                value={form.apiKey}
-                disabled={Boolean(lockedBy("apiKey"))}
-                placeholder={
-                  settings.hasKey ? "Chave guardada" : "Cole a chave"
-                }
-                onChange={(e) => set("apiKey", e.target.value)}
-              />
-            </label>
-            {lockNote("apiKey")}
-            {settings.hasKey && !lockedBy("apiKey") && (
+            {!usesKey(settings, form.provider) ? (
               <p className="key-state">
-                Chave guardada{" "}
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  onClick={() => save({ apiKey: null })}
-                >
-                  Apagar chave
-                </button>
+                O Claude Code usa a sua assinatura. Não precisa de chave.
               </p>
+            ) : (
+              <>
+                <label>
+                  Chave de API
+                  <input
+                    type="password"
+                    autoComplete="off"
+                    value={form.apiKey}
+                    disabled={Boolean(lockedBy("apiKey"))}
+                    placeholder={
+                      settings.hasKey ? "Chave guardada" : "Cole a chave"
+                    }
+                    onChange={(e) => set("apiKey", e.target.value)}
+                  />
+                </label>
+                {lockNote("apiKey")}
+                {settings.hasKey && !lockedBy("apiKey") && (
+                  <p className="key-state">
+                    Chave guardada{" "}
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      onClick={() => save({ apiKey: null })}
+                    >
+                      Apagar chave
+                    </button>
+                  </p>
+                )}
+                <label>
+                  URL
+                  <input
+                    type="url"
+                    value={form.baseURL}
+                    disabled={Boolean(lockedBy("baseURL"))}
+                    placeholder="Padrão do provedor"
+                    onChange={(e) => set("baseURL", e.target.value)}
+                  />
+                </label>
+                {lockNote("baseURL")}
+              </>
             )}
-            <label>
-              URL
-              <input
-                type="url"
-                value={form.baseURL}
-                disabled={Boolean(lockedBy("baseURL"))}
-                placeholder="Padrão do provedor"
-                onChange={(e) => set("baseURL", e.target.value)}
-              />
-            </label>
-            {lockNote("baseURL")}
             <label>
               Modelo
               <input

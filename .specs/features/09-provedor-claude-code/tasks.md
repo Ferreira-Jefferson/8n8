@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: inline (escopo médio). O provedor é um arquivo em `packages/llm`, como os outros (AD-021). `LlmProvider.isConfigured` e `create` passam a receber `options.env` (o ambiente do host, que o núcleo já recebe em `CoreOptions.env`) e `options.spawn` (injetável nos testes). O serviço de config passa o `env` ao criar o cliente. `SettingsResponse.providers` ganha `usesKey`, e o diálogo esconde chave e URL quando ele é falso.
-**Status**: In Progress
+**Status**: Done
 
 ---
 
@@ -133,8 +133,8 @@ T1 → T2 → T3 → T4
 
 **Done when**:
 
-- [ ] Teste do diálogo com `claude-code`
-- [ ] Gate check passes: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
+- [x] Teste do diálogo com `claude-code`
+- [x] Gate check passes: `pnpm typecheck && pnpm check && pnpm test && pnpm e2e`
 
 **Tests**: unit
 **Gate**: build

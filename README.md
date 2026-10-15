@@ -76,7 +76,7 @@ Os dados ficam em `~/.8n8` (no Windows, `C:\Users\<nome>\.8n8`): o cache em `cac
 
 Os resumos e as sugestões pedem um provedor de LLM. O jeito mais simples é pela tela: clique no botão **Configurações** (no canto de cima, em todas as telas) e preencha:
 
-- **Provedor**: `openrouter` (o padrão) ou `openai-compatible` (OpenAI, Ollama, LM Studio).
+- **Provedor**: `openrouter` (o padrão), `openai-compatible` (OpenAI, Ollama, LM Studio) ou `claude-code` (a sua assinatura do Claude Code, sem chave).
 - **Chave de API**: o campo só recebe a chave. Ela nunca volta para a tela: o diálogo diz só "Chave guardada".
 - **URL** e **Modelo**: vazios usam o padrão do provedor.
 - **Gerar o resumo ao selecionar um nó** e **Pedir as sugestões ao selecionar um nó**: desligados, o resumo e as sugestões só são pedidos quando você clica em "Gerar resumo" ou "Pedir sugestões". Assim nada é gasto enquanto você só navega. O que já está no cache aparece sem clique.
@@ -89,13 +89,16 @@ Uma variável de ambiente ganha da tela, e o campo dela aparece travado no diál
 cp .env.example .env
 ```
 
-- `APP8N8_LLM_PROVIDER`: `openrouter` (o padrão) ou `openai-compatible` (OpenAI, Ollama, LM Studio).
+- `APP8N8_LLM_PROVIDER`: `openrouter` (o padrão), `openai-compatible` (OpenAI, Ollama, LM Studio) ou `claude-code`.
+- `APP8N8_CLAUDE_PATH`: o caminho do executável do Claude Code, quando ele não está no lugar de instalação padrão. O caminho só vem desta variável, nunca da tela.
 - `OPENROUTER_API_KEY`: a chave do provedor `openrouter`.
 - `APP8N8_LLM_BASE_URL` e `APP8N8_LLM_API_KEY`: a URL e a chave do provedor `openai-compatible`. Em servidor local, a chave é opcional.
 - `APP8N8_MODEL` e `APP8N8_REVIEW_MODEL`: o modelo do resumo e o do revisor. Vazio usa o padrão do provedor.
 - `APP8N8_AUTO_SUMMARY` e `APP8N8_AUTO_SUGGESTIONS`: `1` pede o resumo ou as sugestões ao selecionar um nó; `0` espera o clique.
 
 **Sem chave, o mapa funciona.** Só os textos (resumos e sugestões) ficam de fora. A estrutura não depende do LLM.
+
+Com o `claude-code`, o 8n8 roda o seu Claude Code em modo não interativo, numa pasta vazia própria, sem ferramentas, sem MCP e só com as suas configurações de usuário. O código do nó vai pelo stdin. Ele nunca roda dentro da pasta analisada, então os hooks e o `CLAUDE.md` dela não são carregados.
 
 Para acrescentar um provedor, veja [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md).
 

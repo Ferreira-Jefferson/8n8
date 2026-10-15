@@ -28,9 +28,12 @@ Cada provedor implementa `LlmProvider`, em `packages/llm/src/provider.ts`:
 |---|---|
 | `id` | O nome do provedor. É o valor de `APP8N8_LLM_PROVIDER`. Entra na impressão digital do cache. |
 | `defaultModel` | O modelo usado quando `APP8N8_MODEL` está vazia. |
-| `env` | Os nomes das variáveis de chave (`apiKey`) e de URL (`baseURL`). |
-| `isConfigured(config)` | Retorna `false` se falta chave ou URL. Então o painel mostra "sem chave". |
-| `create(config, options)` | Retorna o `LlmClient`. `options.fetch` serve aos testes. |
+| `usesKey` | `false` para um provedor sem chave e sem URL (como o `claude-code`). O diálogo de Configurações esconde os dois campos. |
+| `env` | Os nomes das variáveis de chave (`apiKey`) e de URL (`baseURL`), quando o provedor tem. |
+| `isConfigured(config, options)` | Retorna `false` se falta o que o provedor precisa. Então o painel mostra "configure um provedor". `options.env` é o ambiente do host. |
+| `create(config, options)` | Retorna o `LlmClient`. `options.fetch` serve aos testes, e `options.env` traz o ambiente do host. |
+
+Um provedor que roda um programa (como `claude-code.ts`) é exceção da regra `no-child-process`. Ele entra nomeado na regra, no teste das guardas (`apps/cli/src/__tests__/guards.test.ts`) e no `CODEOWNERS`, e roda sem shell, numa pasta vazia, com o código pelo stdin.
 
 ## O perfil de modelo
 

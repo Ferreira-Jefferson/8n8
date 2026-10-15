@@ -1062,7 +1062,7 @@ describe("App settings (CFG-08, CFG-20)", () => {
     autoSummary: true,
     autoSuggestions: false,
     hasKey: true,
-    providers: [{ id: "openrouter", defaultModel: "m/x" }],
+    providers: [{ id: "openrouter", defaultModel: "m/x", usesKey: true }],
     env: {},
   };
 
