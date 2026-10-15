@@ -661,7 +661,7 @@ describe("composeReadProject", () => {
     expect(response.graph.project).toEqual({ name: "loja" });
     expect(response.files).toHaveLength(8);
     expect(response.ignored).toEqual([
-      { path: "grande.py", reason: "too-large" },
+      { path: "grande.py", reason: "too-large", addable: true },
       { path: "latin1.py", reason: "not-utf8" },
     ]);
   });
@@ -804,8 +804,20 @@ describe("composeReadProject: the plugin registry", () => {
     );
 
     expect(await readProject("/qualquer")).toEqual({ kind: "not-found" });
+    expect(await readProject("/qualquer", ["big.a"])).toEqual({
+      kind: "not-found",
+    });
     expect(asked).toEqual([
-      { extensions: [".a", ".b", ".c"], ignoredDirs: ["x", "y", "z"] },
+      {
+        extensions: [".a", ".b", ".c"],
+        ignoredDirs: ["x", "y", "z"],
+        include: [],
+      },
+      {
+        extensions: [".a", ".b", ".c"],
+        ignoredDirs: ["x", "y", "z"],
+        include: ["big.a"],
+      },
     ]);
   });
 

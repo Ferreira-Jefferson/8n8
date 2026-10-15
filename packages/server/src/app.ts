@@ -36,7 +36,8 @@ export interface AppDeps {
     options: { cachedOnly: boolean },
   ) => Promise<ExplainResponse<unknown>>;
   titles: (req: TitleRequest) => Promise<TitlesResponse>;
-  readProject: (path: string) => Promise<ProjectRead>;
+  /** `include`: files over 1 MB the person put on the map (CLEAN-06). */
+  readProject: (path: string, include?: string[]) => Promise<ProjectRead>;
   port: number;
   /** The session token every /api call must carry in x-8n8-token (DIST-20). */
   token: string;
@@ -46,13 +47,31 @@ export interface AppDeps {
   settings?: Pick<SettingsService, "view" | "update"> | undefined;
 }
 
-const projectBody = z.object({ path: z.string().min(1) });
+/** Files over 1 MB put on the map: relative POSIX paths, never outside the folder (CLEAN-07). */
+const include = z
+  .array(
+    z
+      .string()
+      .min(1)
+      .max(1024)
+      .refine(
+        (p) =>
+          !p.startsWith("/") &&
+          !p.includes("\\") &&
+          !p.includes(":") &&
+          !p.split("/").includes(".."),
+      ),
+  )
+  .max(100)
+  .optional();
+const projectBody = z.object({ path: z.string().min(1), include });
 const graphBody = z.object({ source: z.string() });
 const starBody = z.object({ starred: z.boolean() });
 // Extra fields from the client (code, calls...) are dropped: the server builds the request (CORE-17).
 const cachedOnly = z.boolean().optional();
 const projectExplainBody = z.object({
   root: z.string().min(1),
+  include,
   nodeId: z.string(),
   cachedOnly,
 });
@@ -62,7 +81,11 @@ const explainBody = z.object({
   cachedOnly,
 });
 const nodeIds = z.array(z.string()).max(200);
-const projectTitlesBody = z.object({ root: z.string().min(1), nodeIds });
+const projectTitlesBody = z.object({
+  root: z.string().min(1),
+  include,
+  nodeIds,
+});
 const titlesBody = z.object({ source: z.string(), nodeIds });
 
 /** The graph a request talks about, re-extracted on the server (AD-015). */
@@ -80,7 +103,7 @@ interface Origin {
 
 /** Reads `{ source }` or `{ root }`; a missing folder gives `{ notFound }`. The client sends no code (AD-015). */
 async function loadOrigin(
-  body: { source: string } | { root: string },
+  body: { source: string } | { root: string; include?: string[] | undefined },
   deps: AppDeps,
 ): Promise<Origin | { notFound: string }> {
   if ("source" in body) {
@@ -100,7 +123,7 @@ async function loadOrigin(
       idPrefix: `${plugin.id}|`,
     };
   }
-  const read = await deps.readProject(body.root);
+  const read = await deps.readProject(body.root, body.include);
   if (read.kind === "not-found") return { notFound: body.root };
   const { response } = read;
   const graph = response.graph;
@@ -251,7 +274,7 @@ export function createApp(deps: AppDeps): Hono {
   app.post("/api/project", async (c) => {
     const body = projectBody.safeParse(await c.req.json().catch(() => null));
     if (!body.success) return c.json({ error: "invalid body" }, 400);
-    const read = await deps.readProject(body.data.path);
+    const read = await deps.readProject(body.data.path, body.data.include);
     if (read.kind === "not-found") {
       return c.json({ error: "not-found", path: body.data.path }, 404);
     }
@@ -312,7 +335,9 @@ export function createApp(deps: AppDeps): Hono {
     let request: ExplainRequest;
     try {
       const origin = await loadOrigin(
-        "root" in body ? { root: body.root } : { source: body.source },
+        "root" in body
+          ? { root: body.root, include: body.include }
+          : { source: body.source },
         deps,
       );
       if ("notFound" in origin) {

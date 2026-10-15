@@ -196,13 +196,13 @@ export const languagePlugins: LanguagePlugin[] = [
 export function composeReadProject(
   read: (path: string, filter: ReadFilter) => Promise<FolderRead>,
   plugins: LanguagePlugin[],
-): (path: string) => Promise<ProjectRead> {
+): (path: string, include?: string[]) => Promise<ProjectRead> {
   const filter: ReadFilter = {
     extensions: plugins.flatMap((p) => p.extensions),
     ignoredDirs: plugins.flatMap((p) => p.ignoredDirs),
   };
-  return async (path) => {
-    const folder = await read(path, filter);
+  return async (path, include = []) => {
+    const folder = await read(path, { ...filter, include });
     if (folder.kind === "not-found") return folder;
     const { name, root, files, ignored } = folder;
     const { graph: built, offers, requests } = analyzeProject(files, plugins);
