@@ -120,6 +120,7 @@ function isEditable(target: EventTarget | null): boolean {
 }
 
 const PANEL_WIDTH_KEY = "8n8.panelWidth";
+const PANEL_OPEN_KEY = "8n8.panelOpen";
 
 /** The width the viewer last dragged the panel to; storage may be blocked. */
 function savedPanelWidth(): number | undefined {
@@ -128,6 +129,15 @@ function savedPanelWidth(): number | undefined {
     return saved > 0 ? clampPanel(saved) : undefined;
   } catch {
     return undefined;
+  }
+}
+
+/** The panel starts minimized; the viewer's choice to open it stays for the next map. */
+function savedPanelCollapsed(): boolean {
+  try {
+    return localStorage.getItem(PANEL_OPEN_KEY) !== "1";
+  } catch {
+    return true;
   }
 }
 
@@ -214,6 +224,13 @@ export function App({ initialFolder = null }: AppProps) {
   const [mark, setMark] = useState<{ line: number; nonce: number }>();
   const [focusId, setFocusId] = useState<NodeId | null>(null);
   const [panelWidth, setPanelWidth] = useState(savedPanelWidth);
+  const [panelCollapsed, setCollapsed] = useState(savedPanelCollapsed);
+  const setPanelCollapsed = (collapsed: boolean) => {
+    setCollapsed(collapsed);
+    try {
+      localStorage.setItem(PANEL_OPEN_KEY, collapsed ? "0" : "1");
+    } catch {}
+  };
   const [historyOpen, setHistoryOpen] = useState(false);
   // The LLM settings; null until they arrive, or if the call fails: the panel then waits for clicks.
   const [settings, setSettings] = useState<SettingsResponse | null>(null);
@@ -474,9 +491,9 @@ export function App({ initialFolder = null }: AppProps) {
 
   return (
     <main
-      className={panelNode ? "map with-panel" : "map"}
+      className={panelNode && !panelCollapsed ? "map with-panel" : "map"}
       style={
-        panelNode && panelWidth !== undefined
+        panelNode && !panelCollapsed && panelWidth !== undefined
           ? { gridTemplateColumns: `1fr auto ${panelWidth}px` }
           : undefined
       }
@@ -553,7 +570,29 @@ export function App({ initialFolder = null }: AppProps) {
           onOpenEntry={openEntry}
         />
       )}
-      {panelNode && (
+      {panelNode && panelCollapsed && (
+        <button
+          type="button"
+          className="btn-ghost panel-toggle"
+          aria-label="Expandir painel"
+          aria-expanded={false}
+          onClick={() => setPanelCollapsed(false)}
+        >
+          ‹
+        </button>
+      )}
+      {panelNode && !panelCollapsed && (
+        <button
+          type="button"
+          className="btn-ghost panel-toggle"
+          aria-label="Minimizar painel"
+          aria-expanded={true}
+          onClick={() => setPanelCollapsed(true)}
+        >
+          ›
+        </button>
+      )}
+      {panelNode && !panelCollapsed && (
         <PanelResizer
           width={panelWidth}
           onResize={(width) => {
@@ -564,7 +603,7 @@ export function App({ initialFolder = null }: AppProps) {
           }}
         />
       )}
-      {panelNode && (
+      {panelNode && !panelCollapsed && (
         <DetailPanel
           {...panelInput(mapped, panelNode)}
           snippetFile={snippetFileName(

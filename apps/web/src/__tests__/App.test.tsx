@@ -70,6 +70,8 @@ const languagesMock = vi.mocked(fetchLanguages);
 
 beforeEach(() => {
   canvas = null;
+  // The panel starts minimized (8n8.panelOpen); the tests written before that open it.
+  localStorage.setItem("8n8.panelOpen", "1");
   graphMock.mockReset();
   explainMock.mockReset();
   suggestMock.mockReset();
@@ -1260,5 +1262,47 @@ describe("App settings button in the editor (CFG-20)", () => {
     expect(
       await screen.findByRole("dialog", { name: "Configurações" }),
     ).toBeTruthy();
+  });
+});
+
+describe("App, the panel starts minimized", () => {
+  const detail = () =>
+    screen.queryByRole("complementary", { name: "Detalhe do nó" });
+
+  it("a first visit shows only Expandir painel; a click opens the panel and remembers it", async () => {
+    localStorage.removeItem("8n8.panelOpen");
+    await mapVideo();
+    act(() => currentCanvas().onSelect(`${P}/s0`));
+    expect(detail()).toBeNull();
+    expect(screen.queryByRole("separator")).toBeNull();
+    expect(document.querySelector("main.map")?.className).toBe("map");
+    fireEvent.click(screen.getByRole("button", { name: "Expandir painel" }));
+    expect(detail()).toBeTruthy();
+    expect(document.querySelector("main.map")?.className).toBe(
+      "map with-panel",
+    );
+    expect(localStorage.getItem("8n8.panelOpen")).toBe("1");
+  });
+
+  it("Minimizar painel hides the panel, keeps the selection, and the choice holds for the next map", async () => {
+    await mapVideo();
+    act(() => currentCanvas().onSelect(`${P}/s0`));
+    expect(detail()).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Minimizar painel" }));
+    expect(detail()).toBeNull();
+    expect(currentCanvas().selected).toBe(`${P}/s0`);
+    expect(localStorage.getItem("8n8.panelOpen")).toBe("0");
+    cleanup();
+    await mapVideo();
+    act(() => currentCanvas().onSelect(`${P}/s0`));
+    expect(detail()).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Expandir painel" }),
+    ).toBeTruthy();
+  });
+
+  it("shows no toggle while no node is selected", async () => {
+    await mapVideo();
+    expect(screen.queryByRole("button", { name: /painel/ })).toBeNull();
   });
 });

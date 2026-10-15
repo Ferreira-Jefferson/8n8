@@ -26,6 +26,15 @@ const SHARED_STATE = [
   "**/titulos.e2e.ts",
 ];
 
+// The panel starts minimized (8n8.panelOpen); the specs written before that open it.
+const PANEL_OPEN = {
+  cookies: [],
+  origins: [4317, 4319, 4320, 4321, 4322, 4330].map((port) => ({
+    origin: `http://127.0.0.1:${port}`,
+    localStorage: [{ name: "8n8.panelOpen", value: "1" }],
+  })),
+};
+
 export default defineConfig({
   testDir: "e2e",
   // *.e2e.ts, never *.test.ts or *.spec.ts: Vitest does not pick these up.
@@ -48,6 +57,7 @@ export default defineConfig({
     // The specs check the dark theme; marca.e2e.ts asks for the light one.
     colorScheme: "dark",
     extraHTTPHeaders: { "x-8n8-token": E2E_TOKEN },
+    storageState: PANEL_OPEN,
     trace: "retain-on-failure",
   },
   projects: [

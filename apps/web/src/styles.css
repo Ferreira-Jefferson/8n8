@@ -192,6 +192,7 @@ body {
 /* ---- Map screen (VID-09, 19, 27) ---- */
 
 .map {
+  position: relative;
   width: 100vw;
   height: 100vh;
   display: grid;
@@ -220,6 +221,31 @@ body {
 .panel-resizer:focus-visible {
   outline: none;
   background: color-mix(in srgb, var(--main) 45%, transparent);
+}
+
+/* Minimize the panel to the side; the same spot expands it again. */
+.panel-toggle {
+  position: absolute;
+  /* Minimized: under the history button, which sits at the top-right corner. */
+  top: 96px;
+  right: 24px;
+  z-index: 6;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.map.with-panel .panel-toggle {
+  top: 32px;
+  right: 36px;
+  width: 32px;
+  height: 32px;
+}
+
+.detail-panel h2 {
+  padding-right: 40px;
 }
 
 .map-area {

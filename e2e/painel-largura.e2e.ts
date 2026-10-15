@@ -102,6 +102,27 @@ test.describe("panel width", () => {
       .toBeCloseTo(dragged, 0);
   });
 
+  test.describe("first visit", () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
+    test("the panel starts minimized; the icon expands it, the button minimizes it again", async ({
+      page,
+    }) => {
+      await generate(page, OFFLINE, VIDEO);
+      await expectLevel(page, MAIN_FLOW);
+      await clickCard(page, `${PEDIDO}/s3`);
+      await expectLevel(page, FRETE_LEVEL);
+      await clickCard(page, `${FRETE}/s0`);
+      await expect(panel(page)).toBeHidden();
+      await expect(resizer(page)).toBeHidden();
+
+      await page.getByRole("button", { name: "Expandir painel" }).click();
+      await expect(panel(page)).toBeVisible();
+      await page.getByRole("button", { name: "Minimizar painel" }).click();
+      await expect(panel(page)).toBeHidden();
+    });
+  });
+
   test("the node's code shows in full, with no horizontal scroll", async ({
     page,
   }) => {
