@@ -1,0 +1,14 @@
+#!/bin/sh
+# Bloqueia o commit quando o diff staged tem um segredo (CLAUDE.md, "Segredos").
+# O `pnpm install` liga esta pasta de hooks (script `prepare` do package.json).
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-commit: o gitleaks não foi encontrado, então o commit foi bloqueado." >&2
+  echo "Instale e abra um terminal novo:" >&2
+  echo "  Windows: winget install Gitleaks.Gitleaks" >&2
+  echo "  macOS:   brew install gitleaks" >&2
+  echo "  Linux:   https://github.com/gitleaks/gitleaks#installing" >&2
+  exit 1
+fi
+
+exec gitleaks git --pre-commit --staged --redact --no-banner --verbose

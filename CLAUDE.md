@@ -53,6 +53,13 @@ Guias: [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md), [docs/adicion
 - Relate o resultado como ele é. Teste falhando é reportado com a saída.
 - Quando houver uma referência visual (vídeo, mock, print), compare prints do app com ela antes de dar a feature como pronta. Teste passando não prova que a tela é a que foi pedida.
 
+## Segredos
+
+- Nenhum commit pode levar chave de API, token ou senha, nem em teste, fixture, doc ou exemplo. Antes de cada commit, leia o diff staged procurando segredos.
+- Em teste, use uma chave sentinela falsa e óbvia. Uma chave real vive só no `.env` (ignorado pelo git) ou na config do usuário, fora do repositório.
+- Se um segredo entrar num commit, pare e avise. Não basta apagar num commit novo: a chave precisa ser revogada.
+- O hook `.githooks/pre-commit` roda o gitleaks (regras em `.gitleaks.toml`) em todo commit. Nunca pule o hook com `--no-verify`.
+
 ## Explicações para mim
 
 - Escreva as explicações em Português Técnico Simplificado: frases curtas, voz ativa, um termo por conceito.

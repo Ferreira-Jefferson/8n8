@@ -15,7 +15,8 @@
     "dev:server": "tsx watch packages/server/src/main.ts",
     "dev:web": "pnpm --filter @8n8/web dev",
     "start": "pnpm --filter @8n8/web build && tsx packages/server/src/main.ts start",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

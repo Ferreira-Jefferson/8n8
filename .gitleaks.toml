@@ -1,0 +1,10 @@
+# Regras do gitleaks para o 8n8: as padrão, mais as dos provedores de LLM que o padrão não cobre.
+[extend]
+useDefault = true
+
+# OpenRouter é o provedor padrão (AD-021). Sem esta regra, uma chave solta num texto passa.
+[[rules]]
+id = "openrouter-api-key"
+description = "Chave de API do OpenRouter"
+regex = '''sk-or-v1-[a-f0-9]{64}'''
+keywords = ["sk-or-v1-"]
