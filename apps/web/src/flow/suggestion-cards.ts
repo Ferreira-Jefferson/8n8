@@ -1,4 +1,4 @@
-import type { Explanation, FlowNode, NodeId } from "@8n8/model";
+import type { FlowNode, NodeId, Suggestion } from "@8n8/model";
 import type { Level } from "./project-level";
 
 export interface SuggestionCardModel {
@@ -15,13 +15,13 @@ export interface SuggestionCardModel {
 }
 
 /**
- * One card per suggestion of the explanations behind the visible nodes and
+ * One card per suggestion of the nodes behind the visible nodes and
  * the level node, anchored on the smallest visible node that holds its line
  * (VID-31).
  */
 export function suggestionCards(
   level: Level,
-  explanations: ReadonlyMap<NodeId, Explanation>,
+  suggestions: ReadonlyMap<NodeId, Suggestion[]>,
   containerId: NodeId | null,
   panelNodeOf: (node: FlowNode) => NodeId,
 ): SuggestionCardModel[] {
@@ -35,7 +35,7 @@ export function suggestionCards(
   }
   const cards: SuggestionCardModel[] = [];
   for (const [explainedId, owner] of owners) {
-    for (const s of explanations.get(explainedId)?.suggestions ?? []) {
+    for (const s of suggestions.get(explainedId) ?? []) {
       cards.push({
         key: `${explainedId}:${s.id}`,
         explainedId,

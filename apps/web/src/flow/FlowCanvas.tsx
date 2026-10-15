@@ -1,10 +1,4 @@
-import type {
-  Explanation,
-  FlowEdge,
-  FlowNode,
-  Graph,
-  NodeId,
-} from "@8n8/model";
+import type { FlowEdge, FlowNode, Graph, NodeId, Suggestion } from "@8n8/model";
 import {
   type NodeChange,
   ReactFlow,
@@ -63,7 +57,8 @@ export interface FlowCanvasProps {
   titles: ReadonlyMap<NodeId, string>;
   /** The card's code line, read from the node's own source (VID-03). */
   codeLineOf: (node: FlowNode) => string;
-  explanations: ReadonlyMap<NodeId, Explanation>;
+  /** The suggestions each node got, for the cards (CFG-10). */
+  suggestions: ReadonlyMap<NodeId, Suggestion[]>;
   suggestionCounts: ReadonlyMap<NodeId, number>;
   /** The node to center, after "Voltar" or Esc (VID-27). */
   focusId: NodeId | null;
@@ -248,7 +243,7 @@ export function FlowCanvas({
   selected,
   titles,
   codeLineOf,
-  explanations,
+  suggestions,
   suggestionCounts,
   focusId,
   onSelect,
@@ -392,7 +387,7 @@ export function FlowCanvas({
       gridLanes && !levelMoved
         ? gridLanes
         : wireLanes(level.edges, positions, new Set(turnY.keys()));
-    const cards = suggestionCards(level, explanations, levelId, panelNodeOf);
+    const cards = suggestionCards(level, suggestions, levelId, panelNodeOf);
     const lit = highlighted(cards);
     const sources = new Set(level.edges.map((e) => e.source));
     const targets = new Set(level.edges.map((e) => e.target));
@@ -435,7 +430,7 @@ export function FlowCanvas({
     selected,
     titles,
     codeLineOf,
-    explanations,
+    suggestions,
     suggestionCounts,
     size,
     levelMoved,

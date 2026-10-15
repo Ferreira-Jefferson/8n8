@@ -314,11 +314,11 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Modo por clique: pedido `cachedOnly`, acerto aparece, senão botão; clique pede de verdade
-- [ ] Modo automático: pedido de verdade ao selecionar
-- [ ] Sem provedor: texto do CFG-09 e botão que abre as configurações
-- [ ] Cartões e contagem vêm só das sugestões; lista vazia mostra o texto do CFG-11
-- [ ] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
+- [x] Modo por clique: pedido `cachedOnly`, acerto aparece, senão botão; clique pede de verdade
+- [x] Modo automático: pedido de verdade ao selecionar
+- [x] Sem provedor: texto do CFG-09 e botão que abre as configurações
+- [x] Cartões e contagem vêm só das sugestões; lista vazia mostra o texto do CFG-11
+- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick

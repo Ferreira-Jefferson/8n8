@@ -1,4 +1,4 @@
-import type { Explanation, FlowEdge, FlowNode, NodeId } from "@8n8/model";
+import type { FlowEdge, FlowNode, NodeId, Suggestion } from "@8n8/model";
 import {
   act,
   cleanup,
@@ -193,7 +193,7 @@ function props(overrides: Partial<FlowCanvasProps> = {}): FlowCanvasProps {
     selected: null,
     titles: new Map(),
     codeLineOf: (n) => codeLineOf(n, ""),
-    explanations: new Map(),
+    suggestions: new Map(),
     suggestionCounts: new Map(),
     focusId: null,
     onSelect: vi.fn(),
@@ -416,20 +416,14 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
     severity: "media" as const,
     lines: [line],
   });
-  const explanation: Explanation = {
-    summary: "",
-    sentences: [],
-    inputs: [],
-    outputs: [],
-    suggestions: [
-      suggestion("g1", 12, "Grave o pedido numa transação"),
-      suggestion("g2", 13, "Envie o e-mail fora da requisição"),
-    ],
-  };
+  const explanation: Suggestion[] = [
+    suggestion("g1", 12, "Grave o pedido numa transação"),
+    suggestion("g2", 13, "Envie o e-mail fora da requisição"),
+  ];
 
   it("anchors the cards on BANCO and E-MAIL of the main flow, which get on while the rest dims", () => {
     const { container } = render(
-      <FlowCanvas {...props({ explanations: new Map([[P, explanation]]) })} />,
+      <FlowCanvas {...props({ suggestions: new Map([[P, explanation]]) })} />,
     );
     const cards = [...container.querySelectorAll<HTMLElement>(".alert")];
     expect(
@@ -453,7 +447,7 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
       <FlowCanvas
         {...props({
           selected: `${P}/s1`,
-          explanations: new Map([[P, explanation]]),
+          suggestions: new Map([[P, explanation]]),
         })}
       />,
     );
@@ -464,7 +458,7 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
 
   it("places a card 20 px right of and 64 px above its anchor", () => {
     const { container } = render(
-      <FlowCanvas {...props({ explanations: new Map([[P, explanation]]) })} />,
+      <FlowCanvas {...props({ suggestions: new Map([[P, explanation]]) })} />,
     );
     const first = container.querySelector<HTMLElement>(".alert");
     // s5 sits at x = 6 * 380 on the main flow row.
@@ -472,16 +466,13 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
   });
 
   it("sticks a card without a visible line to the frame of the open node", () => {
-    const outside: Explanation = {
-      ...explanation,
-      suggestions: [suggestion("g9", 17, "Documente a função")],
-    };
+    const outside: Suggestion[] = [suggestion("g9", 17, "Documente a função")];
     const { container } = render(
       <FlowCanvas
         {...props({
           levelId: C,
           depth: 1,
-          explanations: new Map([[C, outside]]),
+          suggestions: new Map([[C, outside]]),
         })}
       />,
     );
@@ -491,7 +482,7 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
   });
 
   it("calls onSuggestion with the explained node and the line", () => {
-    const p = props({ explanations: new Map([[P, explanation]]) });
+    const p = props({ suggestions: new Map([[P, explanation]]) });
     render(<FlowCanvas {...p} />);
     fireEvent.click(
       screen.getByRole("button", { name: "Envie o e-mail fora da requisição" }),

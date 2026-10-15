@@ -1,5 +1,4 @@
 import {
-  type Explanation,
   type FlowNode,
   fileNodeOf,
   type Graph,
@@ -8,6 +7,7 @@ import {
   type NodeId,
   type ProjectResponse,
   type SnippetLanguage,
+  type Suggestion,
 } from "@8n8/model";
 import {
   useCallback,
@@ -19,7 +19,6 @@ import {
 } from "react";
 import {
   type ExplainOrigin,
-  type ExplainResult,
   fetchGraph,
   fetchLanguages,
   fetchProject,
@@ -41,7 +40,7 @@ import {
   navReducer,
   panelNodeOf,
 } from "./nav/navigation";
-import { DetailPanel } from "./panel/DetailPanel";
+import { DetailPanel, type PanelCache } from "./panel/DetailPanel";
 import { externalEffects } from "./panel/effects";
 import { IgnoredFiles } from "./panel/IgnoredFiles";
 import { clampPanel, PanelResizer } from "./panel/PanelResizer";
@@ -184,6 +183,12 @@ export interface AppProps {
   initialFolder?: string | null;
 }
 
+/** A cache with no answer yet, one map per part. */
+const emptyPanelCache = (): PanelCache => ({
+  summary: new Map(),
+  suggestions: new Map(),
+});
+
 export function App({ initialFolder = null }: AppProps) {
   const [view, setView] = useState<"home" | "editor" | "map">("home");
   const [text, setText] = useState("");
@@ -193,8 +198,8 @@ export function App({ initialFolder = null }: AppProps) {
   const [failed, setFailed] = useState(false);
   const [notFound, setNotFound] = useState<string | null>(null);
   const [nav, dispatch] = useReducer(appNav, initialNav);
-  const [explanations, setExplanations] = useState(
-    () => new Map<NodeId, Explanation>(),
+  const [suggestions, setSuggestions] = useState(
+    () => new Map<NodeId, Suggestion[]>(),
   );
   const [mark, setMark] = useState<{ line: number; nonce: number }>();
   const [focusId, setFocusId] = useState<NodeId | null>(null);
@@ -211,13 +216,13 @@ export function App({ initialFolder = null }: AppProps) {
       alive = false;
     };
   }, []);
-  // Explanations already fetched in this map: re-opening a node asks no more.
-  const explainCache = useRef(new Map<NodeId, ExplainResult>());
+  // Answers already fetched in this map: re-opening a node asks no more.
+  const explainCache = useRef<PanelCache>(emptyPanelCache());
 
   function clearMap() {
     setMapped(null);
-    setExplanations(new Map());
-    explainCache.current = new Map();
+    setSuggestions(new Map());
+    explainCache.current = emptyPanelCache();
     setMark(undefined);
     setFocusId(null);
     dispatch({ type: "reset" });
@@ -304,16 +309,14 @@ export function App({ initialFolder = null }: AppProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [view, back]);
 
-  const onExplained = useCallback((id: NodeId, explanation: Explanation) => {
-    setExplanations((prev) => new Map(prev).set(id, explanation));
+  const onSuggestions = useCallback((id: NodeId, list: Suggestion[]) => {
+    setSuggestions((prev) => new Map(prev).set(id, list));
   }, []);
 
   const suggestionCounts = useMemo(
     () =>
-      new Map(
-        [...explanations].map(([id, e]) => [id, e.suggestions.length] as const),
-      ),
-    [explanations],
+      new Map([...suggestions].map(([id, list]) => [id, list.length] as const)),
+    [suggestions],
   );
 
   const graph = mapped ? graphOf(mapped) : null;
@@ -489,7 +492,7 @@ export function App({ initialFolder = null }: AppProps) {
           selected={nav.selected}
           titles={titles}
           codeLineOf={cardCode}
-          explanations={explanations}
+          suggestions={suggestions}
           suggestionCounts={suggestionCounts}
           focusId={focusId}
           onSelect={(id) => {
@@ -536,7 +539,7 @@ export function App({ initialFolder = null }: AppProps) {
           title={titles.get(panelNode.id)}
           effects={externalEffects(graph, panelNode.id)}
           mark={mark}
-          onExplained={onExplained}
+          onSuggestions={onSuggestions}
           cache={explainCache.current}
         />
       )}

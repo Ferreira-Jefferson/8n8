@@ -1,4 +1,4 @@
-import type { Explanation, FlowNode, NodeId, Suggestion } from "@8n8/model";
+import type { FlowNode, NodeId, Suggestion } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { projectLevel } from "../project-level";
 import { highlighted, suggestionCards } from "../suggestion-cards";
@@ -18,8 +18,8 @@ function suggestion(id: string, line: number, command: string): Suggestion {
   };
 }
 
-function explanation(suggestions: Suggestion[]): Explanation {
-  return { summary: "", sentences: [], inputs: [], outputs: [], suggestions };
+function explanation(suggestions: Suggestion[]): Suggestion[] {
+  return suggestions;
 }
 
 /** The panel of a call is its target's panel (C10). */

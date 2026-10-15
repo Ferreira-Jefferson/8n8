@@ -222,7 +222,8 @@ describe("settings (CFG-12, CFG-13, CFG-21)", () => {
   it("fetchSettings gets /api/settings and returns the view", async () => {
     const fn = fakeFetch(200, view);
     expect(await fetchSettings()).toEqual(view);
-    expect(fn.mock.calls[0]?.[0]).toBe("/api/settings");
+    const [url] = fn.mock.calls[0] as unknown as [string];
+    expect(url).toBe("/api/settings");
   });
 
   it("fetchSettings gives null on an HTTP error or a network failure", async () => {

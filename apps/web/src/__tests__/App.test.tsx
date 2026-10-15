@@ -1,11 +1,12 @@
 import type {
-  Explanation,
   FlowNode,
   Graph,
   GraphResponse,
   LanguageInfo,
   ProjectResponse,
   SnippetLanguage,
+  Suggestion,
+  Summary,
 } from "@8n8/model";
 import {
   act,
@@ -19,12 +20,13 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../App";
 import {
-  fetchExplanation,
   fetchGraph,
   fetchHistory,
   fetchHistoryEntry,
   fetchLanguages,
   fetchProject,
+  fetchSuggestions,
+  fetchSummary,
   fetchTitles,
 } from "../api";
 import { lojaGraph } from "../flow/__tests__/loja-graph";
@@ -36,7 +38,10 @@ import { pedidoFreteGraph } from "../panel/__tests__/pedido-frete-graph";
 vi.mock("../api", () => ({
   fetchGraph: vi.fn(),
   fetchLanguages: vi.fn(),
-  fetchExplanation: vi.fn(),
+  fetchSummary: vi.fn(),
+  fetchSuggestions: vi.fn(),
+  fetchSettings: vi.fn(async () => null),
+  saveSettings: vi.fn(),
   fetchProject: vi.fn(),
   fetchTitles: vi.fn(),
   fetchHistory: vi.fn(),
@@ -54,7 +59,8 @@ vi.mock("../flow/FlowCanvas", () => ({
 }));
 
 const graphMock = vi.mocked(fetchGraph);
-const explainMock = vi.mocked(fetchExplanation);
+const explainMock = vi.mocked(fetchSummary);
+const suggestMock = vi.mocked(fetchSuggestions);
 const projectMock = vi.mocked(fetchProject);
 const titlesMock = vi.mocked(fetchTitles);
 const historyMock = vi.mocked(fetchHistory);
@@ -65,6 +71,8 @@ beforeEach(() => {
   canvas = null;
   graphMock.mockReset();
   explainMock.mockReset();
+  suggestMock.mockReset();
+  suggestMock.mockResolvedValue({ status: "not-cached" });
   projectMock.mockReset();
   titlesMock.mockReset();
   historyMock.mockReset();
@@ -115,30 +123,31 @@ const graph: Graph = {
   edges: [],
 };
 
-const explanation: Explanation = {
+const explanation: Summary = {
   summary: "Devolve o peso.",
   sentences: [{ id: "s1", text: "Devolve o peso.", lines: [2] }],
   inputs: [{ id: "i1", text: "peso", lines: [1] }],
   outputs: [{ id: "o1", text: "peso", lines: [2] }],
-  suggestions: [
-    {
-      id: "g1",
-      command: "Valide o peso",
-      reason: "r1",
-      line: 1,
-      severity: "media",
-      lines: [1],
-    },
-    {
-      id: "g2",
-      command: "Use tipos",
-      reason: "r2",
-      line: 2,
-      severity: "baixa",
-      lines: [2],
-    },
-  ],
 };
+
+const twoSuggestions: Suggestion[] = [
+  {
+    id: "g1",
+    command: "Valide o peso",
+    reason: "r1",
+    line: 1,
+    severity: "media",
+    lines: [1],
+  },
+  {
+    id: "g2",
+    command: "Use tipos",
+    reason: "r2",
+    line: 2,
+    severity: "baixa",
+    lines: [2],
+  },
+];
 
 async function generate(text = source) {
   render(<App />);
@@ -183,12 +192,18 @@ describe("App", () => {
     );
   });
 
-  it("passes the suggestion count 2 to the canvas after the node is explained (CORE-23)", async () => {
+  it("passes the suggestion count 2 to the canvas once the suggestions come (CORE-23, CFG-10)", async () => {
     graphMock.mockResolvedValue(withLanguage(graph));
     explainMock.mockResolvedValue({
       status: "ok",
-      explanation,
+      result: explanation,
       fromCache: false,
+      review: "full",
+    });
+    suggestMock.mockResolvedValue({
+      status: "ok",
+      result: twoSuggestions,
+      fromCache: true,
       review: "full",
     });
     await generate();
@@ -200,7 +215,11 @@ describe("App", () => {
     await waitFor(() =>
       expect(currentCanvas().suggestionCounts.get("fn:calcular_frete")).toBe(2),
     );
-    expect(explainMock).toHaveBeenCalledWith({ source }, "fn:calcular_frete");
+    expect(explainMock).toHaveBeenCalledWith(
+      { source },
+      "fn:calcular_frete",
+      true,
+    );
   });
 
   it("keeps the graph on the canvas when the explanation fails (CORE-20)", async () => {
@@ -233,7 +252,7 @@ describe("App", () => {
     await screen.findByTestId("canvas");
     act(() => currentCanvas().onSelect("fn:calcular_frete"));
     expect(
-      await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
+      await screen.findByText("Configure um provedor de LLM em Configurações."),
     ).toBeTruthy();
     const list = screen.getByRole("list", { name: "Efeitos externos" });
     expect(
@@ -383,7 +402,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
       currentCanvas().onSelect("file:frete/calculo.py/fn:calcular_frete"),
     );
     expect(
-      await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
+      await screen.findByText("Configure um provedor de LLM em Configurações."),
     ).toBeTruthy();
     expect(
       screen.getByRole("heading", {
@@ -394,6 +413,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     expect(explainMock).toHaveBeenCalledWith(
       { root: lojaRoot },
       "file:frete/calculo.py/fn:calcular_frete",
+      true,
     );
   });
 });
@@ -702,7 +722,11 @@ describe("App, Voltar and Esc (VID-19, VID-23, VID-27)", () => {
     fireEvent.click(crumbs[crumbs.length - 1] as HTMLElement);
     expect(currentCanvas().levelId).toBe(P);
     expect(currentCanvas().selected).toBe(P);
-    expect(explainMock).toHaveBeenLastCalledWith({ source: videoSource }, P);
+    expect(explainMock).toHaveBeenLastCalledWith(
+      { source: videoSource },
+      P,
+      true,
+    );
   });
 
   it("shows the panel of the called function when a call card is open (VID-23, VID-24)", async () => {
@@ -715,6 +739,7 @@ describe("App, Voltar and Esc (VID-19, VID-23, VID-27)", () => {
     expect(explainMock).toHaveBeenLastCalledWith(
       { source: videoSource },
       "fn:calcular_frete",
+      true,
     );
   });
 });
@@ -748,12 +773,11 @@ describe("App, titles, code lines and suggestion cards (VID-14, VID-33)", () => 
     await mapVideo();
     explainMock.mockResolvedValue({
       status: "ok",
-      explanation: {
+      result: {
         summary: "Processa o pedido.",
         sentences: [{ id: "s1", text: "Processa o pedido.", lines: [6] }],
         inputs: [],
         outputs: [],
-        suggestions: [],
       },
       fromCache: false,
       review: "full",
@@ -778,12 +802,11 @@ describe("App, titles, code lines and suggestion cards (VID-14, VID-33)", () => 
 describe("App, explanations kept per map", () => {
   const summary = (text: string) => ({
     status: "ok" as const,
-    explanation: {
+    result: {
       summary: text,
       sentences: [{ id: "s1", text, lines: [7] }],
       inputs: [],
       outputs: [],
-      suggestions: [],
     },
     fromCache: false,
     review: "full" as const,

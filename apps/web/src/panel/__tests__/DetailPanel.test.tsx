@@ -1,4 +1,4 @@
-import type { Explanation, ExternalEffect, FlowNode } from "@8n8/model";
+import type { ExternalEffect, FlowNode, Suggestion, Summary } from "@8n8/model";
 import {
   cleanup,
   fireEvent,
@@ -8,14 +8,24 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type ExplainResult, fetchExplanation } from "../../api";
+import {
+  fetchSuggestions,
+  fetchSummary,
+  type SuggestionsResult,
+  type SummaryResult,
+} from "../../api";
 import { lojaGraph } from "../../flow/__tests__/loja-graph";
 import { DetailPanel } from "../DetailPanel";
 
-vi.mock("../../api", () => ({ fetchExplanation: vi.fn() }));
-const fetchMock = vi.mocked(fetchExplanation);
+vi.mock("../../api", () => ({
+  fetchSummary: vi.fn(),
+  fetchSuggestions: vi.fn(),
+}));
+const fetchMock = vi.mocked(fetchSummary);
+const suggestMock = vi.mocked(fetchSuggestions);
 
-beforeEach(() => fetchMock.mockReset());
+/** Both parts asked as soon as the node is selected: the behaviour before CFG-06. */
+const AUTO = { summary: true, suggestions: true };
 afterEach(cleanup);
 
 const source = [
@@ -52,7 +62,7 @@ const httpNode: FlowNode = {
   category: "HTTP",
 };
 
-const explanation: Explanation = {
+const explanation: Summary = {
   summary:
     "Calcula o frete pelo peso e pela distância. Dobra a taxa acima de 30.",
   sentences: [
@@ -68,23 +78,35 @@ const explanation: Explanation = {
     { id: "i2", text: "distancia", lines: [4] },
   ],
   outputs: [{ id: "o1", text: "valor do frete", lines: [9, 11] }],
-  suggestions: [
-    {
-      id: "g1",
-      command: "Defina um timeout na chamada HTTP",
-      reason: "A chamada pode travar.",
-      line: 5,
-      severity: "alta",
-      lines: [5],
-    },
-  ],
 };
-const ok: ExplainResult = {
+const suggestionList: Suggestion[] = [
+  {
+    id: "g1",
+    command: "Defina um timeout na chamada HTTP",
+    reason: "A chamada pode travar.",
+    line: 5,
+    severity: "alta",
+    lines: [5],
+  },
+];
+const ok: SummaryResult = {
   status: "ok",
-  explanation,
+  result: explanation,
   fromCache: false,
   review: "full",
 };
+const suggestionsOk: SuggestionsResult = {
+  status: "ok",
+  result: suggestionList,
+  fromCache: false,
+  review: "full",
+};
+
+beforeEach(() => {
+  fetchMock.mockReset();
+  suggestMock.mockReset();
+  suggestMock.mockResolvedValue(suggestionsOk);
+});
 
 const requestsGet: ExternalEffect = {
   callee: "requests.get",
@@ -149,7 +171,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={httpNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(
@@ -167,7 +190,8 @@ describe("DetailPanel", () => {
         snippetFile="trecho.py"
         node={httpNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(
@@ -184,7 +208,8 @@ describe("DetailPanel", () => {
         snippetFile="trecho.py"
         node={httpNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(
@@ -194,10 +219,14 @@ describe("DetailPanel", () => {
       '    requests.get("https://api.exemplo.com/tabela-frete")',
     ]);
     expect(
-      await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
+      await screen.findByText("Configure um provedor de LLM em Configurações."),
     ).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith({ source }, "fn:calcular_frete/s0");
+    expect(fetchMock).toHaveBeenCalledWith(
+      { source },
+      "fn:calcular_frete/s0",
+      false,
+    );
   });
 
   it("fetches once for a function and shows summary, inputs, outputs and suggestions (CORE-16)", async () => {
@@ -208,7 +237,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(
@@ -224,7 +254,11 @@ describe("DetailPanel", () => {
     ).toBeTruthy();
     expect(screen.getByText("A chamada pode travar.")).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith({ source }, "fn:calcular_frete");
+    expect(fetchMock).toHaveBeenCalledWith(
+      { source },
+      "fn:calcular_frete",
+      false,
+    );
   });
 
   it("shows the no-key message and keeps the code visible (CORE-19)", async () => {
@@ -235,11 +269,12 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(
-      await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
+      await screen.findByText("Configure um provedor de LLM em Configurações."),
     ).toBeTruthy();
     expect(codeLines(container)).toHaveLength(8);
     expect(codeLines(container)[0]).toBe(
@@ -257,7 +292,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(await screen.findByText("Resumo indisponível")).toBeTruthy();
@@ -277,7 +313,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     fireEvent.click(
@@ -296,7 +333,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(
@@ -306,22 +344,23 @@ describe("DetailPanel", () => {
     ).toBeTruthy();
   });
 
-  it("calls onExplained with the node ID and the explanation on ok", async () => {
+  it("calls onSuggestions with the node ID and the suggestions on ok (CFG-10)", async () => {
     fetchMock.mockResolvedValue(ok);
-    const onExplained = vi.fn();
+    const onSuggestions = vi.fn();
     render(
       <DetailPanel
         source={source}
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={onExplained}
+        auto={AUTO}
+        onSuggestions={onSuggestions}
       />,
     );
     await waitFor(() =>
-      expect(onExplained).toHaveBeenCalledWith(
+      expect(onSuggestions).toHaveBeenCalledWith(
         "fn:calcular_frete",
-        explanation,
+        suggestionList,
       ),
     );
   });
@@ -332,14 +371,15 @@ describe("DetailPanel", () => {
   ] as const)(
     "shows the review badge for review %s (FID-09, FID-11)",
     async (review, badge) => {
-      fetchMock.mockResolvedValue({ ...ok, review } as ExplainResult);
+      fetchMock.mockResolvedValue({ ...ok, review } as SummaryResult);
       const { container } = render(
         <DetailPanel
           source={source}
           origin={{ source }}
           node={fnNode}
           effects={[]}
-          onExplained={() => {}}
+          auto={AUTO}
+          onSuggestions={() => {}}
         />,
       );
       await screen.findByRole("list", { name: "Resumo" });
@@ -355,7 +395,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     await screen.findByRole("list", { name: "Resumo" });
@@ -381,14 +422,15 @@ describe("DetailPanel", () => {
       fetchMock.mockResolvedValue({
         ...ok,
         update: [...update],
-      } as ExplainResult);
+      } as SummaryResult);
       render(
         <DetailPanel
           source={source}
           origin={{ source }}
           node={fnNode}
           effects={[]}
-          onExplained={() => {}}
+          auto={AUTO}
+          onSuggestions={() => {}}
         />,
       );
       expect((await screen.findByRole("status")).textContent).toBe(text);
@@ -403,7 +445,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     await screen.findByRole("list", { name: "Resumo" });
@@ -420,7 +463,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(
@@ -442,7 +486,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[requestsGet]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     await screen.findByRole("list", { name: "Resumo" });
@@ -462,7 +507,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[requestsGet]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     const resumo = await screen.findByRole("list", { name: "Resumo" });
@@ -481,7 +527,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     await screen.findByRole("list", { name: "Resumo" });
@@ -496,20 +543,21 @@ describe("DetailPanel", () => {
     [
       "no-key",
       { status: "no-key" },
-      "Configure OPENROUTER_API_KEY para ver resumos",
+      "Configure um provedor de LLM em Configurações.",
     ],
     ["error", { status: "error", message: "HTTP 502" }, "Resumo indisponível"],
   ] as const)(
     "lists the effects when the explanation is %s (FID-14)",
     async (_state, result, message) => {
-      fetchMock.mockResolvedValue(result as ExplainResult);
+      fetchMock.mockResolvedValue(result as SummaryResult);
       render(
         <DetailPanel
           source={source}
           origin={{ source }}
           node={fnNode}
           effects={[requestsGet]}
-          onExplained={() => {}}
+          auto={AUTO}
+          onSuggestions={() => {}}
         />,
       );
       expect(await screen.findByText(message)).toBeTruthy();
@@ -522,7 +570,7 @@ describe("DetailPanel", () => {
   );
 
   it("lists the effects while the explanation is loading (FID-14)", async () => {
-    let answer: (r: ExplainResult) => void = () => {};
+    let answer: (r: SummaryResult) => void = () => {};
     fetchMock.mockReturnValue(
       new Promise((resolve) => {
         answer = resolve;
@@ -534,7 +582,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={fnNode}
         effects={[requestsGet]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(screen.getByText("Gerando resumo…")).toBeTruthy();
@@ -544,7 +593,7 @@ describe("DetailPanel", () => {
       ),
     ).toBeTruthy();
     answer({ status: "no-key" });
-    await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos");
+    await screen.findByText("Configure um provedor de LLM em Configurações.");
   });
 
   it("shows no effects section for an external node (FID-14)", () => {
@@ -555,7 +604,8 @@ describe("DetailPanel", () => {
         origin={{ source }}
         node={httpNode}
         effects={[requestsGet]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(screen.queryByText("Efeitos externos")).toBeNull();
@@ -564,7 +614,7 @@ describe("DetailPanel", () => {
 });
 
 describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
-  const stepExplanation: Explanation = {
+  const stepExplanation: Summary = {
     summary:
       "A função consulta uma API externa com o CEP. A função retorna a UF.",
     sentences: [
@@ -577,16 +627,15 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
     ],
     inputs: [{ id: "i1", text: "`cep`", lines: [5] }],
     outputs: [{ id: "o1", text: "`uf`", lines: [5] }],
-    suggestions: [],
   };
-  const stepOk: ExplainResult = {
+  const stepOk: SummaryResult = {
     status: "ok",
-    explanation: stepExplanation,
+    result: stepExplanation,
     fromCache: false,
     review: "full",
   };
 
-  function renderStep(result: ExplainResult, node: FlowNode = httpNode) {
+  function renderStep(result: SummaryResult, node: FlowNode = httpNode) {
     fetchMock.mockResolvedValue(result);
     return render(
       <DetailPanel
@@ -595,7 +644,8 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
         node={node}
         title="Buscar UF pelo CEP"
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
   }
@@ -642,8 +692,8 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
   it("leaves out ENTRADA E SAÍDA when there are no inputs nor outputs", async () => {
     renderStep({
       ...stepOk,
-      explanation: { ...stepExplanation, inputs: [], outputs: [] },
-    } as ExplainResult);
+      result: { ...stepExplanation, inputs: [], outputs: [] },
+    } as SummaryResult);
     await screen.findByRole("list", { name: "Resumo" });
     expect(screen.queryByText("ENTRADA E SAÍDA")).toBeNull();
     expect(screen.queryByLabelText("Entrada e saída")).toBeNull();
@@ -660,7 +710,8 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
           { callee: "open", category: "ARQUIVO", line: 6 },
           { callee: "enviar_email", category: "EMAIL", line: 7 },
         ]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     await screen.findByRole("list", { name: "Resumo" });
@@ -688,7 +739,8 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
         origin={{ source }}
         node={fnNode}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(
@@ -703,7 +755,8 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
       origin: { source },
       node: fnNode,
       effects: [],
-      onExplained: () => {},
+      auto: AUTO,
+      onSuggestions: () => {},
     };
     const { container, rerender } = render(
       <DetailPanel {...props} mark={{ line: 5, nonce: 1 }} />,
@@ -740,12 +793,14 @@ describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
         origin={{ root }}
         node={node("dir:frete")}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(screen.getByText("Pasta: frete")).toBeTruthy();
     expect(codeLines(container)).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(suggestMock).not.toHaveBeenCalled();
   });
 
   it("shows every line of the file for a file node, with no explain request", () => {
@@ -756,7 +811,8 @@ describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
         filePath="frete/calculo.py"
         node={node("file:frete/calculo.py")}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(codeLines(container)).toEqual([
@@ -777,11 +833,12 @@ describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
         filePath="frete/calculo.py"
         node={node("file:frete/calculo.py/fn:calcular_frete")}
         effects={[]}
-        onExplained={() => {}}
+        auto={AUTO}
+        onSuggestions={() => {}}
       />,
     );
     expect(
-      await screen.findByText("Configure OPENROUTER_API_KEY para ver resumos"),
+      await screen.findByText("Configure um provedor de LLM em Configurações."),
     ).toBeTruthy();
     expect(
       screen.getByRole("heading", {
@@ -793,6 +850,205 @@ describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       { root },
       "file:frete/calculo.py/fn:calcular_frete",
+      false,
+    );
+  });
+});
+
+describe("DetailPanel on demand (CFG-06..11)", () => {
+  const panel = (extra: Record<string, unknown> = {}) => (
+    <DetailPanel
+      source={source}
+      origin={{ source }}
+      node={fnNode}
+      effects={[]}
+      onSuggestions={() => {}}
+      {...extra}
+    />
+  );
+
+  it("asks only the cache for both parts, and shows a button for each miss (CFG-05, CFG-06)", async () => {
+    fetchMock.mockResolvedValue({ status: "not-cached" });
+    suggestMock.mockResolvedValue({ status: "not-cached" });
+    render(panel());
+    expect(
+      await screen.findByRole("button", { name: "Gerar resumo" }),
+    ).toBeTruthy();
+    expect(
+      await screen.findByRole("button", { name: "Pedir sugestões" }),
+    ).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledWith(
+      { source },
+      "fn:calcular_frete",
+      true,
+    );
+    expect(suggestMock).toHaveBeenCalledWith(
+      { source },
+      "fn:calcular_frete",
+      true,
+    );
+    expect(screen.queryByText("Gerando resumo…")).toBeNull();
+  });
+
+  it("shows a cache hit with no click (CFG-06)", async () => {
+    fetchMock.mockResolvedValue({ ...ok, fromCache: true } as SummaryResult);
+    suggestMock.mockResolvedValue({
+      ...suggestionsOk,
+      fromCache: true,
+    } as SuggestionsResult);
+    render(panel());
+    expect(await screen.findByRole("list", { name: "Resumo" })).toBeTruthy();
+    expect(
+      await screen.findByText(
+        "Defina um timeout na chamada HTTP (linha 5, alta)",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Gerar resumo" })).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(suggestMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("Gerar resumo asks the summary for real, shows Gerando resumo… and leaves the suggestions alone (CFG-07)", async () => {
+    let answer: (r: SummaryResult) => void = () => {};
+    fetchMock
+      .mockResolvedValueOnce({ status: "not-cached" })
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          answer = resolve;
+        }),
+      );
+    suggestMock.mockResolvedValue({ status: "not-cached" });
+    render(panel());
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Gerar resumo" }),
+    );
+    expect(await screen.findByText("Gerando resumo…")).toBeTruthy();
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      { source },
+      "fn:calcular_frete",
+      false,
+    );
+    answer(ok);
+    expect(await screen.findByRole("list", { name: "Resumo" })).toBeTruthy();
+    expect(suggestMock).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole("button", { name: "Pedir sugestões" }),
+    ).toBeTruthy();
+  });
+
+  it("Pedir sugestões asks the suggestions for real and shows them (CFG-07)", async () => {
+    fetchMock.mockResolvedValue({ status: "not-cached" });
+    let answer: (r: SuggestionsResult) => void = () => {};
+    suggestMock
+      .mockResolvedValueOnce({ status: "not-cached" })
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          answer = resolve;
+        }),
+      );
+    const onSuggestions = vi.fn();
+    render(panel({ onSuggestions }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Pedir sugestões" }),
+    );
+    expect(await screen.findByText("Pedindo sugestões…")).toBeTruthy();
+    answer(suggestionsOk);
+    expect(
+      await screen.findByText(
+        "Defina um timeout na chamada HTTP (linha 5, alta)",
+      ),
+    ).toBeTruthy();
+    expect(suggestMock).toHaveBeenLastCalledWith(
+      { source },
+      "fn:calcular_frete",
+      false,
+    );
+    expect(onSuggestions).toHaveBeenCalledWith(
+      "fn:calcular_frete",
+      suggestionList,
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks only the automatic part for real (CFG-08)", async () => {
+    fetchMock.mockResolvedValue(ok);
+    suggestMock.mockResolvedValue({ status: "not-cached" });
+    render(panel({ auto: { summary: true, suggestions: false } }));
+    await screen.findByRole("list", { name: "Resumo" });
+    expect(fetchMock).toHaveBeenCalledWith(
+      { source },
+      "fn:calcular_frete",
+      false,
+    );
+    expect(suggestMock).toHaveBeenCalledWith(
+      { source },
+      "fn:calcular_frete",
+      true,
+    );
+    expect(
+      await screen.findByRole("button", { name: "Pedir sugestões" }),
+    ).toBeTruthy();
+  });
+
+  it("without a provider says so in both parts, with a button that opens the settings (CFG-09)", async () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
+    suggestMock.mockResolvedValue({ status: "no-key" });
+    const onOpenSettings = vi.fn();
+    render(panel({ auto: AUTO, onOpenSettings }));
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("Configure um provedor de LLM em Configurações."),
+      ).toHaveLength(2),
+    );
+    const buttons = screen.getAllByRole("button", {
+      name: "Abrir configurações",
+    });
+    expect(buttons).toHaveLength(2);
+    fireEvent.click(buttons[0] as HTMLElement);
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it("says Nenhuma sugestão para este nó. for an empty list, and calls onSuggestions with it (CFG-10, CFG-11)", async () => {
+    fetchMock.mockResolvedValue(ok);
+    suggestMock.mockResolvedValue({ ...suggestionsOk, result: [] });
+    const onSuggestions = vi.fn();
+    render(panel({ auto: AUTO, onSuggestions }));
+    expect(
+      await screen.findByText("Nenhuma sugestão para este nó."),
+    ).toBeTruthy();
+    expect(onSuggestions).toHaveBeenCalledWith("fn:calcular_frete", []);
+  });
+
+  it("shows Sugestões indisponíveis with a retry for a failed suggestions request", async () => {
+    fetchMock.mockResolvedValue(ok);
+    suggestMock
+      .mockResolvedValueOnce({ status: "error", message: "HTTP 502" })
+      .mockResolvedValueOnce(suggestionsOk);
+    render(panel({ auto: AUTO }));
+    expect(await screen.findByText("Sugestões indisponíveis")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    expect(
+      await screen.findByText(
+        "Defina um timeout na chamada HTTP (linha 5, alta)",
+      ),
+    ).toBeTruthy();
+    expect(suggestMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("a click on one node never asks for real on the next one", async () => {
+    fetchMock.mockResolvedValue({ status: "not-cached" });
+    suggestMock.mockResolvedValue({ status: "not-cached" });
+    const { rerender } = render(panel());
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Gerar resumo" }),
+    );
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    rerender(panel({ node: httpNode }));
+    await screen.findByRole("button", { name: "Gerar resumo" });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      { source },
+      "fn:calcular_frete/s0",
+      true,
     );
   });
 });

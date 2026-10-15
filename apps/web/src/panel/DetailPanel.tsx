@@ -1,18 +1,23 @@
 import {
   type Claim,
   type ExplainKind,
-  type Explanation,
+  type ExplainPart,
   type ExternalEffect,
   explainStyle,
   type FlowNode,
   type NodeId,
+  type Suggestion,
+  type Summary,
   type UpdateReason,
 } from "@8n8/model";
 import { Fragment, useEffect, useState } from "react";
 import {
   type ExplainOrigin,
   type ExplainResult,
-  fetchExplanation,
+  fetchSuggestions,
+  fetchSummary,
+  type SuggestionsResult,
+  type SummaryResult,
 } from "../api";
 import { categoryTag, provisionalLabel } from "../flow/card";
 import { CodeView } from "./CodeView";
@@ -34,13 +39,36 @@ export interface DetailPanelProps {
   effects: ExternalEffect[];
   /** A suggestion card asks to mark this line; a new nonce marks it again (VID-33). */
   mark?: { line: number; nonce: number } | undefined;
-  onExplained: (id: NodeId, explanation: Explanation) => void;
-  /** The explanations this map already got, by node; the panel reads it and adds to it. */
-  cache?: Map<NodeId, ExplainResult> | undefined;
+  /** Which parts the panel asks for as soon as the node is selected; the others wait for a click (CFG-06, CFG-08). */
+  auto?: Auto | undefined;
+  /** The suggestions of a node, for the cards on the map (CFG-10). */
+  onSuggestions: (id: NodeId, suggestions: Suggestion[]) => void;
+  /** Opens the settings dialog from the no-provider notice (CFG-09). */
+  onOpenSettings?: (() => void) | undefined;
+  /** What this map already got, by node; the panel reads it and adds to it. */
+  cache?: PanelCache | undefined;
 }
 
-type Loaded = ExplainResult | { status: "loading" };
+export interface Auto {
+  summary: boolean;
+  suggestions: boolean;
+}
+
+/** The answers this map already got, one map per part. */
+export interface PanelCache {
+  summary: Map<NodeId, SummaryResult>;
+  suggestions: Map<NodeId, SuggestionsResult>;
+}
+
+/** `idle` waits for the button; `checking` asks the cache only, with nothing shown. */
+type Loaded<T> =
+  | ExplainResult<T>
+  | { status: "idle" }
+  | { status: "checking" }
+  | { status: "loading" };
 type Mark = (lines: ReadonlySet<number>) => void;
+
+const MANUAL: Auto = { summary: false, suggestions: false };
 
 const UPDATE_LABELS: Record<UpdateReason, string> = {
   code: "o código mudou",
@@ -68,7 +96,7 @@ function codeHeading(file: string, node: FlowNode): string {
   return `CÓDIGO · ${file}, ${lines}`;
 }
 
-/** The node's title, summary, code, input and output, effects and suggestions, in the video's order (VID-28, 29, 30, 33; CORE-14, 16, 19, 20, 24; FID-09..14; CACHE-04). */
+/** The node's title, summary, code, input and output, effects and suggestions, in the video's order (VID-28, 29, 30, 33; CORE-14, 16, 19, 20, 24; FID-09..14; CACHE-04; CFG-06..11). */
 export function DetailPanel({
   source,
   origin,
@@ -78,43 +106,35 @@ export function DetailPanel({
   title,
   effects,
   mark,
-  onExplained,
+  auto = MANUAL,
+  onSuggestions,
+  onOpenSettings,
   cache,
 }: DetailPanelProps) {
   const kind = explainKind(node);
-  const [result, setResult] = useState<Loaded | null>(null);
-  const [attempt, setAttempt] = useState(0);
   const [highlighted, setHighlighted] = useState<ReadonlySet<number>>();
-  // A new origin object on each render must not refetch; its content decides.
-  const originKey = JSON.stringify(origin);
+  const target = { source, origin, node, explains: kind !== null };
+  const summary = usePart<Summary>(
+    "summary",
+    target,
+    auto.summary,
+    cache?.summary,
+  );
+  const suggestions = usePart<Suggestion[]>(
+    "suggestions",
+    target,
+    auto.suggestions,
+    cache?.suggestions,
+    onSuggestions,
+  );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: onExplained is a callback, not an input; originKey stands for origin; attempt triggers the retry
+  // A new node starts with no marked lines.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: node.id is the trigger, not a value read here
   useEffect(() => {
     setHighlighted(undefined);
-    if (kind === null) {
-      setResult(null);
-      return;
-    }
-    const hit = cache?.get(node.id);
-    if (hit?.status === "ok") {
-      setResult(hit);
-      onExplained(node.id, hit.explanation);
-      return;
-    }
-    let live = true;
-    setResult({ status: "loading" });
-    fetchExplanation(origin, node.id).then((r) => {
-      if (r.status === "ok") cache?.set(node.id, r);
-      if (!live) return;
-      setResult(r);
-      if (r.status === "ok") onExplained(node.id, r.explanation);
-    });
-    return () => {
-      live = false;
-    };
-  }, [source, originKey, node.id, kind, attempt, cache]);
+  }, [node.id]);
 
-  // Declared after the fetch effect, so a card that also changes the node keeps its mark.
+  // Declared after the clearing effect, so a card that also changes the node keeps its mark.
   useEffect(() => {
     if (mark) setHighlighted(new Set([mark.line]));
   }, [mark]);
@@ -130,18 +150,18 @@ export function DetailPanel({
     );
   }
 
-  const ok = result?.status === "ok" ? result : null;
-  const io = ok?.explanation;
+  const io = summary.result.status === "ok" ? summary.result.result : null;
   return (
     <aside className="panel detail-panel" aria-label="Detalhe do nó">
       <h2>{name}</h2>
       {kind !== null && (
         <p className="eyebrow">O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO</p>
       )}
-      {result && (
+      {kind !== null && (
         <SummaryView
-          result={result}
-          onRetry={() => setAttempt((a) => a + 1)}
+          result={summary.result}
+          onAsk={summary.ask}
+          onOpenSettings={onOpenSettings}
           onMark={setHighlighted}
         />
       )}
@@ -168,11 +188,93 @@ export function DetailPanel({
       {(node.kind === "function" ||
         node.kind === "class" ||
         node.kind === "module") && <EffectsView effects={effects} />}
-      {io && (
-        <SuggestionsView suggestions={io.suggestions} onMark={setHighlighted} />
+      {kind !== null && (
+        <SuggestionsView
+          result={suggestions.result}
+          onAsk={suggestions.ask}
+          onOpenSettings={onOpenSettings}
+          onMark={setHighlighted}
+        />
       )}
     </aside>
   );
+}
+
+interface PartTarget {
+  source: string;
+  origin: ExplainOrigin;
+  node: FlowNode;
+  /** False for folders and files: nothing to ask. */
+  explains: boolean;
+}
+
+/** One fetch per part, both with the same shape. */
+const FETCH: Record<
+  ExplainPart,
+  (
+    origin: ExplainOrigin,
+    nodeId: string,
+    cachedOnly: boolean,
+  ) => Promise<ExplainResult<unknown>>
+> = {
+  summary: (origin, nodeId, cachedOnly) =>
+    fetchSummary(origin, nodeId, cachedOnly),
+  suggestions: (origin, nodeId, cachedOnly) =>
+    fetchSuggestions(origin, nodeId, cachedOnly),
+};
+
+/**
+ * One part of the node's explanation. On a new node: a hit of this map shows at
+ * once; the automatic mode asks for real; otherwise the cache only, and a miss
+ * waits for the button, which asks for real (CFG-05, CFG-06, CFG-07, CFG-08).
+ */
+function usePart<T>(
+  part: ExplainPart,
+  { source, origin, node, explains }: PartTarget,
+  auto: boolean,
+  cache: Map<NodeId, ExplainResult<T>> | undefined,
+  onOk?: (id: NodeId, result: T) => void,
+): { result: Loaded<T>; ask: () => void } {
+  const [result, setResult] = useState<Loaded<T>>({ status: "checking" });
+  // A new origin object on each render must not refetch; its content decides.
+  const originKey = JSON.stringify(origin);
+  const target = `${originKey}|${node.id}`;
+  // The click of the current node; a click on another node does not count here.
+  const [click, setClick] = useState({ target: "", count: 0 });
+  const clicked = click.target === target ? click.count : 0;
+  const real = auto || clicked > 0;
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: onOk is a callback, not an input; target stands for origin and node; clicked triggers a new real request
+  useEffect(() => {
+    if (!explains) return;
+    const hit = cache?.get(node.id);
+    if (hit?.status === "ok") {
+      setResult(hit);
+      onOk?.(node.id, hit.result);
+      return;
+    }
+    let live = true;
+    setResult({ status: real ? "loading" : "checking" });
+    const ask = FETCH[part] as (
+      origin: ExplainOrigin,
+      nodeId: string,
+      cachedOnly: boolean,
+    ) => Promise<ExplainResult<T>>;
+    ask(origin, node.id, !real).then((r) => {
+      if (r.status === "ok") cache?.set(node.id, r);
+      if (!live) return;
+      setResult(r.status === "not-cached" ? { status: "idle" } : r);
+      if (r.status === "ok") onOk?.(node.id, r.result);
+    });
+    return () => {
+      live = false;
+    };
+  }, [source, target, explains, real, clicked, cache, part]);
+
+  return {
+    result,
+    ask: () => setClick((c) => ({ target, count: c.count + 1 })),
+  };
 }
 
 function Evidence({ lines, onMark }: { lines: number[]; onMark: Mark }) {
@@ -206,39 +308,77 @@ function IoClaims({ claims, onMark }: { claims: Claim[]; onMark: Mark }) {
   ));
 }
 
+/** What every part shows the same way: the button, loading, no provider and a stale node. */
+function PartState({
+  result,
+  ask,
+  loading,
+  onAsk,
+  onOpenSettings,
+}: {
+  result: Loaded<unknown>;
+  ask: string;
+  loading: string;
+  onAsk: () => void;
+  onOpenSettings: (() => void) | undefined;
+}) {
+  switch (result.status) {
+    case "idle":
+    case "not-cached":
+      return (
+        <button type="button" className="ask" onClick={onAsk}>
+          {ask}
+        </button>
+      );
+    case "loading":
+      return <p>{loading}</p>;
+    case "no-key":
+      return (
+        <div className="explanation-state">
+          <p>Configure um provedor de LLM em Configurações.</p>
+          {onOpenSettings && (
+            <button type="button" onClick={onOpenSettings}>
+              Abrir configurações
+            </button>
+          )}
+        </div>
+      );
+    case "stale":
+      return <p>O trecho mudou. Clique em "Gerar mapa" de novo.</p>;
+    default:
+      return null;
+  }
+}
+
+/** A failed or unfaithful answer, with a retry. */
+function Failed({ text, onAsk }: { text: string; onAsk: () => void }) {
+  return (
+    <div className="explanation-state">
+      <p>{text}</p>
+      <button type="button" onClick={onAsk}>
+        Tentar de novo
+      </button>
+    </div>
+  );
+}
+
 function SummaryView({
   result,
-  onRetry,
+  onAsk,
+  onOpenSettings,
   onMark,
 }: {
-  result: Loaded;
-  onRetry: () => void;
+  result: Loaded<Summary>;
+  onAsk: () => void;
+  onOpenSettings: (() => void) | undefined;
   onMark: Mark;
 }) {
   switch (result.status) {
-    case "loading":
-      return <p>Gerando resumo…</p>;
-    case "no-key":
-      return <p>Configure OPENROUTER_API_KEY para ver resumos</p>;
-    case "stale":
-      return <p>O trecho mudou. Clique em "Gerar mapa" de novo.</p>;
     case "error":
-      return (
-        <div className="explanation-state">
-          <p>Resumo indisponível</p>
-          <button type="button" onClick={onRetry}>
-            Tentar de novo
-          </button>
-        </div>
-      );
+      return <Failed text="Resumo indisponível" onAsk={onAsk} />;
     case "unfaithful":
       return (
-        <div className="explanation-state">
-          <p>Não foi possível gerar um resumo fiel.</p>
-          <button type="button" onClick={onRetry}>
-            Tentar de novo
-          </button>
-        </div>
+        <Failed text="Não foi possível gerar um resumo fiel." onAsk={onAsk} />
       );
     case "ok":
       return (
@@ -252,37 +392,78 @@ function SummaryView({
             </p>
           )}
           <ol aria-label="Resumo">
-            {result.explanation.sentences.map((c) => (
+            {result.result.sentences.map((c) => (
               <ClaimItem key={c.id} claim={c} onMark={onMark} />
             ))}
           </ol>
         </>
       );
+    default:
+      return (
+        <PartState
+          result={result}
+          ask="Gerar resumo"
+          loading="Gerando resumo…"
+          onAsk={onAsk}
+          onOpenSettings={onOpenSettings}
+        />
+      );
   }
 }
 
 function SuggestionsView({
-  suggestions,
+  result,
+  onAsk,
+  onOpenSettings,
   onMark,
 }: {
-  suggestions: Explanation["suggestions"];
+  result: Loaded<Suggestion[]>;
+  onAsk: () => void;
+  onOpenSettings: (() => void) | undefined;
   onMark: Mark;
 }) {
   return (
     <section className="suggestions">
       <h3>Sugestões</h3>
-      <ul>
-        {suggestions.map((s) => (
-          <li key={s.id} data-claim-id={s.id}>
-            <button type="button" onClick={() => onMark(new Set([s.line]))}>
-              {`${s.command} (linha ${s.line}, ${s.severity})`}
-            </button>
-            <span>{s.reason}</span>
-            <Evidence lines={s.lines} onMark={onMark} />
-          </li>
-        ))}
-      </ul>
+      {result.status === "ok" ? (
+        <SuggestionList suggestions={result.result} onMark={onMark} />
+      ) : result.status === "error" || result.status === "unfaithful" ? (
+        <Failed text="Sugestões indisponíveis" onAsk={onAsk} />
+      ) : (
+        <PartState
+          result={result}
+          ask="Pedir sugestões"
+          loading="Pedindo sugestões…"
+          onAsk={onAsk}
+          onOpenSettings={onOpenSettings}
+        />
+      )}
     </section>
+  );
+}
+
+function SuggestionList({
+  suggestions,
+  onMark,
+}: {
+  suggestions: Suggestion[];
+  onMark: Mark;
+}) {
+  if (suggestions.length === 0) {
+    return <p>Nenhuma sugestão para este nó.</p>;
+  }
+  return (
+    <ul>
+      {suggestions.map((s) => (
+        <li key={s.id} data-claim-id={s.id}>
+          <button type="button" onClick={() => onMark(new Set([s.line]))}>
+            {`${s.command} (linha ${s.line}, ${s.severity})`}
+          </button>
+          <span>{s.reason}</span>
+          <Evidence lines={s.lines} onMark={onMark} />
+        </li>
+      ))}
+    </ul>
   );
 }
 
