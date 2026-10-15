@@ -100,7 +100,7 @@ T12
 
 ### Phase 4: extract-python, grafo de projeto
 
-Prefixo nos IDs, `extractProject`, fios de importação, interface pública.
+Prefixo nos IDs, `extractProject`, arestas de importação, interface pública.
 
 ```
 T13 → T14 → T15 → T16
@@ -477,8 +477,8 @@ T31 → T32
 
 **Done when**:
 
-- [x] Com `prefix: "file:a.py"`: IDs `file:a.py/fn:f`, `file:a.py/fn:f/s1`, `file:a.py/mod`; os nós de topo têm `parentId` `file:a.py`; os fios `calls` locais têm IDs prefixados.
-- [x] Com um `resolveImport` falso que devolve `file:b.py/fn:g`, o passo vira `call` com esse `target` e o fio `calls:file:a.py/fn:f->file:b.py/fn:g` aparece.
+- [x] Com `prefix: "file:a.py"`: IDs `file:a.py/fn:f`, `file:a.py/fn:f/s1`, `file:a.py/mod`; os nós de topo têm `parentId` `file:a.py`; as arestas `calls` locais têm IDs prefixados.
+- [x] Com um `resolveImport` falso que devolve `file:b.py/fn:g`, o passo vira `call` com esse `target` e a aresta `calls:file:a.py/fn:f->file:b.py/fn:g` aparece.
 - [x] `build-graph.test.ts` e o snapshot de `extractor.test.ts` (feature 01) passam sem mudança.
 - [x] Gate passa.
 
@@ -503,8 +503,8 @@ T31 → T32
 **Done when**:
 
 - [x] PROJ-02: os nós `folder` e `file` saem exatamente nesta ordem: `dir:.`, `file:main.py`, `file:relatorio.py`, `dir:frete`, `file:frete/__init__.py`, `file:frete/calculo.py`, `dir:legado`, `file:legado/frete_antigo.py`, `dir:pedidos`, `file:pedidos/__init__.py`, `file:pedidos/itens.py`, `file:pedidos/pedidos.py`. Rótulos `raiz`, `main.py`, ..., `pedidos.py`; `path` de cada um; `parentId` de topo `null` só nas pastas.
-- [x] PROJ-04: `file:pedidos/pedidos.py/fn:processar_pedido` tem o passo `call` de rótulo `calcular_frete` com `target` `file:frete/calculo.py/fn:calcular_frete`, e o fio `calls` entre as duas funções existe. `main` chama `file:pedidos/pedidos.py/fn:processar_pedido`.
-- [x] PROJ-09: `file:relatorio.py/fn:gerar` tem um passo `external` `EXTERNO` com `callee` `calcular_frete`; nenhum fio tem `target` `file:legado/frete_antigo.py/fn:calcular_frete`.
+- [x] PROJ-04: `file:pedidos/pedidos.py/fn:processar_pedido` tem o passo `call` de rótulo `calcular_frete` com `target` `file:frete/calculo.py/fn:calcular_frete`, e a aresta `calls` entre as duas funções existe. `main` chama `file:pedidos/pedidos.py/fn:processar_pedido`.
+- [x] PROJ-09: `file:relatorio.py/fn:gerar` tem um passo `external` `EXTERNO` com `callee` `calcular_frete`; nenhuma aresta tem `target` `file:legado/frete_antigo.py/fn:calcular_frete`.
 - [x] IDs iguais em duas execuções e com `files` em ordem invertida.
 - [x] Um arquivo com erro de sintaxe marca só os nós dele.
 - [x] `files` vazio dá `empty: true` e nenhum nó.
@@ -519,9 +519,9 @@ T31 → T32
 
 ---
 
-### T15: Fios de importação entre arquivos
+### T15: Arestas de importação entre arquivos
 
-**What**: Acrescentar a `project.ts` os fios `imports`, um por par (arquivo, arquivo), id `imports:<origem>-><destino>`. `import a.b` liga ao módulo mais profundo resolvido. `from a import b` liga a `a.b` quando `b` é submódulo, senão a `a`. Import do próprio arquivo e de fora da raiz não geram fio.
+**What**: Acrescentar a `project.ts` as arestas `imports`, um por par (arquivo, arquivo), id `imports:<origem>-><destino>`. `import a.b` liga ao módulo mais profundo resolvido. `from a import b` liga a `a.b` quando `b` é submódulo, senão a `a`. Import do próprio arquivo e de fora da raiz não geram aresta.
 **Where**: `packages/extract-python/src/project.ts`
 **Depends on**: T14
 **Reuses**: índice de módulos (T11)
@@ -531,10 +531,10 @@ T31 → T32
 
 **Done when**:
 
-- [x] Na fixture, os fios `imports` são exatamente quatro: `main.py → pedidos/pedidos.py`, `pedidos/pedidos.py → frete/__init__.py`, `pedidos/pedidos.py → pedidos/itens.py`, `frete/__init__.py → frete/calculo.py` (IDs com `file:`).
+- [x] Na fixture, as arestas `imports` são exatamente quatro: `main.py → pedidos/pedidos.py`, `pedidos/pedidos.py → frete/__init__.py`, `pedidos/pedidos.py → pedidos/itens.py`, `frete/__init__.py → frete/calculo.py` (IDs com `file:`).
 - [x] `from a import b` com `a/b.py` liga a `a/b.py`; sem submódulo, liga a `a/__init__.py`.
-- [x] `import os` e um import do próprio módulo não geram fio.
-- [x] Dois imports do mesmo destino geram um fio só.
+- [x] `import os` e um import do próprio módulo não geram aresta.
+- [x] Dois imports do mesmo destino geram uma aresta só.
 - [x] Gate passa.
 
 **Tests**: unit
@@ -557,7 +557,7 @@ T31 → T32
 
 **Done when**:
 
-- [x] `extractor.test.ts` ganha um teste: `extractProject` da fixture devolve os 12 nós de pasta e arquivo de T14 e os 4 fios de T15.
+- [x] `extractor.test.ts` ganha um teste: `extractProject` da fixture devolve os 12 nós de pasta e arquivo de T14 e os 4 arestas de T15.
 - [x] O snapshot do trecho (`extractor.test.ts`, feature 01) não muda.
 - [x] Build não-web passa.
 
@@ -707,9 +707,9 @@ T31 → T32
 
 ---
 
-### T22: Níveis de projeto com fios elevados por tipo
+### T22: Níveis de projeto com arestas elevadas por tipo
 
-**What**: Trocar `liftedCalls` por `lifted(graph, visible, kind)`. Em `projectLevel`, num grafo com `project`: topo e nível de pasta mostram filhos diretos + fios `imports` elevados; nível de arquivo mostra filhos diretos + fios `calls` elevados. Um fio cuja ponta não tem ancestral visível some. Trecho e demais níveis como hoje. Criar o grafo de teste `apps/web/src/flow/__tests__/loja-graph.ts`, copiado da saída de `extractProject` da fixture (T16).
+**What**: Trocar `liftedCalls` por `lifted(graph, visible, kind)`. Em `projectLevel`, num grafo com `project`: topo e nível de pasta mostram filhos diretos + arestas `imports` elevados; nível de arquivo mostra filhos diretos + arestas `calls` elevados. Uma aresta cuja ponta não tem ancestral visível some. Trecho e demais níveis como hoje. Criar o grafo de teste `apps/web/src/flow/__tests__/loja-graph.ts`, copiado da saída de `extractProject` da fixture (T16).
 **Where**: `apps/web/src/flow/project-level.ts`
 **Depends on**: T1
 **Reuses**: `liftedCalls` atual
@@ -719,9 +719,9 @@ T31 → T32
 
 **Done when**:
 
-- [x] Topo: exatamente `dir:.`, `dir:frete`, `dir:legado`, `dir:pedidos`, e exatamente dois fios, `imports:dir:.->dir:pedidos` e `imports:dir:pedidos->dir:frete`; nenhum fio `calls`.
-- [x] `dir:pedidos`: três arquivos (`__init__.py`, `itens.py`, `pedidos.py`) e um fio, `pedidos.py → itens.py`; o fio para `frete` some.
-- [x] `file:pedidos/pedidos.py`: a função `processar_pedido` e nenhum fio (os alvos estão em outros arquivos).
+- [x] Topo: exatamente `dir:.`, `dir:frete`, `dir:legado`, `dir:pedidos`, e exatamente duas arestas, `imports:dir:.->dir:pedidos` e `imports:dir:pedidos->dir:frete`; nenhuma aresta `calls`.
+- [x] `dir:pedidos`: três arquivos (`__init__.py`, `itens.py`, `pedidos.py`) e uma aresta, `pedidos.py → itens.py`; a aresta para `frete` some.
+- [x] `file:pedidos/pedidos.py`: a função `processar_pedido` e nenhuma aresta (os alvos estão em outros arquivos).
 - [x] `project-level.test.ts` (feature 01): os 9 testes atuais passam sem mudança.
 - [x] Gate passa.
 
@@ -865,19 +865,19 @@ T31 → T32
 
 ---
 
-### T28: Fio de importação tracejado
+### T28: Aresta de importação tracejado
 
-**What**: Extrair de `FlowCanvas.tsx` a função pura exportada `toFlowEdges(edges)`, que põe `className: "edge-imports"` nos fios `imports`. Acrescentar em `styles.css` o traço tracejado de `.edge-imports`.
+**What**: Extrair de `FlowCanvas.tsx` a função pura exportada `toFlowEdges(edges)`, que põe `className: "edge-imports"` nas arestas `imports`. Acrescentar em `styles.css` o traço tracejado de `.edge-imports`.
 **Where**: `apps/web/src/flow/FlowCanvas.tsx`
 **Depends on**: T22
-**Reuses**: o mapeamento atual de fios no `useMemo`
+**Reuses**: o mapeamento atual de arestas no `useMemo`
 **Requirement**: PROJ-03
 
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
 
-- [x] `FlowCanvas.test.ts` (novo): um fio `imports` sai com `className` `edge-imports`; fios `calls`, `next` e `branch` saem sem ela; IDs, origem, destino e rótulo se mantêm.
+- [x] `FlowCanvas.test.ts` (novo): uma aresta `imports` sai com `className` `edge-imports`; arestas `calls`, `next` e `branch` saem sem ela; IDs, origem, destino e rótulo se mantêm.
 - [x] Gate passa.
 
 **Tests**: unit
@@ -959,9 +959,9 @@ T31 → T32
 **Done when**:
 
 - [x] PROJ-01/02: o topo tem exatamente 4 nós, `dir:.`, `dir:frete`, `dir:legado`, `dir:pedidos`, com rótulos `raiz`, `frete`, `legado`, `pedidos`. Em cada nível aberto no arquivo inteiro, nenhum `data-id` contém `.venv`, `dist`, `grande.py` ou `latin1.py`. Abrir `pedidos` mostra exatamente 3 nós: `__init__.py`, `itens.py`, `pedidos.py`.
-- [x] PROJ-03 (Independent Test): o topo tem exatamente 2 fios, `Edge from dir:pedidos to dir:frete` e `Edge from dir:. to dir:pedidos`, ambos com a classe `edge-imports`. Dentro de `pedidos`, exatamente 1 fio, de `file:pedidos/pedidos.py` para `file:pedidos/itens.py`.
+- [x] PROJ-03 (Independent Test): o topo tem exatamente 2 arestas, `Edge from dir:pedidos to dir:frete` e `Edge from dir:. to dir:pedidos`, ambos com a classe `edge-imports`. Dentro de `pedidos`, exatamente 1 aresta, de `file:pedidos/pedidos.py` para `file:pedidos/itens.py`.
 - [x] PROJ-04 (Independent Test): em `pedidos › pedidos.py › processar_pedido` o breadcrumb é exatamente `loja › pedidos › pedidos.py › processar_pedido` e o passo `calcular_frete` aparece; o duplo clique leva o breadcrumb a exatamente `loja › frete › calculo.py › calcular_frete`.
-- [x] PROJ-09: em `raiz › relatorio.py › gerar`, o passo `calcular_frete` mostra `EXTERNO`; em `legado › frete_antigo.py`, exatamente 0 fios.
+- [x] PROJ-09: em `raiz › relatorio.py › gerar`, o passo `calcular_frete` mostra `EXTERNO`; em `legado › frete_antigo.py`, exatamente 0 arestas.
 - [x] PROJ-05: `<tmp>/nao-existe` e `<tmp>/loja/main.py` mostram, cada um, o alerta com o texto exato `Pasta não encontrada: <caminho digitado>`.
 - [x] Gate passa.
 
@@ -1151,7 +1151,7 @@ Nenhuma task depende de uma fase posterior.
 | T12: chamadas de projeto | `extract-python` resolução | unit | unit | ✅ OK |
 | T13: prefixo | `extract-python` grafo | unit | unit | ✅ OK |
 | T14: `extractProject` | `extract-python` grafo | unit | unit | ✅ OK |
-| T15: fios `imports` | `extract-python` grafo | unit | unit | ✅ OK |
+| T15: arestas `imports` | `extract-python` grafo | unit | unit | ✅ OK |
 | T16: interface pública | `extract-python` grafo | unit | unit | ✅ OK |
 | T17: `/api/project` | `server` rotas | integration | integration | ✅ OK |
 | T18: 415 | `server` rotas | integration | integration | ✅ OK |

@@ -213,25 +213,25 @@ Seen once or not yet corroborated. Tracked, not trusted.
 ### L-034 - Assert the security options an editor host sets in activate (webview localResourceRoots, the final HTML free of the session token) through a test hook or a pure helper; a passing load test does not prove them.
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `editor-host` · harmful: 0
 - features: 10-extensao-vscode
-- evidence: I2,I3 apps/vscode/src/extension.ts:70,110 (editor-host)
+- evidence: I2,I3 apps/editors/vscode/src/extension.ts:70,110 (editor-host)
 - last seen: 2026-10-15T05:57:35Z
 
 ### L-035 - Give an env-passthrough AC one observable outcome in the host's integration test, such as a variable set by the runner that changes an API answer.
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `editor-host` · harmful: 0
 - features: 10-extensao-vscode
-- evidence: I5 apps/vscode/src/extension.ts:40 (editor-host)
+- evidence: I5 apps/editors/vscode/src/extension.ts:40 (editor-host)
 - last seen: 2026-10-15T05:57:35Z
 
 ### L-036 - Anchor a location assertion to an independent source (the runner's user-data path), never to a value the code under test reports about itself.
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `editor-host` · harmful: 0
 - features: 10-extensao-vscode
-- evidence: R6 apps/vscode/src/extension.ts:43 (editor-host)
+- evidence: R6 apps/editors/vscode/src/extension.ts:43 (editor-host)
 - last seen: 2026-10-15T06:08:27Z
 
 ### L-037 - When a test-only hook is gated by a mode, test the gate in the non-test mode too, since the test harness only ever runs the open branch.
 - signal: `surviving_mutant` · recurrence: 1 feature(s) · scope: `editor-host` · harmful: 0
 - features: 10-extensao-vscode
-- evidence: R5 apps/vscode/src/extension.ts:152 (editor-host)
+- evidence: R5 apps/editors/vscode/src/extension.ts:152 (editor-host)
 - last seen: 2026-10-15T06:08:27Z
 
 ### L-038 - Before claiming what a third-party action does, read its source for the triggers you use; gitleaks-action scans only the event commit range on push and pull_request.

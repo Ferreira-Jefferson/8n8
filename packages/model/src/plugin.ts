@@ -29,7 +29,7 @@ export interface LinkRequest {
 export interface LanguageAnalysis {
   /** Um grafo por arquivo. O primeiro nó é o nó `file`, e os nós internos usam o id dele como prefixo. */
   files: { path: string; graph: Graph }[];
-  /** Fios `imports` entre arquivos da mesma linguagem. */
+  /** Arestas `imports` entre arquivos da mesma linguagem. */
   imports: FlowEdge[];
   offers: Offer[];
   requests: LinkRequest[];

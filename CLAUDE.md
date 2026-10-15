@@ -1,12 +1,12 @@
 # 8n8
 
-Ferramenta que recebe código (um arquivo, uma pasta ou um trecho) e mostra como ele se conecta, como nós e fios no estilo n8n. A visão começa ampla, você abre um nó para ver o fluxo interno dele e vai descendo até as linhas reais de código. Há também sugestões de melhoria presas a cada nó.
+Ferramenta que recebe código (um arquivo, uma pasta ou um trecho) e mostra como ele se conecta, como nós e arestas no estilo n8n. A visão começa ampla, você abre um nó para ver o fluxo interno dele e vai descendo até as linhas reais de código. Há também sugestões de melhoria presas a cada nó.
 
 Não é migração para n8n. Do n8n só vem o modelo mental.
 
 ## Princípios do produto
 
-- Um único grafo hierárquico (repositório → módulo → arquivo → função → bloco), desenhado como fluxo de nós e fios.
+- Um único grafo hierárquico (repositório → módulo → arquivo → função → bloco), desenhado como fluxo de nós e arestas.
 - A estrutura vem de parsing determinístico (Tree-sitter, um plugin por linguagem: Python e TypeScript), nunca de LLM. O LLM só escreve resumos e sugestões, sempre apontando o nó e a linha de origem.
 - Todo nó leva de volta ao código real (arquivo e linhas).
 - O objetivo é supervisionar e entender rápido um código, muitas vezes escrito por IA, e não ler linha por linha.
@@ -16,7 +16,7 @@ Não é migração para n8n. Do n8n só vem o modelo mental.
 O produto segue os degraus do método do Karpathy. Cada degrau aprofunda o anterior:
 
 1. **Texto:** o resumo de cada nó e as sugestões são escritos em Português Técnico Simplificado. As regras estão em [docs/portugues-tecnico-simplificado.md](docs/portugues-tecnico-simplificado.md).
-2. **Diagrama:** o fluxo de nós e fios, com etapas, responsabilidades e dependências.
+2. **Diagrama:** o fluxo de nós e arestas, com etapas, responsabilidades e dependências.
 3. **Página interativa:** drill-down, filtros, busca e comparação.
 4. **Vídeo (futuro):** um tour animado que percorre o caminho dos dados pelo fluxo.
 

@@ -1,12 +1,12 @@
 # Adicionar um editor
 
-O 8n8 tem um núcleo e várias embalagens (AD-022). O núcleo (`packages/server`) faz tudo: lê a pasta, monta o grafo, chama o LLM e guarda o histórico. Uma embalagem só decide onde o núcleo roda e como a tela fala com ele. Hoje há duas: a CLI (`apps/cli`) e a extensão do VS Code (`apps/vscode`).
+O 8n8 tem um núcleo e várias embalagens (AD-022). O núcleo (`packages/server`) faz tudo: lê a pasta, monta o grafo, chama o LLM e guarda o histórico. Uma embalagem só decide onde o núcleo roda e como a tela fala com ele. Hoje há duas: a CLI (`apps/cli`) e a extensão do VS Code (`apps/editors/vscode`).
 
-Este guia mostra como acrescentar outro editor, como JetBrains ou Neovim. Use `apps/vscode` como modelo.
+Este guia mostra como acrescentar outro editor, como JetBrains ou Neovim. Use `apps/editors/vscode` como modelo.
 
 ## O que a embalagem faz
 
-Uma embalagem mora em `apps/<id>` e faz quatro coisas:
+Uma embalagem de editor mora em `apps/editors/<id>` (a CLI e a tela ficam direto em `apps/`). O `pnpm-workspace.yaml` já inclui `apps/editors/*`. Ela faz quatro coisas:
 
 1. **Monta o núcleo** com `createCore` (`packages/server/src/core.ts`). O núcleo recebe tudo por parâmetro e nunca lê o ambiente sozinho:
 
@@ -49,7 +49,7 @@ Toda regra nova entra também no teste das guardas, com um arquivo que a viola, 
 
 ## Checklist
 
-1. Crie `apps/<id>` com o manifesto do editor e um build que empacota o núcleo, as gramáticas, a tela e as regras de PTS.
+1. Crie `apps/editors/<id>` com o manifesto do editor e um build que empacota o núcleo, as gramáticas, a tela e as regras de PTS.
 2. Implemente o `SettingsStore` com o cofre do editor.
 3. Implemente a ponte e o painel com a CSP.
 4. Acrescente as regras do editor ao `.dependency-cruiser.cjs` e ao teste das guardas.

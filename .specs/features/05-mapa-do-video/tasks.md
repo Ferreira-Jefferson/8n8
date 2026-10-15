@@ -339,9 +339,9 @@ T49 → T50
 
 **Done when**:
 
-- [x] `validar_pedido(p)` → external `EXTERNO`; `db.salvar(p)` → `BANCO`; `enviar_email(x)` → `EMAIL`; `print(x)` e `len(x)` → `EXTERNO`. Nenhum desses nós gera fio `calls`.
+- [x] `validar_pedido(p)` → external `EXTERNO`; `db.salvar(p)` → `BANCO`; `enviar_email(x)` → `EMAIL`; `print(x)` e `len(x)` → `EXTERNO`. Nenhum desses nós gera aresta `calls`.
 - [x] `r = f()` seguido de `r.json()` → `null` (receptor ligado). `self.x()` sem método `x` → `null`.
-- [x] Nome definido no trecho continua `call` (CORE-02). Nome importado continua com a tabela (CORE-12). PROJ-09 continua: o nome de projeto sem import vira `EXTERNO`, sem fio.
+- [x] Nome definido no trecho continua `call` (CORE-02). Nome importado continua com a tabela (CORE-12). PROJ-09 continua: o nome de projeto sem import vira `EXTERNO`, sem aresta.
 - [x] `foo().append(x)` continua `null` (receptor encadeado fora da tabela).
 - [x] `project-calls.test.ts` passa sem mudança.
 - [x] Gate passa.
@@ -354,7 +354,7 @@ T49 → T50
 
 ---
 
-### T7: Passo RETORNO sem fio de saída
+### T7: Passo RETORNO sem aresta de saída
 
 **What**: Criar o ramo do `return_statement` em `sequence` (regra A4) e fazer `callsEdges` aceitar qualquer passo com `target`. Atualizar os testes que a VID-20 muda.
 **Where**: `packages/extract-python/src/steps.ts`
@@ -367,9 +367,9 @@ T49 → T50
 
 **Done when**:
 
-- [x] `def x(): a = 1; return a` → `s0` code (linha 2) e `s1` return (linha 3) com `label` `a`, `openable: false` e um fio `next:s0->s1`.
-- [x] Nenhum fio sai do RETORNO: num `return` seguido de outro comando, o comando seguinte não recebe fio do RETORNO.
-- [x] `if/else` com `return` nos dois ramos: os ramos têm um RETORNO cada, e a condição não deixa fio pendente para depois do `if`.
+- [x] `def x(): a = 1; return a` → `s0` code (linha 2) e `s1` return (linha 3) com `label` `a`, `openable: false` e uma aresta `next:s0->s1`.
+- [x] Nenhuma aresta sai do RETORNO: num `return` seguido de outro comando, o comando seguinte não recebe aresta do RETORNO.
+- [x] `if/else` com `return` nos dois ramos: os ramos têm um RETORNO cada, e a condição não deixa aresta pendente para depois do `if`.
 - [x] `if` sem `else` com `return` no ramo "sim": o "não" continua indo ao passo seguinte.
 - [x] `return` dentro de laço: RETORNO filho do laço.
 - [x] `return calcular(x)` (função do trecho) → RETORNO com `target`, e o grafo mantém `calls:<dono>->fn:calcular`. `return requests.get(u)` → RETORNO com `callee` e `category: "HTTP"`. `return` sozinho → `label` `""`.
@@ -398,7 +398,7 @@ T49 → T50
 
 - [x] O teste confere a lista de nós em pré-ordem com `id`, `kind`, `range`, `category`, `callee` e `target` de cada linha da tabela.
 - [x] O teste confere `openable` de cada nó contra a regra da VID-24.
-- [x] O teste confere os fios: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); os fios de `calcular_frete` (2 `next`, "sim" e "não"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhum fio sai de um nó `return`.
+- [x] O teste confere as arestas: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); as arestas de `calcular_frete` (2 `next`, "sim" e "não"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhuma aresta sai de um nó `return`.
 - [x] O teste confere que extrair duas vezes dá o mesmo grafo (CORE-04).
 - [x] O gate Build A passa (fecha a fase).
 
@@ -745,7 +745,7 @@ T49 → T50
 - [x] Código solto com chamada que chama `a()`, mais a função `b` que ninguém chama: as entradas são `mod` e `b`, nessa ordem de código; `a` não é entrada.
 - [x] Código solto só com constantes (`LIMITE = 30`) e duas funções que ninguém chama: `mod` não é entrada; as duas funções são.
 - [x] Duas funções que ninguém chama: duas linhas na ordem do código (VID-11).
-- [x] Função recursiva sem outro chamador: é entrada (o fio para si mesma não conta).
+- [x] Função recursiva sem outro chamador: é entrada (a aresta para si mesma não conta).
 - [x] Só classes, ou duas funções que se chamam: cada definição de topo vira entrada (regra c).
 - [x] Entrada sem chamada: a linha tem só a entrada (caso de borda da VID-10).
 - [x] Um laço com chamada dentro entra; um laço sem chamada não; um passo de ramo (`/b0/s0`) nunca entra direto.
@@ -761,7 +761,7 @@ T49 → T50
 
 ### T22: Nível do fluxo principal em `projectLevel`
 
-**What**: Fazer `projectLevel(graph, null)` de um trecho retornar o fluxo principal, com os campos `rows` e `triggers` e os fios sintéticos `main:<a>-><b>` (C6). Atualizar os testes de topo de trecho (tabela "Testes existentes que mudam").
+**What**: Fazer `projectLevel(graph, null)` de um trecho retornar o fluxo principal, com os campos `rows` e `triggers` e as arestas sintéticas `main:<a>-><b>` (C6). Atualizar os testes de topo de trecho (tabela "Testes existentes que mudam").
 **Where**: `apps/web/src/flow/project-level.ts`
 **Também**: `__tests__/project-level.test.ts`
 **Depends on**: T21
@@ -772,7 +772,7 @@ T49 → T50
 
 **Done when**:
 
-- [x] O topo do grafo do vídeo tem 8 nós, 7 fios `next` com IDs `main:…` e `triggers = {fn:processar_pedido}`.
+- [x] O topo do grafo do vídeo tem 8 nós, 7 arestas `next` com IDs `main:…` e `triggers = {fn:processar_pedido}`.
 - [x] Nenhum nó do topo tem `kind === "module"` com o rótulo "Módulo" sem ser GATILHO (VID-12). O `mod` aparece só em `triggers`.
 - [x] Os níveis internos e de projeto não mudam (os testes de PROJ e de nível interno passam sem mudança) e têm `triggers` vazio.
 - [x] Gate passa.
@@ -823,8 +823,8 @@ T49 → T50
 **Done when**:
 
 - [x] Três nós em `x` 0, 380 e 760 → `enterAt` 0, 350 e 700. Um empate em `x` desempata por `y`.
-- [x] O fio a→b tem `drawAt = enterAt(a) + 400`.
-- [x] Os pontos seguem a ordem do fluxo, com `pulseAt` de `T0 = max(drawAt) + 800` e passo de 750. Há um ponto por fio.
+- [x] A aresta a→b tem `drawAt = enterAt(a) + 400`.
+- [x] Os pontos seguem a ordem do fluxo, com `pulseAt` de `T0 = max(drawAt) + 800` e passo de 750. Há um ponto por aresta.
 - [x] `reduced = true` → todos os valores são 0.
 - [x] Gate passa.
 
@@ -943,7 +943,7 @@ T49 → T50
 
 ---
 
-### T29: Fio com desenho, ponto e rótulo de ramo
+### T29: Aresta com desenho, ponto e rótulo de ramo
 
 **What**: Criar a aresta `WireEdge` conforme C11: curva, `pathLength=1`, `data-draw-at`, ponto com `animateMotion` e `data-pulse-at`, e `.branch-label` em `t = 0.25`.
 **Where**: `apps/web/src/flow/WireEdge.tsx` (novo)
@@ -958,7 +958,7 @@ T49 → T50
 
 - [x] O path tem `d` igual a `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2`, `class="wire"` e `pathLength="1"`.
 - [x] `data-draw-at` e `data-pulse-at` vêm da agenda. Com `reduced`, nenhum `circle.pulse` é renderizado.
-- [x] "sim" e "não" aparecem como `.branch-label`, com `data-branch-label`, perto do início do fio.
+- [x] "sim" e "não" aparecem como `.branch-label`, com `data-branch-label`, perto do início da aresta.
 - [x] Gate passa.
 
 **Tests**: unit
@@ -1008,7 +1008,7 @@ T49 → T50
 - [x] Um clique num nó que abre põe `data-phase="expanding"` e só chama `onOpen` depois da transição. Com movimento reduzido, chama na hora.
 - [x] Um clique numa folha chama `onSelect` e não muda a fase (VID-25).
 - [x] Não existe handler de duplo clique.
-- [x] Os nós recebem `data-enter-at` da agenda. Os fios usam o tipo `wire`. Os cartões de sugestão aparecem com as âncoras de T25, e os nós ganham `on`/`dim`.
+- [x] Os nós recebem `data-enter-at` da agenda. As arestas usam o tipo `wire`. Os cartões de sugestão aparecem com as âncoras de T25, e os nós ganham `on`/`dim`.
 - [x] `toFlowEdges` mantém a classe `edge-imports` (PROJ-03).
 - [x] O gate Build C passa (fecha a fase).
 
@@ -1216,7 +1216,7 @@ T49 → T50
 **Done when**:
 
 - [x] Os 14 testes continuam existindo, com o mesmo ID de AC no nome, e passam.
-- [x] O fio `calls` de CORE-02 é conferido na resposta de `/api/graph`, porque o fluxo principal não desenha `calls`.
+- [x] A aresta `calls` de CORE-02 é conferido na resposta de `/api/graph`, porque o fluxo principal não desenha `calls`.
 - [x] Nenhuma asserção fica mais fraca: cada contagem e cada texto exato continuam exatos, com os valores novos.
 - [x] Gate passa.
 
@@ -1342,11 +1342,11 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 **Done when**:
 
-- [x] VID-10 (Independent Test P1): o código do vídeo mostra no primeiro nível os 8 cartões da linha `processar_pedido`, na ordem do código, com 7 fios. Aparecem GATILHO, FUNÇÃO, BANCO e E-MAIL. Uma entrada sem chamada mostra só o GATILHO (borda).
+- [x] VID-10 (Independent Test P1): o código do vídeo mostra no primeiro nível os 8 cartões da linha `processar_pedido`, na ordem do código, com 7 arestas. Aparecem GATILHO, FUNÇÃO, BANCO e E-MAIL. Uma entrada sem chamada mostra só o GATILHO (borda).
 - [x] VID-11: duas funções que ninguém chama dão duas linhas, a primeira acima. Código solto que chama `a()` mais uma função `b` que ninguém chama dão duas linhas (código solto e `b`). Constantes no topo não viram linha e não escondem as funções.
 - [x] VID-12: um trecho com código solto não mostra nenhum cartão com o texto "Módulo". O código solto aparece como GATILHO "Código solto".
-- [x] VID-13: `validar_pedido` → EXTERNO, `db.buscar_cliente` e `db.salvar` → BANCO, `enviar_email` → E-MAIL. Nenhum desses cartões tem fio `calls` (o grafo de `/api/graph` só tem o `calls` para `calcular_frete`).
-- [x] VID-06: os `data-enter-at` crescem da esquerda para a direita. Cada `.wire` tem `data-draw-at` ≥ `data-enter-at` da origem + 400. Os pontos estão na ordem do fluxo, um por fio, e a animação de um cartão tem o `delay` do seu `data-enter-at`.
+- [x] VID-13: `validar_pedido` → EXTERNO, `db.buscar_cliente` e `db.salvar` → BANCO, `enviar_email` → E-MAIL. Nenhum desses cartões tem aresta `calls` (o grafo de `/api/graph` só tem o `calls` para `calcular_frete`).
+- [x] VID-06: os `data-enter-at` crescem da esquerda para a direita. Cada `.wire` tem `data-draw-at` ≥ `data-enter-at` da origem + 400. Os pontos estão na ordem do fluxo, um por aresta, e a animação de um cartão tem o `delay` do seu `data-enter-at`.
 - [x] VID-07: com `reducedMotion: "reduce"`, `document.getAnimations()` fica vazio, não há `circle.pulse`, e todos os cartões têm `opacity` 1 logo depois de "Gerar mapa".
 - [x] Gate passa.
 
@@ -1399,9 +1399,9 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 - [x] VID-23 e Independent Test P1: um clique em "Calcular frete" abre o nível com HTTP, EXTERNO, SE e dois RETORNO e mostra o painel.
 - [x] VID-18: logo depois do clique, `data-phase="expanding"`, `.open-frame` com borda `rgb(212, 255, 63)` e 0 cartões novos. Depois, `data-phase="open"` e os 5 cartões.
 - [x] VID-19: a trilha mostra "Fluxo principal › Calcular frete". Num segundo nível, ela ganha o segundo título.
-- [x] VID-20: os dois RETORNO não têm fio de saída, e o GATILHO de `processar_pedido`, aberto, mostra o RETORNO da linha 14 sem fio de saída.
+- [x] VID-20: os dois RETORNO não têm aresta de saída, e o GATILHO de `processar_pedido`, aberto, mostra o RETORNO da linha 14 sem aresta de saída.
 - [x] VID-21: o primeiro passo do "sim" fica acima do primeiro do "não".
-- [ ] VID-21: os rótulos "sim" e "não" ficam mais perto da origem que do destino. Não vale: o rótulo fica junto ao cartão de destino (SPEC_DEVIATION em `WireEdge.tsx`); o "sim" fica a 188 px do início do fio e a 84 px do fim.
+- [ ] VID-21: os rótulos "sim" e "não" ficam mais perto da origem que do destino. Não vale: o rótulo fica junto ao cartão de destino (SPEC_DEVIATION em `WireEdge.tsx`); o "sim" fica a 188 px do início da aresta e a 84 px do fim.
 - [x] VID-22: clicar numa folha deixa a borda do cartão em `rgb(212, 255, 63)`.
 - [x] VID-24 e VID-26: cada cartão com "›" abre e cada cartão sem "›" não abre. Descer por todo "›" a partir do primeiro nível termina num nível só de folhas. Na recursão (`def contar`), abrir a chamada empilha o mesmo nível de novo.
 - [x] VID-25: clicar no HTTP mostra o painel e mantém os mesmos 5 cartões.
@@ -1613,7 +1613,7 @@ Lotes sugeridos (um worker por lote): Fase 0 (inline, 3 tasks); trilha A (5); tr
 | T3 | 1 fixture | ✅ |
 | T4, T5 | 1 função cada | ✅ |
 | T6 | 1 regra + 1 ligação de campo | ⚠️ Coeso (o campo não tem uso sem a ligação) |
-| T7 | 1 ramo + 1 condição em `callsEdges` | ⚠️ Coeso (o fio `calls` do RETORNO depende dos dois) |
+| T7 | 1 ramo + 1 condição em `callsEdges` | ⚠️ Coeso (a aresta `calls` do RETORNO depende dos dois) |
 | T8 | 1 arquivo de teste | ✅ |
 | T9–T15 | 1 função ou 1 módulo cada | ✅ |
 | T16, T17 | 1 rota cada | ✅ |

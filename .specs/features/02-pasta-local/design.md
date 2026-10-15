@@ -53,7 +53,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 | `importAliases` | `packages/extract-python/src/imports.ts` | Base dos aliases. Corrige a junção relativa (`from . import x` hoje gera `..x`). |
 | `markSyntaxErrors` | `errors.ts` | Por arquivo, sem mudança. |
 | `childId`, `topLevelId` | `packages/model/src/ids.ts` | Os IDs internos continuam saindo do pai: basta trocar a raiz. |
-| `projectLevel`/`liftedCalls` | `apps/web/src/flow/project-level.ts` | A elevação vira genérica por tipo de fio. |
+| `projectLevel`/`liftedCalls` | `apps/web/src/flow/project-level.ts` | A elevação vira genérica por tipo de aresta. |
 | Guarda de `Host` e `hostname: "127.0.0.1"` | `server/src/app.ts`, `main.ts` | PROJ-08 já existe; a rota nova fica atrás da mesma guarda. |
 | Pipeline e cache de explicação | `packages/explain` | Sem mudança. O servidor passa a identidade com escopo em `nodeId`. |
 
@@ -113,7 +113,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 
 **Nós de pasta e arquivo.** Pré-ordem: as pastas do topo em ordem, depois os arquivos da raiz, com `parentId` nulo (não existe nó "raiz"). Dentro de uma pasta: subpastas, depois arquivos, cada arquivo seguido dos seus nós internos. Só entra pasta que tem `.py` em algum nível abaixo. O nó de arquivo tem `range` de 1 até a última linha. O nó de pasta tem `range {1, 1}` e o painel não mostra linhas para ele.
 
-**Fios de importação (PROJ-03).** Um fio `imports` por par (arquivo, arquivo), id `imports:<origem>-><destino>`. `import a.b` liga ao módulo mais profundo resolvido (`a.b`). `from a import b` liga a `a.b` quando `b` é submódulo, senão a `a`. Import do próprio arquivo e de fora da raiz não geram fio. Os fios `calls` saem de `callsEdges` como hoje, agora entre arquivos.
+**Arestas de importação (PROJ-03).** Uma aresta `imports` por par (arquivo, arquivo), id `imports:<origem>-><destino>`. `import a.b` liga ao módulo mais profundo resolvido (`a.b`). `from a import b` liga a `a.b` quando `b` é submódulo, senão a `a`. Import do próprio arquivo e de fora da raiz não geram aresta. As arestas `calls` saem de `callsEdges` como hoje, agora entre arquivos.
 
 - **Interface pública** (`index.ts`): `createPythonExtractor(): Promise<Extractor & ProjectExtractor>`.
 
@@ -138,11 +138,11 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 - **`api.ts`**: `fetchProject(path): Promise<ProjectResponse | { error: "not-found"; path }>`. `fetchExplanation(origin, nodeId)` com `origin = { source } | { root }`.
 - **Erros**: `not-found` → `<p role="alert">Pasta não encontrada: <caminho></p>`. Pasta sem `.py` (`graph.empty`) → "Nenhum arquivo .py encontrado na pasta.".
 - **Níveis (`projectLevel`)**:
-  - nível de topo ou de pasta num grafo de projeto: filhos diretos + fios `imports` elevados aos nós visíveis;
-  - nível de arquivo: filhos diretos + fios `calls` elevados (o mesmo comportamento do topo do trecho);
+  - nível de topo ou de pasta num grafo de projeto: filhos diretos + arestas `imports` elevados aos nós visíveis;
+  - nível de arquivo: filhos diretos + arestas `calls` elevados (o mesmo comportamento do topo do trecho);
   - demais níveis e o trecho: como hoje.
-  A elevação vira `lifted(graph, visible, kind)`. Um fio cuja ponta não tem ancestral visível no nível some.
-- **Fio de importação**: `className: "edge-imports"` (tracejado em `styles.css`).
+  A elevação vira `lifted(graph, visible, kind)`. Uma aresta cuja ponta não tem ancestral visível no nível some.
+- **Aresta de importação**: `className: "edge-imports"` (tracejado em `styles.css`).
 - **`StepNode`**: ícones novos para `folder` e `file` (glifos, sem emoji).
 - **Navegação**: abrir `folder` ou `file` empilha o ID. Abrir um `call` cujo alvo está em outro arquivo troca o caminho pela ancestralidade do alvo (`ancestry(graph, id)`, pura, em `nav/navigation.ts`), por uma ação nova `{ type: "jump"; path }`. No mesmo arquivo, empilha como na feature 01.
 - **Breadcrumb**: o primeiro item é `graph.project?.name ?? "Trecho"`. O resto já são os rótulos do caminho: `loja › pedidos › pedidos.py › processar_pedido`.
@@ -185,7 +185,7 @@ Setas de pacote: `model` ← `input`; `model` ← `extract-python`; `model` ← 
 | Camada | O quê | Onde |
 | ------ | ----- | ---- |
 | `input` unit | ignorados por nome em qualquer profundidade, 1 MB exato (1 048 576 entra, +1 sai), UTF-8 inválido, `EACCES` (com `vi.mock` de `node:fs/promises`), link, ordem, `not-found` para caminho inexistente e para arquivo, varredura de APIs de escrita (PROJ-07) | `packages/input/src/__tests__/` (árvores em `os.tmpdir()`) |
-| `extract-python` unit | nomes de módulo, relativo nível 1 e 2, `__init__.py` e reexportação, fallback da pasta do script, mesmo nome com e sem import (PROJ-09), fios `imports`, IDs prefixados estáveis em duas execuções, snapshot do trecho sem mudança | `packages/extract-python/src/__tests__/project.test.ts`, `modules.test.ts` |
+| `extract-python` unit | nomes de módulo, relativo nível 1 e 2, `__init__.py` e reexportação, fallback da pasta do script, mesmo nome com e sem import (PROJ-09), arestas `imports`, IDs prefixados estáveis em duas execuções, snapshot do trecho sem mudança | `packages/extract-python/src/__tests__/project.test.ts`, `modules.test.ts` |
 | `server` unit | `/api/project` 200/404/400/415; explain `{root,nodeId}` monta o pedido com código do disco (arquivo alterado no tmp após o mapa), `nodeId` com escopo, vizinhos qualificados; Host estranho → 403; `listenOptions` | `packages/server/src/__tests__/project-route.test.ts` |
 | `web` unit | `lifted`/`projectLevel` por tipo de nível, `ancestry`, `jump`, breadcrumb com nome do projeto, `IgnoredFiles`, mensagem de not-found | `apps/web/src/**/__tests__/` |
 | E2E | ver abaixo | `e2e/pasta-local.e2e.ts` |
@@ -207,9 +207,9 @@ loja/
 **E2E** (`e2e/pasta-local.e2e.ts`, servidor 4317 sem chave). O `beforeAll` copia a fixture para `os.tmpdir()` e acrescenta o que o git não guarda ou não deve guardar: `.venv/lib/x.py`, `dist/y.py`, `grande.py` (1,1 MB) e `latin1.py` (byte `0xE9`). Cada item é um teste:
 
 - PROJ-01/02: o topo tem exatamente `raiz`, `frete`, `legado`, `pedidos`; nenhum nó `.venv` ou `dist` em nenhum nível aberto; abrir `pedidos` mostra `__init__.py`, `itens.py`, `pedidos.py`.
-- PROJ-03: fio `dir:pedidos → dir:frete` e `dir:. → dir:pedidos` no topo; dentro de `pedidos`, fio `pedidos.py → itens.py`.
+- PROJ-03: aresta `dir:pedidos → dir:frete` e `dir:. → dir:pedidos` no topo; dentro de `pedidos`, aresta `pedidos.py → itens.py`.
 - PROJ-04: `pedidos › pedidos.py › processar_pedido` tem o passo `calcular_frete`; o duplo clique leva a `loja › frete › calculo.py › calcular_frete`.
-- PROJ-09: em `raiz › relatorio.py › gerar`, `calcular_frete` é externo `EXTERNO`; `legado/frete_antigo.py` não recebe fio.
+- PROJ-09: em `raiz › relatorio.py › gerar`, `calcular_frete` é externo `EXTERNO`; `legado/frete_antigo.py` não recebe aresta.
 - PROJ-05: um caminho inexistente e o caminho de `main.py` mostram "Pasta não encontrada: <caminho>".
 - PROJ-06: "Arquivos ignorados" lista `grande.py — maior que 1 MB` e `latin1.py — não está em UTF-8`.
 - PROJ-07: a impressão da cópia (caminhos, tamanhos, `mtime` e sha256 de cada arquivo) é igual antes e depois de mapear, navegar e abrir o painel de `calcular_frete`.
@@ -237,7 +237,7 @@ loja/
 | Decisão | Escolha | Motivo |
 | ------- | ------- | ------ |
 | Hierarquia de pastas | Árvore: cada pasta contém subpastas e arquivos; "raiz" agrupa os `.py` da raiz | Espelha o projeto (CLAUDE.md: repositório → módulo → arquivo) |
-| Fios por nível | Pasta e topo: `imports`. Arquivo: `calls` | Teste independente pede um fio de importação entre as pastas, sem fio de chamada duplicado |
+| Arestas por nível | Pasta e topo: `imports`. Arquivo: `calls` | Teste independente pede uma aresta de importação entre as pastas, sem aresta de chamada duplicado |
 | Ordem de resolução | raiz, depois pasta do script; primeiro acerto vence | Determinística e cobre pacote e script solto. Layout `src/` fica adiado |
 | Rótulo do passo de chamada entre arquivos | O nome como está escrito no código | `names` é local; o ID completo seria ilegível |
 | Caminho relativo digitado | Resolvido a partir do diretório do servidor | Sem mensagem nova; o uso normal é caminho completo |

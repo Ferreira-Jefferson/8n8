@@ -8,3 +8,5 @@ e2e/__screenshots__/
 *.tgz
 .vscode-test/
 *.vsix
+release/*
+!release/.gitkeep

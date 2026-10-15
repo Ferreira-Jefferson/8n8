@@ -150,8 +150,8 @@ module.exports = {
       name: "only-vscode-host-imports-vscode",
       severity: "error",
       comment:
-        "Só a embalagem apps/vscode importa o módulo vscode; o núcleo e a tela não conhecem o editor (AD-022, VSC-13).",
-      from: { pathNot: "^apps/vscode/" },
+        "Só a embalagem apps/editors/vscode importa o módulo vscode; o núcleo e a tela não conhecem o editor (AD-022, VSC-13).",
+      from: { pathNot: "^apps/editors/vscode/" },
       to: { path: "^vscode$" },
     },
     {
@@ -159,7 +159,7 @@ module.exports = {
       severity: "error",
       comment:
         "A extensão chama o núcleo por app.fetch e nunca abre porta (VSC-09).",
-      from: { path: "^apps/vscode/" },
+      from: { path: "^apps/editors/vscode/" },
       to: { path: ["@hono[/+]node-server", "^(node:)?(http|https|net)$"] },
     },
     {
@@ -167,7 +167,7 @@ module.exports = {
       severity: "error",
       comment:
         "Uma embalagem em apps/ (cli, web, vscode...) não importa outra (AD-022).",
-      from: { path: "^apps/([^/]+)/" },
+      from: { path: "^apps/(editors/[^/]+|[^/]+)/" },
       to: { path: "^apps/", pathNot: "^apps/$1/" },
     },
     {
@@ -204,7 +204,7 @@ module.exports = {
     // dist/ is build output and .vscode-test/ the VS Code the extension test downloads:
     // none of them is code of 8n8.
     exclude: {
-      path: "(__tests__/fixtures/|/dist/|^apps/vscode/\\.vscode-test/)",
+      path: "(__tests__/fixtures/|/dist/|^apps/editors/vscode/\\.vscode-test/)",
     },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: "tsconfig.base.json" },

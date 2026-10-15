@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-Ao abrir a pasta do próprio 8n8, o mapa mostrou "Arquivos ignorados" com um arquivo de `apps/vscode/.vscode-test`, a cópia do VS Code que o teste da extensão baixa. Três problemas apareceram:
+Ao abrir a pasta do próprio 8n8, o mapa mostrou "Arquivos ignorados" com um arquivo de `apps/editors/vscode/.vscode-test`, a cópia do VS Code que o teste da extensão baixa. Três problemas apareceram:
 
 1. O 8n8 lê pastas que o projeto declara como fora do código (o `.gitignore`), e mostra os arquivos delas.
 2. A lista de arquivos ignorados é um texto solto sobre o mapa: um caminho longo passa por cima do painel. E um arquivo grande não tem como entrar no mapa quando a pessoa quer vê-lo.
@@ -67,7 +67,7 @@ Ao abrir a pasta do 8n8, nada de `.vscode-test`, `node_modules` nem `dist` apare
 
 **Acceptance Criteria**:
 
-1. WHEN o histórico guarda uma pasta THEN ele SHALL guardar só o caminho, o nome e os números da lista (linhas, bytes, arquivos, nós, fios), nunca o código nem o grafo. WHEN guarda um trecho THEN ele SHALL guardar só o texto do trecho e a linguagem.  <!-- CLEAN-08 -->
+1. WHEN o histórico guarda uma pasta THEN ele SHALL guardar só o caminho, o nome e os números da lista (linhas, bytes, arquivos, nós, arestas), nunca o código nem o grafo. WHEN guarda um trecho THEN ele SHALL guardar só o texto do trecho e a linguagem.  <!-- CLEAN-08 -->
 2. WHEN a pessoa abre uma pasta pelo histórico THEN a tela SHALL ler a pasta de novo pelo caminho; IF a pasta não existe mais THEN a tela SHALL mostrar "Pasta não encontrada: <caminho>". WHEN abre um trecho THEN a tela SHALL gerar o mapa do texto de novo.  <!-- CLEAN-09 -->
 3. WHEN o 8n8 abre um banco de histórico antigo THEN a migração SHALL apagar todo código e grafo guardados e deixar uma linha por caminho de pasta (a aberta por último), sem perder favoritos.  <!-- CLEAN-10 -->
 

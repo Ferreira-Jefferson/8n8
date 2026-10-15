@@ -5,7 +5,7 @@
 ### AD-001 — Estrutura por código, explicação por LLM
 - **Date:** 2026-10-13
 - **Context:** O mapa precisa ser confiável e reproduzível.
-- **Decision:** A estrutura (nós, fios, hierarquia) vem só de parsing determinístico. O LLM só escreve resumos e sugestões e nunca cria nem remove nós ou fios.
+- **Decision:** A estrutura (nós, arestas, hierarquia) vem só de parsing determinístico. O LLM só escreve resumos e sugestões e nunca cria nem remove nós ou arestas.
 - **Consequence:** A mesma entrada gera o mesmo grafo. O app funciona sem chave de LLM, só sem textos.
 - **Status:** substituída pela AD-017.
 
@@ -113,7 +113,7 @@
 ### AD-017 — Títulos de nó pelo LLM, com nome provisório
 - **Date:** 2026-10-13
 - **Context:** Feature 05. O mapa do vídeo mostra títulos em PTS em todos os nós. O usuário confirmou que o LLM escreve esses títulos.
-- **Decision:** A estrutura (nós, fios, hierarquia) vem só de parsing determinístico. O LLM escreve resumos, sugestões e títulos de nó, e nunca cria nem remove nós ou fios. Um título passa pela revisão em duas camadas (AD-008), tem no máximo 6 palavras e fica no cache por nó (AD-009). Sem título revisado, a web mostra um nome provisório determinístico.
+- **Decision:** A estrutura (nós, arestas, hierarquia) vem só de parsing determinístico. O LLM escreve resumos, sugestões e títulos de nó, e nunca cria nem remove nós ou arestas. Um título passa pela revisão em duas camadas (AD-008), tem no máximo 6 palavras e fica no cache por nó (AD-009). Sem título revisado, a web mostra um nome provisório determinístico.
 - **Consequence:** O mapa continua completo sem chave de LLM. Substitui a AD-001.
 
 ### AD-018 — Tema visual do vídeo
@@ -124,8 +124,8 @@
 
 ### AD-019 — Sem modo grafo
 - **Date:** 2026-10-14
-- **Context:** O modo grafo desenharia os mesmos nós e fios do fluxo, nível a nível. O nó pai do fluxo já liga o nó aberto ao nível.
-- **Decision:** O produto não tem modo grafo. O mapa é só o fluxo de nós e fios. A feature 03-modo-grafo foi removida, com spec, design e tasks.
+- **Context:** O modo grafo desenharia os mesmos nós e arestas do fluxo, nível a nível. O nó pai do fluxo já liga o nó aberto ao nível.
+- **Decision:** O produto não tem modo grafo. O mapa é só o fluxo de nós e arestas. A feature 03-modo-grafo foi removida, com spec, design e tasks.
 - **Consequence:** Cancela a AD-011 e a AD-012. Não há `d3-force` nem alternância de modo.
 
 ### AD-020 — Linguagens como plugins, um grafo só
@@ -166,7 +166,7 @@
 ### AD-025 — Extensão do VS Code sem porta
 - **Date:** 2026-10-15
 - **Context:** Feature 10. A extensão é a segunda embalagem do núcleo (AD-022). Um servidor local, mesmo com token, deixa uma porta aberta na máquina.
-- **Decision:** A extensão (`apps/vscode`) monta o núcleo com `createCore` no host de extensões e nunca abre porta. A tela empacotada roda numa webview com CSP estrita (scripts só com nonce, `connect-src 'none'`) e fala com a extensão por `postMessage`; a ponte (`bridge.ts`) valida cada mensagem, põe o `Host` e o token e chama `app.fetch`. A chave fica no `SecretStorage`. O núcleo vai num bundle ESM (`core.mjs`), porque os plugins de linguagem usam `await` no topo do módulo; a extensão é CommonJS e o carrega por `import()`. A tela passa a usar caminhos relativos (`base: "./"`).
+- **Decision:** A extensão (`apps/editors/vscode`) monta o núcleo com `createCore` no host de extensões e nunca abre porta. A tela empacotada roda numa webview com CSP estrita (scripts só com nonce, `connect-src 'none'`) e fala com a extensão por `postMessage`; a ponte (`bridge.ts`) valida cada mensagem, põe o `Host` e o token e chama `app.fetch`. A chave fica no `SecretStorage`. O núcleo vai num bundle ESM (`core.mjs`), porque os plugins de linguagem usam `await` no topo do módulo; a extensão é CommonJS e o carrega por `import()`. A tela passa a usar caminhos relativos (`base: "./"`).
 - **Consequence:** As regras `only-vscode-host-imports-vscode` e `vscode-opens-no-port` entram no `pnpm check`. O teste de integração roda num VS Code real com pastas de usuário próprias.
 - **Status:** ativa.
 
@@ -182,6 +182,13 @@
 - **Context:** Feature 12. O 8n8 lia pastas que o projeto declara fora do código (o `.gitignore`), e o histórico guardava o código e o grafo de cada pasta mapeada.
 - **Decision:** A leitura da pasta segue o `.gitignore` da raiz e o de cada subpasta, com o pacote `ignore`. O global e o `.git/info/exclude` ficam de fora. Um arquivo maior que 1 MB e de até 20 MB pode entrar no mapa pelo clique. A tela manda a lista `include` no pedido da pasta e em todo pedido de resumo, sugestões e títulos da mesma pasta (AD-015). O servidor aceita até 100 caminhos relativos, sem `..`, `\`, `:` nem `/` no começo. O histórico (schema v3) guarda o caminho de uma pasta e o texto e a linguagem de um trecho. Abrir pelo histórico lê de novo. A migração apaga a tabela `search_data`, deixa uma linha por caminho (a aberta por último, com favorito se alguma era) e roda `VACUUM`.
 - **Consequence:** Desfaz a escolha anterior, em que abrir pelo histórico não chamava o parser nem lia o disco. Os arquivos postos no mapa não ficam no histórico.
+- **Status:** ativa.
+
+### AD-028 — Um plugin por linguagem, sem plugin genérico de Tree-sitter
+- **Date:** 2026-10-15
+- **Context:** O Tree-sitter tem gramática pronta para dezenas de linguagens. Surgiu a ideia de um plugin genérico, que lê qualquer gramática e extrai só arquivos, funções, classes e imports, para cobrir muitas linguagens sem um plugin cada.
+- **Decision:** Mantém um plugin por linguagem (AD-020). O Tree-sitter dá a árvore de sintaxe, e `packages/languages/treesitter` reaproveita o trabalho de gramática. A árvore não diz o que é função, import, rota ou chamada de processo: isso muda com a linguagem e com a biblioteca. As ligações entre linguagens (HTTP, processo e nome) dependem desse conhecimento. Python reconhece rotas do Flask e do FastAPI e chamadas de `requests`, `httpx`, `aiohttp`, `urllib`, `subprocess` e `os.system`. TypeScript reconhece rotas no estilo Express, chamadas HTTP e `exec`, `spawn`, `fork` e as variantes. Cada `links.ts` tem cerca de 300 linhas. O casamento em si (`packages/links`) é comum a todas as linguagens.
+- **Consequence:** Cada linguagem nova custa as regras de extração, não a gramática. Um plugin genérico só ofereceria o caminho do arquivo e o nome das funções, e o mapa perderia as ligações entre front e back. Reabra a decisão se o pedido por muitas linguagens superar o valor dessas ligações. Nesse caso, um plugin genérico entra como plugin separado e declarado como de menor fidelidade.
 - **Status:** ativa.
 
 ## Handoff
@@ -203,4 +210,4 @@
   - Lições candidatas L-015..L-024 esperam confirmação de outra feature.
   - Fazer push e ligar no GitHub o que o `SECURITY.md` lista (pede o ok do dono).
   - As pastas `C:/w12`, `C:/w13` e `C:/w13b` (worktrees dos Verifiers) ficaram no disco; apague à mão.
-  - O VS Code instalado estava se atualizando em 2026-10-15; o teste de integração rodou num VS Code baixado em `apps/vscode/.vscode-test`.
+  - O VS Code instalado estava se atualizando em 2026-10-15; o teste de integração rodou num VS Code baixado em `apps/editors/vscode/.vscode-test`.

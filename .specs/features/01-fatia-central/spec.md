@@ -6,7 +6,7 @@ Ler código, principalmente código gerado por IA, leva mais tempo do que escrev
 
 Esta feature entrega a menor fatia demonstrável do 8n8:
 - colar um trecho Python;
-- ver as funções como nós e fios;
+- ver as funções como nós e arestas;
 - abrir um nó até o código;
 - ler um resumo em Português Técnico Simplificado com sugestões.
 
@@ -60,7 +60,7 @@ Esta feature entrega a menor fatia demonstrável do 8n8:
 
 ### P1: Entender um trecho colado, do mapa até a linha ⭐ MVP
 
-**User Story**: Como desenvolvedor, quero colar um trecho Python, ver o fluxo como nós e fios, abrir qualquer nó até o código e ler um resumo com sugestões, para entender o trecho sem ler linha por linha.
+**User Story**: Como desenvolvedor, quero colar um trecho Python, ver o fluxo como nós e arestas, abrir qualquer nó até o código e ler um resumo com sugestões, para entender o trecho sem ler linha por linha.
 
 **Why P1**: É a fatia central do produto. Todas as outras features ficam em cima dela.
 
@@ -69,7 +69,7 @@ Esta feature entrega a menor fatia demonstrável do 8n8:
 *Mapa*
 
 1. WHEN o usuário cola um trecho Python e aciona "Gerar mapa" THEN o sistema SHALL mostrar um nó para cada função e classe de nível superior.  <!-- CORE-01 -->
-2. WHEN uma função A chama uma função B definida no trecho THEN o sistema SHALL desenhar um fio de A para B.  <!-- CORE-02 -->
+2. WHEN uma função A chama uma função B definida no trecho THEN o sistema SHALL desenhar uma aresta de A para B.  <!-- CORE-02 -->
 3. WHEN o trecho tem instruções fora de funções e classes, sem contar `import` e `from … import`, THEN o sistema SHALL agrupá-las num nó "Módulo". Um trecho cujas instruções soltas são só imports não tem nó "Módulo".  <!-- CORE-03 -->
 4. The system SHALL produzir o mesmo grafo, com os mesmos IDs de nó, para o mesmo trecho.  <!-- CORE-04 -->
 5. The system SHALL montar o grafo sem chamar o LLM.  <!-- CORE-05 -->
@@ -79,7 +79,7 @@ Esta feature entrega a menor fatia demonstrável do 8n8:
 *Drill-down*
 
 8. WHEN o usuário abre um nó de função THEN o sistema SHALL mostrar os passos internos na ordem do código.  <!-- CORE-08 -->
-9. WHEN um passo é um `if`/`elif`/`else` THEN o sistema SHALL mostrar um nó de condição com um fio rotulado por ramo ("sim", "não" ou a condição do `elif`).  <!-- CORE-09 -->
+9. WHEN um passo é um `if`/`elif`/`else` THEN o sistema SHALL mostrar um nó de condição com uma aresta rotulada por ramo ("sim", "não" ou a condição do `elif`).  <!-- CORE-09 -->
 10. WHEN um passo é um `for` ou `while` THEN o sistema SHALL mostrar um nó de laço que pode ser aberto para ver o corpo.  <!-- CORE-10 -->
 11. WHEN o usuário abre um passo que chama uma função do trecho THEN o sistema SHALL mostrar o fluxo interno da função chamada.  <!-- CORE-11 -->
 12. WHEN um passo chama uma biblioteca externa THEN o sistema SHALL classificar o nó como HTTP, BANCO, ARQUIVO, E-MAIL ou EXTERNO pela tabela de prefixos. A comparação é por segmento inteiro do nome, nunca por pedaço de texto: `requests.get` é HTTP, `requests_cache.get` é EXTERNO. As entradas de método (`.execute`, `.commit`) valem para qualquer receptor, inclusive uma chamada ou um índice (`conn.cursor().execute(q)`, `c[0].commit()`).  <!-- CORE-12 -->
@@ -100,7 +100,7 @@ Esta feature entrega a menor fatia demonstrável do 8n8:
 24. WHEN o usuário clica numa sugestão THEN o sistema SHALL destacar a linha de origem no código do nó.  <!-- CORE-24 -->
 
 **Independent Test**: Colar o exemplo `processar_pedido` / `calcular_frete`. O teste passa quando:
-1. aparecem dois nós com um fio entre eles;
+1. aparecem dois nós com uma aresta entre eles;
 2. ao abrir `calcular_frete`, aparecem HTTP → Código → condição "peso > 30" com dois ramos;
 3. ao selecionar o nó HTTP, aparecem as linhas do `requests.get`;
 4. ao abrir o detalhe, aparecem um resumo em PTS e uma sugestão que aponta para essa linha. Este passo depende do LLM real, então é verificado à mão. Os testes automáticos cobrem o mesmo fluxo com um LLM falso;

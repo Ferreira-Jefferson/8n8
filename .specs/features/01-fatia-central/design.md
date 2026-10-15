@@ -121,7 +121,7 @@ O 8n8 ainda não tem código. O reuso vem do roadmap.
   1. Nível superior: um nó por `def` e `class` (CORE-01). O resto vira passos de um nó `module` com rótulo "Módulo" (CORE-03). Os `import` não contam: eles alimentam o mapa de aliases, mas sozinhos não criam o nó `module`. Sem passos que não sejam `import`, o nó `module` não existe.
   2. Uma `class` abre para os métodos (nós `function`) e para as instruções do corpo.
   3. Cada instrução de um corpo vira um passo, na ordem do código (CORE-08):
-     - `if/elif/else` → `condition`, com o texto do `if` como rótulo. Os ramos ficam no mesmo nível, ligados por fios `branch` (CORE-09). Os rótulos são `"sim"`, o texto de cada `elif` e `"não"`. Sem `else`, o fio `"não"` vai ao passo seguinte ao `if`. Se não há passo seguinte, o fio `"não"` não existe.
+     - `if/elif/else` → `condition`, com o texto do `if` como rótulo. Os ramos ficam no mesmo nível, ligados por arestas `branch` (CORE-09). Os rótulos são `"sim"`, o texto de cada `elif` e `"não"`. Sem `else`, a aresta `"não"` vai ao passo seguinte ao `if`. Se não há passo seguinte, a aresta `"não"` não existe.
      - `for`/`while` → `loop`, que abre para o corpo (CORE-10).
      - `try`, `with`, `match` → `block`, que abre para o corpo. A expressão de um `with` é classificada como uma chamada comum.
      - Instrução com chamada a uma função ou classe do trecho → `call`, com `target` (CORE-11).
@@ -135,7 +135,7 @@ O 8n8 ainda não tem código. O reuso vem do roadmap.
 
      Builtins (`len`, `print`, `int`...) e métodos de variáveis locais não contam, exceto `open`, `.execute(` e `.commit(`. Se uma instrução tem várias chamadas, a chamada do trecho vence. Senão, vale a primeira externa na ordem do código.
   5. Tabela, testada nesta ordem: HTTP (`requests`, `httpx`, `urllib`, `aiohttp`); BANCO (`sqlite3`, `psycopg`, `sqlalchemy`, `.execute`, `.commit`); ARQUIVO (`open`, `pathlib`); EMAIL (`smtplib`). O resto é EXTERNO.
-  6. Fios `calls` ligam funções, métodos, classes e o `module` às funções e classes que eles chamam (CORE-02). Há um fio por par, sem repetição.
+  6. Arestas `calls` ligam funções, métodos, classes e o `module` às funções e classes que eles chamam (CORE-02). Há uma aresta por par, sem repetição.
   7. Erros de sintaxe: cada nó `ERROR` ou `MISSING` marca `syntaxError.line` no nó mais interno do grafo que contém a linha. Fora de qualquer função, a marca vai para o `module`, que é criado se faltar (CORE-06). Grafo sem nós → `empty: true` (CORE-07).
 - **Dependencies**: `@8n8/model`, `web-tree-sitter`, `tree-sitter-python`.
 - **Reuses**: nada. É código novo.
@@ -176,7 +176,7 @@ O 8n8 ainda não tem código. O reuso vem do roadmap.
 - **Regras**:
   - o corpo de cada requisição é validado com zod;
   - um middleware recusa todo `Host` diferente de `127.0.0.1:4317` ou `localhost:4317`, contra DNS rebinding;
-  - os vizinhos de um nó saem dos fios `calls` do grafo extraído pelo próprio servidor, nunca da web.
+  - os vizinhos de um nó saem das arestas `calls` do grafo extraído pelo próprio servidor, nunca da web.
 - **Dependencies**: `@8n8/model`, `@8n8/extract-python`, `@8n8/explain`, `hono`, `@hono/node-server`, `zod`.
 - **ACs**: CORE-05 (o grafo não passa pelo explain), CORE-17 (o servidor monta o pedido), CORE-19 (cliente opcional), CORE-20 (502).
 
@@ -186,7 +186,7 @@ O 8n8 ainda não tem código. O reuso vem do roadmap.
 - **Interfaces e módulos**:
   - `api.ts`: `fetchGraph(source)` e `fetchExplanation(source, nodeId)`;
   - `nav/navigation.ts`: um reducer puro sobre `{ path: NodeId[]; selected: NodeId | null }`, com as ações `open(id)`, `goTo(index)` e `select(id)`. Abrir um `call` empilha o `target` (CORE-11). Abrir `function`, `class`, `module`, `loop` ou `block` empilha o próprio nó;
-  - `flow/project-level.ts`: `projectLevel(graph, containerId | null): { nodes; edges }` é puro. No nível superior, ele sobe as pontas dos fios `calls` até o ancestral visível e remove laços e repetições;
+  - `flow/project-level.ts`: `projectLevel(graph, containerId | null): { nodes; edges }` é puro. No nível superior, ele sobe as pontas das arestas `calls` até o ancestral visível e remove laços e repetições;
   - `flow/layout.ts`: `layoutLR(nodes, edges)` com `@dagrejs/dagre`, `rankdir: 'LR'`;
   - `flow/FlowCanvas.tsx`: `<ReactFlow>` com o tipo de nó `StepNode`. `StepNode` mostra o ícone do tipo, a categoria externa, o selo de erro de sintaxe e o selo com o número de sugestões (CORE-23);
   - `nav/Breadcrumb.tsx`: mostra "Trecho › calcular_frete › for item in itens". Um clique em qualquer item volta a esse nível (CORE-15);

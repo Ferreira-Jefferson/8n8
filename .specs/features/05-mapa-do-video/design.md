@@ -107,7 +107,7 @@ Grafo esperado depois das trilhas A e C:
 | `fn:calcular_frete/s2/b0/s0` | 21 | return | RETORNO | Retorno | `return TABELA_PESADA[uf]` |
 | `fn:calcular_frete/s2/b1/s0` | 23 | return | RETORNO | Retorno | `return TABELA_PADRAO[uf]` |
 
-O fluxo principal tem uma linha: `fn:processar_pedido` e os passos `s0..s6`, ligados por 7 fios. O passo `s7` fica fora porque não tem chamada. Os fios dentro de `calcular_frete` são `s0→s1` e `s1→s2` (`next`), `s2→b0/s0` ("sim") e `s2→b1/s0` ("não"). Nenhum fio sai de um RETORNO.
+O fluxo principal tem uma linha: `fn:processar_pedido` e os passos `s0..s6`, ligados por 7 arestas. O passo `s7` fica fora porque não tem chamada. As arestas dentro de `calcular_frete` são `s0→s1` e `s1→s2` (`next`), `s2→b0/s0` ("sim") e `s2→b1/s0` ("não"). Nenhuma aresta sai de um RETORNO.
 
 ---
 
@@ -118,7 +118,7 @@ O fluxo principal tem uma linha: `fn:processar_pedido` e os passos `s0..s6`, lig
 | `resolveCall`, `resolveOne`, `chainedMethod` | `packages/extract-python/src/calls.ts` | Ganha a regra dos nomes sem definição (VID-13). O resto não muda. |
 | `classify` e a tabela | `packages/extract-python/src/classify.ts` | Continua como passo (c) da VID-13. |
 | `sequence` e `place` | `packages/extract-python/src/steps.ts` | Ganha o ramo do `return_statement` (VID-20). |
-| `callsEdges` | `packages/extract-python/src/build-graph.ts` | Passa a aceitar qualquer passo com `target`. Assim o RETORNO com chamada mantém o fio `calls`. |
+| `callsEdges` | `packages/extract-python/src/build-graph.ts` | Passa a aceitar qualquer passo com `target`. Assim o RETORNO com chamada mantém a aresta `calls`. |
 | `reviewedDraft`, `layerOne`, `parseVerdicts`, `applyVerdicts` | `packages/explain/src/review.ts`, `checks.ts`, `reviewer.ts` | O resumo de passo usa o mesmo pipeline. Os títulos reusam a camada 1 e o veredicto do revisor. |
 | `fingerprintOf`, `diffReasons`, `normalizeCode` | `packages/explain/src/fingerprint.ts` | Mesma impressão digital para títulos (VID-17). |
 | Gravação atômica de `createDiskCache` | `packages/explain/src/cache.ts` | Mesmo padrão (temp + `rename`) no cache de títulos. |
@@ -284,7 +284,7 @@ O alargamento quebra o typecheck em dois pontos. A Fase 0 corrige os dois para o
 
 ### A4. RETORNO: `steps.ts` + `callsEdges` em `build-graph.ts` (VID-20)
 
-- Em `sequence`, um `return_statement` faz `flush()` e chama `place({ kind: "return", ... })` com os campos de "Contratos". Depois, `pending = []`. Assim nenhum fio sai do RETORNO, nem para o passo seguinte, nem para fora de um ramo.
+- Em `sequence`, um `return_statement` faz `flush()` e chama `place({ kind: "return", ... })` com os campos de "Contratos". Depois, `pending = []`. Assim nenhuma aresta sai do RETORNO, nem para o passo seguinte, nem para fora de um ramo.
 - O `return` é avaliado antes de `resolveCall`. Por isso um `return f(x)` vira RETORNO com `target`, e não um passo `call`.
 - `callsEdges` passa a usar `step.target !== undefined` em vez de `step.kind === "call"`. Assim `return calcular(x)` continua gerando `calls:<dono>-><alvo>`.
 - Os IDs não mudam (`<pai>/s<i>`). Em `pedido_frete.py`, os passos `fn:calcular_frete/s2/b0/s0` e `b1/s0` passam de `code` para `return` com o mesmo ID.
@@ -399,8 +399,8 @@ interface TitleCacheEntry {
 
 - **Origem do grafo**: uma função interna `loadOrigin(raw)` lê `{source}` ou `{root}`. Ela retorna `graph`, `codeOf`, `nameOf` e `idPrefix`. Hoje esse ramo está escrito dentro de `/api/explain`. Uma pasta ausente retorna 404.
 - **`neighboursOf(graph, node, nameOf)`** monta duas listas de nomes:
-  - `calls`: os alvos dos fios `calls` que saem do nó, mais `node.target` quando existe, sem repetição;
-  - `calledBy`: as origens dos fios `calls` que chegam ao nó.
+  - `calls`: os alvos das arestas `calls` que saem do nó, mais `node.target` quando existe, sem repetição;
+  - `calledBy`: as origens das arestas `calls` que chegam ao nó.
   - Para função e classe o resultado é igual ao de hoje, então as entradas de cache da feature 04 continuam válidas.
 - **`/api/explain`**: aceita todo nó cujo `kind` não é `folder` nem `file`. Para pasta ou arquivo, responde 400 com `{ error: "node has no explanation" }`. O resto não muda (200/502/404/400).
 - **`POST /api/titles`** (novo):
@@ -456,8 +456,8 @@ body { margin: 0; background: var(--ground); color: var(--second); font-family: 
 | Linha de código | `.node .fn` | `font-family: var(--font-mono)`; `font-size: 20px`; `color: var(--accent)`; `white-space: nowrap`; `overflow: hidden`; `text-overflow: ellipsis` |
 | Selecionado / com sugestão | `.node.on` | `border-color: var(--main)` |
 | Esmaecido | `.node.dim` | `opacity: .55` |
-| Porta | `.port` (Handle) | `width: 16px`; `height: 16px`; `border-radius: 50%`; `background: var(--main)`; `border: 0`; `top: 50%`; `margin-top: -8px`. A entrada usa `left: -9px` e a saída `right: -9px`. Um lado sem fio usa `visibility: hidden`. |
-| Fio | `.wire` | `fill: none`; `stroke: var(--main)`; `stroke-width: 4`; `stroke-linecap: round` |
+| Porta | `.port` (Handle) | `width: 16px`; `height: 16px`; `border-radius: 50%`; `background: var(--main)`; `border: 0`; `top: 50%`; `margin-top: -8px`. A entrada usa `left: -9px` e a saída `right: -9px`. Um lado sem aresta usa `visibility: hidden`. |
+| Aresta | `.wire` | `fill: none`; `stroke: var(--main)`; `stroke-width: 4`; `stroke-linecap: round` |
 | Ponto | `.pulse` | `fill: var(--main)`; `r = 9` |
 | Rótulo de ramo | `.branch-label` | `font-size: 22px`; `font-weight: 500`; `letter-spacing: .18em`; `text-transform: uppercase`; `white-space: nowrap`. "sim" em `var(--main)`; "não" e os rótulos de `elif` em `var(--accent)`. |
 | Cartão de sugestão | `.alert` | `display: flex`; `gap: 14px`; `align-items: center`; `padding: 14px 22px`; `border-radius: 6px`; `background: var(--second)`; `color: var(--ground)`; `font-size: 24px`; `font-weight: 700`; `white-space: nowrap`; `box-shadow: 0 12px 26px rgba(0,0,0,.3)`. `.alert .dot`: `14px` por `14px`, `border-radius: 50%`, `background: var(--ground)`. |
@@ -547,7 +547,7 @@ Regras, em ordem:
    - é `loop`, `block` ou `condition` com um descendente (ID que começa com `<id>/`) de um dos tipos acima.
 3. **Entradas** (VID-11):
    - (a) Um nó de topo `module` com ao menos um "comando com chamada" (regra 2) é entrada. Um `module` só com constantes ou atribuições sem chamada não é entrada.
-   - (b) Também são entradas as funções de topo (`kind === "function"`, `parentId === null`) sem fio `calls` vindo de outro nó, seja o `module` ou outra função. O fio de uma função para ela mesma não conta. (a) e (b) se somam.
+   - (b) Também são entradas as funções de topo (`kind === "function"`, `parentId === null`) sem aresta `calls` vindo de outro nó, seja o `module` ou outra função. A aresta de uma função para ela mesma não conta. (a) e (b) se somam.
    - (c) Se (a) e (b) não acham nada, cada função e classe de topo é uma entrada.
 4. Um nó de topo com `syntaxError` que não é entrada ganha uma linha só com ele. Assim um erro fora das funções continua visível (CORE-06).
 5. Uma linha tem a forma `{ trigger, steps: comandos com chamada da entrada, na ordem do código }`. As linhas seguem a ordem de `range.start`.
@@ -559,7 +559,7 @@ O nó `mod` aparece como GATILHO "Código solto". Nenhum cartão do primeiro ní
 - `Level` ganha dois campos: `rows?: NodeId[][]` (só no fluxo principal) e `triggers: ReadonlySet<NodeId>`.
 - `projectLevel(graph, null)` num **trecho** (`!graph.project`) retorna o fluxo principal:
   - `nodes`: as entradas e os passos, na ordem das linhas;
-  - `edges`: fios `next` sintéticos entre vizinhos de cada linha, com ID `main:<a>-><b>`;
+  - `edges`: arestas `next` sintéticos entre vizinhos de cada linha, com ID `main:<a>-><b>`;
   - `rows`: as linhas;
   - `triggers`: as entradas.
 - Os outros níveis não mudam, com `triggers` vazio. Isso vale para o nível de dentro de um nó e para todo nível de projeto.
@@ -588,15 +588,15 @@ O nó `mod` aparece como GATILHO "Código solto". Nenhum cartão do primeiro ní
 ```ts
 export interface Schedule {
   enterAt: Map<NodeId, number>;  // ms
-  drawAt: Map<string, number>;   // por fio
-  pulseAt: Map<string, number>;  // por fio
+  drawAt: Map<string, number>;   // por aresta
+  pulseAt: Map<string, number>;  // por aresta
 }
 export function schedule(nodes, edges, positions, reduced: boolean): Schedule;
 ```
 
 - **Ordem de entrada**: os nós são ordenados por `x` e, no empate, por `y`. O nó de ordem `k` entra em `enterAt = k * 350`, com 500 ms de duração. Os valores vêm do vídeo.
-- **Desenho do fio**: começa em `drawAt = enterAt(origem) + 400`, com 500 ms de duração.
-- **Ponto**: os fios ficam na ordem do fluxo (por `enterAt` da origem, depois do destino). O primeiro ponto sai em `T0 = max(drawAt) + 500 + 300`. O fio de ordem `k` recebe `pulseAt = T0 + k * 750`, com 750 ms de duração. Cada fio tem um ponto, uma vez.
+- **Desenho da aresta**: começa em `drawAt = enterAt(origem) + 400`, com 500 ms de duração.
+- **Ponto**: as arestas ficam na ordem do fluxo (por `enterAt` da origem, depois do destino). O primeiro ponto sai em `T0 = max(drawAt) + 500 + 300`. A aresta de ordem `k` recebe `pulseAt = T0 + k * 750`, com 750 ms de duração. Cada aresta tem um ponto, uma vez.
 - **`reduced = true`**: todos os valores são `0`, e a web não desenha os pontos.
 
 ### C9. Cartões de sugestão: `flow/suggestion-cards.ts` (VID-31, VID-32)
@@ -651,10 +651,10 @@ export type NavAction =
   - Handles `.port` com `visibility` conforme `hasIn` e `hasOut`.
 - **`WireEdge.tsx`** (VID-05, VID-06, VID-21), tipo de aresta `wire`:
   - path `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2` com `pathLength=1` e `class="wire"`;
-  - o fio que vai para uma faixa de baixo tem `data.turnY` (o `gapAbove` da faixa do destino) e usa `turnPath`: sai 24 px à direita, desce até `turnY`, corre até 24 px antes do cartão de destino e desce até a porta dele, com cantos de raio 20;
+  - a aresta que vai para uma faixa de baixo tem `data.turnY` (o `gapAbove` da faixa do destino) e usa `turnPath`: sai 24 px à direita, desce até `turnY`, corre até 24 px antes do cartão de destino e desce até a porta dele, com cantos de raio 20;
   - animação CSS de `stroke-dashoffset` de 1 a 0, com `data-draw-at` e `animation-delay`;
   - o ponto é `<circle class="pulse" r="9" data-pulse-at>` com `<animateMotion begin="<pulseAt>ms" dur="750ms" path=… fill="remove">` e visibilidade só durante o movimento. O ponto não é renderizado com movimento reduzido;
-  - o rótulo de ramo (`.branch-label`, via `EdgeLabelRenderer`) fica junto ao cartão de destino, alinhado à borda esquerda dele e a 8 px do cartão: acima quando o fio sobe ("sim"), abaixo quando o fio desce ou segue reto ("não"). Assim ele não toca fio nem cartão. Ele tem `data-branch-label` igual ao texto e aparece em maiúsculas, como o `.eyebrow` do vídeo.
+  - o rótulo de ramo (`.branch-label`, via `EdgeLabelRenderer`) fica junto ao cartão de destino, alinhado à borda esquerda dele e a 8 px do cartão: acima quando a aresta sobe ("sim"), abaixo quando a aresta desce ou segue reto ("não"). Assim ele não toca aresta nem cartão. Ele tem `data-branch-label` igual ao texto e aparece em maiúsculas, como o `.eyebrow` do vídeo.
 - **`SuggestionCard.tsx`** (VID-31, VID-33): um `button.alert` com `<i class="dot">`, o texto e `data-anchor-id` (ou `"frame"`).
   - Os cartões entram no `ViewportPortal` do React Flow. O de ordem `k` na mesma âncora fica em `x = âncora.x + 20` e `y = âncora.y − 64 − k * 64`.
   - Um cartão preso à moldura fica fora do viewport, em `left: 24px; top: 96px`, empilhado.
@@ -665,7 +665,7 @@ export type NavAction =
   - No fim da transição, o canvas chama `onOpen(node)` e volta a `"open"`. Com movimento reduzido, chama `onOpen` na hora.
   - O contêiner tem `data-phase` e `data-level="top" | "inner"`. Um nível de dentro ganha `.level-frame`.
   - A `key` do React Flow é `${path.length}:${levelId}`, para que a recursão anime de novo.
-  - O canvas guarda o tamanho medido pelo React Flow (`MeasureCanvas`), por nível: um nível que acabou de abrir espera o próprio tamanho. O nível é cortado (`chooseWrap`) para esse tamanho. Um nível cortado deixa `WRAP_PAD = 48` px nas laterais, porque os fios que descem saem 24 px dos cartões.
+  - O canvas guarda o tamanho medido pelo React Flow (`MeasureCanvas`), por nível: um nível que acabou de abrir espera o próprio tamanho. O nível é cortado (`chooseWrap`) para esse tamanho. Um nível cortado deixa `WRAP_PAD = 48` px nas laterais, porque as arestas que descem saem 24 px dos cartões.
   - A primeira vista vem de `levelViewport` (`flow/viewport.ts`), quando o canvas já tem tamanho:
     - se o nível todo cabe com zoom ≥ `LEGIBLE_ZOOM` (0,6, o título de 27 px fica acima de 16 px), o zoom é `min(1, ajuste)`, com 24 px (`FIT_PAD`) nas laterais e embaixo e 140 px (`TOP_PAD`) em cima (`fitViewport`). O nível fica no meio da área livre. Com `focusId` (vindo do "Voltar"), o nível se move para pôr esse cartão o mais perto possível do centro, sem tirar nenhum cartão da vista;
     - senão, com `focusId`, o cartão fica no centro da área livre (abaixo dos 140 px de `TOP_PAD`, acima dos 24 px de `FIT_PAD`) com zoom 1;
@@ -820,7 +820,7 @@ O clique que abre também seleciona e mostra o painel. Por isso os prints 03 e 0
 | `boundNames` ignora escopo: um nome ligado numa função conta como ligado no arquivo todo | `bound.ts` (novo) | Uma chamada `x.y()` com `x` global e sem definição pode virar "Código" | Aceito pela simplicidade. O caso aparece num teste de unidade. |
 | A lista de nós vem do grafo, mas a etiqueta GATILHO depende do nível | `card.ts` | A mesma função aparece como GATILHO no topo e FUNÇÃO num arquivo de projeto | É o comportamento pedido (VID-04: GATILHO = entrada do fluxo). |
 | Um título reprovado não é gravado e é pedido de novo a cada vez que o nível aparece | `titles.ts` | Custo repetido | Adiado como na spec ("Custo"). No máximo 2 chamadas por nível. |
-| `orderBranches` só reordena dentro de cada coluna | `layout.ts` | Num `if` aninhado com ramos de tamanhos diferentes, um fio pode cruzar outro | VID-21 exige só a ordem do primeiro passo de cada ramo. Há um teste com `elif` e um com `if` aninhado. |
+| `orderBranches` só reordena dentro de cada coluna | `layout.ts` | Num `if` aninhado com ramos de tamanhos diferentes, uma aresta pode cruzar outro | VID-21 exige só a ordem do primeiro passo de cada ramo. Há um teste com `elif` e um com `if` aninhado. |
 | O selo de contagem de sugestões (CORE-23) não existe no vídeo | `StepNode.tsx` | Diferença no print "Sugestões" | A spec não remove a CORE-23. O selo fica, e o usuário decide na aprovação das imagens. |
 | Imagens de referência dependem do sistema e das fontes | `playwright.config.ts` | Uma imagem gerada no Windows falha em outro sistema | O caminho inclui `{platform}`. As fontes são locais (`@fontsource`). As animações ficam desligadas. |
 | A janela do E2E fica vermelha entre o fim das trilhas e a Fase 7 | todos os `e2e/*.e2e.ts` | Uma trilha não consegue rodar o E2E sozinha | O gate das trilhas é unit + typecheck + check. O E2E inteiro volta na Fase 7, depois da mescla. |

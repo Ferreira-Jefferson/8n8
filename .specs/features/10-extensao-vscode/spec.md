@@ -54,7 +54,7 @@ O usuário instala o `.vsix` gerado pelo repositório, abre uma pasta no VS Code
 4. The tela SHALL funcionar na webview com as mesmas funções da CLI. Pela ponte, `POST /api/project` da pasta SHALL responder 200, `GET /api/settings` SHALL responder 200, `POST /api/summary` com `cachedOnly: true` SHALL responder 200 com `not-cached` num cache vazio, e `GET /api/history` SHALL responder 200 com o mapa aberto na lista.  <!-- VSC-04 -->
 5. The extensão SHALL guardar o cache e o histórico na pasta global da extensão, a chave de API no `SecretStorage` do VS Code e o resto da config no `globalState`. A chave nunca SHALL ir para o `globalState`.  <!-- VSC-05 -->
 6. The extensão SHALL passar ao núcleo o ambiente do host de extensões, então as variáveis da AD-021, da 08 e da 09 (`APP8N8_*`, `OPENROUTER_*`, `APP8N8_CLAUDE_PATH`) valem como na CLI.  <!-- VSC-06 -->
-7. WHEN o usuário roda `pnpm --filter 8n8-vscode package` THEN o repositório SHALL gerar `apps/vscode/8n8-vscode-<versão>.vsix` com a extensão empacotada num arquivo só, as gramáticas, a tela e as regras de PTS, sem dependências e sem scripts de instalação.  <!-- VSC-07 -->
+7. WHEN o usuário roda `pnpm --filter 8n8-vscode package` THEN o repositório SHALL gerar `apps/editors/vscode/8n8-vscode-<versão>.vsix` com a extensão empacotada num arquivo só, as gramáticas, a tela e as regras de PTS, sem dependências e sem scripts de instalação.  <!-- VSC-07 -->
 8. The teste de integração SHALL rodar num VS Code real (`@vscode/test-electron`): o comando abre o painel de uma pasta de teste, a página carrega sob a CSP e avisa que está pronta, pede `POST /api/project` pela ponte e recebe 200.  <!-- VSC-08 -->
 
 **Independent Test**: o teste de integração abre o painel numa pasta com um arquivo Python e vê a ponte responder ao mapa.
@@ -69,12 +69,12 @@ O usuário instala o `.vsix` gerado pelo repositório, abre uma pasta no VS Code
 
 **Acceptance Criteria**:
 
-1. The extensão nunca SHALL abrir porta: o código de `apps/vscode` não importa `@hono/node-server`, `node:http`, `node:https` nem `node:net`, e o `pnpm check` SHALL falhar se importar.  <!-- VSC-09 -->
+1. The extensão nunca SHALL abrir porta: o código de `apps/editors/vscode` não importa `@hono/node-server`, `node:http`, `node:https` nem `node:net`, e o `pnpm check` SHALL falhar se importar.  <!-- VSC-09 -->
 2. WHEN a webview manda uma mensagem THEN a ponte SHALL aceitar só `{id, method, path, body?}` com `method` em `GET`, `POST`, `PUT`, `DELETE`, `path` que começa com `/api/` sem `..`, sem `//`, sem `\` e sem esquema, e `body` texto de no máximo 1 048 576 bytes, só em `POST` e `PUT`. Qualquer outra mensagem SHALL receber status 400 sem chegar ao núcleo. IF o núcleo falha ao responder THEN a ponte SHALL responder 500, para a página sempre receber uma resposta.  <!-- VSC-10 -->
 3. The ponte SHALL pôr ela mesma o cabeçalho `Host` aceito pela guarda e o token da sessão. A webview nunca SHALL receber o token (nem no HTML da página), e o núcleo continua recusando um pedido sem ele (DIST-20). A extensão SHALL devolver uma API de teste só quando o VS Code roda os testes dela (`ExtensionMode.Test`), para nenhuma outra extensão alcançar o núcleo.  <!-- VSC-11 -->
 4. The HTML da webview SHALL ter a CSP `default-src 'none'`, `script-src 'nonce-<aleatório>'`, `style-src <cspSource> 'unsafe-inline'`, `font-src <cspSource>`, `img-src <cspSource> data:` e `connect-src 'none'`. The webview SHALL ter `localResourceRoots` só com a pasta da tela empacotada.  <!-- VSC-12 -->
-5. The `pnpm check` SHALL falhar se um arquivo fora de `apps/vscode` importa o módulo `vscode`, e o teste das guardas SHALL provar isso com um arquivo que viola a regra.  <!-- VSC-13 -->
-6. The `.github/CODEOWNERS` SHALL exigir o dono do projeto como revisor da ponte (`apps/vscode/src/bridge.ts`) e do HTML da webview (`apps/vscode/src/webview-html.ts`).  <!-- VSC-14 -->
+5. The `pnpm check` SHALL falhar se um arquivo fora de `apps/editors/vscode` importa o módulo `vscode`, e o teste das guardas SHALL provar isso com um arquivo que viola a regra.  <!-- VSC-13 -->
+6. The `.github/CODEOWNERS` SHALL exigir o dono do projeto como revisor da ponte (`apps/editors/vscode/src/bridge.ts`) e do HTML da webview (`apps/editors/vscode/src/webview-html.ts`).  <!-- VSC-14 -->
 
 **Independent Test**: `pnpm test` roda os testes da ponte e da CSP, e o teste das guardas faz o `pnpm check` falhar com um import de `vscode` fora da extensão e com um import de `node:http` dentro dela.
 

@@ -13,9 +13,9 @@
 /packages/llm/src/claude-code.ts @Ferreira-Jefferson
 
 # A ponte da extensão e a página da webview (VSC-14).
-/apps/vscode/src/bridge.ts @Ferreira-Jefferson
-/apps/vscode/src/webview-html.ts @Ferreira-Jefferson
-/apps/vscode/package.json @Ferreira-Jefferson
+/apps/editors/vscode/src/bridge.ts @Ferreira-Jefferson
+/apps/editors/vscode/src/webview-html.ts @Ferreira-Jefferson
+/apps/editors/vscode/package.json @Ferreira-Jefferson
 /apps/cli/src/__tests__/guards.test.ts @Ferreira-Jefferson
 /apps/cli/src/__tests__/repo-ci.test.ts @Ferreira-Jefferson
 /.dependency-cruiser.cjs @Ferreira-Jefferson

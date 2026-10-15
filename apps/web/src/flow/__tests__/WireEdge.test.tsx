@@ -18,7 +18,7 @@ function renderWire(data: WireData, label?: string) {
   return render(
     <ReactFlowProvider>
       <svg>
-        <title>fio</title>
+        <title>aresta</title>
         <WireEdge
           sourceX={0}
           sourceY={0}
@@ -130,7 +130,7 @@ describe("WireEdge turning to the next row (VID-10)", () => {
     const { container } = render(
       <ReactFlowProvider>
         <svg>
-          <title>fio</title>
+          <title>aresta</title>
           <WireEdge
             sourceX={1500}
             sourceY={70}

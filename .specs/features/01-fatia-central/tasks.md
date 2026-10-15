@@ -94,7 +94,7 @@ T14 → T16 → T18
 
 ### Phase 4: extract-python, montagem do grafo
 
-Nível superior, passos, condição, laço, fios `calls`, erros de sintaxe e o extrator público.
+Nível superior, passos, condição, laço, arestas `calls`, erros de sintaxe e o extrator público.
 
 ```
 T19 → T20 → T21 → T22 → T23 → T24 → T25
@@ -639,7 +639,7 @@ T48 → T49
 
 ### T20: Passos lineares de um corpo
 
-**What**: Implementar `buildSteps(body, parentId, ctx)` para passos sem controle de fluxo (`call`, `external`, `code` agrupado com intervalo de linhas) ligados por fios `next`, e chamá-lo de `buildGraph` para funções, métodos, corpo de classe e `module`.
+**What**: Implementar `buildSteps(body, parentId, ctx)` para passos sem controle de fluxo (`call`, `external`, `code` agrupado com intervalo de linhas) ligados por arestas `next`, e chamá-lo de `buildGraph` para funções, métodos, corpo de classe e `module`.
 **Where**: `packages/extract-python/src/steps.ts`, `packages/extract-python/src/build-graph.ts`
 **Depends on**: T18, T19
 **Requirement**: CORE-08, CORE-11, CORE-12, CORE-13
@@ -650,7 +650,7 @@ T48 → T49
 
 **Done when**:
 
-- [x] Teste: os passos de uma função saem na ordem do código, com IDs `fn:x/s0`, `fn:x/s1`... e fios `next` entre passos seguidos (CORE-08).
+- [x] Teste: os passos de uma função saem na ordem do código, com IDs `fn:x/s0`, `fn:x/s1`... e arestas `next` entre passos seguidos (CORE-08).
 - [x] Teste: três atribuições seguidas sem chamada viram um só nó `code`, rótulo "Código", com o intervalo de linhas delas (CORE-13).
 - [x] Teste: um `return` sem chamada entra no grupo `code` anterior.
 - [x] Teste: `y = calcular_frete(p)` vira `call` com `target: fn:calcular_frete` e `openable: true` (CORE-11).
@@ -670,7 +670,7 @@ T48 → T49
 
 ### T21: Nó de condição e ramos
 
-**What**: Tratar `if`/`elif`/`else` em `buildSteps`: um nó `condition` com o texto do `if`, passos dos ramos no mesmo nível com ID `<cond>/b<j>/s<i>` e fios `branch` rotulados.
+**What**: Tratar `if`/`elif`/`else` em `buildSteps`: um nó `condition` com o texto do `if`, passos dos ramos no mesmo nível com ID `<cond>/b<j>/s<i>` e arestas `branch` rotulados.
 **Where**: `packages/extract-python/src/steps.ts`
 **Depends on**: T20
 **Requirement**: CORE-09
@@ -681,10 +681,10 @@ T48 → T49
 
 **Done when**:
 
-- [x] Teste (fixture do vídeo): `calcular_frete` abre para `external` HTTP → `code` → `condition` com rótulo `peso > 30` e dois fios `branch`, `"sim"` e `"não"` (Independent Test 2).
-- [x] Teste: `if/elif/else` → fios `"sim"`, o texto do `elif` e `"não"`.
-- [x] Teste: `if` sem `else` e com passo seguinte → o fio `"não"` vai ao passo seguinte.
-- [x] Teste: `if` sem `else` e sem passo seguinte → não existe fio `"não"`.
+- [x] Teste (fixture do vídeo): `calcular_frete` abre para `external` HTTP → `code` → `condition` com rótulo `peso > 30` e duas arestas `branch`, `"sim"` e `"não"` (Independent Test 2).
+- [x] Teste: `if/elif/else` → arestas `"sim"`, o texto do `elif` e `"não"`.
+- [x] Teste: `if` sem `else` e com passo seguinte → a aresta `"não"` vai ao passo seguinte.
+- [x] Teste: `if` sem `else` e sem passo seguinte → não existe aresta `"não"`.
 - [x] Teste: os passos de um ramo têm o mesmo `parentId` da condição e IDs `.../b0/s0`, `.../b1/s0`.
 - [x] Gate passa. Test count: ≥ 5 testes novos; nenhum anterior sumiu.
 
@@ -725,9 +725,9 @@ T48 → T49
 
 ---
 
-### T23: Fios `calls` entre funções
+### T23: Arestas `calls` entre funções
 
-**What**: Gerar em `buildGraph` um fio `calls` por par (chamador, chamado) a partir dos passos `call`, com o chamador sendo a função, o método, a classe ou o `module` que contém o passo.
+**What**: Gerar em `buildGraph` uma aresta `calls` por par (chamador, chamado) a partir dos passos `call`, com o chamador sendo a função, o método, a classe ou o `module` que contém o passo.
 **Where**: `packages/extract-python/src/build-graph.ts`
 **Depends on**: T22
 **Requirement**: CORE-02
@@ -738,11 +738,11 @@ T48 → T49
 
 **Done when**:
 
-- [x] Teste (fixture do vídeo): existe exatamente um fio `calls:fn:processar_pedido->fn:calcular_frete`, mesmo com a chamada dentro do laço (Independent Test 1).
-- [x] Teste: duas chamadas de A para B geram um só fio.
-- [x] Teste: um método que chama uma função do nível superior gera o fio a partir do ID do método.
-- [x] Teste: uma chamada solta no módulo gera o fio a partir de `mod`.
-- [x] Teste: função sem chamadas do trecho não tem fio `calls` saindo.
+- [x] Teste (fixture do vídeo): existe exatamente uma aresta `calls:fn:processar_pedido->fn:calcular_frete`, mesmo com a chamada dentro do laço (Independent Test 1).
+- [x] Teste: duas chamadas de A para B geram um só aresta.
+- [x] Teste: um método que chama uma função do nível superior gera a aresta a partir do ID do método.
+- [x] Teste: uma chamada solta no módulo gera a aresta a partir de `mod`.
+- [x] Teste: função sem chamadas do trecho não tem aresta `calls` saindo.
 - [x] Gate passa. Test count: ≥ 5 testes novos; nenhum anterior sumiu.
 
 **Tests**: unit
@@ -799,7 +799,7 @@ T48 → T49
 - [x] Teste: `language` é `"python"`.
 - [x] Teste (CORE-04): dois extratores novos extraem a fixture do vídeo, e os dois grafos são iguais com `toEqual`. O JSON confere com um snapshot.
 - [x] Teste: extrair duas vezes com o mesmo extrator dá o mesmo grafo.
-- [x] Teste (Independent Test 1-3 no nível do grafo): no nível superior, 2 funções e um fio entre elas; `calcular_frete` abre para HTTP → Código → condição `peso > 30` com dois ramos; o `range` do nó HTTP aponta para a linha do `requests.get` (a linha esperada é achada no texto da fixture, não fixada no teste).
+- [x] Teste (Independent Test 1-3 no nível do grafo): no nível superior, 2 funções e uma aresta entre elas; `calcular_frete` abre para HTTP → Código → condição `peso > 30` com dois ramos; o `range` do nó HTTP aponta para a linha do `requests.get` (a linha esperada é achada no texto da fixture, não fixada no teste).
 - [x] `pnpm check` passa: o pacote não importa `explain` nem `openai` (CORE-05).
 - [x] Gate passa. Test count: ≥ 4 testes.
 
@@ -1099,7 +1099,7 @@ T48 → T49
 
 ### T36: Rota `POST /api/explain`
 
-**What**: Adicionar `POST /api/explain` `{ source, nodeId }`: extrai o grafo de novo, acha o nó, monta o `ExplainRequest` só com dados do próprio grafo (`sliceLines` e vizinhos dos fios `calls`) e mapeia o status para HTTP.
+**What**: Adicionar `POST /api/explain` `{ source, nodeId }`: extrai o grafo de novo, acha o nó, monta o `ExplainRequest` só com dados do próprio grafo (`sliceLines` e vizinhos das arestas `calls`) e mapeia o status para HTTP.
 **Where**: `packages/server/src/app.ts`
 **Depends on**: T35
 **Requirement**: CORE-17, CORE-19, CORE-20
@@ -1246,7 +1246,7 @@ T48 → T49
 
 ### T41: Projeção de um nível do grafo
 
-**What**: Implementar `projectLevel(graph, containerId | null)`, que devolve os nós e fios visíveis num nível. No nível superior, sobe as pontas dos fios `calls` até o ancestral visível e remove laços e repetições.
+**What**: Implementar `projectLevel(graph, containerId | null)`, que devolve os nós e arestas visíveis num nível. No nível superior, sobe as pontas das arestas `calls` até o ancestral visível e remove laços e repetições.
 **Where**: `apps/web/src/flow/project-level.ts`
 **Depends on**: T38
 **Requirement**: CORE-01, CORE-02, CORE-03, CORE-08, CORE-09, CORE-10, CORE-13
@@ -1258,9 +1258,9 @@ T48 → T49
 **Done when**:
 
 - [x] Teste (CORE-01, 03): nível superior → só `function`, `class` e `module`.
-- [x] Teste (CORE-02): fio `calls` entre funções aparece; fio de um método para uma função sobe para a classe; fio de uma classe para ela mesma some; dois fios iguais viram um.
-- [x] Teste (CORE-08, 13): dentro de uma função → só os filhos diretos, na ordem, com os fios `next`.
-- [x] Teste (CORE-09): dentro de uma função com condição → os passos dos ramos aparecem no mesmo nível, com os fios `branch` e seus rótulos.
+- [x] Teste (CORE-02): aresta `calls` entre funções aparece; aresta de um método para uma função sobe para a classe; aresta de uma classe para ela mesma some; duas arestas iguais viram um.
+- [x] Teste (CORE-08, 13): dentro de uma função → só os filhos diretos, na ordem, com as arestas `next`.
+- [x] Teste (CORE-09): dentro de uma função com condição → os passos dos ramos aparecem no mesmo nível, com as arestas `branch` e seus rótulos.
 - [x] Teste (CORE-10): dentro de um `loop` → só o corpo do laço.
 - [x] Gate passa. Test count: ≥ 7 testes.
 
@@ -1287,7 +1287,7 @@ T48 → T49
 **Done when**:
 
 - [x] Teste: todo nó recebe `x` e `y` numéricos.
-- [x] Teste: para cada fio A → B, `x` de A é menor que `x` de B.
+- [x] Teste: para cada aresta A → B, `x` de A é menor que `x` de B.
 - [x] Teste: a mesma entrada dá as mesmas posições.
 - [x] Teste: lista vazia → lista vazia.
 - [x] Gate passa. Test count: ≥ 4 testes.
@@ -1343,7 +1343,7 @@ T48 → T49
 **Done when**:
 
 - [x] Só monta: toda lógica vem de `projectLevel`, `layoutLR` e `StepNode`, já testados.
-- [x] Checagem manual no Independent Test (T49): dois nós e um fio; duplo clique abre o nível.
+- [x] Checagem manual no Independent Test (T49): dois nós e uma aresta; duplo clique abre o nível.
 - [x] Build gate passa.
 
 **Tests**: none (o design tira o canvas do jsdom; checagem manual)

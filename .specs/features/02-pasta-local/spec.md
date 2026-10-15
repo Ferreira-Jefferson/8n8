@@ -52,15 +52,15 @@ Depende de: 01-fatia-central.
 
 1. WHEN o usuário informa o caminho de uma pasta THEN o sistema SHALL ler todos os arquivos `.py` da pasta e das subpastas, exceto as pastas ignoradas.  <!-- PROJ-01 -->
 2. WHEN a leitura termina THEN o sistema SHALL mostrar um nó por subpasta e um nó por arquivo da raiz no nível superior, e um nó por arquivo dentro de cada subpasta.  <!-- PROJ-02 -->
-3. WHEN um arquivo importa outro arquivo da mesma raiz THEN o sistema SHALL desenhar um fio de importação entre eles.  <!-- PROJ-03 -->
-4. WHEN uma função chama uma função de outro arquivo da raiz por um import resolvido THEN o sistema SHALL desenhar o fio de chamada entre as duas funções.  <!-- PROJ-04 -->
+3. WHEN um arquivo importa outro arquivo da mesma raiz THEN o sistema SHALL desenhar uma aresta de importação entre eles.  <!-- PROJ-03 -->
+4. WHEN uma função chama uma função de outro arquivo da raiz por um import resolvido THEN o sistema SHALL desenhar a aresta de chamada entre as duas funções.  <!-- PROJ-04 -->
 5. IF o caminho não existe ou não é uma pasta THEN o sistema SHALL mostrar "Pasta não encontrada: <caminho>".  <!-- PROJ-05 -->
 6. IF um arquivo não pode ser lido, passa de 1 MB, não está em UTF-8 ou é um link simbólico THEN o sistema SHALL ignorá-lo e listá-lo em "Arquivos ignorados" como "<caminho> — <motivo>". Os motivos são exatamente "maior que 1 MB", "não está em UTF-8", "não foi possível ler" e "link simbólico não seguido". 1 MB são 1 048 576 bytes: um arquivo com exatamente esse tamanho entra no mapa, e um com 1 byte a mais é ignorado.  <!-- PROJ-06 -->
 7. The system SHALL só ler arquivos e nunca SHALL escrever, mover ou executar arquivos da pasta analisada.  <!-- PROJ-07 -->
 8. The system SHALL escutar só no endereço IPv4 `127.0.0.1`. O nome `localhost` funciona quando resolve para esse endereço. O IPv6 `::1` e as interfaces de rede externas não são escutados.  <!-- PROJ-08 -->
-9. WHEN dois arquivos definem funções com o mesmo nome THEN o sistema SHALL resolver a chamada pelo import do arquivo chamador e, sem import, SHALL classificá-la como EXTERNO. Uma chamada pontuada para um módulo do projeto que o arquivo não importou (`frete.calcular()` sem `import frete`) também não ganha fio de chamada.  <!-- PROJ-09 -->
+9. WHEN dois arquivos definem funções com o mesmo nome THEN o sistema SHALL resolver a chamada pelo import do arquivo chamador e, sem import, SHALL classificá-la como EXTERNO. Uma chamada pontuada para um módulo do projeto que o arquivo não importou (`frete.calcular()` sem `import frete`) também não ganha aresta de chamada.  <!-- PROJ-09 -->
 
-**Independent Test**: Apontar uma pasta com `pedidos/` e `frete/` em que `pedidos` importa `frete`. Devem aparecer dois nós de pasta com um fio de importação entre eles. Abrindo `pedidos`, o fio de chamada deve chegar a `calcular_frete`.
+**Independent Test**: Apontar uma pasta com `pedidos/` e `frete/` em que `pedidos` importa `frete`. Devem aparecer dois nós de pasta com uma aresta de importação entre eles. Abrindo `pedidos`, a aresta de chamada deve chegar a `calcular_frete`.
 
 ---
 

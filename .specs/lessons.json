@@ -256,7 +256,7 @@
       "harmful": 0,
       "evidence": [
         "SP-1 / PROJ-06 / packages/input/src/read-file.ts:4 (input)",
-        "VSC-10 M12 apps/vscode/src/bridge.ts:52 (input)"
+        "VSC-10 M12 apps/editors/vscode/src/bridge.ts:52 (input)"
       ],
       "created": "2026-10-13T23:06:56Z",
       "last_seen": "2026-10-15T05:57:35Z"
@@ -618,7 +618,7 @@
       "recurrence": 1,
       "harmful": 0,
       "evidence": [
-        "I2,I3 apps/vscode/src/extension.ts:70,110 (editor-host)"
+        "I2,I3 apps/editors/vscode/src/extension.ts:70,110 (editor-host)"
       ],
       "created": "2026-10-15T05:57:35Z",
       "last_seen": "2026-10-15T05:57:35Z"
@@ -636,7 +636,7 @@
       "recurrence": 1,
       "harmful": 0,
       "evidence": [
-        "I5 apps/vscode/src/extension.ts:40 (editor-host)"
+        "I5 apps/editors/vscode/src/extension.ts:40 (editor-host)"
       ],
       "created": "2026-10-15T05:57:35Z",
       "last_seen": "2026-10-15T05:57:35Z"
@@ -654,7 +654,7 @@
       "recurrence": 1,
       "harmful": 0,
       "evidence": [
-        "R6 apps/vscode/src/extension.ts:43 (editor-host)"
+        "R6 apps/editors/vscode/src/extension.ts:43 (editor-host)"
       ],
       "created": "2026-10-15T06:08:27Z",
       "last_seen": "2026-10-15T06:08:27Z"
@@ -672,7 +672,7 @@
       "recurrence": 1,
       "harmful": 0,
       "evidence": [
-        "R5 apps/vscode/src/extension.ts:152 (editor-host)"
+        "R5 apps/editors/vscode/src/extension.ts:152 (editor-host)"
       ],
       "created": "2026-10-15T06:08:27Z",
       "last_seen": "2026-10-15T06:08:27Z"

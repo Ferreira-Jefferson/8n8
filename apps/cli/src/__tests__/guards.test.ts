@@ -29,14 +29,15 @@ const CONFIG = [
   ".gitignore",
 ];
 
-/** Every workspace folder, plus a host that does not exist yet (apps/vscode). */
+/** Every workspace folder, plus a host that does not exist yet (apps/editors/vscode). */
 const workspaces = [
-  ...["packages", "packages/languages", "apps"].flatMap((parent) =>
-    readdirSync(join(repo, parent))
-      .map((name) => `${parent}/${name}`)
-      .filter((dir) => existsSync(join(repo, dir, "package.json"))),
+  ...["packages", "packages/languages", "apps", "apps/editors"].flatMap(
+    (parent) =>
+      readdirSync(join(repo, parent))
+        .map((name) => `${parent}/${name}`)
+        .filter((dir) => existsSync(join(repo, dir, "package.json"))),
   ),
-  "apps/vscode",
+  "apps/editors/vscode",
 ].filter((dir, i, all) => all.indexOf(dir) === i);
 const packages = workspaces.filter((w) => w.startsWith("packages/"));
 
@@ -61,7 +62,7 @@ const BASE: Record<string, string> = {
   "packages/llm/src/claude-code.ts": SPAWN,
   "apps/cli/src/__tests__/guards.test.ts": SPAWN,
   // The extension may import vscode (VSC-13).
-  "apps/vscode/src/editor.ts": VSCODE,
+  "apps/editors/vscode/src/editor.ts": VSCODE,
 };
 
 const temps: string[] = [];
@@ -150,7 +151,7 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
       // cluster.fork() starts a Node process without naming child_process (SEC-08).
       "packages/server/src/probe-cluster.ts":
         'import cluster from "node:cluster";\n\nexport const probe = cluster;\n',
-      "apps/vscode/src/probe-cluster.ts":
+      "apps/editors/vscode/src/probe-cluster.ts":
         'import cluster from "cluster";\n\nexport const probe = cluster;\n',
     };
     for (const w of workspaces) files[`${w}/src/probe-spawn.ts`] = SPAWN;
@@ -172,8 +173,8 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
         "apps/web/src/probe-host.ts",
         toCli,
       ),
-      "apps/vscode/src/probe-host.ts": importOf(
-        "apps/vscode/src/probe-host.ts",
+      "apps/editors/vscode/src/probe-host.ts": importOf(
+        "apps/editors/vscode/src/probe-host.ts",
         toCli,
       ),
       "apps/cli/src/probe-host.ts": importOf(
@@ -186,7 +187,7 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
     }
     const { status, out } = check(files);
     const found = cruiseFindings(out);
-    for (const host of ["apps/web", "apps/vscode", "apps/cli"]) {
+    for (const host of ["apps/web", "apps/editors/vscode", "apps/cli"]) {
       expect(found).toContain(
         `error hosts-do-not-import-each-other: ${host}/src/probe-host.ts`,
       );
@@ -218,7 +219,7 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
     const files: Record<string, string> = Object.fromEntries([
       ...outside.map((f) => [f, VSCODE]),
       ...ports.map((m, i) => [
-        `apps/vscode/src/probe-port${i}.ts`,
+        `apps/editors/vscode/src/probe-port${i}.ts`,
         importing(m),
       ]),
     ]);
@@ -229,10 +230,10 @@ describe("pnpm check guards, run for real on rule breakers (DIST-14, DIST-23)", 
     }
     for (const i of ports.keys()) {
       expect(found).toContain(
-        `error vscode-opens-no-port: apps/vscode/src/probe-port${i}.ts`,
+        `error vscode-opens-no-port: apps/editors/vscode/src/probe-port${i}.ts`,
       );
     }
-    expect(found.join("\n")).not.toContain("apps/vscode/src/editor.ts");
+    expect(found.join("\n")).not.toContain("apps/editors/vscode/src/editor.ts");
     expect(status).not.toBe(0);
   });
 });
@@ -246,7 +247,7 @@ function sourcesOf(root: string): string[] {
         if (e.isDirectory()) {
           // The VS Code the extension test downloads, only at its one place.
           return ["node_modules", "dist", ".cache"].includes(e.name) ||
-            path === "apps/vscode/.vscode-test"
+            path === "apps/editors/vscode/.vscode-test"
             ? []
             : walk(path);
         }
@@ -264,14 +265,14 @@ describe("source scan: what the check cannot see (DIST-23)", () => {
     temps.push(root);
     for (const file of [
       "packages/server/.vscode-test/x.ts",
-      "apps/vscode/.vscode-test/y.ts",
-      "apps/vscode/src/z.ts",
+      "apps/editors/vscode/.vscode-test/y.ts",
+      "apps/editors/vscode/src/z.ts",
     ]) {
       mkdirSync(join(root, dirname(file)), { recursive: true });
       writeFileSync(join(root, file), "export {};\n");
     }
     expect(sourcesOf(root).sort()).toEqual([
-      "apps/vscode/src/z.ts",
+      "apps/editors/vscode/src/z.ts",
       "packages/server/.vscode-test/x.ts",
     ]);
   });

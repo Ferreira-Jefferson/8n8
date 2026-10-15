@@ -63,7 +63,7 @@ Use somente estes termos com estes sentidos. Acrescente termos aqui quando preci
 | Termo | Sentido | Não use |
 |---|---|---|
 | nó | uma etapa do fluxo no mapa | bloco, caixa, etapa (como sinônimo) |
-| fio | a conexão entre dois nós | linha, seta, link |
+| aresta | a conexão entre dois nós | fio, linha, seta, link |
 | entrada | o dado que o nó recebe | input, parâmetro (no texto corrido) |
 | saída | o dado que o nó produz | output, resultado |
 | retorna | a função entrega um valor a quem chamou | devolve, dá |

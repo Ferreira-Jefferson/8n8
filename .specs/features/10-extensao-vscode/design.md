@@ -14,7 +14,7 @@ graph LR
     subgraph "Webview (apps/web empacotada)"
       API[api.ts: apiFetch] -->|postMessage {id, method, path, body}| HOSTMSG
     end
-    subgraph "Host de extensões (apps/vscode)"
+    subgraph "Host de extensões (apps/editors/vscode)"
       HOSTMSG[bridge.ts: valida, põe Host e token] -->|app.fetch Request| CORE[createCore]
       EXT[extension.ts: comando, painel] --> HTML[webview-html.ts: CSP, nonce, base]
       EXT --> STORE[store.ts: SecretStorage + globalState]
@@ -48,7 +48,7 @@ graph LR
 - `session.ts`: `readLaunch` lê a pasta da `<meta name="8n8-folder">` quando não há fragmento.
 - `main.tsx`: na webview, manda `{type: "ready"}` ao montar.
 
-### `apps/vscode`
+### `apps/editors/vscode`
 
 - `package.json`: manifesto (`main: dist/extension.cjs`, `engines.vscode: ^1.138.0`, comando `8n8.abrirMapa`, menu do Explorer em pastas), scripts `build`, `test`, `test:integration`, `package`.
 - `src/store.ts`: `createVscodeSettingsStore(secrets, memento)`: a chave no `SecretStorage` (`8n8.apiKey`), o resto no `globalState` (`8n8.settings`).
@@ -60,7 +60,7 @@ graph LR
 
 ### Guardas
 
-- `.dependency-cruiser.cjs`: regra `only-vscode-host-imports-vscode` (de fora de `apps/vscode/` para `^vscode$`) e regra `vscode-opens-no-port` (de `apps/vscode/` para `@hono/node-server`, `node:http`, `node:https`, `node:net`).
+- `.dependency-cruiser.cjs`: regra `only-vscode-host-imports-vscode` (de fora de `apps/editors/vscode/` para `^vscode$`) e regra `vscode-opens-no-port` (de `apps/editors/vscode/` para `@hono/node-server`, `node:http`, `node:https`, `node:net`).
 
 ---
 

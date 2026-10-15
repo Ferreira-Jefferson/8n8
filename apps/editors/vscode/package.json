@@ -1,7 +1,7 @@
 {
   "name": "8n8-vscode",
   "displayName": "8n8",
-  "description": "Mostra como o código se conecta, em nós e fios, ao lado do editor.",
+  "description": "Mostra como o código se conecta, em nós e arestas, ao lado do editor.",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -54,7 +54,7 @@
     "typecheck": "tsc --noEmit",
     "build": "pnpm --filter @8n8/web build && tsx src/build.ts",
     "test:integration": "pnpm run build && tsx src/__tests__/integration/run.ts",
-    "package": "pnpm run build && vsce package --no-dependencies --skip-license"
+    "package": "pnpm run build && vsce package --no-dependencies --skip-license --out ../../../release/"
   },
   "devDependencies": {
     "@8n8/server": "workspace:*",

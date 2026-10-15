@@ -15,7 +15,7 @@ import { build, type Plugin } from "esbuild";
 // language plugins await at the top level; the extension as CommonJS
 // (extension.cjs), with vscode left out, which imports core.mjs at run time.
 const extRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-const repoRoot = join(extRoot, "../..");
+const repoRoot = join(extRoot, "../../..");
 const languagesDir = join(repoRoot, "packages/languages");
 
 /**
@@ -103,7 +103,7 @@ export function copyGrammars(outDir: string): void {
   );
 }
 
-/** apps/vscode/dist: the extension, the grammars, the built screen and the PTS rules. */
+/** apps/editors/vscode/dist: the extension, the grammars, the built screen and the PTS rules. */
 export async function buildExtension(
   outDir = join(extRoot, "dist"),
 ): Promise<void> {

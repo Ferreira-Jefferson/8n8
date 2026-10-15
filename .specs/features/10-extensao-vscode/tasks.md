@@ -18,8 +18,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
 | Tela (`apps/web`) | unit (Vitest) | Transporte da ponte, pasta da meta, aviso ready | `apps/web/src/__tests__/*.test.ts` | `pnpm --filter @8n8/web test` |
-| Extensão: módulos puros (`apps/vscode`) | unit (Vitest) | Cada regra da ponte, CSP, store, build | `apps/vscode/src/__tests__/*.test.ts` | `pnpm --filter 8n8-vscode test` |
-| Extensão no VS Code real | integration (`@vscode/test-electron`) | Comando, painel, ready, `POST /api/project` 200 | `apps/vscode/src/test/*.ts` | `pnpm --filter 8n8-vscode test:integration` |
+| Extensão: módulos puros (`apps/editors/vscode`) | unit (Vitest) | Cada regra da ponte, CSP, store, build | `apps/editors/vscode/src/__tests__/*.test.ts` | `pnpm --filter 8n8-vscode test` |
+| Extensão no VS Code real | integration (`@vscode/test-electron`) | Comando, painel, ready, `POST /api/project` 200 | `apps/editors/vscode/src/test/*.ts` | `pnpm --filter 8n8-vscode test:integration` |
 | Guardas | unit | Regras novas com arquivo que viola | `apps/cli/src/__tests__/guards.test.ts` | `pnpm --filter @8n8/cli test` |
 | Docs | none | - | - | build gate only |
 
@@ -85,7 +85,7 @@ T7 → T8
 ### T2: Pacote `@8n8/vscode` e store da config
 
 **What**: Manifesto, tsconfig, vitest e `createVscodeSettingsStore`.
-**Where**: `apps/vscode/src/store.ts`
+**Where**: `apps/editors/vscode/src/store.ts`
 **Depends on**: None (a fase 1 termina antes)
 **Reuses**: `SettingsStore`
 **Requirement**: VSC-05
@@ -110,7 +110,7 @@ T7 → T8
 ### T3: Ponte
 
 **What**: `createBridge(app, token)` com a validação do VSC-10 e o Host e o token do VSC-11.
-**Where**: `apps/vscode/src/bridge.ts`
+**Where**: `apps/editors/vscode/src/bridge.ts`
 **Depends on**: T2
 **Reuses**: `createCore`
 **Requirement**: VSC-10, VSC-11
@@ -135,7 +135,7 @@ T7 → T8
 ### T4: HTML da webview
 
 **What**: `webviewHtml` com CSP, nonce, base, metas e sem `crossorigin`.
-**Where**: `apps/vscode/src/webview-html.ts`
+**Where**: `apps/editors/vscode/src/webview-html.ts`
 **Depends on**: T3
 **Reuses**: `apps/web/dist/index.html`
 **Requirement**: VSC-12
@@ -160,7 +160,7 @@ T7 → T8
 ### T5: Ativação, comando e build
 
 **What**: `extension.ts` (comando, painel, núcleo, ponte) e `build.ts`.
-**Where**: `apps/vscode/src/extension.ts`
+**Where**: `apps/editors/vscode/src/extension.ts`
 **Depends on**: T4
 **Reuses**: `createCore`, build da CLI (copiado)
 **Requirement**: VSC-01, VSC-02, VSC-03, VSC-06, VSC-07
@@ -185,7 +185,7 @@ T7 → T8
 ### T6: Integração no VS Code real e `.vsix`
 
 **What**: Teste com `@vscode/test-electron`; script `package` com `@vscode/vsce`.
-**Where**: `apps/vscode/src/test/suite.ts`
+**Where**: `apps/editors/vscode/src/test/suite.ts`
 **Depends on**: T5
 **Reuses**: fixture `projeto-loja`
 **Requirement**: VSC-01, VSC-03, VSC-07, VSC-08
@@ -223,7 +223,7 @@ T7 → T8
 
 **Done when**:
 
-- [x] Um import de `vscode` fora de `apps/vscode` e um de `node:http` dentro dela fazem o check falhar
+- [x] Um import de `vscode` fora de `apps/editors/vscode` e um de `node:http` dentro dela fazem o check falhar
 - [x] Gate check passes: `pnpm --filter @8n8/cli test && pnpm check`
 
 **Tests**: unit

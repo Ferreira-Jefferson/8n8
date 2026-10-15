@@ -6,6 +6,10 @@ Este guia usa o plugin TypeScript (`packages/languages/typescript`) como exemplo
 
 Uma linguagem nova pede uma pasta nova e pequenos ajustes em dois arquivos do servidor. Nenhum arquivo do core muda.
 
+## Por que um plugin por linguagem
+
+O Tree-sitter tem gramática pronta para muitas linguagens, mas ele só devolve a árvore de sintaxe. O plugin precisa dizer o que a árvore significa: o que é função, import, rota HTTP e chamada de processo. Isso muda com a linguagem e com a biblioteca. Sem isso, o mapa perde as ligações entre linguagens. A gramática vem pronta (veja `packages/languages/treesitter`). As regras de extração são o trabalho de um plugin novo. A decisão está na AD-028, em `.specs/STATE.md`.
+
 ## O contrato `LanguagePlugin`
 
 O contrato fica em `packages/model/src/plugin.ts`. Veja o plugin TypeScript em `packages/languages/typescript/src/index.ts`:
@@ -50,7 +54,7 @@ interface LanguageAnalysis {
 ```
 
 - `files`: um grafo por arquivo recebido. O **primeiro nó** de cada grafo é o nó `file`. Os outros nós usam o id dele como prefixo.
-- `imports`: fios `imports` entre arquivos da mesma linguagem. Um fio por par (origem, destino). O `source` e o `target` são ids de nós `file`. O id do fio no TypeScript é `imports:<origem>-><destino>`. Todo fio aqui tem `kind: "imports"`.
+- `imports`: arestas `imports` entre arquivos da mesma linguagem. Uma aresta por par (origem, destino). O `source` e o `target` são ids de nós `file`. O id da aresta no TypeScript é `imports:<origem>-><destino>`. Toda aresta aqui tem `kind: "imports"`.
 - `offers`: o que o arquivo expõe (uma rota, o próprio caminho, uma função).
 - `requests`: o que o arquivo procura (uma URL chamada, um caminho executado, um nome chamado).
 
@@ -69,8 +73,8 @@ O tipo `Graph` fica em `packages/model/src/graph.ts`. A suíte de conformidade c
   - `openable: true` em `folder`, `file`, `module`, `function`, `class`, `loop` e `block`.
   - `openable: true` em `call` só quando o nó tem `target`. Sem `target`, é `false`.
   - `openable: false` em `code`, `condition`, `external` e `return`.
-- **Fios.** Os fios do grafo usam os tipos `calls`, `next`, `branch` e `imports`. O tipo `contains` nunca entra num `Graph`: a tela desenha esse fio.
-- **Todo fio aponta para nós que existem** no conjunto de grafos do `analyze`.
+- **Arestas.** As arestas do grafo usam os tipos `calls`, `next`, `branch` e `imports`. O tipo `contains` nunca entra num `Graph`: a tela desenha essa aresta.
+- **Toda aresta aponta para nós que existem** no conjunto de grafos do `analyze`.
 - **Determinismo.** O mesmo texto gera o mesmo grafo, sempre. Chamar duas vezes devolve valores iguais.
 - **Sem LLM.** A estrutura vem do parser. Nunca peça nada a um modelo de linguagem dentro de um plugin (AD-001).
 - **`Graph.language`** vale o `id` do plugin. `empty` vale `true` só quando `nodes` está vazio.
@@ -147,9 +151,9 @@ Crie `src/index.ts` com o objeto `LanguagePlugin`, como no exemplo acima. Divida
 | Arquivo | Papel |
 |---|---|
 | `src/parse.ts` | Carrega a gramática uma vez. |
-| `src/build-graph.ts` | Monta nós e fios de uma árvore. |
+| `src/build-graph.ts` | Monta nós e arestas de uma árvore. |
 | `src/extract.ts` | `extract`: o grafo de um trecho. |
-| `src/analyze.ts` | `analyze`: um grafo por arquivo, fios `imports`, ofertas e pedidos. |
+| `src/analyze.ts` | `analyze`: um grafo por arquivo, arestas `imports`, ofertas e pedidos. |
 | `src/detect.ts` | `detect`: a nota da linguagem. |
 | `src/links.ts` | Ofertas e pedidos de cada arquivo. |
 
@@ -235,7 +239,7 @@ A suíte confere:
 - `id`, `label`, `extensions`, `commentPrefix` e `ignoredDirs` bem formados;
 - `extract` determinístico, com `Graph.language` igual ao `id`, ids únicos, pré-ordem, linhas 1-based dentro do texto e a regra `openable`;
 - `detect` determinístico, com nota entre 0 e 1;
-- `analyze` determinístico, com um grafo por arquivo, o nó `file` primeiro, ids sob `file:<caminho>`, ids únicos entre arquivos, fios que apontam para nós que existem, fios `imports` do tipo `imports`, e ofertas e pedidos que apontam para nós que existem, com linha inteira maior ou igual a 1;
+- `analyze` determinístico, com um grafo por arquivo, o nó `file` primeiro, ids sob `file:<caminho>`, ids únicos entre arquivos, arestas que apontam para nós que existem, arestas `imports` do tipo `imports`, e ofertas e pedidos que apontam para nós que existem, com linha inteira maior ou igual a 1;
 - `analyze` de nenhum arquivo devolve tudo vazio.
 
 Rode só o pacote novo:
@@ -291,7 +295,7 @@ O `pnpm check` falha se você quebrar uma regra.
 
 ## Ligações entre linguagens
 
-Um arquivo de uma linguagem chama um de outra por um **canal**. O plugin só declara dados neutros e não conhece a outra linguagem. O pacote `packages/links` casa pedidos com ofertas e desenha os fios.
+Um arquivo de uma linguagem chama um de outra por um **canal**. O plugin só declara dados neutros e não conhece a outra linguagem. O pacote `packages/links` casa pedidos com ofertas e desenha as arestas.
 
 Os tipos `Offer` e `LinkRequest` têm os mesmos campos:
 
@@ -309,7 +313,7 @@ Há três canais. O `links` testa nesta ordem e para no primeiro que liga: `http
 | `process` | O caminho do próprio arquivo, relativo à raiz, ex.: `scripts/b.ts`. | O texto do caminho, como está no código, ex.: `node b.ts`. | Alguma palavra do pedido, resolvida a partir da raiz ou da pasta do arquivo que pede, é igual ao caminho da oferta. |
 | `name` | O nome de uma função exportada. | O nome chamado. | O nome é igual. |
 
-Só o canal `http` casa dentro da mesma linguagem. Os canais `process` e `name` ignoram uma oferta do mesmo arquivo ou da mesma linguagem (a mesma extensão), porque dentro da linguagem o fio `imports` já cobre.
+Só o canal `http` casa dentro da mesma linguagem. Os canais `process` e `name` ignoram uma oferta do mesmo arquivo ou da mesma linguagem (a mesma extensão), porque dentro da linguagem a aresta `imports` já cobre.
 
 Um pedido sem oferta fica como nó `external`. Um pedido com mais de uma oferta possível não liga nada, para não errar.
 
@@ -325,7 +329,7 @@ Veja como o plugin TypeScript declara cada canal em `packages/languages/typescri
 - **Oferta `name`:** cada função de nível superior exportada, pelo nome exportado.
 - **Pedido `name`:** uma chamada a um nome simples que o arquivo nem define nem importa (classificada como externa).
 
-O plugin Python faz o equivalente para as bibliotecas dele em `packages/languages/python/src/links.ts`. Declare só o que o seu parser enxerga com segurança. Um pedido errado cria um fio falso.
+O plugin Python faz o equivalente para as bibliotecas dele em `packages/languages/python/src/links.ts`. Declare só o que o seu parser enxerga com segurança. Um pedido errado cria uma aresta falsa.
 
 ## Detecção do trecho colado
 
