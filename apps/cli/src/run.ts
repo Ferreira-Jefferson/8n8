@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { createCore, resolvePort } from "@8n8/server";
+import { createCore, createFileSettingsStore, resolvePort } from "@8n8/server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import type { Hono } from "hono";
 
@@ -11,7 +11,7 @@ export interface RunDeps {
   env: Record<string, string | undefined>;
   /** The terminal's folder: a relative folder resolves from here (DIST-03). */
   cwd: string;
-  /** The user's home: data lives in <home>/.8n8 (DIST-09). */
+  /** The user's home: data and settings live in <home>/.8n8 (DIST-09, CFG-19). */
   home: string;
   paths: {
     /** The built screen to serve; undefined when Vite serves it (pnpm dev). */
@@ -38,13 +38,16 @@ Variáveis de ambiente:
   APP8N8_PORT          porta do servidor (padrão 4317)
   APP8N8_CACHE_DIR     pasta do cache (padrão ~/.8n8/cache)
   APP8N8_HISTORY_DIR   pasta do historico.db (padrão ~/.8n8)
+  APP8N8_CONFIG_DIR    pasta do config.json, gravado pela tela (padrão ~/.8n8)
   APP8N8_TOKEN         token de sessão fixo, com 32 caracteres ou mais (testes)
 
-LLM (opcional; sem chave, o mapa funciona):
+LLM (opcional; sem chave, o mapa funciona). Configure pela tela, em
+Configurações. Uma variável definida ganha da tela:
   APP8N8_LLM_PROVIDER  openrouter (padrão) ou openai-compatible
   OPENROUTER_API_KEY, OPENROUTER_BASE_URL
   APP8N8_LLM_API_KEY, APP8N8_LLM_BASE_URL
-  APP8N8_MODEL, APP8N8_REVIEW_MODEL`;
+  APP8N8_MODEL, APP8N8_REVIEW_MODEL
+  APP8N8_AUTO_SUMMARY, APP8N8_AUTO_SUGGESTIONS   1 gera sem clique, 0 só com clique`;
 
 const isFolder = (path: string) => {
   try {
@@ -92,6 +95,9 @@ export async function run(argv: string[], deps: RunDeps): Promise<number> {
     historyFile: join(deps.env.APP8N8_HISTORY_DIR || data, "historico.db"),
     port,
     token,
+    settings: createFileSettingsStore(
+      join(deps.env.APP8N8_CONFIG_DIR || data, "config.json"),
+    ),
   });
   if (deps.paths.web !== undefined) {
     app.use("/*", serveStatic({ root: deps.paths.web }));

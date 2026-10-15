@@ -263,9 +263,9 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] `PUT` pela CLI grava em `<home>/.8n8/config.json` ou em `APP8N8_CONFIG_DIR`
-- [ ] Permissão `0o600` conferida fora do Windows; a saída nunca tem a chave guardada
-- [ ] Gate check passes: `pnpm --filter @8n8/cli test`
+- [x] `PUT` pela CLI grava em `<home>/.8n8/config.json` ou em `APP8N8_CONFIG_DIR`
+- [x] Permissão `0o600` conferida fora do Windows; a saída nunca tem a chave guardada
+- [x] Gate check passes: `pnpm --filter @8n8/cli test`
 
 **Tests**: unit
 **Gate**: quick

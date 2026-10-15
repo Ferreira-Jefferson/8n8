@@ -2,7 +2,9 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -168,6 +170,10 @@ describe("8n8 --help (DIST-08)", () => {
       "APP8N8_PORT",
       "APP8N8_CACHE_DIR",
       "APP8N8_HISTORY_DIR",
+      "APP8N8_CONFIG_DIR",
+      "APP8N8_AUTO_SUMMARY",
+      "APP8N8_AUTO_SUGGESTIONS",
+      "Configurações",
       "APP8N8_LLM_PROVIDER",
       "OPENROUTER_API_KEY",
       "APP8N8_MODEL",
@@ -214,7 +220,7 @@ describe("no LLM config (DIST-11)", () => {
     const h = harness();
     await run([h.project], h.deps);
     const token = launch(opened(h.events)[0] ?? "").get("t") ?? "";
-    const res = await h.app().request("/api/explain", {
+    const res = await h.app().request("/api/summary", {
       method: "POST",
       headers: {
         host: "127.0.0.1:4317",
@@ -224,6 +230,82 @@ describe("no LLM config (DIST-11)", () => {
       body: JSON.stringify({ root: h.project, nodeId: "file:a.py/fn:f" }),
     });
     expect(await res.json()).toEqual({ status: "no-key" });
+  });
+});
+
+describe("settings in config.json (CFG-19, CFG-25)", () => {
+  const KEY = "sk-cli-sentinel-0000000000000000000000000";
+  const putSettings = (app: Hono, token: string, body: unknown) =>
+    app.request("/api/settings", {
+      method: "PUT",
+      headers: {
+        host: "127.0.0.1:4317",
+        "content-type": "application/json",
+        "x-8n8-token": token,
+      },
+      body: JSON.stringify(body),
+    });
+  const tokenOf = (h: ReturnType<typeof harness>) =>
+    launch(opened(h.events)[0] ?? "").get("t") ?? "";
+
+  it("keeps the settings in ~/.8n8/config.json, and a new run reads them", async () => {
+    const h = harness();
+    await run([], h.deps);
+    const res = await putSettings(h.app(), tokenOf(h), {
+      apiKey: KEY,
+      autoSummary: true,
+    });
+    expect(res.status).toBe(200);
+    const file = join(h.home, ".8n8", "config.json");
+    expect(JSON.parse(readFileSync(file, "utf8"))).toEqual({
+      apiKey: KEY,
+      autoSummary: true,
+    });
+
+    const again = harness();
+    again.deps.home = h.home;
+    await run([], again.deps);
+    const view = await again.app().request("/api/settings", {
+      headers: { host: "127.0.0.1:4317", "x-8n8-token": tokenOf(again) },
+    });
+    expect(await view.json()).toMatchObject({
+      hasKey: true,
+      autoSummary: true,
+    });
+  });
+
+  it("moves the settings to APP8N8_CONFIG_DIR", async () => {
+    const elsewhere = join(root, `config${n++}`);
+    const h = harness({ APP8N8_CONFIG_DIR: elsewhere });
+    await run([], h.deps);
+    await putSettings(h.app(), tokenOf(h), { autoSummary: true });
+    expect(existsSync(join(elsewhere, "config.json"))).toBe(true);
+    expect(existsSync(join(h.home, ".8n8", "config.json"))).toBe(false);
+  });
+
+  it.skipIf(process.platform === "win32")(
+    "gives config.json owner-only permission (CFG-25)",
+    async () => {
+      const h = harness();
+      await run([], h.deps);
+      await putSettings(h.app(), tokenOf(h), { apiKey: KEY });
+      const mode = statSync(join(h.home, ".8n8", "config.json")).mode;
+      expect(mode & 0o777).toBe(0o600);
+    },
+  );
+
+  it("never prints the stored key, on any later run (CFG-25)", async () => {
+    const h = harness();
+    await run([], h.deps);
+    await putSettings(h.app(), tokenOf(h), { apiKey: KEY });
+    for (const argv of [[], ["--help"], ["nada"], ["--no-open"]]) {
+      const later = harness();
+      later.deps.home = h.home;
+      await run(argv, later.deps);
+      expect([...later.out, ...later.err].join("\n")).not.toContain(
+        KEY.slice(0, 6),
+      );
+    }
   });
 });
 
