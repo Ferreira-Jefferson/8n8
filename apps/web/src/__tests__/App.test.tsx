@@ -291,6 +291,14 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     expect(breadcrumbItems()).toEqual(["loja"]);
   });
 
+  it("opens the folder the CLI asked for without any typing (DIST-01)", async () => {
+    projectMock.mockResolvedValue(loja);
+    render(<App initialFolder={lojaRoot} />);
+    await screen.findByTestId("canvas");
+    expect(projectMock).toHaveBeenCalledWith(lojaRoot);
+    expect(breadcrumbItems()).toEqual(["loja"]);
+  });
+
   it("shows Pasta não encontrada: <path> for a missing folder (PROJ-05)", async () => {
     projectMock.mockResolvedValue({
       error: "not-found",

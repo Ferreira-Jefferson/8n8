@@ -134,10 +134,10 @@ T10 → T11
 
 **Done when**:
 
-- [ ] Toda função de `api.ts` manda `x-8n8-token` quando há token; nenhuma chama `fetch` direto
-- [ ] Com `folder`, o `App` abre o mapa da pasta sem o usuário digitar nada
-- [ ] Os testes atuais da web continuam passando
-- [ ] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
+- [x] Toda função de `api.ts` manda `x-8n8-token` quando há token; nenhuma chama `fetch` direto
+- [x] Com `folder`, o `App` abre o mapa da pasta sem o usuário digitar nada
+- [x] Os testes atuais da web continuam passando
+- [x] Gate check passes: `pnpm --filter @8n8/web test && pnpm typecheck`
 
 **Tests**: unit
 **Gate**: quick

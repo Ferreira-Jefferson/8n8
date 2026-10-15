@@ -6,11 +6,16 @@ import type {
 } from "@8n8/model";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  deleteHistory,
   fetchExplanation,
   fetchGraph,
+  fetchHistory,
+  fetchHistoryEntry,
   fetchLanguages,
   fetchProject,
   fetchTitles,
+  setSessionToken,
+  starHistory,
 } from "../api";
 
 const graph: Graph = { language: "python", empty: false, nodes: [], edges: [] };
@@ -21,7 +26,10 @@ function fakeFetch(status: number, body: unknown) {
   return fn;
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  setSessionToken(null);
+});
 
 describe("fetchGraph", () => {
   const language = { id: "python", label: "Python", uncertain: false };
@@ -279,4 +287,39 @@ describe("fetchTitles (VID-14, VID-15)", () => {
     );
     expect(await fetchTitles({ source: "x" }, ids)).toEqual([]);
   });
+});
+
+describe("session token on every call (DIST-19)", () => {
+  // Every api function, called once; the answer only has to parse.
+  const calls: [string, () => Promise<unknown>][] = [
+    ["fetchGraph", () => fetchGraph("x")],
+    ["fetchLanguages", () => fetchLanguages()],
+    ["fetchProject", () => fetchProject("C:/p")],
+    ["fetchExplanation", () => fetchExplanation({ source: "x" }, "n")],
+    ["fetchTitles", () => fetchTitles({ source: "x" }, ["n"])],
+    ["fetchHistory", () => fetchHistory()],
+    ["fetchHistoryEntry", () => fetchHistoryEntry(1)],
+    ["deleteHistory", () => deleteHistory(1)],
+    ["starHistory", () => starHistory(1, true)],
+  ];
+  const sentHeader = (fn: ReturnType<typeof fakeFetch>) => {
+    const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit?];
+    return new Headers(init?.headers).get("x-8n8-token");
+  };
+
+  it.each(calls)("%s sends x-8n8-token", async (_name, call) => {
+    setSessionToken("tok-123");
+    const fn = fakeFetch(200, { items: [], entry: {}, languages: [] });
+    await call().catch(() => undefined);
+    expect(sentHeader(fn)).toBe("tok-123");
+  });
+
+  it.each(calls)(
+    "%s sends no token header without a session",
+    async (_name, call) => {
+      const fn = fakeFetch(200, { items: [], entry: {}, languages: [] });
+      await call().catch(() => undefined);
+      expect(sentHeader(fn)).toBeNull();
+    },
+  );
 });

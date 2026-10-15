@@ -179,7 +179,12 @@ function Logo() {
 }
 
 /** The launcher, the snippet editor, then the map: one level at a time, one click opens, "Voltar" and Esc go back, the panel shows the node (VID-08, 09, 14, 19, 23, 27, 33). */
-export function App() {
+export interface AppProps {
+  /** The folder the CLI asked to open (`#pasta=`); its map opens on load. */
+  initialFolder?: string | null;
+}
+
+export function App({ initialFolder = null }: AppProps) {
   const [view, setView] = useState<"home" | "editor" | "map">("home");
   const [text, setText] = useState("");
   const [folder, setFolder] = useState("");
@@ -242,17 +247,24 @@ export function App() {
     }
   }
 
-  async function openFolder() {
+  async function openFolder(path = folder) {
     setFailed(false);
     setNotFound(null);
     try {
-      const result = await fetchProject(folder);
+      const result = await fetchProject(path);
       if ("error" in result) fail(result.path);
-      else show({ kind: "project", root: folder, response: result });
+      else show({ kind: "project", root: path, response: result });
     } catch {
       fail(null);
     }
   }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once, for the folder the page was opened with
+  useEffect(() => {
+    if (initialFolder === null) return;
+    setFolder(initialFolder);
+    openFolder(initialFolder);
+  }, []);
 
   /** A saved map opens as a fresh one would, with no call to the parser. */
   function openEntry(entry: HistoryEntry) {
@@ -366,7 +378,7 @@ export function App() {
           <Home
             folder={folder}
             onFolderChange={setFolder}
-            onOpenFolder={openFolder}
+            onOpenFolder={() => openFolder()}
             onPaste={() => {
               setFailed(false);
               setNotFound(null);

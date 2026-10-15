@@ -14,8 +14,22 @@ export type ExplainResult = ExplainResponse | { status: "stale" };
 
 const JSON_HEADERS = { "content-type": "application/json" };
 
+/** The token the CLI opened this tab with; the server answers 401 without it (DIST-19). */
+let sessionToken: string | null = null;
+
+export function setSessionToken(token: string | null): void {
+  sessionToken = token;
+}
+
+/** Every call to the server goes through here, so none leaves without the token. */
+function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers);
+  if (sessionToken !== null) headers.set("x-8n8-token", sessionToken);
+  return fetch(url, { ...init, headers });
+}
+
 function post(url: string, body: unknown): Promise<Response> {
-  return fetch(url, {
+  return apiFetch(url, {
     method: "POST",
     headers: JSON_HEADERS,
     body: JSON.stringify(body),
@@ -32,7 +46,7 @@ export async function fetchGraph(source: string): Promise<GraphResponse> {
 /** The languages the server reads; any failure gives `[]`, and the screen keeps its generic texts. */
 export async function fetchLanguages(): Promise<LanguageInfo[]> {
   try {
-    const res = await fetch("/api/languages");
+    const res = await apiFetch("/api/languages");
     if (!res.ok) return [];
     const body = (await res.json()) as LanguagesResponse;
     return body.languages ?? [];
@@ -96,7 +110,7 @@ export async function fetchTitles(
 
 /** The saved searches, most recently opened first. */
 export async function fetchHistory(): Promise<HistoryItem[]> {
-  const res = await fetch("/api/history");
+  const res = await apiFetch("/api/history");
   if (!res.ok) throw new Error(`Falha ao ler o histórico (HTTP ${res.status})`);
   const body = (await res.json()) as { items: HistoryItem[] };
   return body.items;
@@ -104,7 +118,7 @@ export async function fetchHistory(): Promise<HistoryItem[]> {
 
 /** One saved map, whole: opening it asks no parser. */
 export async function fetchHistoryEntry(id: number): Promise<HistoryEntry> {
-  const res = await fetch(`/api/history/${id}`);
+  const res = await apiFetch(`/api/history/${id}`);
   if (!res.ok)
     throw new Error(`Falha ao abrir a pesquisa (HTTP ${res.status})`);
   const body = (await res.json()) as { entry: HistoryEntry };
@@ -112,14 +126,14 @@ export async function fetchHistoryEntry(id: number): Promise<HistoryEntry> {
 }
 
 export async function deleteHistory(id: number): Promise<void> {
-  const res = await fetch(`/api/history/${id}`, { method: "DELETE" });
+  const res = await apiFetch(`/api/history/${id}`, { method: "DELETE" });
   if (!res.ok)
     throw new Error(`Falha ao apagar a pesquisa (HTTP ${res.status})`);
 }
 
 /** Marks or unmarks a saved map as a favourite. */
 export async function starHistory(id: number, starred: boolean): Promise<void> {
-  const res = await fetch(`/api/history/${id}/star`, {
+  const res = await apiFetch(`/api/history/${id}/star`, {
     method: "PUT",
     headers: JSON_HEADERS,
     body: JSON.stringify({ starred }),
