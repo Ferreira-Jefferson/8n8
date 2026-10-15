@@ -220,14 +220,20 @@ describe("source scan: what the check cannot see (DIST-23)", () => {
     expect(sources.filter((f) => silencer.test(text(f)))).toEqual([]);
   });
 
+  // Pinned by line, not by file: a new line in links.ts (getBuiltinModule, a
+  // createRequire of child_process) fails here even though the file is listed.
   it("only open-browser.ts reaches child_process; links.ts only names it as analysed code", () => {
-    expect(
-      shipped
-        .filter((f) => /child_process|getBuiltinModule/.test(text(f)))
-        .sort(),
-    ).toEqual([
-      "apps/cli/src/open-browser.ts",
-      "packages/languages/typescript/src/links.ts",
+    const lines = shipped
+      .filter((f) => f !== "apps/cli/src/open-browser.ts")
+      .flatMap((f) =>
+        text(f)
+          .split("\n")
+          .filter((line) => /child_process|getBuiltinModule/.test(line))
+          .map((line) => `${f}: ${line.trim()}`),
+      );
+    expect(lines).toEqual([
+      'packages/languages/typescript/src/links.ts: // Request: `child_process.exec("node b.ts")`.',
+      'packages/languages/typescript/src/links.ts: if (lib === "child_process" && PROCESS_CALLS.has(processFn ?? "")) {',
     ]);
   });
 
