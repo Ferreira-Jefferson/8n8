@@ -127,8 +127,8 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Cada parte grava na sua pasta; uma entrada v3 conta como ausente
-- [ ] Gate check passes: `pnpm --filter @8n8/explain test`
+- [x] Cada parte grava na sua pasta; uma entrada v3 conta como ausente
+- [x] Gate check passes: `pnpm --filter @8n8/explain test`
 
 **Tests**: unit
 **Gate**: quick

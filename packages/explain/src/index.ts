@@ -1,5 +1,10 @@
 export type { CacheEntryV2, ExplainCache } from "./cache";
-export { createDiskCache } from "./cache";
+export type { CacheEntry, PartCache } from "./cache";
+export {
+  createDiskCache,
+  createSuggestionsCache,
+  createSummaryCache,
+} from "./cache";
 export type { ExplainDeps } from "./explain";
 export { explainNode } from "./explain";
 export type { PromptLanguage } from "./language";
