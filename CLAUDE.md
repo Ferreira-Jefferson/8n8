@@ -7,7 +7,7 @@ Não é migração para n8n. Do n8n só vem o modelo mental.
 ## Princípios do produto
 
 - Um único grafo hierárquico (repositório → módulo → arquivo → função → bloco), desenhado como fluxo de nós e fios.
-- A estrutura vem de parsing determinístico (Tree-sitter), nunca de LLM. O LLM só escreve resumos e sugestões, sempre apontando o nó e a linha de origem.
+- A estrutura vem de parsing determinístico (Tree-sitter, um plugin por linguagem: Python e TypeScript), nunca de LLM. O LLM só escreve resumos e sugestões, sempre apontando o nó e a linha de origem.
 - Todo nó leva de volta ao código real (arquivo e linhas).
 - O objetivo é supervisionar e entender rápido um código, muitas vezes escrito por IA, e não ler linha por linha.
 
@@ -24,7 +24,15 @@ As visualizações podem ser descartáveis: uma vista gerada para responder a um
 
 ## Comandos
 
-<!-- Preencher quando a stack existir. Ex.: instalar, rodar, testar, lint, typecheck. -->
+- `pnpm install`: instala as dependências.
+- `pnpm dev`: sobe o servidor (`dev:server`, porta 4317) e a tela (`dev:web`, Vite).
+- `pnpm start`: constrói a tela e sobe o servidor.
+- `pnpm test`: testes unitários (Vitest) de todos os pacotes.
+- `pnpm typecheck`: TypeScript nos pacotes e em `e2e`.
+- `pnpm check`: Biome e dependency-cruiser (fronteiras).
+- `pnpm e2e`: testes de ponta a ponta (Playwright).
+
+Guias: [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md), [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md). Contribuição: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Antes de codar
 

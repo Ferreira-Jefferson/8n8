@@ -80,9 +80,9 @@ Premissa: numa pasta, o plugin continua sendo escolhido pela extensão. É mais 
 ## Fase 8 — Prova e documentação para open source
 
 - [x] 8.1 **[D1]** Plugin `packages/languages/typescript` (`@code2n8n/lang-typescript`): funções, classes, chamadas, imports, condições, laços e retornos. Passa na suíte de conformidade (2.5). Nenhum arquivo do core muda para ele entrar. Feito, com 219 testes próprios. Falta ligar a suíte de conformidade (2.5) quando `@code2n8n/lang-testkit` entrar.
-- [ ] 8.2 **[1ª]** Guia `docs/adicionar-linguagem.md`: o contrato, o passo a passo, a suíte de conformidade e um exemplo.
-- [ ] 8.3 **[2ª]** O repositório não tem `README.md` nem `CONTRIBUTING.md`. Para o lançamento open source, os dois precisam existir.
-- [ ] 8.4 **[2ª]** O `CLAUDE.md` e as ADs falam só de Python em alguns pontos. Atualizar.
+- [x] 8.2 **[1ª]** Guia `docs/adicionar-linguagem.md`: o contrato, o passo a passo, a suíte de conformidade e um exemplo.
+- [x] 8.3 **[2ª]** O repositório não tem `README.md` nem `CONTRIBUTING.md`. Para o lançamento open source, os dois precisam existir.
+- [x] 8.4 **[2ª]** O `CLAUDE.md` e as ADs falam só de Python em alguns pontos. Atualizar.
 
 ## Fase 9 — Ligações entre linguagens (D3)
 

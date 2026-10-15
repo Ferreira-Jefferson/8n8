@@ -23,7 +23,7 @@
 
 ### AD-004 — Stack
 - **Date:** 2026-10-13
-- **Decision:** TypeScript, monorepo pnpm, Biome e Vitest, igual ao roadmap. Parser: Tree-sitter (`web-tree-sitter` com a gramática Python). Interface: React com React Flow. App web local. (O modo grafo saiu pela AD-019.)
+- **Decision:** TypeScript, monorepo pnpm, Biome e Vitest, igual ao roadmap. Parser: Tree-sitter (`web-tree-sitter` com a gramática Python). Interface: React com React Flow. App web local. (O modo grafo saiu pela AD-019. A AD-020 atualiza o parser: a gramática Python é do plugin.)
 - **Consequence:** A design phase confirma as versões exatas das bibliotecas.
 
 ### AD-005 — Fronteiras de pacote garantidas no build
@@ -36,7 +36,7 @@
 - **Date:** 2026-10-13
 - **Context:** A AD-001 pede o mesmo grafo para a mesma entrada. As features 02 e 03 reutilizam o grafo.
 - **Decision:** O pacote `model` define `Graph`, `FlowNode`, `FlowEdge` e a interface `Extractor`. Os IDs saem do caminho na estrutura (`fn:nome`, `cls:Nome/fn:metodo`, `<pai>/s<i>`, `<cond>/b<j>/s<i>`, `#n` para nomes repetidos). As linhas são 1-based e inclusivas. Os nós ficam em pré-ordem, na ordem do código.
-- **Consequence:** Outras linguagens implementam `Extractor` e produzem o mesmo formato. A feature 02 acrescenta o arquivo ao prefixo do ID.
+- **Consequence:** Outras linguagens implementam `Extractor` e produzem o mesmo formato (a AD-020 atualiza: elas implementam `LanguagePlugin`). A feature 02 acrescenta o arquivo ao prefixo do ID.
 
 ### AD-007 — Servidor dono do parsing e do LLM
 - **Date:** 2026-10-13
@@ -147,6 +147,7 @@
 *Pausado pelo usuário em 2026-10-14, durante a verificação da feature 05. Nada foi enviado ao remoto.*
 
 - **Ordem das features:** 01-fatia-central ✅ → 04-fidelidade-e-cache ✅ → 02-pasta-local ✅ → 05-mapa-do-video (implementada, falta verificar).
+- **06-multilinguagem:** plugins Python e TypeScript, ligações entre linguagens e provedores de LLM (AD-020, AD-021). Documentação pronta: `README.md`, `CONTRIBUTING.md` e `docs/adicionar-linguagem.md`. O e2e da tarefa 7.4 não foi marcado.
 - **Features futuras:** o tour em vídeo (degrau 4). O modo grafo (03) foi removido em 2026-10-14 (AD-019).
 - **01, 04 e 02:** verificadas (PASS). Detalhes no `validation.md` de cada uma.
 - **05-mapa-do-video:**
