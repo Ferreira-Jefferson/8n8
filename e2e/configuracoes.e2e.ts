@@ -14,7 +14,6 @@ const SETTINGS = "http://127.0.0.1:4322";
 const REPO = fileURLToPath(new URL("..", import.meta.url));
 const CACHE = join(REPO, ".cache", "e2e-settings");
 const CONFIG = join(REPO, ".cache", "e2e-settings-config", "config.json");
-const FAKE_URL = "http://127.0.0.1:4318/v1";
 const FAKE_KEY = "e2e-fake-key";
 // A function the fake LLM summarizes and its reviewer accepts (fake-llm.ts).
 const CONTAGEM =
@@ -26,14 +25,13 @@ const HEADERS = {
   "content-type": "application/json",
 };
 
-/** Puts the server back to no key, no URL and both modes off, through its own API. */
+/** Puts the server back to no key, the default provider and both modes off, through its own API. */
 async function resetSettings(page: Page): Promise<void> {
   const res = await page.request.put(`${SETTINGS}/api/settings`, {
     headers: HEADERS,
     data: {
       provider: "openrouter",
       apiKey: null,
-      baseURL: null,
       autoSummary: false,
       autoSuggestions: false,
     },
@@ -93,18 +91,16 @@ test.describe("Configurações e LLM sob demanda", () => {
     expect(await fakeLog()).toEqual([]);
   });
 
-  test("CFG-07, CFG-17, CFG-19: a key and URL saved in the dialog turn the LLM on with no restart; the click asks the summary only, and the cache shows with no click", async ({
+  test("CFG-07, CFG-17, CFG-19: a key saved in the dialog turns the LLM on with no restart; the click asks the summary only, and the cache shows with no click", async ({
     page,
   }) => {
     await openFunction(page);
     await saveInDialog(page, async (dialog) => {
       await dialog.getByLabel("Chave de API").fill(FAKE_KEY);
-      await dialog.getByLabel("URL").fill(FAKE_URL);
     });
     // The settings live in the config file of the server.
     expect(JSON.parse(readFileSync(CONFIG, "utf8"))).toMatchObject({
       apiKey: FAKE_KEY,
-      baseURL: FAKE_URL,
     });
 
     // Selecting again asks the cache only: nothing is spent on the explanation.
@@ -138,7 +134,6 @@ test.describe("Configurações e LLM sob demanda", () => {
     await openFunction(page);
     await saveInDialog(page, async (dialog) => {
       await dialog.getByLabel("Chave de API").fill(FAKE_KEY);
-      await dialog.getByLabel("URL").fill(FAKE_URL);
       await dialog.getByLabel("Gerar o resumo ao selecionar um nó").check();
       await dialog.getByLabel("Pedir as sugestões ao selecionar um nó").check();
     });
@@ -157,7 +152,7 @@ test.describe("Configurações e LLM sob demanda", () => {
     ).toHaveCount(0);
   });
 
-  test("CFG-12, CFG-15, CFG-22: the dialog says a key is stored and never shows it; a new URL erases it; a variable locks its field", async ({
+  test("CFG-12, CFG-15, CFG-22: the dialog says a key is stored and never shows it; a new provider erases it; a variable locks its field", async ({
     page,
   }) => {
     await page.goto(`${SETTINGS}/`);
@@ -177,41 +172,41 @@ test.describe("Configurações e LLM sob demanda", () => {
     await expect(dialog.getByLabel("Chave de API")).toHaveValue("");
     // APP8N8_MODEL is set for this server.
     await expect(dialog.getByLabel("Modelo")).toBeDisabled();
+    await expect(dialog.getByLabel("Modelo")).toHaveValue("e2e/drafter");
     await expect(
       dialog.getByText("Definido pela variável APP8N8_MODEL"),
     ).toBeVisible();
 
-    await dialog.getByLabel("URL").fill(FAKE_URL);
+    await dialog.getByLabel("Provedor").selectOption("anthropic");
     await dialog.getByRole("button", { name: "Salvar" }).click();
     await expect(dialog.getByText("Configurações salvas.")).toBeVisible();
     await expect(dialog.getByText(/Chave guardada/)).toHaveCount(0);
     expect(JSON.parse(readFileSync(CONFIG, "utf8"))).toEqual({
-      provider: "openrouter",
+      provider: "anthropic",
       autoSummary: false,
       autoSuggestions: false,
-      baseURL: FAKE_URL,
     });
   });
 
-  test("CFG-21: the server refuses a URL that is not http(s), and the dialog keeps what was typed", async ({
+  test("CFG-14, CFG-21: the dialog has no URL field, and the server refuses a base URL in the settings", async ({
     page,
   }) => {
     await page.goto(`${SETTINGS}/`);
     await page.getByRole("button", { name: "Configurações" }).click();
     const dialog = page.getByRole("dialog", { name: "Configurações" });
-    // The field type stops a bad URL in the browser; the server refuses it too.
-    await dialog.getByLabel("URL").evaluate((el) => {
-      (el as HTMLInputElement).type = "text";
+    for (const provider of ["openrouter", "openai", "anthropic"]) {
+      await dialog.getByLabel("Provedor").selectOption(provider);
+      await expect(dialog.getByLabel("URL")).toHaveCount(0);
+    }
+    // The URL comes only from the environment of the server.
+    const res = await page.request.put(`${SETTINGS}/api/settings`, {
+      headers: HEADERS,
+      data: { baseURL: "http://127.0.0.1:4318/v1" },
     });
-    await dialog.getByLabel("URL").fill("ftp://127.0.0.1/v1");
-    await dialog.getByRole("button", { name: "Salvar" }).click();
-    await expect(
-      dialog.getByText("Não foi possível salvar. Confira a URL e a chave."),
-    ).toBeVisible();
-    await expect(dialog.getByLabel("URL")).toHaveValue("ftp://127.0.0.1/v1");
+    expect(res.status()).toBe(400);
   });
 
-  test("CC-01: choosing claude-code hides the key and the URL and says the subscription is enough", async ({
+  test("CC-01: choosing claude-code hides the key and says the subscription is enough", async ({
     page,
   }) => {
     await page.goto(`${SETTINGS}/`);
@@ -220,7 +215,6 @@ test.describe("Configurações e LLM sob demanda", () => {
     await expect(dialog.getByLabel("Chave de API")).toBeVisible();
     await dialog.getByLabel("Provedor").selectOption("claude-code");
     await expect(dialog.getByLabel("Chave de API")).toHaveCount(0);
-    await expect(dialog.getByLabel("URL")).toHaveCount(0);
     await expect(
       dialog.getByText(
         "O Claude Code usa a sua assinatura. Não precisa de chave.",

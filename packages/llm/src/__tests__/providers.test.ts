@@ -15,6 +15,8 @@ describe("providerOf", () => {
     for (const p of PROVIDERS) expect(providerOf(p.id)).toBe(p);
     expect(PROVIDERS.map((p) => p.id)).toEqual([
       "openrouter",
+      "openai",
+      "anthropic",
       "openai-compatible",
       "claude-code",
     ]);
@@ -22,7 +24,7 @@ describe("providerOf", () => {
 
   it("throws, naming the known ids, on an unknown id", () => {
     expect(() => providerOf("nope")).toThrow(
-      'Provedor de LLM desconhecido: "nope". Use um destes: openrouter, openai-compatible, claude-code.',
+      'Provedor de LLM desconhecido: "nope". Use um destes: openrouter, openai, anthropic, openai-compatible, claude-code.',
     );
   });
 });

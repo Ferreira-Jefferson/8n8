@@ -49,7 +49,7 @@ describe("PUT /api/settings (CFG-13, CFG-14)", () => {
 
   it.each([
     ["an unknown field", JSON.stringify({ apiKey: KEY, extra: 1 })],
-    ["an ftp URL", JSON.stringify({ baseURL: "ftp://127.0.0.1/v1" })],
+    ["a base URL", JSON.stringify({ baseURL: "http://127.0.0.1/v1" })],
     ["an empty key", JSON.stringify({ apiKey: "" })],
     ["an unknown provider", JSON.stringify({ provider: "nope" })],
     ["a body that is not JSON", "{ quebrado"],

@@ -1,5 +1,7 @@
 import type { LlmClient } from "@8n8/model";
+import { anthropic } from "./anthropic";
 import { claudeCode } from "./claude-code";
+import { openai } from "./openai";
 import { openaiCompatible } from "./openai-compatible";
 import { openrouter } from "./openrouter";
 import type { LlmConfig, LlmProvider, ProviderOptions } from "./provider";
@@ -7,6 +9,8 @@ import type { LlmConfig, LlmProvider, ProviderOptions } from "./provider";
 /** The registry: a new provider is one file plus one entry here. */
 export const PROVIDERS: LlmProvider[] = [
   openrouter,
+  openai,
+  anthropic,
   openaiCompatible,
   claudeCode,
 ];

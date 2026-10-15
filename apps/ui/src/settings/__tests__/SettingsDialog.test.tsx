@@ -26,6 +26,7 @@ const view = (over: Partial<SettingsResponse> = {}): SettingsResponse => ({
   providers: [
     { id: "openrouter", defaultModel: DEFAULT_MODEL, usesKey: true },
     { id: "openai-compatible", defaultModel: "gpt-4o-mini", usesKey: true },
+    { id: "openai", defaultModel: "gpt-5-nano", usesKey: true },
   ],
   env: {},
   ...over,
@@ -45,7 +46,7 @@ const save = () =>
   fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
 
 describe("SettingsDialog fields (CFG-20)", () => {
-  it("shows provider, key, URL, model and both modes, with the default model as a hint", () => {
+  it("shows provider, key, model and both modes, with the default model as a hint", () => {
     open();
     expect(screen.getByRole("dialog", { name: "Configurações" })).toBeTruthy();
     expect((screen.getByLabelText("Provedor") as HTMLSelectElement).value).toBe(
@@ -54,7 +55,7 @@ describe("SettingsDialog fields (CFG-20)", () => {
     expect(field("Chave de API").type).toBe("password");
     expect(field("Chave de API").value).toBe("");
     expect(field("Chave de API").placeholder).toBe("Cole a chave");
-    expect(field("URL").value).toBe("");
+    expect(screen.queryByLabelText("URL")).toBeNull();
     expect(field("Modelo").value).toBe("");
     expect(field("Modelo").placeholder).toBe(DEFAULT_MODEL);
     expect(field("Gerar o resumo ao selecionar um nó").checked).toBe(false);
@@ -75,14 +76,32 @@ describe("SettingsDialog fields (CFG-20)", () => {
     expect(onSaved).toHaveBeenCalledWith(view());
   });
 
-  it("shows a stored model and URL, and the hint of the provider picked", () => {
-    open(view({ model: "m/x", baseURL: "http://127.0.0.1:9/v1" }));
+  it("shows a stored model, and the hint and an empty model of the provider picked", () => {
+    open(view({ model: "m/x" }));
     expect(field("Modelo").value).toBe("m/x");
-    expect(field("URL").value).toBe("http://127.0.0.1:9/v1");
     fireEvent.change(screen.getByLabelText("Provedor"), {
-      target: { value: "openai-compatible" },
+      target: { value: "openai" },
     });
-    expect(field("Modelo").placeholder).toBe("gpt-4o-mini");
+    // The model of the old provider means nothing to the new one.
+    expect(field("Modelo").value).toBe("");
+    expect(field("Modelo").placeholder).toBe("gpt-5-nano");
+  });
+
+  it("sends the typed model, trimmed", async () => {
+    saveMock.mockResolvedValue(view({ model: "z/novo" }));
+    open();
+    fireEvent.change(field("Modelo"), { target: { value: " z/novo " } });
+    save();
+    await screen.findByText("Configurações salvas.");
+    expect(saveMock).toHaveBeenCalledWith({ model: "z/novo" });
+  });
+
+  it("keeps the model a variable sets when the provider changes", () => {
+    open(view({ model: "env/model", env: { model: "APP8N8_MODEL" } }));
+    fireEvent.change(screen.getByLabelText("Provedor"), {
+      target: { value: "openai" },
+    });
+    expect(field("Modelo").value).toBe("env/model");
   });
 
   it("says so when the settings could not be read", () => {
@@ -121,14 +140,14 @@ describe("SettingsDialog save (CFG-21)", () => {
   it("keeps the typed values and shows the error when the server refuses", async () => {
     saveMock.mockResolvedValue(null);
     const { onSaved } = open();
-    fireEvent.change(field("URL"), { target: { value: "ftp://x" } });
+    fireEvent.change(field("Modelo"), { target: { value: "--x" } });
     save();
     expect(
       await screen.findByText(
-        "Não foi possível salvar. Confira a URL e a chave.",
+        "Não foi possível salvar. Confira a chave e o modelo.",
       ),
     ).toBeTruthy();
-    expect(field("URL").value).toBe("ftp://x");
+    expect(field("Modelo").value).toBe("--x");
     expect(onSaved).not.toHaveBeenCalled();
   });
 
@@ -169,17 +188,13 @@ describe("patchOf", () => {
   const base = {
     provider: "openrouter",
     apiKey: "",
-    baseURL: "http://a",
     model: "m/x",
     autoSummary: false,
     autoSuggestions: false,
   };
 
-  it("erases a cleared URL and model with null", () => {
-    expect(patchOf(base, { ...base, baseURL: "", model: " " })).toEqual({
-      baseURL: null,
-      model: null,
-    });
+  it("erases a cleared model with null", () => {
+    expect(patchOf(base, { ...base, model: " " })).toEqual({ model: null });
   });
 
   it("ignores a blank key and keeps a changed provider", () => {
@@ -199,10 +214,9 @@ describe("SettingsDialog with claude-code (CC-01)", () => {
       ...over,
     });
 
-  it("hides the key and the URL and says the subscription is enough", () => {
+  it("hides the key and says the subscription is enough", () => {
     open(withClaude({ provider: "claude-code", model: "sonnet" }));
     expect(screen.queryByLabelText("Chave de API")).toBeNull();
-    expect(screen.queryByLabelText("URL")).toBeNull();
     expect(
       screen.getByText(
         "O Claude Code usa a sua assinatura. Não precisa de chave.",

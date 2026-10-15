@@ -5,7 +5,7 @@ export interface LlmConfig {
   /** Id of the provider (`LlmProvider.id`). */
   provider: string;
   apiKey: string | undefined;
-  /** Undefined means the provider's own default URL. */
+  /** Undefined means the provider's own default URL; only the provider's environment variable sets it. */
   baseURL: string | undefined;
   model: string;
   reviewModel: string;
@@ -23,7 +23,7 @@ export interface LlmProvider {
   id: string;
   /** Model used when APP8N8_MODEL is unset or empty. */
   defaultModel: string;
-  /** False for a provider with no key and no URL (Claude Code): the settings dialog hides both fields. */
+  /** False for a provider with no key (Claude Code): the settings dialog hides the key field. */
   usesKey: boolean;
   /** Environment variables that hold the key and the base URL of this provider, when it has them. */
   env: { apiKey?: string; baseURL?: string };

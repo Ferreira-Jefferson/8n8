@@ -13,11 +13,10 @@ export interface SettingsDialogProps {
   onClose: () => void;
 }
 
-/** The text fields as typed; an empty model or URL means the provider's default. */
+/** The text fields as typed; an empty model means the provider's default. */
 interface Form {
   provider: string;
   apiKey: string;
-  baseURL: string;
   model: string;
   autoSummary: boolean;
   autoSuggestions: boolean;
@@ -26,7 +25,7 @@ interface Form {
 const defaultModelOf = (settings: SettingsResponse, provider: string) =>
   settings.providers.find((p) => p.id === provider)?.defaultModel ?? "";
 
-/** A provider with no key and no URL (Claude Code) shows neither field (CC-01). */
+/** A provider with no key (Claude Code) shows no key field (CC-01). */
 const usesKey = (settings: SettingsResponse, provider: string) =>
   settings.providers.find((p) => p.id === provider)?.usesKey ?? true;
 
@@ -34,7 +33,6 @@ function formOf(settings: SettingsResponse): Form {
   return {
     provider: settings.provider,
     apiKey: "",
-    baseURL: settings.baseURL ?? "",
     // The default model shows as the field's hint, not as a stored value.
     model:
       settings.model === defaultModelOf(settings, settings.provider)
@@ -45,14 +43,11 @@ function formOf(settings: SettingsResponse): Form {
   };
 }
 
-/** Only the fields that changed; a cleared URL or model erases the stored one (CFG-21). */
+/** Only the fields that changed; a cleared model erases the stored one (CFG-21). */
 export function patchOf(before: Form, after: Form): SettingsPatch {
   const patch: SettingsPatch = {};
   if (after.provider !== before.provider) patch.provider = after.provider;
   if (after.apiKey.trim() !== "") patch.apiKey = after.apiKey.trim();
-  if (after.baseURL.trim() !== before.baseURL) {
-    patch.baseURL = after.baseURL.trim() || null;
-  }
   if (after.model.trim() !== before.model) {
     patch.model = after.model.trim() || null;
   }
@@ -67,7 +62,7 @@ export function patchOf(before: Form, after: Form): SettingsPatch {
 
 type Status = "idle" | "saving" | "saved" | "failed";
 
-/** Provider, key, URL, model and the automatic modes; a field the environment sets stays read-only (CFG-20, CFG-21, CFG-22). */
+/** Provider, key, model and the automatic modes; a field the environment sets stays read-only (CFG-20, CFG-21, CFG-22). */
 export function SettingsDialog({
   settings,
   onSaved,
@@ -108,6 +103,12 @@ export function SettingsDialog({
     setForm((f) => (f ? { ...f, [key]: value } : f));
     setStatus("idle");
   };
+  const pickProvider = (provider: string) => {
+    // A model of one provider means nothing to another, unless a variable fixes it.
+    const keep = Boolean(lockedBy("model"));
+    setForm((f) => (f ? { ...f, provider, model: keep ? f.model : "" } : f));
+    setStatus("idle");
+  };
   const lockedBy = (field: SettingsField) => settings?.env[field];
   const lockNote = (field: SettingsField) =>
     lockedBy(field) ? (
@@ -137,7 +138,7 @@ export function SettingsDialog({
               <select
                 value={form.provider}
                 disabled={Boolean(lockedBy("provider"))}
-                onChange={(e) => set("provider", e.target.value)}
+                onChange={(e) => pickProvider(e.target.value)}
               >
                 {settings.providers.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -179,17 +180,6 @@ export function SettingsDialog({
                     </button>
                   </p>
                 )}
-                <label>
-                  URL
-                  <input
-                    type="url"
-                    value={form.baseURL}
-                    disabled={Boolean(lockedBy("baseURL"))}
-                    placeholder="Padrão do provedor"
-                    onChange={(e) => set("baseURL", e.target.value)}
-                  />
-                </label>
-                {lockNote("baseURL")}
               </>
             )}
             <label>
@@ -226,7 +216,7 @@ export function SettingsDialog({
             {status === "saved" && <p role="status">Configurações salvas.</p>}
             {status === "failed" && (
               <p role="alert">
-                Não foi possível salvar. Confira a URL e a chave.
+                Não foi possível salvar. Confira a chave e o modelo.
               </p>
             )}
             <div className="dialog-actions">

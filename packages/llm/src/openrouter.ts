@@ -3,7 +3,7 @@ import type { LlmProvider } from "./provider";
 
 const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 
-/** OpenRouter; baseURL also serves an OpenAI-compatible fake in E2E. */
+/** OpenRouter; OPENROUTER_BASE_URL also serves an OpenAI-compatible fake in E2E. */
 export const openrouter: LlmProvider = {
   id: "openrouter",
   defaultModel: "~deepseek/deepseek-v4-flash-latest",

@@ -43,9 +43,10 @@ Variáveis de ambiente:
 
 LLM (opcional; sem chave, o mapa funciona). Configure pela tela, em
 Configurações. Uma variável definida ganha da tela:
-  APP8N8_LLM_PROVIDER  openrouter (padrão) ou openai-compatible
+  APP8N8_LLM_PROVIDER  openrouter (padrão), openai, anthropic, openai-compatible ou claude-code
   OPENROUTER_API_KEY, OPENROUTER_BASE_URL
-  APP8N8_LLM_API_KEY, APP8N8_LLM_BASE_URL
+  OPENAI_API_KEY, ANTHROPIC_API_KEY
+  APP8N8_LLM_API_KEY, APP8N8_LLM_BASE_URL   openai-compatible (a URL só vem daqui)
   APP8N8_MODEL, APP8N8_REVIEW_MODEL
   APP8N8_AUTO_SUMMARY, APP8N8_AUTO_SUGGESTIONS   1 gera sem clique, 0 só com clique`;
 

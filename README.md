@@ -78,12 +78,12 @@ Para acrescentar outro editor, veja [docs/adicionar-editor.md](docs/adicionar-ed
 
 Os resumos e as sugestões pedem um provedor de LLM. O jeito mais simples é pela tela: clique no botão **Configurações** (no canto de cima, em todas as telas) e preencha:
 
-- **Provedor**: `openrouter` (o padrão), `openai-compatible` (OpenAI, Ollama, LM Studio) ou `claude-code` (a sua assinatura do Claude Code, sem chave).
+- **Provedor**: `openrouter` (o padrão), `openai`, `anthropic` (os três pedem uma chave de API), `openai-compatible` (Ollama, LM Studio ou um servidor seu, com a URL pela variável de ambiente) ou `claude-code` (a sua assinatura do Claude Code, sem chave).
 - **Chave de API**: o campo só recebe a chave. Ela nunca volta para a tela: o diálogo diz só "Chave guardada".
-- **URL** e **Modelo**: vazios usam o padrão do provedor.
+- **Modelo**: escreva o nome exato do modelo, como o provedor o conhece. Vazio usa o padrão do provedor, que aparece como dica no campo.
 - **Gerar o resumo ao selecionar um nó** e **Pedir as sugestões ao selecionar um nó**: desligados, o resumo e as sugestões só são pedidos quando você clica em "Gerar resumo" ou "Pedir sugestões". Assim nada é gasto enquanto você só navega. O que já está no cache aparece sem clique.
 
-Trocar o provedor ou a URL apaga a chave guardada, para a chave nunca ir a um servidor que você não escolheu.
+Trocar o provedor apaga a chave e o modelo guardados, para a chave nunca ir a um serviço que você não escolheu.
 
 ### Variáveis de ambiente
 
@@ -93,10 +93,10 @@ Uma variável de ambiente ganha da tela, e o campo dela aparece travado no diál
 cp .env.example .env
 ```
 
-- `APP8N8_LLM_PROVIDER`: `openrouter` (o padrão), `openai-compatible` (OpenAI, Ollama, LM Studio) ou `claude-code`.
+- `APP8N8_LLM_PROVIDER`: `openrouter` (o padrão), `openai`, `anthropic`, `openai-compatible` (Ollama, LM Studio, servidor próprio) ou `claude-code`.
 - `APP8N8_CLAUDE_PATH`: o caminho do executável do Claude Code, quando ele não está no lugar de instalação padrão. O caminho só vem desta variável, nunca da tela.
-- `OPENROUTER_API_KEY`: a chave do provedor `openrouter`.
-- `APP8N8_LLM_BASE_URL` e `APP8N8_LLM_API_KEY`: a URL e a chave do provedor `openai-compatible`. Em servidor local, a chave é opcional.
+- `OPENROUTER_API_KEY`, `OPENAI_API_KEY` e `ANTHROPIC_API_KEY`: a chave de cada provedor. Esses três usam o endereço oficial. Só o `openrouter` aceita trocar a URL, por `OPENROUTER_BASE_URL`.
+- `APP8N8_LLM_BASE_URL` e `APP8N8_LLM_API_KEY`: a URL e a chave do provedor `openai-compatible`. A URL só vem desta variável: a tela não tem campo de URL. Em servidor local, a chave é opcional.
 - `APP8N8_MODEL` e `APP8N8_REVIEW_MODEL`: o modelo do resumo e o do revisor. Vazio usa o padrão do provedor.
 - `APP8N8_AUTO_SUMMARY` e `APP8N8_AUTO_SUGGESTIONS`: `1` pede o resumo ou as sugestões ao selecionar um nó; `0` espera o clique.
 

@@ -55,15 +55,6 @@ function flag(value: string | undefined): boolean | undefined {
   return undefined;
 }
 
-const isHttpUrl = (value: string) => {
-  try {
-    const { protocol } = new URL(value);
-    return protocol === "http:" || protocol === "https:";
-  } catch {
-    return false;
-  }
-};
-
 // Strict: an unknown field is an error, never ignored (CFG-14).
 const patchSchema = z
   .object({
@@ -72,7 +63,6 @@ const patchSchema = z
       .refine((id) => PROVIDERS.some((p) => p.id === id))
       .optional(),
     apiKey: z.string().trim().min(1).max(512).nullable().optional(),
-    baseURL: z.string().max(2048).refine(isHttpUrl).nullable().optional(),
     // A model id, never something a program could read as a flag (CC-03): it may start
     // with a letter, a digit or `~` (OpenRouter), then only id characters.
     model: z
@@ -87,7 +77,7 @@ const patchSchema = z
   })
   .strict();
 
-/** The stored settings after a patch: `null` erases; a new provider or URL erases the key, and a new provider its URL and model, unless the patch brings them (CFG-15). */
+/** The stored settings after a patch: `null` erases; a new provider erases the key and the model, unless the patch brings them (CFG-15). */
 export function applyPatch(
   stored: StoredSettings,
   patch: SettingsPatch,
@@ -96,15 +86,11 @@ export function applyPatch(
   const providerChanged =
     patch.provider !== undefined &&
     patch.provider !== (stored.provider ?? DEFAULT_PROVIDER);
-  const urlChanged =
-    patch.baseURL !== undefined &&
-    (patch.baseURL ?? undefined) !== stored.baseURL;
   if (providerChanged) {
-    delete next.baseURL;
+    delete next.apiKey;
     delete next.model;
   }
-  if (providerChanged || urlChanged) delete next.apiKey;
-  for (const field of ["provider", "apiKey", "baseURL", "model"] as const) {
+  for (const field of ["provider", "apiKey", "model"] as const) {
     const value = patch[field];
     if (value === null) delete next[field];
     else if (value !== undefined) next[field] = value;
@@ -146,11 +132,10 @@ export function createSettingsService(
     const s = await load();
     const config = resolveLlmConfig(env, s);
     const provider = providerOf(config.provider);
-    // A provider without a key or a URL has no variable for them.
+    // A provider without a key has no variable for it.
     const names: Record<SettingsField, string | undefined> = {
       provider: "APP8N8_LLM_PROVIDER",
       apiKey: provider.env.apiKey,
-      baseURL: provider.env.baseURL,
       model: "APP8N8_MODEL",
       ...AUTO_ENV,
     };
@@ -164,7 +149,6 @@ export function createSettingsService(
     const modes = auto(s);
     return {
       provider: config.provider,
-      ...(config.baseURL === undefined ? {} : { baseURL: config.baseURL }),
       model: config.model,
       autoSummary: modes.summary,
       autoSuggestions: modes.suggestions,

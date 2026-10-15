@@ -2,7 +2,6 @@
 export interface StoredSettings {
   provider?: string;
   apiKey?: string;
-  baseURL?: string;
   model?: string;
   autoSummary?: boolean;
   autoSuggestions?: boolean;
@@ -12,7 +11,6 @@ export interface StoredSettings {
 export interface SettingsPatch {
   provider?: string;
   apiKey?: string | null;
-  baseURL?: string | null;
   model?: string | null;
   autoSummary?: boolean;
   autoSuggestions?: boolean;
@@ -22,7 +20,6 @@ export interface SettingsPatch {
 export type SettingsField =
   | "provider"
   | "apiKey"
-  | "baseURL"
   | "model"
   | "autoSummary"
   | "autoSuggestions";
@@ -30,14 +27,12 @@ export type SettingsField =
 /** The effective settings, without the key (CFG-12). */
 export interface SettingsResponse {
   provider: string;
-  /** Undefined means the provider's own default URL. */
-  baseURL?: string;
   model: string;
   autoSummary: boolean;
   autoSuggestions: boolean;
   /** Whether a key is in effect, from the environment or stored. */
   hasKey: boolean;
-  /** `usesKey` false: the provider needs no key and no URL (Claude Code, CC-01). */
+  /** `usesKey` false: the provider needs no key (Claude Code, CC-01). */
   providers: { id: string; defaultModel: string; usesKey: boolean }[];
   /** The environment variable that sets a field, for each field one sets (CFG-22). */
   env: Partial<Record<SettingsField, string>>;

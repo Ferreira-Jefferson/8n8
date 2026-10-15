@@ -18,7 +18,7 @@ export interface MementoLike {
 export const SECRET_KEY = "8n8.apiKey";
 export const STATE_KEY = "8n8.settings";
 
-const TEXT_FIELDS = ["provider", "baseURL", "model"] as const;
+const TEXT_FIELDS = ["provider", "model"] as const;
 const FLAG_FIELDS = ["autoSummary", "autoSuggestions"] as const;
 
 /** Only the known fields of the right type: a stray value in the state is dropped. */

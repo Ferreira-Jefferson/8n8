@@ -267,7 +267,7 @@ describe("settings (CFG-12, CFG-13, CFG-21)", () => {
 
   it("saveSettings gives null on 400", async () => {
     fakeFetch(400, { error: "invalid settings" });
-    expect(await saveSettings({ baseURL: "ftp://x" })).toBeNull();
+    expect(await saveSettings({ model: "--x" })).toBeNull();
   });
 });
 

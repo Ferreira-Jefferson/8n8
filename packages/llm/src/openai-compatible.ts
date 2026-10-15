@@ -3,7 +3,7 @@ import type { LlmProvider } from "./provider";
 
 const DEFAULT_BASE_URL = "https://api.openai.com/v1";
 
-/** Any API that speaks the OpenAI chat protocol: OpenAI, Ollama, LM Studio. A local server needs only baseURL; the key is optional. */
+/** Any API that speaks the OpenAI chat protocol: OpenAI, Ollama, LM Studio. A local server needs only APP8N8_LLM_BASE_URL; the key is optional. */
 export const openaiCompatible: LlmProvider = {
   id: "openai-compatible",
   defaultModel: "gpt-4o-mini",

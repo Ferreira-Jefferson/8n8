@@ -200,17 +200,15 @@ describe("the API key never reaches a response (DIST-22, CFG-23)", () => {
     });
     fromSettings = createCore({
       ...base,
-      env: {},
+      // The key comes from the settings; the URL only from the environment.
+      env: { OPENROUTER_BASE_URL: `http://127.0.0.1:${port}/v1` },
       cacheDir: join(dir, "cache-settings"),
       settings: memoryStore(),
     });
     const put = await fromSettings.request("/api/settings", {
       method: "PUT",
       headers: { host: HOST, "x-8n8-token": TEST_TOKEN, ...JSON_TYPE },
-      body: JSON.stringify({
-        apiKey: STORED_SENTINEL,
-        baseURL: `http://127.0.0.1:${port}/v1`,
-      }),
+      body: JSON.stringify({ apiKey: STORED_SENTINEL }),
     });
     expect(put.status).toBe(200);
   });

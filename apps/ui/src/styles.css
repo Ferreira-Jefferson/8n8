@@ -1402,6 +1402,11 @@ body {
   align-items: center;
   gap: 12px;
   color: var(--accent);
+.settings-dialog select option {
+  background: var(--panel-bg);
+  color: var(--second);
+}
+
 }
 
 .dialog-actions {

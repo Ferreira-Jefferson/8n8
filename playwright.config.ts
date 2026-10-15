@@ -184,7 +184,8 @@ export default defineConfig({
         APP8N8_TOKEN: E2E_TOKEN,
         APP8N8_PORT: "4322",
         OPENROUTER_API_KEY: "",
-        OPENROUTER_BASE_URL: "",
+        // The URL only comes from here; the key and the rest go in through the dialog.
+        OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
         APP8N8_MODEL: "e2e/drafter",
         APP8N8_REVIEW_MODEL: "e2e/reviewer",
         APP8N8_CACHE_DIR: cacheDir("e2e-settings"),

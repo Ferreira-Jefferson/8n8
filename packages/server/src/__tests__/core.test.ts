@@ -553,7 +553,7 @@ describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
         token: TEST_TOKEN,
         settings: noSettings(),
       }),
-    ).toThrow(/desconhecido.*openrouter, openai-compatible/);
+    ).toThrow(/desconhecido.*openrouter, openai, anthropic, openai-compatible/);
   });
 
   it("without a client both pipelines answer no-key, whatever the provider", async () => {

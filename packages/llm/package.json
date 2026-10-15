@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@8n8/model": "workspace:*",
+    "@anthropic-ai/sdk": "0.134.0",
     "openai": "7.32.0"
   },
   "devDependencies": {

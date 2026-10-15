@@ -28,8 +28,8 @@ Cada provedor implementa `LlmProvider`, em `packages/llm/src/provider.ts`:
 |---|---|
 | `id` | O nome do provedor. É o valor de `APP8N8_LLM_PROVIDER`. Entra na impressão digital do cache. |
 | `defaultModel` | O modelo usado quando `APP8N8_MODEL` está vazia. |
-| `usesKey` | `false` para um provedor sem chave e sem URL (como o `claude-code`). O diálogo de Configurações esconde os dois campos. |
-| `env` | Os nomes das variáveis de chave (`apiKey`) e de URL (`baseURL`), quando o provedor tem. |
+| `usesKey` | `false` para um provedor sem chave (como o `claude-code`). O diálogo de Configurações esconde o campo da chave. |
+| `env` | Os nomes das variáveis de chave (`apiKey`) e de URL (`baseURL`), quando o provedor tem. A URL só vem da variável: a tela não tem campo de URL. |
 | `isConfigured(config, options)` | Retorna `false` se falta o que o provedor precisa. Então o painel mostra "configure um provedor". `options.env` é o ambiente do host. |
 | `create(config, options)` | Retorna o `LlmClient`. `options.fetch` serve aos testes, e `options.env` traz o ambiente do host. |
 
@@ -55,7 +55,7 @@ O provedor lê o perfil. O pipeline nunca lê.
 
 ## Exemplo: um provedor novo
 
-Este exemplo cria o provedor `meu-provedor`. A API dele fala o protocolo da OpenAI, mas exige um cabeçalho extra. Se a sua API só fala o protocolo da OpenAI, use `openai-compatible` e não crie nada.
+Este exemplo cria o provedor `meu-provedor`. A API dele fala o protocolo da OpenAI, mas exige um cabeçalho extra. Se a sua API só fala o protocolo da OpenAI, use `openai-compatible` (com `APP8N8_LLM_BASE_URL`) e não crie nada.
 
 1. Crie `packages/llm/src/meu-provedor.ts`:
 
@@ -66,6 +66,7 @@ import type { LlmProvider } from "./provider";
 export const meuProvedor: LlmProvider = {
   id: "meu-provedor",
   defaultModel: "meu-modelo-rapido",
+  usesKey: true,
   env: { apiKey: "MEU_PROVEDOR_API_KEY", baseURL: "MEU_PROVEDOR_BASE_URL" },
   isConfigured: (config) => config.apiKey !== undefined,
   create: (config, options = {}) =>
@@ -81,16 +82,16 @@ export const meuProvedor: LlmProvider = {
 
 2. Registre o provedor em `PROVIDERS`, em `packages/llm/src/providers.ts`.
 3. Escreva `packages/llm/src/__tests__/meu-provedor.test.ts` com um `fetch` falso. Use `openrouter.test.ts` como modelo. Nenhum teste usa a rede.
-4. Acrescente as variáveis ao `.env.example`. O diálogo de Configurações lista o provedor novo sozinho, a partir de `PROVIDERS`, e guarda a chave, a URL e o modelo dele sem código a mais.
+4. Acrescente as variáveis ao `.env.example`. O diálogo de Configurações lista o provedor novo sozinho, a partir de `PROVIDERS`, e guarda a chave e o modelo dele sem código a mais, e mostra o `defaultModel` dele como dica no campo Modelo.
 5. Rode `pnpm typecheck`, `pnpm check` e `pnpm test`.
 
 ## API com protocolo próprio
 
-`createChatClient` serve às APIs com o protocolo da OpenAI. Uma API com protocolo próprio (Anthropic nativa, Gemini nativa) não usa `createChatClient`. O provedor implementa `create` por conta própria e retorna um objeto com `complete`. O resto do guia vale igual.
+`createChatClient` serve às APIs com o protocolo da OpenAI. Uma API com protocolo próprio não usa `createChatClient`. O provedor implementa `create` por conta própria e retorna um objeto com `complete`. O `anthropic.ts` é o exemplo: ele usa o SDK oficial, separa as mensagens `system` e pede o JSON só pelo prompt. O resto do guia vale igual.
 
 ## O que não muda
 
 - O pipeline `explain` não importa `llm`. A regra `explain-not-llm` do dependency-cruiser garante isso.
 - O servidor cria um cliente para a config atual e o passa ao resumo, às sugestões e aos títulos. Ele só cria outro quando a config muda.
-- A config vem campo a campo: a variável de ambiente ganha do valor guardado pela tela, e o valor guardado ganha do padrão do provedor. A chave, a URL e o modelo guardados valem só para o provedor com que foram guardados.
+- A config vem campo a campo: a variável de ambiente ganha do valor guardado pela tela, e o valor guardado ganha do padrão do provedor. A chave e o modelo guardados valem só para o provedor com que foram guardados.
 - O id do provedor entra na impressão digital do cache. Trocar de provedor refaz os textos, mesmo com o mesmo nome de modelo.

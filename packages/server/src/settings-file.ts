@@ -8,7 +8,6 @@ import type { SettingsStore } from "./settings";
 const fileSchema = z.object({
   provider: z.string().optional(),
   apiKey: z.string().optional(),
-  baseURL: z.string().optional(),
   model: z.string().optional(),
   autoSummary: z.boolean().optional(),
   autoSuggestions: z.boolean().optional(),

@@ -136,15 +136,14 @@ describe("resolveLlmConfig: stored settings (CFG-16)", () => {
   const STORED = {
     provider: "openai-compatible",
     apiKey: "stored-key",
-    baseURL: "http://localhost:11434/v1",
     model: "llama-x",
   };
 
-  it("uses the stored provider, key, URL and model when the environment sets none", () => {
+  it("uses the stored provider, key and model when the environment sets none; the URL never comes from the store", () => {
     expect(resolveLlmConfig({}, STORED)).toEqual({
       provider: "openai-compatible",
       apiKey: "stored-key",
-      baseURL: "http://localhost:11434/v1",
+      baseURL: undefined,
       model: "llama-x",
       reviewModel: "llama-x",
     });
@@ -154,7 +153,7 @@ describe("resolveLlmConfig: stored settings (CFG-16)", () => {
     const base = { APP8N8_LLM_PROVIDER: "openai-compatible" };
     expect(
       resolveLlmConfig({ ...base, APP8N8_LLM_API_KEY: "env-key" }, STORED),
-    ).toMatchObject({ apiKey: "env-key", baseURL: STORED.baseURL });
+    ).toMatchObject({ apiKey: "env-key", baseURL: undefined });
     expect(
       resolveLlmConfig({ ...base, APP8N8_LLM_BASE_URL: "http://env" }, STORED),
     ).toMatchObject({ apiKey: "stored-key", baseURL: "http://env" });
@@ -169,7 +168,7 @@ describe("resolveLlmConfig: stored settings (CFG-16)", () => {
     ).toMatchObject({ apiKey: "stored-key", model: "llama-x" });
   });
 
-  it("never sends a stored key, URL or model to another provider chosen by the environment", () => {
+  it("never sends a stored key or model to another provider chosen by the environment", () => {
     expect(
       resolveLlmConfig({ APP8N8_LLM_PROVIDER: "openrouter" }, STORED),
     ).toEqual({
@@ -200,11 +199,8 @@ describe("resolveLlmConfig: stored settings (CFG-16)", () => {
   });
 
   it("treats empty stored values as absent", () => {
-    expect(
-      resolveLlmConfig({}, { apiKey: "", baseURL: "", model: "" }),
-    ).toMatchObject({
+    expect(resolveLlmConfig({}, { apiKey: "", model: "" })).toMatchObject({
       apiKey: undefined,
-      baseURL: undefined,
       model: DEFAULT_MODEL,
     });
   });

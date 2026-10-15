@@ -1,4 +1,4 @@
-import type { LlmConfig } from "@8n8/llm";
+import { type LlmConfig, PROVIDERS } from "@8n8/llm";
 import type { LlmClient, StoredSettings } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import {
@@ -46,27 +46,32 @@ describe("view (CFG-12)", () => {
       autoSummary: false,
       autoSuggestions: false,
       hasKey: false,
-      providers: [
-        { id: "openrouter", defaultModel: DEFAULT_MODEL, usesKey: true },
-        { id: "openai-compatible", defaultModel: "gpt-4o-mini", usesKey: true },
-        { id: "claude-code", defaultModel: "sonnet", usesKey: false },
-      ],
+      providers: PROVIDERS.map(({ id, defaultModel, usesKey }) => ({
+        id,
+        defaultModel,
+        usesKey,
+      })),
       env: {},
     });
+    expect(view.providers.map((p) => p.id)).toEqual([
+      "openrouter",
+      "openai",
+      "anthropic",
+      "openai-compatible",
+      "claude-code",
+    ]);
   });
 
   it("shows the stored settings, says a key exists and never shows it", async () => {
     const { store } = memoryStore({
       apiKey: KEY,
       model: "m/x",
-      baseURL: "http://127.0.0.1:9/v1",
       autoSummary: true,
     });
     const view = await createSettingsService({}, store).view();
     expect(view).toMatchObject({
       provider: "openrouter",
       model: "m/x",
-      baseURL: "http://127.0.0.1:9/v1",
       autoSummary: true,
       autoSuggestions: false,
       hasKey: true,
@@ -146,16 +151,14 @@ describe("update (CFG-13, CFG-14)", () => {
     expect(JSON.stringify(view)).not.toContain(KEY);
   });
 
-  it("erases apiKey, baseURL and model with null", async () => {
+  it("erases apiKey and model with null", async () => {
     const mem = memoryStore({
       apiKey: KEY,
-      baseURL: "http://127.0.0.1:9/v1",
       model: "m/x",
       autoSummary: true,
     });
     await createSettingsService({}, mem.store).update({
       apiKey: null,
-      baseURL: null,
       model: null,
     });
     expect(mem.current()).toEqual({ autoSummary: true });
@@ -164,9 +167,7 @@ describe("update (CFG-13, CFG-14)", () => {
   it.each([
     ["an unknown field", { apiKey: KEY, extra: 1 }],
     ["an unknown provider", { provider: "nope" }],
-    ["a URL without http(s)", { baseURL: "ftp://x" }],
-    ["a URL that is not a URL", { baseURL: "não é url" }],
-    ["a javascript: URL", { baseURL: "javascript:alert(1)" }],
+    ["a base URL, which only the environment sets", { baseURL: "http://x/v1" }],
     ["an empty key", { apiKey: "" }],
     ["a blank key", { apiKey: "   " }],
     ["a mode that is not a boolean", { autoSummary: "sim" }],
@@ -204,6 +205,9 @@ describe("model ids the patch accepts", () => {
     "openai/gpt-4o-mini",
     "llama3.1:8b",
     "sonnet[1m]",
+    "dots-studio/dots-3-note-preview:free",
+    "gpt-4.1-nano",
+    "claude-haiku-5-5",
   ])("accepts %s", async (model) => {
     const mem = memoryStore();
     await createSettingsService({}, mem.store).update({ model });
@@ -212,49 +216,31 @@ describe("model ids the patch accepts", () => {
 });
 
 describe("applyPatch: the key never follows a new destination (CFG-15)", () => {
-  const stored = {
-    apiKey: KEY,
-    baseURL: "http://127.0.0.1:9/v1",
-    model: "m/x",
-  };
+  const stored = { apiKey: KEY, model: "m/x" };
 
-  it("erases the key when the URL changes", () => {
-    expect(applyPatch(stored, { baseURL: "http://outro/v1" })).toEqual({
-      baseURL: "http://outro/v1",
-      model: "m/x",
-    });
-    expect(applyPatch(stored, { baseURL: null })).toEqual({ model: "m/x" });
-  });
-
-  it("erases the key, the URL and the model when the provider changes", () => {
-    expect(applyPatch(stored, { provider: "openai-compatible" })).toEqual({
-      provider: "openai-compatible",
+  it("erases the key and the model when the provider changes", () => {
+    expect(applyPatch(stored, { provider: "anthropic" })).toEqual({
+      provider: "anthropic",
     });
   });
 
-  it("keeps a new key, URL and model brought by the same patch", () => {
+  it("keeps a new key and model brought by the same patch", () => {
     expect(
       applyPatch(stored, {
-        provider: "openai-compatible",
-        baseURL: "http://localhost:11434/v1",
+        provider: "anthropic",
         apiKey: "new-key",
-        model: "llama",
+        model: "claude-haiku-5-5",
       }),
     ).toEqual({
-      provider: "openai-compatible",
-      baseURL: "http://localhost:11434/v1",
+      provider: "anthropic",
       apiKey: "new-key",
-      model: "llama",
+      model: "claude-haiku-5-5",
     });
   });
 
-  it("keeps the key when the URL and the provider stay the same", () => {
+  it("keeps the key when the provider stays the same", () => {
     expect(
-      applyPatch(stored, {
-        baseURL: "http://127.0.0.1:9/v1",
-        provider: "openrouter",
-        autoSummary: true,
-      }),
+      applyPatch(stored, { provider: "openrouter", autoSummary: true }),
     ).toEqual({ ...stored, provider: "openrouter", autoSummary: true });
   });
 });
