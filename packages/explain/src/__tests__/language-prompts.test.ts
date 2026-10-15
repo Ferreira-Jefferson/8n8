@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { docstringOmitted } from "../language";
-import { buildStepPrompt, buildSystemPrompt } from "../prompt";
+import {
+  buildStepSummaryPrompt,
+  buildSuggestionsPrompt,
+  buildSummaryPrompt,
+} from "../prompt";
 import { buildReviewerPrompt } from "../reviewer";
 import { buildTitlePrompt } from "../title-prompt";
 import { buildTitleReviewerPrompt } from "../title-reviewer";
@@ -23,8 +27,9 @@ describe("prompts by language (6.1, 6.2)", () => {
     string,
     (l: typeof PY) => { text: string; version: string },
   ][] = [
-    ["system", (l) => buildSystemPrompt("REGRAS", l)],
-    ["step", (l) => buildStepPrompt("REGRAS", l)],
+    ["summary", (l) => buildSummaryPrompt("REGRAS", l)],
+    ["suggestions", (l) => buildSuggestionsPrompt("REGRAS", l)],
+    ["step", (l) => buildStepSummaryPrompt("REGRAS", l)],
     ["reviewer", (l) => buildReviewerPrompt(l)],
     ["title", (l) => buildTitlePrompt("REGRAS", l)],
     ["title reviewer", (l) => buildTitleReviewerPrompt(l)],
@@ -50,15 +55,15 @@ describe("prompts by language (6.1, 6.2)", () => {
 
   it("the explain prompts show the marker of the language, not the Python one", () => {
     for (const { text } of [
-      buildSystemPrompt("REGRAS", TS),
-      buildStepPrompt("REGRAS", TS),
+      buildSummaryPrompt("REGRAS", TS),
+      buildStepSummaryPrompt("REGRAS", TS),
     ]) {
       expect(text).toContain("`// docstring omitida`");
       expect(text).not.toContain("# docstring omitida");
     }
     for (const { text } of [
-      buildSystemPrompt("REGRAS", PY),
-      buildStepPrompt("REGRAS", PY),
+      buildSummaryPrompt("REGRAS", PY),
+      buildStepSummaryPrompt("REGRAS", PY),
     ]) {
       expect(text).toContain("`# docstring omitida`");
     }

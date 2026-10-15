@@ -1,7 +1,7 @@
 import {
   buildReviewerPrompt,
-  buildStepPrompt,
-  buildSystemPrompt,
+  buildStepSummaryPrompt,
+  buildSummaryPrompt,
   buildTitlePrompt,
   buildTitleReviewerPrompt,
   createDiskCache,
@@ -104,8 +104,8 @@ export function composeExplain(
           provider: config.provider,
           model: config.model,
           reviewModel: config.reviewModel,
-          prompt: buildSystemPrompt(deps.ptsRules, lang),
-          stepPrompt: buildStepPrompt(deps.ptsRules, lang),
+          prompt: buildSummaryPrompt(deps.ptsRules, lang),
+          stepPrompt: buildStepSummaryPrompt(deps.ptsRules, lang),
           reviewer: buildReviewerPrompt(lang),
         },
       ];

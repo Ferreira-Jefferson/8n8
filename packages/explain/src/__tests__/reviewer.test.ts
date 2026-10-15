@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildSystemPrompt } from "../prompt";
+import { buildSummaryPrompt } from "../prompt";
 import {
   applyVerdicts,
   buildReviewerPrompt,
@@ -86,7 +86,7 @@ describe("reviewerMessage (FID-06)", () => {
       .filter((line) => !/^\d+ \| /.test(line))
       .join("\n");
     expect(outsideCode).not.toContain("calcular_frete");
-    const pts = buildSystemPrompt("REGRAS PTS", PY).text;
+    const pts = buildSummaryPrompt("REGRAS PTS", PY).text;
     expect(msg).not.toContain("REGRAS PTS");
     expect(msg).not.toContain(pts.slice(0, 40));
     expect(msg).not.toContain('"summary"');

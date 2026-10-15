@@ -13,19 +13,19 @@ import { type ExplainRequest, type LlmClient, sliceLines } from "@8n8/model";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildReviewerPrompt,
-  buildSystemPrompt,
+  buildSummaryPrompt,
   createDiskCache,
   type ExplainCache,
   type ExplainDeps,
   explainNode,
 } from "../index";
-import { buildStepPrompt } from "../prompt";
+import { buildStepSummaryPrompt } from "../prompt";
 import { PY } from "./py";
 
 type LlmRequest = Parameters<LlmClient["complete"]>[0];
 
-const prompt = buildSystemPrompt("REGRAS PTS", PY);
-const stepPrompt = buildStepPrompt("REGRAS PTS", PY);
+const prompt = buildSummaryPrompt("REGRAS PTS", PY);
+const stepPrompt = buildStepSummaryPrompt("REGRAS PTS", PY);
 const reviewer = buildReviewerPrompt(PY);
 const MODEL = "~deepseek/deepseek-v4-flash-latest";
 
@@ -210,7 +210,7 @@ describe("explainNode", () => {
       request(),
       deps(llm, {
         model: "openai/gpt-x",
-        prompt: buildSystemPrompt("OUTRAS REGRAS", PY),
+        prompt: buildSummaryPrompt("OUTRAS REGRAS", PY),
       }),
     );
     expect(requests).toHaveLength(6);
@@ -559,7 +559,7 @@ describe("explainNode for a step (VID-28)", () => {
 
     const res = await explainNode(
       step(),
-      deps(llm, { stepPrompt: buildStepPrompt("OUTRAS REGRAS", PY) }),
+      deps(llm, { stepPrompt: buildStepSummaryPrompt("OUTRAS REGRAS", PY) }),
     );
     expect(requests).toHaveLength(4);
     expect(res).toMatchObject({

@@ -13,8 +13,8 @@ import {
 import { tmpdir } from "node:os";
 import { join, sep } from "node:path";
 import {
-  buildStepPrompt,
-  buildSystemPrompt,
+  buildStepSummaryPrompt,
+  buildSummaryPrompt,
   buildTitlePrompt,
   buildTitleReviewerPrompt,
 } from "@8n8/explain";
@@ -343,8 +343,8 @@ describe("composeExplain for a step (VID-28)", () => {
     });
     await explain(req);
     const [step, full] = f.drafts();
-    expect(step?.system).toBe(buildStepPrompt(ptsRules, PY).text);
-    expect(full?.system).toBe(buildSystemPrompt(ptsRules, PY).text);
+    expect(step?.system).toBe(buildStepSummaryPrompt(ptsRules, PY).text);
+    expect(full?.system).toBe(buildSummaryPrompt(ptsRules, PY).text);
   });
 });
 

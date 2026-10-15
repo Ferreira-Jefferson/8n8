@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { type Draft, type DraftSuggestion, parseExplanation } from "../schema";
+import {
+  type DraftSuggestion,
+  parseSuggestions,
+  parseSummary,
+} from "../schema";
 
 const suggestion = (
   line: number,
@@ -11,78 +15,105 @@ const suggestion = (
   severity: "media",
 });
 
-const explanation = (suggestions: DraftSuggestion[]): Draft => ({
+const summary = {
   summary: "Calcula o frete.",
   inputs: ["peso"],
   outputs: ["valor"],
-  suggestions,
+};
+
+const NO_SUMMARY = { summary: "", inputs: [], outputs: [] };
+
+describe("parseSummary (CORE-16, CFG-03)", () => {
+  it("reads plain JSON and fenced ```json JSON the same way, with no suggestions", () => {
+    const raw = JSON.stringify(summary);
+    const draft = { ...summary, suggestions: [] };
+    expect(parseSummary(raw)).toEqual(draft);
+    expect(parseSummary(`\`\`\`json\n${raw}\n\`\`\``)).toEqual(draft);
+  });
+
+  it("ignores suggestions and a docstring verdict in the answer", () => {
+    const raw = JSON.stringify({
+      ...summary,
+      suggestions: [suggestion(1)],
+      docstring: { reflects: false, reason: "x" },
+    });
+    expect(parseSummary(raw)).toEqual({ ...summary, suggestions: [] });
+  });
+
+  it("throws when the text is not JSON or the summary fields are missing", () => {
+    expect(() => parseSummary("não é JSON")).toThrow();
+    const { summary: _, ...noSummary } = summary;
+    expect(() => parseSummary(JSON.stringify(noSummary))).toThrow();
+    expect(() =>
+      parseSummary(JSON.stringify({ ...summary, inputs: "peso" })),
+    ).toThrow();
+  });
+
+  it("returns inputs as plain strings, without claim ids (FID-01)", () => {
+    expect(parseSummary(JSON.stringify(summary)).inputs).toEqual(["peso"]);
+  });
 });
 
-describe("parseExplanation (CORE-16, CORE-22)", () => {
-  it("reads plain JSON and fenced ```json JSON the same way", () => {
-    const value = explanation([suggestion(2)]);
-    const raw = JSON.stringify(value);
-    expect(parseExplanation(raw, 4)).toEqual(value);
-    expect(parseExplanation(`\`\`\`json\n${raw}\n\`\`\``, 4)).toEqual(value);
+describe("parseSuggestions (CORE-22, CFG-03)", () => {
+  const raw = (suggestions: DraftSuggestion[], extra = {}) =>
+    JSON.stringify({ suggestions, ...extra });
+
+  it("reads plain and fenced JSON, with an empty summary", () => {
+    const value = { ...NO_SUMMARY, suggestions: [suggestion(2)] };
+    expect(parseSuggestions(raw([suggestion(2)]), 4)).toEqual(value);
+    expect(
+      parseSuggestions(`\`\`\`json\n${raw([suggestion(2)])}\n\`\`\``, 4),
+    ).toEqual(value);
   });
 
-  it("throws when the text is not JSON", () => {
-    expect(() => parseExplanation("não é JSON", 4)).toThrow();
+  it("ignores a summary in the answer", () => {
+    expect(parseSuggestions(raw([], summary), 4)).toEqual({
+      ...NO_SUMMARY,
+      suggestions: [],
+    });
   });
 
-  it("throws when the JSON does not match the schema", () => {
-    const { summary: _, ...noSummary } = explanation([]);
-    expect(() => parseExplanation(JSON.stringify(noSummary), 4)).toThrow();
-    const badSeverity = explanation([
-      { ...suggestion(1), severity: "critica" as never },
-    ]);
-    expect(() => parseExplanation(JSON.stringify(badSeverity), 4)).toThrow();
-    const fractionalLine = explanation([suggestion(1.5)]);
-    expect(() => parseExplanation(JSON.stringify(fractionalLine), 4)).toThrow();
+  it("throws when the text is not JSON or does not match the schema", () => {
+    expect(() => parseSuggestions("não é JSON", 4)).toThrow();
+    expect(() => parseSuggestions(JSON.stringify(summary), 4)).toThrow();
+    expect(() =>
+      parseSuggestions(
+        raw([{ ...suggestion(1), severity: "critica" as never }]),
+        4,
+      ),
+    ).toThrow();
+    expect(() => parseSuggestions(raw([suggestion(1.5)]), 4)).toThrow();
   });
 
   it("drops suggestions whose line is outside 1..lineCount (CORE-22)", () => {
-    const raw = JSON.stringify(
-      explanation([suggestion(0), suggestion(1), suggestion(4), suggestion(5)]),
+    const parsed = parseSuggestions(
+      raw([suggestion(0), suggestion(1), suggestion(4), suggestion(5)]),
+      4,
     );
-    expect(parseExplanation(raw, 4).suggestions.map((s) => s.line)).toEqual([
-      1, 4,
-    ]);
+    expect(parsed.suggestions.map((s) => s.line)).toEqual([1, 4]);
   });
 
   it("keeps the first 5 valid suggestions in order", () => {
     const seven = [1, 2, 3, 4, 1, 2, 3].map((line, i) =>
       suggestion(line, `cmd ${i}`),
     );
-    const result = parseExplanation(JSON.stringify(explanation(seven)), 4);
-    expect(result.suggestions).toEqual(seven.slice(0, 5));
-  });
-
-  it("returns inputs as plain strings, without claim ids (FID-01)", () => {
-    const raw = JSON.stringify({ ...explanation([]), inputs: ["peso"] });
-    expect(parseExplanation(raw, 4).inputs).toEqual(["peso"]);
+    expect(parseSuggestions(raw(seven), 4).suggestions).toEqual(
+      seven.slice(0, 5),
+    );
   });
 
   it("accepts zero suggestions", () => {
-    const value = explanation([]);
-    expect(parseExplanation(JSON.stringify(value), 4)).toEqual(value);
+    expect(parseSuggestions(raw([]), 4).suggestions).toEqual([]);
   });
-});
 
-describe("parseExplanation docstring field", () => {
-  it("accepts the optional docstring object and still parses answers without it", () => {
-    const base = explanation([]);
+  it("keeps the optional docstring verdict and rejects a malformed one", () => {
     const docstring = { reflects: false, reason: "Cita `peso`." };
-    expect(parseExplanation(JSON.stringify({ ...base, docstring }), 4)).toEqual(
-      { ...base, docstring },
+    expect(parseSuggestions(raw([], { docstring }), 4).docstring).toEqual(
+      docstring,
     );
-    expect(parseExplanation(JSON.stringify(base), 4)).not.toHaveProperty(
-      "docstring",
-    );
-  });
-
-  it("rejects a malformed docstring object", () => {
-    const bad = { ...explanation([]), docstring: { reflects: "sim" } };
-    expect(() => parseExplanation(JSON.stringify(bad), 4)).toThrow();
+    expect(parseSuggestions(raw([]), 4)).not.toHaveProperty("docstring");
+    expect(() =>
+      parseSuggestions(raw([], { docstring: { reflects: "sim" } }), 4),
+    ).toThrow();
   });
 });

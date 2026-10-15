@@ -4,7 +4,11 @@ export type { ExplainDeps } from "./explain";
 export { explainNode } from "./explain";
 export type { PromptLanguage } from "./language";
 export { docstringOmitted } from "./language";
-export { buildStepPrompt, buildSystemPrompt } from "./prompt";
+export {
+  buildStepSummaryPrompt,
+  buildSuggestionsPrompt,
+  buildSummaryPrompt,
+} from "./prompt";
 export { buildReviewerPrompt } from "./reviewer";
 export type { TitleCache } from "./title-cache";
 export { createTitleCache } from "./title-cache";

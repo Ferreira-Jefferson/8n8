@@ -100,10 +100,10 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] O prompt do resumo pede `summary`, `inputs` e `outputs`, e não cita `suggestions` nem `docstring`
-- [ ] O prompt das sugestões pede `suggestions` e `docstring`, e não pede `summary`
-- [ ] `parseSuggestions` mantém o corte de linha e o limite de 5 (CORE-22)
-- [ ] Gate check passes: `pnpm --filter @8n8/explain test`
+- [x] O prompt do resumo pede `summary`, `inputs` e `outputs`, e não cita `suggestions` nem `docstring`
+- [x] O prompt das sugestões pede `suggestions` e `docstring`, e não pede `summary`
+- [x] `parseSuggestions` mantém o corte de linha e o limite de 5 (CORE-22)
+- [x] Gate check passes: `pnpm --filter @8n8/explain test`
 
 **Tests**: unit
 **Gate**: quick

@@ -370,7 +370,7 @@ describe("titleNodes (VID-14, VID-16, VID-17)", () => {
       "createTitleCache",
       "buildTitlePrompt",
       "buildTitleReviewerPrompt",
-      "buildStepPrompt",
+      "buildStepSummaryPrompt",
     ]) {
       expect(typeof (api as Record<string, unknown>)[name]).toBe("function");
     }
