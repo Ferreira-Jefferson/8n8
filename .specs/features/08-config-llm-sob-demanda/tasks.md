@@ -9,7 +9,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 ---
 
 **Design**: `.specs/features/08-config-llm-sob-demanda/design.md`
-**Status**: In Progress
+**Status**: Done
 
 ---
 
