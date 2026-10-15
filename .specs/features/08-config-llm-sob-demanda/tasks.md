@@ -152,11 +152,12 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Resumo sem frase sobrevivente → `unfaithful`; sugestões todas cortadas → `ok` com lista vazia
-- [ ] `cachedOnly` sem acerto → `not-cached` e nenhuma chamada ao LLM
-- [ ] A mensagem do resumo não tem o bloco da docstring; editar a docstring não invalida o resumo e invalida as sugestões
-- [ ] Os testes atuais do pipeline passam para a parte correspondente, sem perder casos
-- [ ] Gate check passes: `pnpm --filter @8n8/explain test`
+- [x] Resumo sem frase sobrevivente → `unfaithful`; sugestões todas cortadas → `ok` com lista vazia
+- [x] `cachedOnly` sem acerto → `not-cached` e nenhuma chamada ao LLM
+- [x] A mensagem do resumo não tem o bloco da docstring; editar a docstring não invalida o resumo e invalida as sugestões
+- [x] Os testes atuais do pipeline passam para a parte correspondente, sem perder casos
+- [x] Gate check passes: `pnpm --filter @8n8/explain test`
+- [x] Desvio: os testes do `server` ficam vermelhos até a T7, que troca a composição e as rotas. A T4 só mexe no `explain`
 
 **Tests**: unit
 **Gate**: quick

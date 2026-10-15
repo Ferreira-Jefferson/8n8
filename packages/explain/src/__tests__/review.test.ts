@@ -83,6 +83,7 @@ const input = {
 };
 const deps = (llm: LlmClient, extra: Partial<ReviewDeps> = {}): ReviewDeps => ({
   llm,
+  part: "summary",
   model: "openai/gpt-x",
   reviewModel: "openai/gpt-x",
   prompt,
@@ -197,7 +198,71 @@ describe("reviewedDraft", () => {
     expect(fake.requests).toHaveLength(6);
   });
 
-  it("drops cut inputs, outputs and suggestions, joins kept sentences and keeps id gaps (FID-09)", async () => {
+  const TWO_SUGGESTIONS = draft({
+    summary: "",
+    suggestions: [
+      {
+        command: "Valide `caixa`.",
+        reason: "Caixa nula quebra.",
+        line: 2,
+        severity: "alta",
+      },
+      {
+        command: "Use timeout de 10 s.",
+        reason: "Evita espera.",
+        line: 1,
+        severity: "baixa",
+      },
+    ],
+  });
+
+  it("keeps the suggestions that survive and never asks a summary of the suggestions part (CFG-02)", async () => {
+    const fake = scripted([TWO_SUGGESTIONS]);
+    const out = await reviewedDraft(
+      input,
+      deps(fake.llm, { part: "suggestions" }),
+    );
+    expect(out).toEqual({
+      kind: "ok",
+      review: "cut",
+      result: {
+        summary: "",
+        sentences: [],
+        inputs: [],
+        outputs: [],
+        suggestions: [
+          {
+            id: "g1",
+            command: "Valide `caixa`.",
+            reason: "Caixa nula quebra.",
+            line: 2,
+            severity: "alta",
+            lines: [2],
+          },
+        ],
+      },
+    });
+  });
+
+  it("answers ok with no suggestions when every suggestion is cut, never unfaithful (CFG-02)", async () => {
+    const fake = scripted([TWO_SUGGESTIONS], (id) => ({
+      id,
+      supported: false,
+      evidence: [],
+      problem: "não",
+    }));
+    const out = await reviewedDraft(
+      input,
+      deps(fake.llm, { part: "suggestions" }),
+    );
+    expect(out).toMatchObject({
+      kind: "ok",
+      review: "cut",
+      result: { suggestions: [] },
+    });
+  });
+
+  it("drops cut inputs and outputs, joins kept sentences, keeps id gaps and ignores suggestions in a summary (FID-09, CFG-01)", async () => {
     const raw = draft({
       summary: "Recebe `caixa`. Pesa 5 kg. Devolve `caixa.peso`.",
       inputs: ["`caixa`", "`tamanho`"],
@@ -234,16 +299,7 @@ describe("reviewedDraft", () => {
         ],
         inputs: [{ id: "i1", text: "`caixa`", lines: [1, 2] }],
         outputs: [],
-        suggestions: [
-          {
-            id: "g1",
-            command: "Valide `caixa`.",
-            reason: "Caixa nula quebra.",
-            line: 2,
-            severity: "alta",
-            lines: [1, 2],
-          },
-        ],
+        suggestions: [],
       },
     });
   });

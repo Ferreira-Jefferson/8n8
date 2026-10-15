@@ -70,13 +70,3 @@ export function parseSuggestions(raw: string, lineCount: number): Draft {
       .slice(0, MAX_SUGGESTIONS),
   };
 }
-
-/** Both parts of one answer; the pipeline drops it once it asks for each part on its own (T4). */
-export function parseExplanation(raw: string, lineCount: number): Draft {
-  const { docstring, suggestions } = parseSuggestions(raw, lineCount);
-  return {
-    ...parseSummary(raw),
-    suggestions,
-    ...(docstring ? { docstring } : {}),
-  };
-}

@@ -1,8 +1,10 @@
 import type {
   ChatMessage,
-  Explanation,
+  ExplainPart,
   LlmClient,
   ReviewStatus,
+  Suggestion,
+  Summary,
 } from "@8n8/model";
 import { layerOne, type Problem } from "./checks";
 import {
@@ -12,14 +14,14 @@ import {
   redraftMessage,
   reviewerMessage,
 } from "./reviewer";
-import { type Draft, parseExplanation } from "./schema";
+import { type Draft, parseSuggestions, parseSummary } from "./schema";
 import { splitSentences, toClaims } from "./sentences";
 
-/** An explanation with every line RELATIVE to the node, as stored in the cache. */
-export type StoredExplanation = Explanation;
+/** The kept claims of one draft, every line RELATIVE to the node; a part keeps its own piece. */
+export type Reviewed = Summary & { suggestions: Suggestion[] };
 
 export type ReviewOutcome =
-  | { kind: "ok"; review: ReviewStatus; result: StoredExplanation }
+  | { kind: "ok"; review: ReviewStatus; result: Reviewed }
   | { kind: "unfaithful" };
 
 export interface ReviewInput {
@@ -66,6 +68,8 @@ function withDocstringSuggestion(
 
 export interface ReviewDeps {
   llm: LlmClient;
+  /** Picks the parser; only a summary with no surviving sentence is unfaithful (CFG-01, CFG-02). */
+  part: ExplainPart;
   model: string;
   reviewModel: string;
   prompt: { text: string };
@@ -78,7 +82,7 @@ export interface ReviewDeps {
 const ROUNDS = 3;
 
 /** Builds the stored explanation from the kept claims; ids keep their gaps (FID-09). */
-function toResult(draft: Draft, kept: ReviewedClaim[]): StoredExplanation {
+function toResult(draft: Draft, kept: ReviewedClaim[]): Reviewed {
   const plain = (kind: ReviewedClaim["kind"]) =>
     kept
       .filter((c) => c.kind === kind)
@@ -105,7 +109,8 @@ export async function reviewedDraft(
   input: ReviewInput,
   deps: ReviewDeps,
 ): Promise<ReviewOutcome> {
-  const { llm, model, reviewModel, prompt, reviewer, maxSentences } = deps;
+  const { llm, part, model, reviewModel, prompt, reviewer, maxSentences } =
+    deps;
   const lineCount = input.code.split("\n").length;
   const ctx = { code: input.code, neighbours: input.neighbours };
   const base: ChatMessage[] = [
@@ -117,7 +122,8 @@ export async function reviewedDraft(
   for (let round = 1; ; round++) {
     // "native" asks for JSON; the client downgrades it when the model profile says so.
     const raw = await llm.complete({ model, messages, json: "native" });
-    const parsed = parseExplanation(raw, lineCount);
+    const parsed =
+      part === "summary" ? parseSummary(raw) : parseSuggestions(raw, lineCount);
     const capped =
       maxSentences === undefined
         ? parsed
@@ -166,7 +172,9 @@ export async function reviewedDraft(
       ];
       continue;
     }
-    if (!kept.some((c) => c.kind === "sentence")) return { kind: "unfaithful" };
+    if (part === "summary" && !kept.some((c) => c.kind === "sentence")) {
+      return { kind: "unfaithful" };
+    }
     return {
       kind: "ok",
       review: problems.length === 0 ? "full" : "cut",
