@@ -14,6 +14,10 @@ O 8n8 é um mapa visual de código. Você aponta um arquivo, uma pasta ou um tre
 
 O mapa começa amplo. Você abre um nó para ver o fluxo interno dele e vai descendo, até as linhas reais de código. Cada nó traz um resumo e sugestões de melhoria.
 
+## Por que o 8n8 existe
+
+Com a IA, o código muda e cresce rápido demais para ler linha por linha. Eu perdia tempo para entender o que tinha mudado e como as partes se ligavam. Procurei uma ferramenta visual que mostrasse o fluxo de forma rápida e intuitiva, e não achei nenhuma. Lembrei do [n8n](https://n8n.io), me inspirei nele e criei o 8n8. O nome é uma brincadeira com ele. Fora o desenho de nós e arestas, os dois projetos não têm relação nenhuma.
+
 ## Como fica
 
 **1. Você aponta uma pasta ou cola um trecho.**
@@ -39,16 +43,6 @@ O mapa começa amplo. Você abre um nó para ver o fluxo interno dele e vai desc
 
 O código de exemplo está em [docs/imagens/exemplo](docs/imagens/exemplo). Para refazer as imagens: `pnpm prints`.
 
-Em `apps/` há três pastas. Uma é a tela e duas são as formas de rodar o 8n8, sobre o mesmo núcleo:
-
-- **Tela (`apps/ui`):** a interface, em React com React Flow. A CLI e a extensão servem o mesmo build. Não há backend hospedado: o núcleo roda localmente.
-- **CLI (`apps/cli`):** você roda o comando `8n8` no terminal (PowerShell ou Bash), e o mapa abre no navegador.
-- **Editores (`apps/editors`):** a extensão do VS Code abre o mapa num painel ao lado do código. Outros editores entram na mesma pasta.
-
-O objetivo é supervisionar e entender rápido um código, muitas vezes escrito por IA, sem ler linha por linha.
-
-O desenho de nós e arestas foi inspirado no [n8n](https://n8n.io), e o nome 8n8 é uma brincadeira com ele. Fora isso, os dois projetos não têm relação nenhuma.
-
 ## Como funciona
 
 1. **O 8n8 lê o código.** Ele aceita um arquivo, uma pasta ou um trecho colado.
@@ -57,6 +51,12 @@ O desenho de nós e arestas foi inspirado no [n8n](https://n8n.io), e o nome 8n8
 4. **O LLM escreve os textos.** Ele cria o resumo e as sugestões de cada nó. Ele nunca decide a estrutura, e cada texto aponta para um nó e uma linha.
 
 Todo nó leva de volta ao código real, com o arquivo e as linhas. **Sem chave de LLM, o mapa funciona.** Só os resumos e as sugestões ficam de fora.
+
+Em `apps/` há três pastas. Uma é a tela e duas são as formas de rodar o 8n8, sobre o mesmo núcleo:
+
+- **Tela (`apps/ui`):** a interface, em React com React Flow. A CLI e a extensão servem o mesmo build. Não há backend hospedado: o núcleo roda localmente.
+- **CLI (`apps/cli`):** você roda o comando `8n8` no terminal (PowerShell ou Bash), e o mapa abre no navegador.
+- **Editores (`apps/editors`):** a extensão do VS Code abre o mapa num painel ao lado do código. Outros editores entram na mesma pasta.
 
 Os textos usam Português Técnico Simplificado: frases curtas, voz ativa, um termo por conceito. As regras estão em [docs/portugues-tecnico-simplificado.md](docs/portugues-tecnico-simplificado.md).
 
@@ -145,6 +145,8 @@ Para acrescentar um provedor, veja [docs/adicionar-provedor-llm.md](docs/adicion
 
 ## Dados e segurança
 
+Achou uma falha de segurança? Avise em privado, como explica o [SECURITY.md](SECURITY.md).
+
 - **Token por execução.** Cada execução da CLI gera um token novo, que só a aba aberta por ela conhece. Outro programa da máquina não consegue usar a API nem a sua chave de LLM. Sem o token, a API responde 401.
 - **Pasta de dados.** Tudo fica em `~/.8n8` (no Windows, `C:\Users\<nome>\.8n8`): o cache em `cache/`, o histórico em `historico.db` e as configurações em `config.json`, só com permissão do dono. As variáveis `APP8N8_CACHE_DIR`, `APP8N8_HISTORY_DIR` e `APP8N8_CONFIG_DIR` mudam essas pastas.
 - O histórico guarda só o caminho de cada pasta, nunca o código. Abrir uma pasta pelo histórico lê a pasta de novo. De um trecho colado, o histórico guarda o texto e a linguagem.
@@ -197,7 +199,8 @@ Abra o endereço que o terminal mostrar (`http://127.0.0.1:4317/#t=...`). O `#t=
 | `packages/llm` | Provedores de LLM. |
 | `packages/server` | O núcleo: as rotas da API, montadas por `createCore`. |
 | `e2e` | Testes de ponta a ponta com Playwright. |
-| `docs` | Guias e o manual da marca. |
+| `scripts` | `dev.mjs` (o `pnpm dev`) e `prints-readme.mjs` (o `pnpm prints`). |
+| `docs` | Guias, o manual da marca e as imagens do README (`docs/imagens`). |
 | `release` | Os pacotes gerados (`.tgz` e `.vsix`). O git ignora o conteúdo. |
 
 ### Como contribuir
