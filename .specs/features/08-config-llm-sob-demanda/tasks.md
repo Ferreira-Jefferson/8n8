@@ -181,9 +181,9 @@ T9 → T10 → T11 → T12 → T13
 
 **Done when**:
 
-- [ ] Ambiente ganha do guardado, guardado ganha do padrão, campo a campo
-- [ ] Chave, URL e modelo guardados não valem para outro provedor
-- [ ] Gate check passes: `pnpm --filter @8n8/llm test`
+- [x] Ambiente ganha do guardado, guardado ganha do padrão, campo a campo
+- [x] Chave, URL e modelo guardados não valem para outro provedor
+- [x] Gate check passes: `pnpm --filter @8n8/llm test`
 
 **Tests**: unit
 **Gate**: quick

@@ -1,25 +1,44 @@
+import type { StoredSettings } from "@8n8/model";
 import type { LlmConfig } from "./provider";
-import { DEFAULT_PROVIDER, providerOf } from "./providers";
+import { DEFAULT_PROVIDER, PROVIDERS, providerOf } from "./providers";
 
 type Env = Record<string, string | undefined>;
 
 /** Empty values count as absent (CORE-21). */
 const present = (value: string | undefined) => value || undefined;
 
+/** A stored provider no registry entry knows (a hand-edited file) counts as absent. */
+const knownProvider = (id: string | undefined) =>
+  PROVIDERS.some((p) => p.id === id) ? id : undefined;
+
 /**
- * Provider from APP8N8_LLM_PROVIDER (default openrouter); key and base URL from that provider's variables;
- * model from APP8N8_MODEL (default of the provider); reviewer model from APP8N8_REVIEW_MODEL (default the summary model) (FID-15).
- * Throws on an unknown provider.
+ * Field by field, the environment wins over the stored settings, and the stored
+ * settings win over the defaults (CFG-16):
+ * - provider: APP8N8_LLM_PROVIDER, then the stored one, then openrouter;
+ * - key and base URL: that provider's variables, then the stored ones;
+ * - model: APP8N8_MODEL, then the stored one, then the provider's default;
+ * - reviewer model: APP8N8_REVIEW_MODEL, then the summary model (FID-15).
+ * The stored key, URL and model belong to the stored provider: they never go
+ * to another one. Throws on an unknown provider in the environment.
  */
-export function resolveLlmConfig(env: Env): LlmConfig {
+export function resolveLlmConfig(
+  env: Env,
+  stored: StoredSettings = {},
+): LlmConfig {
   const provider = providerOf(
-    present(env.APP8N8_LLM_PROVIDER) ?? DEFAULT_PROVIDER,
+    present(env.APP8N8_LLM_PROVIDER) ??
+      knownProvider(stored.provider) ??
+      DEFAULT_PROVIDER,
   );
-  const model = present(env.APP8N8_MODEL) ?? provider.defaultModel;
+  // The fields belong to the provider they were stored with, unknown ones included.
+  const owner = stored.provider ?? DEFAULT_PROVIDER;
+  const own: StoredSettings = owner === provider.id ? stored : {};
+  const model =
+    present(env.APP8N8_MODEL) ?? present(own.model) ?? provider.defaultModel;
   return {
     provider: provider.id,
-    apiKey: present(env[provider.env.apiKey]),
-    baseURL: present(env[provider.env.baseURL]),
+    apiKey: present(env[provider.env.apiKey]) ?? present(own.apiKey),
+    baseURL: present(env[provider.env.baseURL]) ?? present(own.baseURL),
     model,
     reviewModel: present(env.APP8N8_REVIEW_MODEL) ?? model,
   };

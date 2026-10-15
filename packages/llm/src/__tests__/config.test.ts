@@ -131,3 +131,81 @@ describe("resolveLlmConfig: reviewer model (FID-15)", () => {
     );
   });
 });
+
+describe("resolveLlmConfig: stored settings (CFG-16)", () => {
+  const STORED = {
+    provider: "openai-compatible",
+    apiKey: "stored-key",
+    baseURL: "http://localhost:11434/v1",
+    model: "llama-x",
+  };
+
+  it("uses the stored provider, key, URL and model when the environment sets none", () => {
+    expect(resolveLlmConfig({}, STORED)).toEqual({
+      provider: "openai-compatible",
+      apiKey: "stored-key",
+      baseURL: "http://localhost:11434/v1",
+      model: "llama-x",
+      reviewModel: "llama-x",
+    });
+  });
+
+  it("lets each environment variable win over its stored field, one by one", () => {
+    const base = { APP8N8_LLM_PROVIDER: "openai-compatible" };
+    expect(
+      resolveLlmConfig({ ...base, APP8N8_LLM_API_KEY: "env-key" }, STORED),
+    ).toMatchObject({ apiKey: "env-key", baseURL: STORED.baseURL });
+    expect(
+      resolveLlmConfig({ ...base, APP8N8_LLM_BASE_URL: "http://env" }, STORED),
+    ).toMatchObject({ apiKey: "stored-key", baseURL: "http://env" });
+    expect(
+      resolveLlmConfig({ ...base, APP8N8_MODEL: "env-model" }, STORED),
+    ).toMatchObject({ model: "env-model", apiKey: "stored-key" });
+  });
+
+  it("an empty variable does not win over a stored field (CORE-21)", () => {
+    expect(
+      resolveLlmConfig({ APP8N8_LLM_API_KEY: "", APP8N8_MODEL: "" }, STORED),
+    ).toMatchObject({ apiKey: "stored-key", model: "llama-x" });
+  });
+
+  it("never sends a stored key, URL or model to another provider chosen by the environment", () => {
+    expect(
+      resolveLlmConfig({ APP8N8_LLM_PROVIDER: "openrouter" }, STORED),
+    ).toEqual({
+      provider: "openrouter",
+      apiKey: undefined,
+      baseURL: undefined,
+      model: DEFAULT_MODEL,
+      reviewModel: DEFAULT_MODEL,
+    });
+  });
+
+  it("applies stored fields without a stored provider to the default provider only", () => {
+    const loose = { apiKey: "stored-key", model: "m/x" };
+    expect(resolveLlmConfig({}, loose)).toMatchObject({
+      provider: "openrouter",
+      apiKey: "stored-key",
+      model: "m/x",
+    });
+    expect(
+      resolveLlmConfig({ APP8N8_LLM_PROVIDER: "openai-compatible" }, loose),
+    ).toMatchObject({ apiKey: undefined, model: "gpt-4o-mini" });
+  });
+
+  it("ignores a stored provider no registry entry knows, with its fields", () => {
+    expect(
+      resolveLlmConfig({}, { provider: "nope", apiKey: "stored-key" }),
+    ).toMatchObject({ provider: "openrouter", apiKey: undefined });
+  });
+
+  it("treats empty stored values as absent", () => {
+    expect(
+      resolveLlmConfig({}, { apiKey: "", baseURL: "", model: "" }),
+    ).toMatchObject({
+      apiKey: undefined,
+      baseURL: undefined,
+      model: DEFAULT_MODEL,
+    });
+  });
+});
