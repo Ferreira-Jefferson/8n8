@@ -3,6 +3,8 @@
 node_modules/
 dist/
 test-results/
+# um git worktree por chat (CLAUDE.md, Verificação)
+.claude/worktrees/
 playwright-report/
 e2e/__screenshots__/
 *.tgz
