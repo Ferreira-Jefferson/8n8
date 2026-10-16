@@ -7,8 +7,6 @@ export const ptBR = {
   "settings.apiKey.stored": "Chave guardada",
   "settings.apiKey.paste": "Cole a chave",
   "settings.apiKey.delete": "Apagar chave",
-  "settings.apiKey.notNeeded":
-    "O Claude Code usa a sua assinatura. Não precisa de chave.",
   "settings.claude.found": "Claude Code encontrado.",
   "settings.claude.missing":
     "Claude Code não encontrado. Escolha o executável.",
@@ -17,6 +15,7 @@ export const ptBR = {
   "settings.claude.notClaude": "Esse arquivo não é o Claude Code.",
   "settings.claude.pickFailed": "A janela de arquivo não abriu.",
   "settings.claude.pick": "Escolher…",
+  "settings.claude.change": "Alterar",
   "settings.claude.auto": "Usar o automático",
   "settings.model": "Modelo",
   "settings.autoSummary": "Gerar o resumo ao selecionar um nó",

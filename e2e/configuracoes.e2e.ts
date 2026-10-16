@@ -251,7 +251,7 @@ test.describe("Configurações e LLM sob demanda", () => {
     expect(res.status()).toBe(400);
   });
 
-  test("CC-01: choosing claude-code hides the key and says the subscription is enough", async ({
+  test("CC-01: choosing claude-code hides the key, with no note about the subscription", async ({
     page,
   }) => {
     await page.goto(`${SETTINGS}/`);
@@ -260,11 +260,7 @@ test.describe("Configurações e LLM sob demanda", () => {
     await expect(dialog.getByLabel("Chave de API")).toBeVisible();
     await dialog.getByLabel("Provedor").selectOption("claude-code");
     await expect(dialog.getByLabel("Chave de API")).toHaveCount(0);
-    await expect(
-      dialog.getByText(
-        "O Claude Code usa a sua assinatura. Não precisa de chave.",
-      ),
-    ).toBeVisible();
+    await expect(dialog.getByText(/assinatura/)).toHaveCount(0);
     // The server's APP8N8_CLAUDE_PATH names no file (NO_CLAUDE): the dialog says so (CC-17).
     await expect(
       dialog.getByText(

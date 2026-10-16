@@ -289,14 +289,10 @@ describe("SettingsDialog with claude-code (CC-01)", () => {
       ...over,
     });
 
-  it("hides the key and says the subscription is enough", () => {
+  it("hides the key and adds no note about the subscription", () => {
     open(withClaude({ provider: "claude-code", model: "sonnet" }));
     expect(screen.queryByLabelText("Chave de API")).toBeNull();
-    expect(
-      screen.getByText(
-        "O Claude Code usa a sua assinatura. Não precisa de chave.",
-      ),
-    ).toBeTruthy();
+    expect(screen.queryByText(/assinatura/)).toBeNull();
     expect(field("Modelo").placeholder).toBe("sonnet");
   });
 
@@ -331,18 +327,23 @@ describe("SettingsDialog: where Claude Code is (CC-17, CC-18)", () => {
     });
   const button = (name: string) => screen.queryByRole("button", { name });
 
-  it("says Claude Code was found, in green with its path, and offers to choose another", () => {
+  it("says Claude Code was found, in green, keeps the path behind a folder icon and offers to change it", () => {
     open(claude({ path: PATH, source: "auto" }));
     const found = screen.getByText("Claude Code encontrado.");
     expect(found.className).toBe("claude-ok");
-    expect(screen.getByText(PATH)).toBeTruthy();
-    expect(button("Escolher…")).toBeTruthy();
+    // The path is not text on the screen: the folder icon names it and shows it as a tooltip.
+    expect(screen.queryByText(PATH)).toBeNull();
+    const folder = screen.getByRole("button", { name: PATH });
+    expect(folder.getAttribute("data-tip")).toBe(PATH);
+    expect(button("Alterar")).toBeTruthy();
+    expect(button("Escolher…")).toBeNull();
     expect(button("Usar o automático")).toBeNull();
   });
 
   it("shows no button when a variable that works sets the path", () => {
     open(claude({ path: PATH, source: "env" }));
     expect(screen.getByText("Claude Code encontrado.")).toBeTruthy();
+    expect(button("Alterar")).toBeNull();
     expect(button("Escolher…")).toBeNull();
   });
 
@@ -370,6 +371,7 @@ describe("SettingsDialog: where Claude Code is (CC-17, CC-18)", () => {
       target: { value: "openrouter" },
     });
     expect(screen.queryByText("Claude Code encontrado.")).toBeNull();
+    expect(button("Alterar")).toBeNull();
     expect(button("Escolher…")).toBeNull();
   });
 

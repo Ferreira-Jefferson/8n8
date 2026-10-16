@@ -242,9 +242,7 @@ export function SettingsDialog({
                 }}
               />
             )}
-            {!usesKey(settings, form.provider) ? (
-              <p className="key-state">{t("settings.apiKey.notNeeded")}</p>
-            ) : (
+            {usesKey(settings, form.provider) && (
               <>
                 <label>
                   {t("settings.apiKey")}
@@ -371,15 +369,47 @@ function ClaudeState({
           {t("settings.claude.envInvalid", { name: "APP8N8_CLAUDE_PATH" })}
         </p>
       )}
-      {path ? (
-        <p className="claude-ok">
-          {t("settings.claude.found")} <small>{path}</small>
-        </p>
-      ) : (
-        !envInvalid && (
-          <p className="claude-warn">{t("settings.claude.missing")}</p>
-        )
-      )}
+      <div className="claude-row">
+        {path ? (
+          <p className="claude-ok">
+            <button
+              type="button"
+              className="claude-path"
+              aria-label={path}
+              data-tip={path}
+            >
+              <FolderIcon />
+            </button>
+            {t("settings.claude.found")}
+          </p>
+        ) : (
+          !envInvalid && (
+            <p className="claude-warn">{t("settings.claude.missing")}</p>
+          )
+        )}
+        {source !== "env" && (
+          <span className="claude-actions">
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={busy}
+              onClick={() => choose("pick")}
+            >
+              {t(path ? "settings.claude.change" : "settings.claude.pick")}
+            </button>
+            {source === "picked" && (
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={busy}
+                onClick={() => choose("auto")}
+              >
+                {t("settings.claude.auto")}
+              </button>
+            )}
+          </span>
+        )}
+      </div>
       {error && (
         <p className="claude-warn" role="alert">
           {t(
@@ -389,29 +419,22 @@ function ClaudeState({
           )}
         </p>
       )}
-      {source !== "env" && (
-        <p className="key-state">
-          <button
-            type="button"
-            className="btn-ghost"
-            disabled={busy}
-            onClick={() => choose("pick")}
-          >
-            {t("settings.claude.pick")}
-          </button>
-          {source === "picked" && (
-            <button
-              type="button"
-              className="btn-ghost"
-              disabled={busy}
-              onClick={() => choose("auto")}
-            >
-              {t("settings.claude.auto")}
-            </button>
-          )}
-        </p>
-      )}
     </div>
+  );
+}
+
+/** A folder, as on the start screen: hover or focus it to read the full path of the file. */
+function FolderIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 

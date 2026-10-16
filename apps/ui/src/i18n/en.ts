@@ -9,8 +9,6 @@ export const en: Record<MessageKey, string> = {
   "settings.apiKey.stored": "Key stored",
   "settings.apiKey.paste": "Paste the key",
   "settings.apiKey.delete": "Delete key",
-  "settings.apiKey.notNeeded":
-    "Claude Code uses your subscription. It needs no key.",
   "settings.claude.found": "Claude Code found.",
   "settings.claude.missing": "Claude Code not found. Choose the executable.",
   "settings.claude.envInvalid":
@@ -18,6 +16,7 @@ export const en: Record<MessageKey, string> = {
   "settings.claude.notClaude": "This file is not Claude Code.",
   "settings.claude.pickFailed": "The file window did not open.",
   "settings.claude.pick": "Choose…",
+  "settings.claude.change": "Change",
   "settings.claude.auto": "Use the automatic one",
   "settings.model": "Model",
   "settings.autoSummary": "Generate the summary when a node is selected",

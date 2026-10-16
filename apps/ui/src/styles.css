@@ -1900,14 +1900,64 @@ body {
   margin: 0;
 }
 
+/* The status and its button share one line; the tooltip hangs under the line. */
+.settings-dialog .claude-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.settings-dialog .claude-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-dialog .claude-actions .btn-ghost {
+  padding: 4px 14px;
+  font-size: 18px;
+}
+
 .settings-dialog .claude-ok {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--main);
 }
 
-.settings-dialog .claude-ok small {
-  display: block;
+/* The folder shows the full path on hover or focus. */
+.settings-dialog .claude-path {
+  display: inline-flex;
+  padding: 2px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
   color: var(--accent);
+  cursor: help;
+}
+
+.settings-dialog .claude-path:hover,
+.settings-dialog .claude-path:focus-visible {
+  color: var(--second);
+}
+
+.settings-dialog .claude-path:hover::after,
+.settings-dialog .claude-path:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 2;
+  padding: 8px 12px;
+  border: 2px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--second);
   font: 400 14px var(--font-mono);
+  text-align: left;
   overflow-wrap: anywhere;
 }
 
