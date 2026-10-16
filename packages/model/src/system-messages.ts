@@ -3,6 +3,8 @@ import { DEFAULT_LOCALE, type Locale } from "./settings";
 /** What the system says outside the screen: the terminal, the server and the LLM clients, one text per language of the system. */
 const PT = {
   "error.noPrompt": "Não há prompt para a linguagem {language}.",
+  "node.code": "Código",
+  "node.module": "Módulo",
   "llm.invalidModel": "Modelo inválido para o Claude Code.",
   "llm.refused": "O Claude Code recusou o pedido: {subtype}.",
   "llm.unknownFormat": "O Claude Code respondeu um formato desconhecido.",
@@ -53,6 +55,8 @@ export type SystemKey = keyof typeof PT;
 
 const EN: Record<SystemKey, string> = {
   "error.noPrompt": "There is no prompt for the language {language}.",
+  "node.code": "Code",
+  "node.module": "Module",
   "llm.invalidModel": "Invalid model for Claude Code.",
   "llm.refused": "Claude Code refused the request: {subtype}.",
   "llm.unknownFormat": "Claude Code answered in an unknown format.",

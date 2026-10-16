@@ -9,10 +9,12 @@ import {
   type GraphResponse,
   type LanguagePlugin,
   type LanguagesResponse,
+  type Locale,
   type ProjectResponse,
   type TitleItem,
   type TitleRequest,
   type TitlesResponse,
+  translateSystem,
 } from "@8n8/model";
 import { detectLanguage, pluginForPath } from "@8n8/project";
 import { type Context, Hono } from "hono";
@@ -110,6 +112,13 @@ interface Origin {
   idPrefix: string;
 }
 
+/** The name the LLM reads: what the code calls the node, or, for loose code and steps the system names, the system's word in its language. */
+function nameOfNode(node: FlowNode, locale: Locale): string {
+  if (node.kind === "code") return translateSystem(locale, "node.code");
+  if (node.kind === "module") return translateSystem(locale, "node.module");
+  return node.label;
+}
+
 /** Reads `{ source }` or `{ root }`; a missing folder gives `{ notFound }`. The client sends no code (AD-015). */
 async function loadOrigin(
   body: { source: string } | { root: string; include?: string[] | undefined },
@@ -130,7 +139,7 @@ async function loadOrigin(
           plugin.commentPrefix,
           locale,
         ),
-      nameOf: (node) => node.label,
+      nameOf: (node) => nameOfNode(node, locale),
       pluginOf: () => plugin,
       idPrefix: `${plugin.id}|`,
     };
@@ -163,8 +172,8 @@ async function loadOrigin(
     // A neighbour from another file is named `<path>:<label>`.
     nameOf: (node, home) =>
       filePath(node) !== filePath(home)
-        ? `${filePath(node)}:${node.label}`
-        : node.label,
+        ? `${filePath(node)}:${nameOfNode(node, locale)}`
+        : nameOfNode(node, locale),
     idPrefix: `${read.root.replaceAll("\\", "/")}|`,
   };
 }
@@ -387,7 +396,7 @@ export function createApp(deps: AppDeps): Hono {
       request = {
         nodeId: `${idPrefix}${node.id}`,
         language: pluginOf(node).id,
-        nodeName: node.label,
+        nodeName: nameOf(node, node),
         nodeKind: node.kind,
         ...codeOf(node),
         range: node.range,
@@ -492,7 +501,7 @@ export function createApp(deps: AppDeps): Hono {
             cacheKey: `${idPrefix}${node.id}`,
             language: pluginOf(node).id,
             kind: node.kind,
-            name: node.label,
+            name: nameOf(node, node),
             code: codeOf(node).code,
             range: node.range,
             ...neighboursOf(graph, node, (other) => nameOf(other, node)),
