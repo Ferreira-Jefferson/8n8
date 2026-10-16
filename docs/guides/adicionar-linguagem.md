@@ -37,6 +37,7 @@ export const typescriptPlugin: LanguagePlugin = {
 | `detect(source)` | Nota de 0 a 1: quanto o texto parece ser desta linguagem. Serve ao trecho colado, que não tem extensão. |
 | `extract(source)` | Devolve o `Graph` de um trecho. |
 | `analyze(files)` | Lê um conjunto de arquivos da linguagem. Os caminhos são POSIX e relativos à raiz do projeto. |
+| `openSlice(files)` | Opcional. Deixa o core dividir o `analyze` entre threads. Veja [Análise em paralelo](#análise-em-paralelo-opcional). |
 
 Todos os métodos são síncronos. Se a gramática carrega de forma assíncrona, carregue na importação do módulo. O plugin TypeScript faz isso em `packages/languages/typescript/src/parse.ts` com `await loadParser(...)` no nível do módulo.
 
@@ -59,6 +60,55 @@ interface LanguageAnalysis {
 - `requests`: o que o arquivo procura (uma URL chamada, um caminho executado, um nome chamado).
 
 Para um conjunto vazio de arquivos, devolva `{ files: [], imports: [], offers: [], requests: [] }`.
+
+### Análise em paralelo (opcional)
+
+Uma pasta grande leva dezenas de segundos para analisar. O servidor reparte o trabalho entre threads (`worker_threads`), e a thread principal fica livre. Um plugin pode ajudar com o método `openSlice`. Sem ele, o plugin continua certo: o core roda o `analyze` inteiro, em uma thread à parte, sem dividir.
+
+Use `openSlice` quando o `analyze` faz duas coisas: lê o projeto inteiro para montar um contexto (índice de módulos, nomes de topo) e depois monta o grafo de cada arquivo com esse contexto. Os arquivos do mesmo grupo dividem o contexto, e por isso o core não pode cortar o `analyze` por conta própria.
+
+O contrato fica em `packages/model/src/plugin.ts`:
+
+```ts
+openSlice?(files: SourceFile[]): AnalysisSlice;
+
+interface AnalysisSlice {
+  contribute(): unknown;
+  analyze(contributions: unknown[]): LanguageAnalysis;
+  dispose(): void;
+}
+```
+
+O core corta os arquivos da linguagem em fatias seguidas, na ordem do `analyze`, e abre uma fatia em cada thread. Cada fatia faz duas fases:
+
+1. `contribute()`: a fatia lê só os seus arquivos e devolve a parte dela do contexto. O retorno é dado simples (objetos, `Map`, `Set`, textos), porque um `structuredClone` leva esse valor de uma thread à outra. Não devolva árvores do parser, funções nem classes.
+2. `analyze(contributions)`: o core entrega as contribuições de TODAS as fatias, na ordem das fatias. A fatia junta o contexto e devolve o `LanguageAnalysis` só dos arquivos dela.
+
+`dispose()` libera as árvores do parser. O core chama `dispose` no fim, mesmo com erro.
+
+A regra principal: juntar as fatias, em ordem, tem de dar o mesmo `LanguageAnalysis` que `analyze` dá com todos os arquivos. A suíte de conformidade confere isso quando o plugin declara `openSlice`.
+
+O jeito mais simples de cumprir a regra: escreva o `analyze` em cima do `openSlice`, com uma fatia só.
+
+```ts
+function analyzeFiles(files: SourceFile[]): LanguageAnalysis {
+  const slice = openSlice(files);
+  try {
+    return slice.analyze([slice.contribute()]);
+  } finally {
+    slice.dispose();
+  }
+}
+```
+
+Os dois plugins atuais fazem assim (`analyze.ts` de cada um). Assim existe um só caminho de código, e a análise em paralelo não pode divergir da sequencial. A união das contribuições precisa dar o mesmo contexto que o projeto inteiro daria: em um `Map`, o último arquivo vence e a ordem de entrada se mantém.
+
+Duas regras do `openSlice`:
+
+- O plugin não conhece threads, fatias nem o tamanho do projeto. O core decide tudo isso.
+- Os arquivos da fatia chegam em ordem. O plugin ordena de novo do mesmo jeito que o `analyze`, para o caso de o core entregar fora de ordem.
+
+Projetos com menos de 150 arquivos rodam em uma thread só: acordar as outras custa mais do que ganha.
 
 ## As regras do grafo
 
@@ -265,11 +315,12 @@ Em `packages/server/package.json`, acrescente a dependência junto das outras li
 "@8n8/lang-<id>": "workspace:*",
 ```
 
-Em `packages/server/src/core.ts`, importe o plugin e inclua na lista `languagePlugins`:
+Em `packages/server/src/plugins.ts`, importe o plugin e inclua na lista `languagePlugins`. O servidor e as threads da análise em paralelo leem a mesma lista:
 
 ```ts
 import { pythonPlugin } from "@8n8/lang-python";
 import { typescriptPlugin } from "@8n8/lang-typescript";
+import type { LanguagePlugin } from "@8n8/model";
 
 /** The languages the server knows; a new language is one more entry. */
 export const languagePlugins: LanguagePlugin[] = [
@@ -369,6 +420,7 @@ O código está em `packages/languages/typescript/src/detect.ts`. Cada plugin v�
 - [ ] A gramática está em `dependencies`, é achada com `createRequire(import.meta.url).resolve(...)`, e `pnpm --filter 8n8 test` passa.
 - [ ] `pnpm typecheck`, `pnpm test` e `pnpm check` passam. O `check` confere as fronteiras e o Biome.
 - [ ] O plugin não importa outro plugin nem o LLM.
+- [ ] Opcional: se o plugin declara `openSlice`, juntar as fatias dá o mesmo resultado que `analyze` (a suíte de conformidade confere).
 - [ ] `ignoredDirs` lista as pastas de dependências e de build da linguagem.
 - [ ] Ofertas e pedidos só cobrem o que o parser enxerga com segurança.
 
