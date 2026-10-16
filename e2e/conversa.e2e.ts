@@ -396,4 +396,6 @@ test("the marks of an answer are shaped: code, bold, italic and a list, with no 
   await expect(answer.locator("li")).toHaveCount(2);
   await expect(answer.getByRole("button", { name: "L18" })).toBeVisible();
   expect(await answer.locator(".rich").innerText()).not.toMatch(/[`*_]/);
+  // A line mark stands alone: no parentheses around the button.
+  expect(await answer.locator(".rich").innerText()).not.toMatch(/\(\s*L\d+/);
 });

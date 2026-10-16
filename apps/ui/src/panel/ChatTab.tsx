@@ -86,6 +86,16 @@ function historyOf(entries: ChatEntry[]): ChatTurn[] {
   return turns.slice(-CHAT_MAX_TURNS);
 }
 
+/** `L12` or a range `L12–15` (also `L12-L15`). */
+const RANGE = String.raw`L\d+(?:\s*[–-]\s*L?\d+)?`;
+const MARK = new RegExp(String.raw`\b(${RANGE})\b`);
+const MARK_ONLY = /^L(\d+)(?:\s*[–-]\s*L?(\d+))?$/;
+/** Marks alone inside parentheses, as in "(L12)" or "(`L12`, L15–17)". */
+const PAREN_MARKS = new RegExp(
+  String.raw`\(\s*(\`?${RANGE}\`?(?:\s*(?:,|;|e|and)\s*\`?${RANGE}\`?)*)\s*\)`,
+  "g",
+);
+
 /** An answer with `L12` marks: each one inside the node becomes a button that marks the line in the code. The Markdown marks around it are shaped. */
 function WithLines({
   text,
@@ -98,17 +108,21 @@ function WithLines({
 }) {
   const plain: PlainRenderer = (piece, key) => (
     <Fragment key={key}>
-      {piece.split(/\b(L\d+)\b/).map((part, i) => {
-        const n = /^L(\d+)$/.exec(part)?.[1];
-        const line = n === undefined ? NaN : Number(n);
-        const inside = line >= node.range.start && line <= node.range.end;
+      {piece.split(MARK).map((part, i) => {
+        const m = MARK_ONLY.exec(part);
+        const first = m ? Number(m[1]) : Number.NaN;
+        const last = m?.[2] ? Number(m[2]) : first;
+        const inside =
+          first >= node.range.start && last >= first && last <= node.range.end;
+        const lines = new Set<number>();
+        if (inside) for (let n = first; n <= last; n++) lines.add(n);
         return inside ? (
           <button
             // biome-ignore lint/suspicious/noArrayIndexKey: the pieces never reorder
             key={i}
             type="button"
             className="line-ref"
-            onClick={() => onMark(new Set([line]))}
+            onClick={() => onMark(lines)}
           >
             {part}
           </button>
@@ -118,7 +132,11 @@ function WithLines({
       })}
     </Fragment>
   );
-  return <Rich text={text} plain={plain} />;
+  // The button already stands out, so the parentheses and backticks around a mark are noise.
+  const bare = text
+    .replace(PAREN_MARKS, "$1")
+    .replace(/`(L\d+(?:\s*[–-]\s*L?\d+)?)`/g, "$1");
+  return <Rich text={bare} plain={plain} />;
 }
 
 /** Under an answer: the icon that keeps it as a suggestion (and takes it back), and what happened. */

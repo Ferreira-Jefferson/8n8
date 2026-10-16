@@ -60,7 +60,10 @@ export function blocksOf(text: string): Block[] {
     .replace(/\r\n/g, "\n")
     .replace(/([:.;)])[ \t]+(?=[-•][ \t]+\S)/g, "$1\n");
   const blocks: Block[] = [];
-  for (const line of flat.split("\n")) {
+  for (const raw of flat.split("\n")) {
+    // A code fence is noise (the fence goes); a heading mark is dropped, the text stays.
+    if (/^\s*```/.test(raw)) continue;
+    const line = raw.replace(/^\s*#{1,6}\s+/, "");
     if (line.trim() === "") {
       blocks.push({ kind: "p", lines: [] });
       continue;

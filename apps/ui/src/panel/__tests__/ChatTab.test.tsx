@@ -151,6 +151,20 @@ describe("ChatTab", () => {
     expect(screen.getByText("L99", { exact: false })).toBeTruthy();
   });
 
+  it("drops the parentheses and backticks around marks, and a range marks all its lines", async () => {
+    chatMock.mockResolvedValue(
+      ok("Lê (L5) e (`L6`, L7–8). Ver `L9`.\n```\ncodigo\n```\n## Título"),
+    );
+    const { onMark } = setup();
+    await say("onde?");
+    const range = await screen.findByRole("button", { name: "L7–8" });
+    fireEvent.click(range);
+    expect(onMark).toHaveBeenCalledWith(new Set([7, 8]));
+    const answer = range.closest("article") as HTMLElement;
+    expect(answer.textContent).not.toMatch(/[()`#]/);
+    expect(answer.textContent).toContain("Lê L5 e L6, L7–8. Ver L9.");
+  });
+
   it("runs /resumo as a shortcut: asks the part, shows it in the chat, and never calls the chat", async () => {
     const { askPart } = setup();
     await say("/resumo");
