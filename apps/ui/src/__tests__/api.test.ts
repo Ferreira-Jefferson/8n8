@@ -225,6 +225,7 @@ describe("settings (CFG-12, CFG-13, CFG-21)", () => {
     model: "m/x",
     autoSummary: false,
     autoSuggestions: true,
+    ignoreDependencies: true,
     theme: "system",
     locale: "pt-BR",
     hasKey: true,

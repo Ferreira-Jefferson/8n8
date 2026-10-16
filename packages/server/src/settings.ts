@@ -44,6 +44,8 @@ export interface SettingsService {
   llm(): Promise<LlmSetup>;
   /** The automatic modes in effect (CFG-08). */
   auto(): Promise<{ summary: boolean; suggestions: boolean }>;
+  /** Whether dependency folders such as node_modules stay out of the map; on by default. */
+  ignoreDependencies(): Promise<boolean>;
   /** The language of the system: what the LLM writes and which cache it reads. */
   locale(): Promise<Locale>;
   /** Stores the Claude Code executable the person picked, or erases it with null; throws InvalidSettings unless it is a file named claude (CC-18). */
@@ -86,6 +88,7 @@ const patchSchema = z
       .optional(),
     autoSummary: z.boolean().optional(),
     autoSuggestions: z.boolean().optional(),
+    ignoreDependencies: z.boolean().optional(),
     theme: z.enum(THEMES).optional(),
     locale: z.enum(LOCALES).optional(),
   })
@@ -112,6 +115,9 @@ export function applyPatch(
   if (patch.autoSummary !== undefined) next.autoSummary = patch.autoSummary;
   if (patch.autoSuggestions !== undefined) {
     next.autoSuggestions = patch.autoSuggestions;
+  }
+  if (patch.ignoreDependencies !== undefined) {
+    next.ignoreDependencies = patch.ignoreDependencies;
   }
   if (patch.theme !== undefined) next.theme = patch.theme;
   if (patch.locale !== undefined) next.locale = patch.locale;
@@ -187,6 +193,7 @@ export function createSettingsService(
       model: config.model,
       autoSummary: modes.summary,
       autoSuggestions: modes.suggestions,
+      ignoreDependencies: s.ignoreDependencies ?? true,
       theme: s.theme ?? "system",
       locale: s.locale ?? DEFAULT_LOCALE,
       hasKey: config.apiKey !== undefined,
@@ -259,6 +266,9 @@ export function createSettingsService(
     },
     async auto() {
       return auto(await load());
+    },
+    async ignoreDependencies() {
+      return (await load()).ignoreDependencies ?? true;
     },
     async locale() {
       return (await load()).locale ?? DEFAULT_LOCALE;

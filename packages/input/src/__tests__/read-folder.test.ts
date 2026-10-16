@@ -314,6 +314,25 @@ describe("readSourceFolder and .gitignore (CLEAN-01, CLEAN-02)", () => {
     });
   });
 
+  it("lists what the .gitignore ignores when ignoreDependencies is off", async () => {
+    const root = await tree({
+      ".gitignore": "gerado/\n*.log.py\n",
+      "gerado/a.py": "x = 1\n",
+      "app/run.log.py": "x = 1\n",
+      "app/main.py": "x = 1\n",
+    });
+    const read = await readSourceFolder(root, {
+      ...PY,
+      ignoreDependencies: false,
+    });
+    if (read.kind !== "ok") throw new Error("not-found");
+    expect(read.files.map((f) => f.path)).toEqual([
+      "app/main.py",
+      "app/run.log.py",
+      "gerado/a.py",
+    ]);
+  });
+
   it("applies a sub-folder's .gitignore below it only, and lets a deeper ! win", async () => {
     const root = await tree({
       ".gitignore": "*.gen.py\n",
@@ -395,5 +414,48 @@ describe("readSourceFolder with a file path", () => {
     const file = join(root, "notas.txt");
     await writeFile(file, "oi");
     expect(await readSourceFolder(file, PY)).toEqual({ kind: "not-found" });
+  });
+});
+
+describe("readSourceFolder and dependency folders", () => {
+  it("refuses a folder named node_modules, or inside one, as a dependency", async () => {
+    const inside = join(dir, "pkg", "node_modules");
+    expect(await readSourceFolder(inside, PY)).toEqual({
+      kind: "not-found",
+      dependency: true,
+    });
+    const deeper = join(dir, "lib", "site-packages");
+    expect(await readSourceFolder(deeper, PY)).toEqual({
+      kind: "not-found",
+      dependency: true,
+    });
+    expect(
+      await readSourceFolder(join(dir, "pkg", "node_modules", "y.py"), PY),
+    ).toEqual({ kind: "not-found", dependency: true });
+  });
+
+  it("still opens a folder that sits under build or dist", async () => {
+    const root = await mkdtemp(join(tmpdir(), "input-dist-"));
+    made.push(root);
+    const project = join(root, "dist", "app");
+    await mkdir(project, { recursive: true });
+    await writeFile(join(project, "m.py"), "x = 1\n");
+    const r = await readSourceFolder(project, PY);
+    expect(r.kind).toBe("ok");
+  });
+
+  it("opens a dependency folder and walks into one when the setting is off, but never .git", async () => {
+    const off = { ...PY, ignoreDependencies: false };
+    const direct = await readSourceFolder(
+      join(dir, "pkg", "node_modules"),
+      off,
+    );
+    expect(direct.kind).toBe("ok");
+    const r = await readSourceFolder(dir, off);
+    if (r.kind !== "ok") throw new Error("expected ok");
+    const paths = r.files.map((f) => f.path);
+    expect(paths).toContain("pkg/node_modules/y.py");
+    expect(paths).toContain(".venv/lib/x.py");
+    expect(paths.some((p) => p.startsWith(".git/"))).toBe(false);
   });
 });

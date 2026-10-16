@@ -842,11 +842,13 @@ describe("composeReadProject: the plugin registry", () => {
         extensions: [".a", ".b", ".c"],
         ignoredDirs: ["x", "y", "z"],
         include: [],
+        ignoreDependencies: true,
       },
       {
         extensions: [".a", ".b", ".c"],
         ignoredDirs: ["x", "y", "z"],
         include: ["big.a"],
+        ignoreDependencies: true,
       },
     ]);
   });

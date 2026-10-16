@@ -2327,6 +2327,17 @@ body {
   gap: 10px;
 }
 
+.settings-dialog .confirm-box {
+  padding: 14px 18px;
+  border-radius: 6px;
+  border: 2px solid var(--warm);
+}
+
+.settings-dialog .confirm-box p {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
 .settings-dialog input:not([type="checkbox"]),
 .settings-dialog select {
   padding: 10px 14px;

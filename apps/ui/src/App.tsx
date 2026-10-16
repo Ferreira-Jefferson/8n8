@@ -240,6 +240,7 @@ export function App({ initialFolder = null }: AppProps) {
   const [mapVersion, setMapVersion] = useState(0);
   const [failed, setFailed] = useState(false);
   const [notFound, setNotFound] = useState<string | null>(null);
+  const [inDependency, setInDependency] = useState(false);
   const [nav, dispatch] = useReducer(appNav, initialNav);
   const [suggestions, setSuggestions] = useState(
     () => new Map<NodeId, Suggestion[]>(),
@@ -338,9 +339,10 @@ export function App({ initialFolder = null }: AppProps) {
     if (!graphOf(next).empty) setView("map");
   }
 
-  function fail(missing: string | null) {
+  function fail(missing: string | null, dependency = false) {
     setMapped(null);
     setNotFound(missing);
+    setInDependency(dependency);
     setFailed(missing === null);
   }
 
@@ -360,7 +362,7 @@ export function App({ initialFolder = null }: AppProps) {
     setNotFound(null);
     try {
       const result = await fetchProject(path, include);
-      if ("error" in result) fail(result.path);
+      if ("error" in result) fail(result.path, result.dependency === true);
       else show({ kind: "project", root: path, response: result, include });
     } catch {
       fail(null);
@@ -509,7 +511,11 @@ export function App({ initialFolder = null }: AppProps) {
       <>
         {failed && <p role="alert">{t("app.mapFailed")}</p>}
         {notFound !== null && (
-          <p role="alert">{t("app.folderNotFound", { path: notFound })}</p>
+          <p role="alert">
+            {t(inDependency ? "app.folderDependency" : "app.folderNotFound", {
+              path: notFound,
+            })}
+          </p>
         )}
         {graph?.empty && (
           <p>

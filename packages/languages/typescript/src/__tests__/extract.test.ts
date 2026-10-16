@@ -20,7 +20,12 @@ describe("typescriptPlugin", () => {
     expect(typescriptPlugin.id).toBe("typescript");
     expect(typescriptPlugin.label).toBe("TypeScript");
     expect(typescriptPlugin.extensions).toEqual([".ts", ".tsx"]);
-    expect(typescriptPlugin.ignoredDirs).toEqual([".next", "coverage"]);
+    expect(typescriptPlugin.ignoredDirs).toEqual([
+      ".next",
+      "coverage",
+      ".turbo",
+      "bower_components",
+    ]);
     expect(typescriptPlugin.commentPrefix).toBe("//");
   });
 

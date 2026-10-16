@@ -14,6 +14,8 @@ export interface StoredSettings {
   model?: string;
   autoSummary?: boolean;
   autoSuggestions?: boolean;
+  /** Skips what the .gitignore ignores and dependency folders such as node_modules when reading a folder; on unless stored as false. */
+  ignoreDependencies?: boolean;
   theme?: Theme;
   locale?: Locale;
   /** The Claude Code executable picked in the system's file chooser; never set by a patch (CC-18). */
@@ -27,6 +29,7 @@ export interface SettingsPatch {
   model?: string | null;
   autoSummary?: boolean;
   autoSuggestions?: boolean;
+  ignoreDependencies?: boolean;
   theme?: Theme;
   locale?: Locale;
 }
@@ -45,6 +48,7 @@ export interface SettingsResponse {
   model: string;
   autoSummary: boolean;
   autoSuggestions: boolean;
+  ignoreDependencies: boolean;
   theme: Theme;
   locale: Locale;
   /** Whether a key is in effect, from the environment or stored. */

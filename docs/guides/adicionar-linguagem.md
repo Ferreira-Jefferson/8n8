@@ -32,7 +32,7 @@ export const typescriptPlugin: LanguagePlugin = {
 | `id` | Id estável. Vai em `Graph.language` e nas chaves de cache. Minúsculas, começa com letra (`^[a-z][a-z0-9-]*$`). Não pode ser `mixed`: esse valor é do projeto com mais de uma linguagem. |
 | `label` | Nome para a tela. Ex.: `TypeScript`. |
 | `extensions` | Extensões com o ponto e em minúsculas. Ex.: `[".ts", ".tsx"]`. O core escolhe o plugin pela extensão do arquivo. |
-| `ignoredDirs` | Pastas que só esta linguagem tem e que a leitura da pasta pula. Só o nome, sem `/`. O core já pula `.git`, `node_modules` e outras comuns (`IGNORED_DIRS` em `packages/input/src/read-folder.ts`). |
+| `ignoredDirs` | Pastas que só esta linguagem tem e que a leitura da pasta pula. Só o nome, sem `/`. O core já pula `.git`, `node_modules` e outras comuns (`IGNORED_DIRS` em `packages/input/src/read-folder.ts`). Abrir uma dessas pastas direto também é recusado. A opção "Ignorar o que está no .gitignore e as pastas de dependência", em Configurações, liga e desliga essas regras e o `.gitignore`, e vale para todas as linguagens. |
 | `commentPrefix` | Início de um comentário de linha. Ex.: `#`, `//`. |
 | `detect(source)` | Nota de 0 a 1: quanto o texto parece ser desta linguagem. Serve ao trecho colado, que não tem extensão. |
 | `extract(source)` | Devolve o `Graph` de um trecho. |

@@ -341,6 +341,19 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     expect(screen.queryByTestId("canvas")).toBeNull();
   });
 
+  it("says a dependency folder does not open, and where to change it", async () => {
+    projectMock.mockResolvedValue({
+      error: "not-found",
+      path: "C:\\app\\node_modules",
+      dependency: true,
+    });
+    render(<App />);
+    openFolder("C:\\app\\node_modules");
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Essa é uma pasta de dependência e não abre: C:\\app\\node_modules. Para abrir, desligue a opção nas configurações.",
+    );
+  });
+
   it("shows the empty-folder message for a project with no .py file", async () => {
     languagesMock.mockResolvedValue([python]);
     projectMock.mockResolvedValue({
@@ -1222,6 +1235,7 @@ describe("App settings (CFG-08, CFG-20)", () => {
     model: "m/x",
     autoSummary: true,
     autoSuggestions: false,
+    ignoreDependencies: true,
     theme: "light" as const,
     locale: "pt-BR" as const,
     hasKey: true,

@@ -46,7 +46,7 @@ import { sameToken } from "./token";
 
 export type ProjectRead =
   | { kind: "ok"; root: string; response: ProjectResponse }
-  | { kind: "not-found" };
+  | { kind: "not-found"; dependency?: true };
 
 export interface AppDeps {
   /** The registered languages, in a stable order: a snippet is read by the best score, a file by its extension. */
@@ -393,7 +393,14 @@ export function createApp(deps: AppDeps): Hono {
     if (!body.success) return c.json({ error: "invalid body" }, 400);
     const read = await deps.readProject(body.data.path, body.data.include);
     if (read.kind === "not-found") {
-      return c.json({ error: "not-found", path: body.data.path }, 404);
+      return c.json(
+        {
+          error: "not-found",
+          path: body.data.path,
+          ...(read.dependency ? { dependency: true } : {}),
+        },
+        404,
+      );
     }
     if (!read.response.graph.empty) {
       saveLater(deps.history, {

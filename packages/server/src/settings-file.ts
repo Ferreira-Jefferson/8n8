@@ -11,6 +11,7 @@ const fileSchema = z.object({
   model: z.string().optional(),
   autoSummary: z.boolean().optional(),
   autoSuggestions: z.boolean().optional(),
+  ignoreDependencies: z.boolean().optional(),
   theme: z.enum(THEMES).optional(),
   locale: z.enum(LOCALES).optional(),
   claudePath: z.string().optional(),

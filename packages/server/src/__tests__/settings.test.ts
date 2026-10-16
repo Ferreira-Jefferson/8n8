@@ -54,6 +54,7 @@ describe("view (CFG-12)", () => {
       model: DEFAULT_MODEL,
       autoSummary: false,
       autoSuggestions: false,
+      ignoreDependencies: true,
       theme: "system",
       locale: "pt-BR",
       hasKey: false,
@@ -519,5 +520,25 @@ describe("Claude Code on this machine (CC-15, CC-17, CC-18)", () => {
     await expect(service.update({ claudePath: PICKED })).rejects.toThrow(
       InvalidSettings,
     );
+  });
+});
+
+describe("ignoreDependencies", () => {
+  it("is on until the person turns it off, and shows in the view", async () => {
+    const { store, current } = memoryStore();
+    const service = settingsService({}, store);
+    expect(await service.ignoreDependencies()).toBe(true);
+    expect((await service.view()).ignoreDependencies).toBe(true);
+    const view = await service.update({ ignoreDependencies: false });
+    expect(view.ignoreDependencies).toBe(false);
+    expect(await service.ignoreDependencies()).toBe(false);
+    expect(current().ignoreDependencies).toBe(false);
+  });
+
+  it("rejects a value that is not a boolean", async () => {
+    const { store } = memoryStore();
+    await expect(
+      settingsService({}, store).update({ ignoreDependencies: "no" }),
+    ).rejects.toBeInstanceOf(InvalidSettings);
   });
 });

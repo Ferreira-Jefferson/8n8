@@ -21,6 +21,12 @@ export const en: Record<MessageKey, string> = {
   "settings.model": "Model",
   "settings.autoSummary": "Automatic summary",
   "settings.autoSuggestions": "Automatic suggestion",
+  "settings.ignoreDependencies":
+    "Ignore what is in .gitignore and dependency folders",
+  "settings.ignoreDependencies.confirm":
+    "List what is in .gitignore on the map? Dependency folders (such as node_modules) and generated files come in. The map can get huge and slow, and third-party code mixes with yours.",
+  "settings.ignoreDependencies.yes": "Yes, list it",
+  "settings.ignoreDependencies.no": "Cancel",
   "settings.lockedBy": "Set by the variable {name}",
   "settings.saved": "Settings saved.",
   "settings.failed": "Could not save. Check the key and the model.",
@@ -34,6 +40,8 @@ export const en: Record<MessageKey, string> = {
   "app.home": "Home",
   "app.mapFailed": "Could not generate the map.",
   "app.folderNotFound": "Folder not found: {path}",
+  "app.folderDependency":
+    "This is a dependency folder and does not open: {path}. To open it, turn the option off in the settings.",
   "app.noNodes": "No function or statement found.",
   "app.snippetAria": "Code snippet",
   "app.editor": "Editor",

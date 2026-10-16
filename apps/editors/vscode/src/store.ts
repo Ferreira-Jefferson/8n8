@@ -19,7 +19,11 @@ export const SECRET_KEY = "8n8.apiKey";
 export const STATE_KEY = "8n8.settings";
 
 const TEXT_FIELDS = ["provider", "model", "claudePath"] as const;
-const FLAG_FIELDS = ["autoSummary", "autoSuggestions"] as const;
+const FLAG_FIELDS = [
+  "autoSummary",
+  "autoSuggestions",
+  "ignoreDependencies",
+] as const;
 const THEMES = ["system", "light", "dark"] as const;
 const LOCALES = ["pt-BR", "en"] as const;
 

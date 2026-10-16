@@ -20,6 +20,12 @@ export const ptBR = {
   "settings.model": "Modelo",
   "settings.autoSummary": "Resumo automático",
   "settings.autoSuggestions": "Sugestão automática",
+  "settings.ignoreDependencies":
+    "Ignorar o que está no .gitignore e as pastas de dependência",
+  "settings.ignoreDependencies.confirm":
+    "Listar no mapa o que está no .gitignore? Entram as pastas de dependência (como node_modules) e os arquivos gerados. O mapa pode ficar enorme e lento, e o código de terceiros se mistura com o seu.",
+  "settings.ignoreDependencies.yes": "Sim, listar",
+  "settings.ignoreDependencies.no": "Cancelar",
   "settings.lockedBy": "Definido pela variável {name}",
   "settings.saved": "Configurações salvas.",
   "settings.failed": "Não foi possível salvar. Confira a chave e o modelo.",
@@ -33,6 +39,8 @@ export const ptBR = {
   "app.home": "Início",
   "app.mapFailed": "Não foi possível gerar o mapa.",
   "app.folderNotFound": "Pasta não encontrada: {path}",
+  "app.folderDependency":
+    "Essa é uma pasta de dependência e não abre: {path}. Para abrir, desligue a opção nas configurações.",
   "app.noNodes": "Nenhuma função ou instrução encontrada.",
   "app.snippetAria": "Trecho de código",
   "app.editor": "Editor",

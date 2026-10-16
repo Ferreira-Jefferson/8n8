@@ -12,12 +12,20 @@ export const IGNORED_DIRS: ReadonlySet<string> = new Set([
   "dist",
 ]);
 
+/** Never read, whatever the settings say: version control is no dependency, but nobody maps it. */
+const ALWAYS_SKIPPED: ReadonlySet<string> = new Set([".git"]);
+
+/** Build outputs are skipped inside a folder, but a project may sit under one (`/srv/dist/app`). */
+const OUTPUT_DIRS: ReadonlySet<string> = new Set(["build", "dist"]);
+
 /** What to read: the files of these extensions (with the dot, any case), skipping these folders besides `IGNORED_DIRS`. */
 export interface ReadFilter {
   extensions: string[];
   ignoredDirs: string[];
   /** Files over 1 MB the person put on the map, relative POSIX paths (CLEAN-06). */
   include?: string[];
+  /** Skip what the .gitignore files ignore and the dependency folders (node_modules, .venv…), also as the folder or file opened; true unless set to false. */
+  ignoreDependencies?: boolean;
 }
 
 export type FolderRead =
@@ -28,7 +36,8 @@ export type FolderRead =
       files: SourceFile[];
       ignored: IgnoredFile[];
     }
-  | { kind: "not-found" };
+  /** `dependency`: the path is, or lies inside, a dependency folder the settings skip. */
+  | { kind: "not-found"; dependency?: true };
 
 /** The folder's own name, or the whole path for a disk root (`C:\`, `/`). */
 export function folderName(root: string): string {
@@ -39,14 +48,24 @@ const byCode = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
 export async function readSourceFolder(
   path: string,
-  { extensions, ignoredDirs, include = [] }: ReadFilter,
+  {
+    extensions,
+    ignoredDirs,
+    include = [],
+    ignoreDependencies = true,
+  }: ReadFilter,
 ): Promise<FolderRead> {
   const added = new Set(include);
   const wanted = extensions.map((e) => e.toLowerCase());
-  const skipped = new Set([...IGNORED_DIRS, ...ignoredDirs]);
+  const skipped = ignoreDependencies
+    ? new Set([...IGNORED_DIRS, ...ignoredDirs])
+    : new Set(ALWAYS_SKIPPED);
   let root: string;
   try {
     root = await realpath(resolve(path));
+    if (ignoreDependencies && insideDependency(root, skipped)) {
+      return { kind: "not-found", dependency: true };
+    }
     const info = await stat(root);
     // A file is a map of one file: its own path is the root, so a re-read finds only it.
     if (info.isFile()) {
@@ -79,7 +98,7 @@ export async function readSourceFolder(
     const entries = await readdir(abs, { withFileTypes: true }).catch(() => []);
     entries.sort((a, b) => byCode(a.name, b.name));
     // This folder's .gitignore applies to it and below, after the ones above (CLEAN-01).
-    const own = await gitignoreOf(abs, rel);
+    const own = ignoreDependencies ? await gitignoreOf(abs, rel) : undefined;
     const active = own ? [...rules, own] : rules;
     for (const entry of entries) {
       const entryAbs = join(abs, entry.name);
@@ -105,6 +124,18 @@ export async function readSourceFolder(
   await walk(root, "", []);
   ignored.sort((a, b) => byCode(a.path, b.path));
   return { kind: "ok", name: folderName(root), root, files, ignored };
+}
+
+/** Whether a folder on the path is one the walk skips: opening it directly would map what the walk never reads. */
+function insideDependency(root: string, skipped: ReadonlySet<string>): boolean {
+  return root
+    .split(/[\\/]/)
+    .some(
+      (part) =>
+        skipped.has(part) &&
+        !ALWAYS_SKIPPED.has(part) &&
+        !OUTPUT_DIRS.has(part),
+    );
 }
 
 /** The rules of one .gitignore and the folder they live in ("" for the root). */

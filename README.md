@@ -245,11 +245,13 @@ Achou uma falha de segurança? Avise em privado, como explica o [SECURITY.md](SE
 
 O 8n8 respeita o `.gitignore` da pasta. Ele lê o `.gitignore` da raiz e o de cada subpasta, com as regras do git (padrões, `!`, `/` e `**`). Um arquivo que o `.gitignore` ignora não entra no mapa nem aparece na lista de arquivos ignorados. O `.gitignore` global da máquina e o `.git/info/exclude` não contam: o mapa da mesma pasta é igual em qualquer máquina.
 
-O 8n8 também pula, sempre:
+O 8n8 também pula, por padrão:
 
 - as pastas `.git`, `node_modules`, `build` e `dist`;
-- as pastas de cada linguagem: `.venv`, `venv`, `__pycache__` e `site-packages` (Python), `.next` e `coverage` (TypeScript);
+- as pastas de cada linguagem: `.venv`, `venv`, `__pycache__`, `site-packages`, `.tox`, `.mypy_cache` e `.pytest_cache` (Python), `.next`, `coverage`, `.turbo` e `bower_components` (TypeScript);
 - arquivos de extensão que nenhuma linguagem lê.
+
+Abrir uma dessas pastas direto (por exemplo, o próprio `node_modules`) também não funciona: o 8n8 avisa que é pasta de dependência. Em Configurações, a opção "Ignorar o que está no .gitignore e as pastas de dependência" desliga o `.gitignore` e essa lista, depois de uma confirmação. Só o `.git` continua de fora.
 
 Alguns arquivos de código ficam fora do mapa por outro motivo: maior que 1 MB, fora do UTF-8, ilegível ou link simbólico. Nesse caso, um ícone de aviso aparece no canto do mapa. O hover diz quantos arquivos ficaram fora, e o clique mostra a lista com o motivo de cada um. Um arquivo maior que 1 MB, e de até 20 MB, tem o botão "Adicionar ao mapa".
 

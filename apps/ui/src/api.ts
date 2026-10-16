@@ -73,7 +73,7 @@ export async function fetchLanguages(): Promise<LanguageInfo[]> {
 
 export type ProjectResult =
   | ProjectResponse
-  | { error: "not-found"; path: string };
+  | { error: "not-found"; path: string; dependency?: true };
 
 /** Opens a local folder; `not-found` carries the path as typed (PROJ-05). `include`: files over 1 MB put on the map (CLEAN-06). */
 export async function fetchProject(
@@ -84,7 +84,16 @@ export async function fetchProject(
     path,
     ...(include.length > 0 ? { include } : {}),
   });
-  if (res.status === 404) return { error: "not-found", path };
+  if (res.status === 404) {
+    const body = (await res.json().catch(() => ({}))) as {
+      dependency?: boolean;
+    };
+    return {
+      error: "not-found",
+      path,
+      ...(body.dependency ? { dependency: true as const } : {}),
+    };
+  }
   if (!res.ok) throw new Error(`Falha ao abrir a pasta (HTTP ${res.status})`);
   return (await res.json()) as ProjectResponse;
 }

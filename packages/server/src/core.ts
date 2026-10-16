@@ -288,13 +288,18 @@ export const languagePlugins: LanguagePlugin[] = [
 export function composeReadProject(
   read: (path: string, filter: ReadFilter) => Promise<FolderRead>,
   plugins: LanguagePlugin[],
+  ignoreDependencies: () => Promise<boolean> = async () => true,
 ): (path: string, include?: string[]) => Promise<ProjectRead> {
   const filter: ReadFilter = {
     extensions: plugins.flatMap((p) => p.extensions),
     ignoredDirs: plugins.flatMap((p) => p.ignoredDirs),
   };
   return async (path, include = []) => {
-    const folder = await read(path, { ...filter, include });
+    const folder = await read(path, {
+      ...filter,
+      include,
+      ignoreDependencies: await ignoreDependencies(),
+    });
     if (folder.kind === "not-found") return folder;
     const { name, root, files, ignored } = folder;
     const { graph: built, offers, requests } = analyzeProject(files, plugins);
@@ -371,7 +376,9 @@ export function createCore(options: CoreOptions): Hono {
     titles: composeTitles(options.env, compose),
     ...composeChat(compose),
     notes: composeNotes(options.env, compose),
-    readProject: composeReadProject(readSourceFolder, languagePlugins),
+    readProject: composeReadProject(readSourceFolder, languagePlugins, () =>
+      settings.ignoreDependencies(),
+    ),
     pick: createPicker(),
     history:
       options.historyFile === undefined

@@ -1,4 +1,11 @@
-import { readFileSync, rmSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { E2E_TOKEN } from "../playwright.config";
@@ -40,6 +47,7 @@ async function resetSettings(page: Page): Promise<void> {
       apiKey: null,
       autoSummary: false,
       autoSuggestions: false,
+      ignoreDependencies: true,
       theme: "system",
     },
   });
@@ -116,6 +124,57 @@ test.describe("Configurações e LLM sob demanda", () => {
     await dialog.getByRole("button", { name: "Tema: Escuro" }).click();
     await expect(page.locator("html")).not.toHaveAttribute("data-theme");
     expect(await bg()).toBe(GROUND_DARK);
+  });
+
+  test("a dependency folder does not open, and the setting opens it only after a confirmation", async ({
+    page,
+  }) => {
+    const tmp = mkdtempSync(join(tmpdir(), "8n8-dependencias-"));
+    try {
+      const deps = join(tmp, "app", "node_modules");
+      mkdirSync(join(deps, "dep"), { recursive: true });
+      writeFileSync(join(deps, "dep", "x.py"), "def x():\n    return 1\n");
+      writeFileSync(join(tmp, "app", "m.py"), "def m():\n    return 2\n");
+
+      const open = async (path: string) => {
+        await page.getByLabel("Caminho da pasta").fill(path);
+        await page.getByRole("button", { name: "Mapear pasta" }).click();
+      };
+
+      await page.goto(SETTINGS);
+      await open(deps);
+      await expect(page.getByRole("alert")).toContainText(
+        "pasta de dependência e não abre",
+      );
+
+      await page.getByRole("button", { name: "Configurações" }).click();
+      const dialog = page.getByRole("dialog", { name: "Configurações" });
+      const box = dialog.getByLabel(
+        "Ignorar o que está no .gitignore e as pastas de dependência",
+      );
+      await expect(box).toBeChecked();
+
+      // Cancel: the choice stays.
+      await box.click();
+      await expect(dialog.getByRole("alert")).toContainText(
+        "Listar no mapa o que está no .gitignore?",
+      );
+      await dialog.getByRole("button", { name: "Cancelar" }).click();
+      await expect(dialog.getByRole("alert")).toHaveCount(0);
+      await expect(box).toBeChecked();
+
+      // Confirm and save: the folder opens.
+      await box.click();
+      await dialog.getByRole("button", { name: "Sim, listar" }).click();
+      await expect(box).not.toBeChecked();
+      await dialog.getByRole("button", { name: "Salvar" }).click();
+      await expect(dialog.getByText("Configurações salvas.")).toBeVisible();
+      await dialog.getByRole("button", { name: "Fechar" }).click();
+      await open(deps);
+      await expect(page.getByRole("application")).toBeVisible();
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   test("CFG-06, CFG-09: with no provider a node asks nothing, the click says what to configure and opens the settings", async ({
@@ -245,6 +304,7 @@ test.describe("Configurações e LLM sob demanda", () => {
       provider: "anthropic",
       autoSummary: false,
       autoSuggestions: false,
+      ignoreDependencies: true,
       theme: "system",
     });
   });

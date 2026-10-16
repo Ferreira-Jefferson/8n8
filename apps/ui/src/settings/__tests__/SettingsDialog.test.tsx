@@ -26,6 +26,7 @@ const view = (over: Partial<SettingsResponse> = {}): SettingsResponse => ({
   model: DEFAULT_MODEL,
   autoSummary: false,
   autoSuggestions: false,
+  ignoreDependencies: true,
   theme: "system",
   locale: "pt-BR",
   hasKey: false,
@@ -262,6 +263,7 @@ describe("patchOf", () => {
     model: "m/x",
     autoSummary: false,
     autoSuggestions: false,
+    ignoreDependencies: true,
   };
 
   it("erases a cleared model with null", () => {
@@ -276,6 +278,49 @@ describe("patchOf", () => {
     expect(
       patchOf(base, { ...base, apiKey: "   ", provider: "openai-compatible" }),
     ).toEqual({ provider: "openai-compatible" });
+  });
+});
+
+describe("SettingsDialog and the .gitignore", () => {
+  const box = () =>
+    screen.getByLabelText(
+      "Ignorar o que está no .gitignore e as pastas de dependência",
+    ) as HTMLInputElement;
+
+  it("starts on, from the settings", () => {
+    open();
+    expect(box().checked).toBe(true);
+  });
+
+  it("asks before listing what the .gitignore ignores and keeps the choice on Cancelar", () => {
+    open();
+    fireEvent.click(box());
+    expect(screen.getByRole("alert").textContent).toMatch(
+      /Listar no mapa o que está no \.gitignore/,
+    );
+    expect(box().checked).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(box().checked).toBe(true);
+  });
+
+  it("turns off only after the confirmation, and saves the change", async () => {
+    saveMock.mockResolvedValue(view({ ignoreDependencies: false }));
+    open();
+    fireEvent.click(box());
+    fireEvent.click(screen.getByRole("button", { name: "Sim, listar" }));
+    expect(box().checked).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+    await waitFor(() =>
+      expect(saveMock).toHaveBeenCalledWith({ ignoreDependencies: false }),
+    );
+  });
+
+  it("turns back on without asking", () => {
+    open(view({ ignoreDependencies: false }));
+    fireEvent.click(box());
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(box().checked).toBe(true);
   });
 });
 

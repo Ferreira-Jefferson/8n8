@@ -14,7 +14,15 @@ export const pythonPlugin: LanguagePlugin = {
   id: "python",
   label: "Python",
   extensions: [".py"],
-  ignoredDirs: [".venv", "venv", "__pycache__", "site-packages"],
+  ignoredDirs: [
+    ".venv",
+    "venv",
+    "__pycache__",
+    "site-packages",
+    ".tox",
+    ".mypy_cache",
+    ".pytest_cache",
+  ],
   commentPrefix: "#",
   detect: detectPython,
   extract(source) {

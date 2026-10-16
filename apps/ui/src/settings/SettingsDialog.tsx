@@ -25,6 +25,7 @@ interface Form {
   model: string;
   autoSummary: boolean;
   autoSuggestions: boolean;
+  ignoreDependencies: boolean;
 }
 
 const THEME_LABELS: Record<Theme, MessageKey> = {
@@ -68,6 +69,7 @@ function formOf(settings: SettingsResponse): Form {
         : settings.model,
     autoSummary: settings.autoSummary,
     autoSuggestions: settings.autoSuggestions,
+    ignoreDependencies: settings.ignoreDependencies,
   };
 }
 
@@ -84,6 +86,9 @@ export function patchOf(before: Form, after: Form): SettingsPatch {
   }
   if (after.autoSuggestions !== before.autoSuggestions) {
     patch.autoSuggestions = after.autoSuggestions;
+  }
+  if (after.ignoreDependencies !== before.ignoreDependencies) {
+    patch.ignoreDependencies = after.ignoreDependencies;
   }
   return patch;
 }
@@ -103,6 +108,8 @@ export function SettingsDialog({
   );
   const [status, setStatus] = useState<Status>("idle");
   const [theme, setTheme] = useState<Theme | null>(settings?.theme ?? null);
+  // Showing dependency folders is the risky way: it waits for a confirmation.
+  const [confirmShow, setConfirmShow] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -305,6 +312,45 @@ export function SettingsDialog({
               {t("settings.autoSuggestions")}
             </label>
             {lockNote("autoSuggestions")}
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={form.ignoreDependencies}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setConfirmShow(false);
+                    set("ignoreDependencies", true);
+                  } else {
+                    setConfirmShow(true);
+                  }
+                }}
+              />
+              {t("settings.ignoreDependencies")}
+            </label>
+            {confirmShow && (
+              <div role="alert" className="confirm-box">
+                <p>{t("settings.ignoreDependencies.confirm")}</p>
+                <div className="dialog-actions">
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => {
+                      set("ignoreDependencies", false);
+                      setConfirmShow(false);
+                    }}
+                  >
+                    {t("settings.ignoreDependencies.yes")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    onClick={() => setConfirmShow(false)}
+                  >
+                    {t("settings.ignoreDependencies.no")}
+                  </button>
+                </div>
+              </div>
+            )}
             {status === "saved" && <p role="status">{t("settings.saved")}</p>}
             {status === "failed" && <p role="alert">{t("settings.failed")}</p>}
             <div className="dialog-actions">

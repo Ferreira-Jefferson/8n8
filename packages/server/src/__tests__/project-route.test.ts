@@ -61,6 +61,17 @@ describe("POST /api/project", () => {
     });
   });
 
+  it("tells a dependency folder apart: 404 with dependency true", async () => {
+    const { post } = setup({ kind: "not-found", dependency: true });
+    const res = await post({ path: "./app/node_modules" });
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({
+      error: "not-found",
+      path: "./app/node_modules",
+      dependency: true,
+    });
+  });
+
   it("answers 400 to {}, an empty path and a non-string path", async () => {
     const { paths, post } = setup({ kind: "not-found" });
     for (const body of [{}, { path: "" }, { path: 42 }]) {
