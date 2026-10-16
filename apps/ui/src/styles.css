@@ -1409,10 +1409,28 @@ body {
   padding: 24px;
 }
 
-.settings-dialog h2 {
+.settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin: 0 0 16px;
+}
+
+.settings-dialog h2 {
+  margin: 0;
   font: 400 30px var(--font-display);
 }
+
+.theme-btn {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 /* ---- Node search: a magnifier that grows into a field, to the left of it ---- */
 
 .node-search {

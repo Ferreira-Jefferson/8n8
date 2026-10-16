@@ -160,6 +160,44 @@ describe("SettingsDialog save (CFG-21)", () => {
   });
 });
 
+describe("SettingsDialog theme button", () => {
+  it("shows the theme by its icon and saves the next one on the click", async () => {
+    saveMock.mockResolvedValue(view({ theme: "light" }));
+    const { onSaved } = open();
+    expect(screen.queryByLabelText("Tema")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Tema: Seguir o sistema" }),
+    );
+    await screen.findByRole("button", { name: "Tema: Claro" });
+    expect(saveMock).toHaveBeenCalledWith({ theme: "light" });
+    expect(onSaved).toHaveBeenCalledWith(view({ theme: "light" }));
+  });
+
+  it("goes from dark back to the system's", async () => {
+    saveMock.mockResolvedValue(view());
+    open(view({ theme: "dark" }));
+    fireEvent.click(screen.getByRole("button", { name: "Tema: Escuro" }));
+    await screen.findByRole("button", { name: "Tema: Seguir o sistema" });
+    expect(saveMock).toHaveBeenCalledWith({ theme: "system" });
+  });
+
+  it("keeps the theme and shows the error when the server refuses", async () => {
+    saveMock.mockResolvedValue(null);
+    open();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Tema: Seguir o sistema" }),
+    );
+    expect(
+      await screen.findByText(
+        "Não foi possível salvar. Confira a chave e o modelo.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Tema: Seguir o sistema" }),
+    ).toBeTruthy();
+  });
+});
+
 describe("SettingsDialog with the environment (CFG-22)", () => {
   it("disables each field a variable sets and names the variable", () => {
     open(
@@ -192,18 +230,14 @@ describe("patchOf", () => {
     model: "m/x",
     autoSummary: false,
     autoSuggestions: false,
-    theme: "system" as const,
   };
 
   it("erases a cleared model with null", () => {
     expect(patchOf(base, { ...base, model: " " })).toEqual({ model: null });
   });
 
-  it("sends the theme only when it changed", () => {
+  it("sends nothing when nothing changed", () => {
     expect(patchOf(base, base)).toEqual({});
-    expect(patchOf(base, { ...base, theme: "light" })).toEqual({
-      theme: "light",
-    });
   });
 
   it("ignores a blank key and keeps a changed provider", () => {

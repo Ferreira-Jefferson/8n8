@@ -83,10 +83,17 @@ test.describe("Configurações e LLM sob demanda", () => {
     await page.goto(SETTINGS);
     expect(await bg()).toBe(GROUND_DARK);
 
-    await saveInDialog(page, async (dialog) => {
-      await dialog.getByLabel("Tema").selectOption("light");
-    });
+    // The icon at the right of the title cycles system → light → dark, saving on each click.
+    await page.getByRole("button", { name: "Configurações" }).click();
+    const dialog = page.getByRole("dialog", { name: "Configurações" });
+    await dialog
+      .getByRole("button", { name: "Tema: Seguir o sistema" })
+      .click();
+    await expect(
+      dialog.getByRole("button", { name: "Tema: Claro" }),
+    ).toBeVisible();
     expect(await bg()).toBe(GROUND_LIGHT);
+    await dialog.getByRole("button", { name: "Fechar" }).click();
 
     // The choice is stored by the server, so a reload keeps it.
     await page.reload();
@@ -97,9 +104,10 @@ test.describe("Configurações e LLM sob demanda", () => {
     await generate(page, SETTINGS, CONTAGEM);
     expect(await bg()).toBe(GROUND_LIGHT);
 
-    await saveInDialog(page, async (dialog) => {
-      await dialog.getByLabel("Tema").selectOption("system");
-    });
+    await page.getByRole("button", { name: "Configurações" }).click();
+    await dialog.getByRole("button", { name: "Tema: Claro" }).click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await dialog.getByRole("button", { name: "Tema: Escuro" }).click();
     await expect(page.locator("html")).not.toHaveAttribute("data-theme");
     expect(await bg()).toBe(GROUND_DARK);
   });

@@ -22,7 +22,6 @@ interface Form {
   model: string;
   autoSummary: boolean;
   autoSuggestions: boolean;
-  theme: Theme;
 }
 
 const THEME_LABELS: Record<Theme, string> = {
@@ -30,6 +29,10 @@ const THEME_LABELS: Record<Theme, string> = {
   light: "Claro",
   dark: "Escuro",
 };
+
+/** Each click moves to the next theme, back to the first after the last. */
+const nextTheme = (theme: Theme): Theme =>
+  THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length] ?? "system";
 
 const defaultModelOf = (settings: SettingsResponse, provider: string) =>
   settings.providers.find((p) => p.id === provider)?.defaultModel ?? "";
@@ -49,7 +52,6 @@ function formOf(settings: SettingsResponse): Form {
         : settings.model,
     autoSummary: settings.autoSummary,
     autoSuggestions: settings.autoSuggestions,
-    theme: settings.theme,
   };
 }
 
@@ -67,7 +69,6 @@ export function patchOf(before: Form, after: Form): SettingsPatch {
   if (after.autoSuggestions !== before.autoSuggestions) {
     patch.autoSuggestions = after.autoSuggestions;
   }
-  if (after.theme !== before.theme) patch.theme = after.theme;
   return patch;
 }
 
@@ -84,6 +85,7 @@ export function SettingsDialog({
     settings ? formOf(settings) : null,
   );
   const [status, setStatus] = useState<Status>("idle");
+  const [theme, setTheme] = useState<Theme | null>(settings?.theme ?? null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -110,6 +112,17 @@ export function SettingsDialog({
     setStatus("saved");
   }
 
+  // The theme saves on the click, apart from the form and its Salvar.
+  async function switchTheme(current: Theme) {
+    const next = await saveSettings({ theme: nextTheme(current) });
+    if (!next) {
+      setStatus("failed");
+      return;
+    }
+    onSaved(next);
+    setTheme(next.theme);
+  }
+
   const set = <K extends keyof Form>(key: K, value: Form[K]) => {
     setForm((f) => (f ? { ...f, [key]: value } : f));
     setStatus("idle");
@@ -134,7 +147,20 @@ export function SettingsDialog({
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <h2 id={titleId}>Configurações</h2>
+        <div className="settings-head">
+          <h2 id={titleId}>Configurações</h2>
+          {theme && (
+            <button
+              type="button"
+              className="btn-ghost theme-btn"
+              aria-label={`Tema: ${THEME_LABELS[theme]}`}
+              title={`Tema: ${THEME_LABELS[theme]}`}
+              onClick={() => switchTheme(theme)}
+            >
+              <ThemeIcon theme={theme} />
+            </button>
+          )}
+        </div>
         {!settings || !form ? (
           <p>Não foi possível ler as configurações.</p>
         ) : (
@@ -144,19 +170,6 @@ export function SettingsDialog({
               save(patchOf(formOf(settings), form));
             }}
           >
-            <label>
-              Tema
-              <select
-                value={form.theme}
-                onChange={(e) => set("theme", e.target.value as Theme)}
-              >
-                {THEMES.map((t) => (
-                  <option key={t} value={t}>
-                    {THEME_LABELS[t]}
-                  </option>
-                ))}
-              </select>
-            </label>
             <label>
               Provedor
               <select
@@ -266,6 +279,37 @@ export function SettingsDialog({
         )}
       </div>
     </div>
+  );
+}
+
+/** Sun for light, moon for dark, a half-filled circle for the system's. */
+function ThemeIcon({ theme }: { theme: Theme }) {
+  return (
+    <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {theme === "light" && (
+          <>
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </>
+        )}
+        {theme === "dark" && (
+          <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" />
+        )}
+        {theme === "system" && (
+          <>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" />
+          </>
+        )}
+      </g>
+    </svg>
   );
 }
 
