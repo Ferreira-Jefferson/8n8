@@ -265,8 +265,15 @@ describe("the hub card", () => {
     expect(screen.getByTitle("1 nó").textContent).toBe("1");
   });
 
-  it("shows no count on a card that is not a hub", () => {
+  it("shows the count on a card that is not a hub, too", () => {
     const { container } = renderStep(file, { childCount: 7 });
+    expect(screen.getByTitle("7 nós").textContent).toBe("7");
+    expect(container.querySelector(".node")?.classList).toContain("has-count");
+  });
+
+  it("shows no count without one", () => {
+    const { container } = renderStep(file);
     expect(container.querySelector(".hub-count")).toBeNull();
+    expect(container.querySelector(".has-count")).toBeNull();
   });
 });

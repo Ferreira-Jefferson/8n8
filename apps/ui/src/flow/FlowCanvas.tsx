@@ -33,7 +33,7 @@ import {
   wrapRows,
 } from "./layout";
 import { type Schedule, schedule } from "./motion";
-import { projectLevel } from "./project-level";
+import { levelSize, projectLevel } from "./project-level";
 import { type StepFlowNode, StepNode } from "./StepNode";
 import { SuggestionCard } from "./SuggestionCard";
 import { highlighted, suggestionCards } from "./suggestion-cards";
@@ -422,6 +422,7 @@ export function FlowCanvas({
     const targets = new Set(level.edges.map((e) => e.target));
     const nodes: StepFlowNode[] = drawn.map((n) => {
       const measured = sizes.get(n.id);
+      const openable = isOpenable(n, graph);
       return {
         id: n.id,
         type: "step",
@@ -433,7 +434,8 @@ export function FlowCanvas({
           title: titles.get(n.id),
           isTrigger: level.triggers.has(n.id),
           codeLine: codeLineOf(n),
-          openable: isOpenable(n, graph),
+          openable,
+          childCount: openable ? levelSize(graph, n) : undefined,
           hasIn: targets.has(n.id),
           hasOut: sources.has(n.id),
           enterAt: times.enterAt.get(n.id) ?? 0,

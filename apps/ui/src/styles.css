@@ -687,7 +687,7 @@ body {
   text-align: center;
 }
 
-/* How many nodes the level of a hub shows; the main flow of a snippet has no hub and keeps the count in the corner. */
+/* How many nodes the level of a hub, or of a card that opens, shows; the main flow of a snippet has no hub and keeps the count in the corner. */
 .node .hub-count {
   position: absolute;
   right: 16px;
@@ -705,7 +705,7 @@ body {
   text-align: center;
 }
 
-.node.hub .step-badge {
+.node.has-count .step-badge {
   right: 56px;
 }
 

@@ -182,6 +182,25 @@ test.describe("Nó-pai", () => {
     ]);
   });
 
+  test("a card that opens shows how many nodes its level has, the same number its hub shows once open", async ({
+    page,
+  }) => {
+    await openApp(page);
+    // acesso.py hides its docstring and constants: 2, not 3.
+    await expect(
+      nodeById(page, "file:acesso.py").getByTitle("2 nós"),
+    ).toHaveText("2");
+    await clickCard(page, "file:acesso.py");
+    await expect(hub(page).getByTitle("2 nós")).toHaveText("2");
+    // pode_acessar has two steps; the steps carry no number.
+    await expect(
+      nodeById(page, "file:acesso.py/fn:pode_acessar").getByTitle("2 nós"),
+    ).toHaveText("2");
+    await clickCard(page, "file:acesso.py/fn:pode_acessar");
+    await expect(hub(page).getByTitle("2 nós")).toHaveText("2");
+    await expect(children(page).locator(".hub-count")).toHaveCount(0);
+  });
+
   test("loose code that runs a call stays a card, tagged CÓDIGO SOLTO", async ({
     page,
   }) => {

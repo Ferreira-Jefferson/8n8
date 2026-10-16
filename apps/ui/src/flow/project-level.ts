@@ -60,13 +60,7 @@ function innerLevel(
       };
     }
     if (kind === "file") {
-      // Loose code with no call only sets names: it shows in the file's panel.
-      const nodes = children.filter(
-        (n) =>
-          n.kind !== "module" ||
-          n.syntaxError !== undefined ||
-          hasCommands(graph, n.id),
-      );
+      const nodes = children.filter((n) => shownInFile(graph, n));
       const visible = new Set(nodes.map((n) => n.id));
       return {
         nodes,
@@ -80,6 +74,38 @@ function innerLevel(
     (e) => e.kind !== "calls" && visible.has(e.source) && visible.has(e.target),
   );
   return { nodes: children, edges, triggers: NO_TRIGGERS };
+}
+
+/** Loose code with no call only sets names: it shows in the file's panel, not on its level. */
+function shownInFile(graph: Graph, n: FlowNode): boolean {
+  return (
+    n.kind !== "module" ||
+    n.syntaxError !== undefined ||
+    hasCommands(graph, n.id)
+  );
+}
+
+/** The kinds whose size says something before the viewer opens them. */
+const SIZED: ReadonlySet<FlowNode["kind"]> = new Set([
+  "folder",
+  "file",
+  "function",
+  "class",
+  "module",
+]);
+
+/**
+ * How many nodes the level of `node` shows, the same number its hub carries
+ * once open; direct children only. Undefined on the kinds where the size says
+ * nothing (loop, block, call and the leaves).
+ */
+export function levelSize(graph: Graph, node: FlowNode): number | undefined {
+  if (!SIZED.has(node.kind)) return undefined;
+  const children = graph.nodes.filter((n) => n.parentId === node.id);
+  if (graph.project && node.kind === "file") {
+    return children.filter((n) => shownInFile(graph, n)).length;
+  }
+  return children.length;
 }
 
 /** The open node, or a folder named after the project on its top. */

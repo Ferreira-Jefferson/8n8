@@ -1,6 +1,11 @@
 import type { EdgeKind, FlowEdge, FlowNode, Graph, NodeKind } from "@8n8/model";
 import { describe, expect, it } from "vitest";
-import { type Level, projectLevel, ROOT_HUB } from "../project-level";
+import {
+  type Level,
+  levelSize,
+  projectLevel,
+  ROOT_HUB,
+} from "../project-level";
 import { lojaGraph } from "./loja-graph";
 import { videoGraph } from "./video-graph";
 
@@ -441,5 +446,61 @@ describe("a file level hides loose code that runs no call", () => {
       F,
     );
     expect(level.nodes.map((n) => n.id)).toContain(`${F}/mod`);
+  });
+});
+
+describe("levelSize counts the direct children a level shows", () => {
+  const F = "file:app/acesso.py";
+  const fn = `${F}/fn:pode_acessar`;
+  const p: Graph = {
+    ...graph(
+      [
+        node("dir:app", "folder", null, { path: "app" }),
+        node("dir:app/sub", "folder", "dir:app", { path: "app/sub" }),
+        node("file:app/sub/x.py", "file", "dir:app/sub", {
+          path: "app/sub/x.py",
+        }),
+        node("file:app/sub/y.py", "file", "dir:app/sub", {
+          path: "app/sub/y.py",
+        }),
+        node(F, "file", "dir:app", { path: "app/acesso.py" }),
+        node(`${F}/mod`, "module", F),
+        node(`${F}/mod/s0`, "code", `${F}/mod`, { openable: false }),
+        node(`${F}/fn:ativo`, "function", F),
+        node(fn, "function", F),
+        node(`${fn}/s0`, "loop", fn),
+        node(`${fn}/s0/s0`, "code", `${fn}/s0`, { openable: false }),
+        node(`${fn}/s0/s1`, "code", `${fn}/s0`, { openable: false }),
+        node(`${fn}/s1`, "return", fn, { openable: false }),
+      ],
+      [],
+    ),
+    project: { name: "p" },
+  };
+  const byId = (id: string) => p.nodes.find((n) => n.id === id) as FlowNode;
+  const size = (id: string) => levelSize(p, byId(id));
+
+  it("counts a folder's own folders and files, not what lies below them", () => {
+    expect(size("dir:app")).toBe(2);
+  });
+
+  it("counts a file's cards, without the loose code it hides", () => {
+    expect(size(F)).toBe(2);
+  });
+
+  it("counts a function's steps, not the steps inside its loop", () => {
+    expect(size(fn)).toBe(2);
+  });
+
+  it("matches the number on the hub once the node is open", () => {
+    for (const id of ["dir:app", "dir:app/sub", F, fn]) {
+      expect(size(id)).toBe(projectLevel(p, id).nodes.length);
+    }
+  });
+
+  it("gives no number to a loop, a block or a call", () => {
+    expect(size(`${fn}/s0`)).toBeUndefined();
+    expect(levelSize(p, node("b", "block", fn))).toBeUndefined();
+    expect(levelSize(p, node("c", "call", fn, { target: fn }))).toBeUndefined();
   });
 });
