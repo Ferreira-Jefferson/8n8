@@ -160,9 +160,16 @@ async function loadOrigin(
     codeOf: (node) => {
       const path = filePath(node);
       const file = response.files.find((f) => f.path === path);
+      // A file hides the docstrings of every node in it, like each node hides its own.
+      const docstrings =
+        node.kind === "file"
+          ? graph.nodes.flatMap((n) =>
+              n.docstring && filePath(n) === path ? [n.docstring] : [],
+            )
+          : node.docstring;
       return maskDocstring(
         node.range,
-        node.docstring,
+        docstrings,
         (file?.source ?? "").split(/\r?\n/),
         pluginOf(node).commentPrefix,
         locale,
@@ -390,7 +397,7 @@ export function createApp(deps: AppDeps): Hono {
       const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
       const node = graph.nodes.find((n) => n.id === body.nodeId);
       if (!node) return c.json({ error: "unknown node" }, 404);
-      if (node.kind === "folder" || node.kind === "file") {
+      if (node.kind === "folder") {
         return c.json({ error: "node has no explanation" }, 400);
       }
       request = {

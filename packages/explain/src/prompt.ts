@@ -24,7 +24,7 @@ Cite entre crases cada identificador do código (variável, parâmetro, função
 Não escreva número nem unidade (como kg, %, R$ ou segundos) que não aparece no código.`,
   summaryRole: (lang, rules) =>
     `Você explica código ${lang.label} para quem lê o fluxo de um programa.
-Você recebe um nó (função ou classe), os nomes dos nós que ele chama, os nomes dos nós que o chamam e o código do nó com as linhas numeradas de 1 a n.
+Você recebe um nó (arquivo, função ou classe), os nomes dos nós que ele chama, os nomes dos nós que o chamam e o código do nó com as linhas numeradas de 1 a n.
 ${rules}`,
   stepRole: (lang, rules) =>
     `Você explica um passo de dentro de uma função ${lang.label} para quem lê o fluxo de um programa.
@@ -32,7 +32,7 @@ Você recebe o passo, os nomes dos nós que ele chama e o código do passo com a
 ${rules}`,
   suggestionsRole: (lang, rules) =>
     `Você sugere melhorias para um código ${lang.label}, para quem revisa o fluxo de um programa.
-Você recebe um nó (função, classe ou passo), os nomes dos nós que ele chama, os nomes dos nós que o chamam e o código do nó com as linhas numeradas de 1 a n.
+Você recebe um nó (arquivo, função, classe ou passo), os nomes dos nós que ele chama, os nomes dos nós que o chamam e o código do nó com as linhas numeradas de 1 a n.
 ${rules}`,
   explainOnly:
     "Explique só o que o código mostra. Não invente comportamento. O resumo descreve só o que o código faz, nunca o que uma docstring diz.",
@@ -65,7 +65,7 @@ Quote each identifier of the code in backticks (variable, parameter, function, c
 Do not write a number or a unit (like kg, %, $ or seconds) that does not appear in the code.`,
   summaryRole: (lang, rules) =>
     `You explain ${lang.label} code to someone who reads the flow of a program.
-You receive a node (function or class), the names of the nodes it calls, the names of the nodes that call it and the code of the node with lines numbered from 1 to n.
+You receive a node (file, function or class), the names of the nodes it calls, the names of the nodes that call it and the code of the node with lines numbered from 1 to n.
 ${rules}`,
   stepRole: (lang, rules) =>
     `You explain a step inside a ${lang.label} function to someone who reads the flow of a program.
@@ -73,7 +73,7 @@ You receive the step, the names of the nodes it calls and the code of the step w
 ${rules}`,
   suggestionsRole: (lang, rules) =>
     `You suggest improvements for ${lang.label} code, for someone who reviews the flow of a program.
-You receive a node (function, class or step), the names of the nodes it calls, the names of the nodes that call it and the code of the node with lines numbered from 1 to n.
+You receive a node (file, function, class or step), the names of the nodes it calls, the names of the nodes that call it and the code of the node with lines numbered from 1 to n.
 ${rules}`,
   explainOnly:
     "Explain only what the code shows. Do not invent behavior. The summary describes only what the code does, never what a docstring says.",

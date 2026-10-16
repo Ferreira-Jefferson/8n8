@@ -184,8 +184,8 @@ test.describe("Configurações e LLM sob demanda", () => {
     await openFunction(page);
     await saveInDialog(page, async (dialog) => {
       await dialog.getByLabel("Chave de API").fill(FAKE_KEY);
-      await dialog.getByLabel("Gerar o resumo ao selecionar um nó").check();
-      await dialog.getByLabel("Pedir as sugestões ao selecionar um nó").check();
+      await dialog.getByLabel("Resumo automático").check();
+      await dialog.getByLabel("Sugestão automática").check();
     });
 
     await openFunction(page);

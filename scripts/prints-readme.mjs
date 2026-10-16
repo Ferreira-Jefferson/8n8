@@ -1,7 +1,7 @@
 // Gera as imagens do README (docs/images/*.png) a partir do projeto de exemplo
 // em docs/sample-project. Uso: pnpm prints (constrói o CLI antes).
 import { spawn } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { cpSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -92,7 +92,60 @@ async function mapa(browser, tema) {
   await ctx.close();
 }
 
-/** Um trecho colado, com o nó aberto: a tela do guia visual, com a caixa de cada peça (em % da imagem). */
+/** Imprime a caixa de cada peça, para posicionar os números do guia visual. */
+async function caixas(page, rotulo, alvos) {
+  const out = {};
+  for (const [n, css] of Object.entries(alvos)) {
+    const alvo = page.locator(css).first();
+    const box = (await alvo.count()) ? await alvo.boundingBox() : null;
+    if (box) {
+      out[n] = [box.x, box.y, box.width, box.height].map((v) => Math.round(v));
+    }
+  }
+  console.log(rotulo, JSON.stringify(out));
+}
+
+/** O mapa de uma pasta com um arquivo grande demais: a tela do guia visual, com o painel aberto. */
+async function telaDoGuia(browser, tema) {
+  const pasta = join(data, "guia", "store");
+  cpSync(exemplo, pasta, { recursive: true });
+  // Maior que 1 MB: o 8n8 ignora o arquivo e mostra o botão de arquivos ignorados.
+  writeFileSync(join(pasta, "fixtures.py"), "# dados\n".repeat(140000));
+  const { ctx, page } = await novaPagina(browser, tema);
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.getByLabel("Caminho da pasta").fill(pasta);
+  await page.getByRole("button", { name: "Mapear pasta" }).click();
+  await page.waitForTimeout(SETTLE_MS);
+  await abrir(page, "orders.py");
+  await page
+    .locator('[aria-roledescription="node"]:has-text("Process order")')
+    .first()
+    .getByRole("button", { name: "Ver detalhes do nó" })
+    .click();
+  await page.getByRole("button", { name: "Expandir painel" }).click();
+  await page.waitForTimeout(1500);
+  await shot(page, "tela", tema);
+  if (tema === "dark") {
+    await caixas(page, "TELA", {
+      1: ".logo-link",
+      2: "nav.breadcrumb",
+      3: ".search-lupa",
+      4: ".settings-btn",
+      5: ".history-btn",
+      6: ".react-flow",
+      7: ".hub",
+      8: '[aria-roledescription="node"]:not(.hub):not(:has(.hub))',
+      9: ".react-flow__edge path.wire >> nth=1",
+      10: ".ignored-btn",
+      11: ".panel-resizer",
+      12: ".panel-toggle",
+      13: ".detail-panel",
+    });
+  }
+  await ctx.close();
+}
+
+/** Um trecho colado, com o nó aberto: o botão "Novo código" só existe aqui. */
 const TRECHO = [
   "def process_order(items):",
   "    for item in items:",
@@ -102,44 +155,18 @@ const TRECHO = [
   "",
 ].join("\n");
 
-async function telaDoGuia(browser, tema) {
+async function trechoDoGuia(browser, tema) {
   const { ctx, page } = await novaPagina(browser, tema);
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.getByRole("button", { name: /Colar trecho/ }).click();
   await page.getByLabel("Trecho de código").fill(TRECHO);
+  await shot(page, "editor", tema);
   await page.getByRole("button", { name: "Gerar mapa" }).click();
   await page.waitForTimeout(SETTLE_MS);
   await abrir(page, "Process order");
-  // O último item da trilha abre o painel do nó aberto.
-  await page.locator("nav.breadcrumb").getByText("Process order").click();
-  await page.getByRole("button", { name: "Expandir painel" }).click();
-  await page.waitForTimeout(1500);
-  await shot(page, "tela", tema);
+  await shot(page, "trecho", tema);
   if (tema === "dark") {
-    const alvos = {
-      1: ".logo-link",
-      2: "nav.breadcrumb",
-      3: ".new-code",
-      4: ".search-lupa",
-      5: ".settings-btn",
-      6: ".history-btn",
-      7: ".react-flow",
-      8: ".hub",
-      9: '[aria-roledescription="node"]:not(.hub):not(:has(.hub))',
-      10: ".react-flow__edge path.wire >> nth=1",
-      11: ".detail-panel",
-    };
-    const caixas = {};
-    for (const [n, css] of Object.entries(alvos)) {
-      const alvo = page.locator(css).first();
-      const box = (await alvo.count()) ? await alvo.boundingBox() : null;
-      if (box) {
-        caixas[n] = [box.x, box.y, box.width, box.height].map((v) =>
-          Math.round(v),
-        );
-      }
-    }
-    console.log("CAIXAS", JSON.stringify(caixas));
+    await caixas(page, "TRECHO", { 1: ".new-code" });
   }
   await ctx.close();
 }
@@ -174,6 +201,7 @@ try {
   for (const tema of temas) await inicio(browser, tema);
   for (const tema of temas) await mapa(browser, tema);
   for (const tema of temas) await telaDoGuia(browser, tema);
+  for (const tema of temas) await trechoDoGuia(browser, tema);
   for (const tema of temas) await etiquetaDoGuia(browser, tema);
   await browser.close();
 } finally {

@@ -1,7 +1,28 @@
 {
-  "name": "@8n8/cli",
+  "name": "8n8",
   "version": "0.0.1",
-  "private": true,
+  "description": "Mapa visual de código: nós e arestas no estilo n8n, do repositório até as linhas reais.",
+  "keywords": [
+    "code-map",
+    "visualization",
+    "diagram",
+    "flow",
+    "tree-sitter",
+    "python",
+    "typescript",
+    "cli"
+  ],
+  "homepage": "https://github.com/Ferreira-Jefferson/8n8#readme",
+  "bugs": {
+    "url": "https://github.com/Ferreira-Jefferson/8n8/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ferreira-Jefferson/8n8.git",
+    "directory": "apps/cli"
+  },
+  "license": "GPL-3.0-only",
+  "author": "Jefferson Ferreira",
   "type": "module",
   "bin": {
     "8n8": "dist/8n8.mjs"

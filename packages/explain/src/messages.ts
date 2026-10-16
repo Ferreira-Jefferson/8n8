@@ -55,6 +55,7 @@ const PT: Words = {
   titleTooLong: (words, max) =>
     `o título tem ${words} palavras, mais de ${max}`,
   kinds: {
+    file: "arquivo",
     function: "função",
     class: "classe",
     module: "código solto",
@@ -95,6 +96,7 @@ const EN: Words = {
   titleTooLong: (words, max) =>
     `the title has ${words} words, more than ${max}`,
   kinds: {
+    file: "file",
     function: "function",
     class: "class",
     module: "loose code",

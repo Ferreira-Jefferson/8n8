@@ -18,8 +18,8 @@ export const ptBR = {
   "settings.claude.change": "Alterar",
   "settings.claude.auto": "Usar o automático",
   "settings.model": "Modelo",
-  "settings.autoSummary": "Gerar o resumo ao selecionar um nó",
-  "settings.autoSuggestions": "Pedir as sugestões ao selecionar um nó",
+  "settings.autoSummary": "Resumo automático",
+  "settings.autoSuggestions": "Sugestão automática",
   "settings.lockedBy": "Definido pela variável {name}",
   "settings.saved": "Configurações salvas.",
   "settings.failed": "Não foi possível salvar. Confira a chave e o modelo.",
@@ -112,7 +112,6 @@ export const ptBR = {
   "step.inspectTitle": "Ver código e explicação, sem entrar",
   "step.syntaxError": "Erro de sintaxe na linha {line}",
   "panel.aria": "Detalhe do nó",
-  "panel.folder": "Pasta: {path}",
   "panel.eyebrow": "O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO",
   "panel.rules": "2 frases · voz ativa · um termo por conceito",
   "panel.codeLine": "CÓDIGO · {file}, linha {n}",
@@ -163,13 +162,13 @@ export const ptBR = {
   "list.or": "ou",
   "flow.edgeAria": "Aresta de {from} para {to}",
   "flow.nodeHelp":
-    "Tecle Enter ou espaço para selecionar um nó. Tecle Delete para removê-lo e Esc para cancelar.",
+    "Tecle Enter ou espaço para selecionar um nó. Tecle Esc para cancelar.",
   "flow.nodeHelpKeyboard":
-    "Tecle Enter ou espaço para selecionar um nó. Depois use as setas para mover o nó. Tecle Delete para removê-lo e Esc para cancelar.",
+    "Tecle Enter ou espaço para selecionar um nó. Depois use as setas para mover o nó. Tecle Esc para cancelar.",
   "flow.nodeMoved":
     "Nó selecionado movido: {direction}. Nova posição, x: {x}, y: {y}",
   "flow.edgeHelp":
-    "Tecle Enter ou espaço para selecionar uma aresta. Depois tecle Delete para removê-la ou Esc para cancelar.",
+    "Tecle Enter ou espaço para selecionar uma aresta. Tecle Esc para cancelar.",
   "flow.handle": "Porta",
   "edge.true": "true",
   "edge.false": "false",

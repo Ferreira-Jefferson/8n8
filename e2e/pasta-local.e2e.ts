@@ -509,7 +509,13 @@ test.describe("Pasta local", () => {
         exact: true,
       }),
     ).toHaveCount(2);
-    expect(bodies).toEqual([{ root: LOJA, nodeId: FRETE }]);
+    // Opening the file on the way to FRETE explains the file too.
+    await expect
+      .poll(() => bodies)
+      .toEqual([
+        { root: LOJA, nodeId: "file:frete/calculo.py" },
+        { root: LOJA, nodeId: FRETE },
+      ]);
     await expect(
       view.getByText("CÓDIGO · frete/calculo.py, linhas 1 a 4", {
         exact: true,

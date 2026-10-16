@@ -184,3 +184,23 @@ describe("styles: history button", () => {
     );
   });
 });
+
+describe("styles: brand rules", () => {
+  it("paints an error in Cobre, the color of attention", () => {
+    expect(rule('[role="alert"]')).toContain("color: var(--warm);");
+  });
+
+  it("keeps the on-demand button on a loaded weight of Space Grotesk (400, 500, 700)", () => {
+    expect(rule(".detail-panel .ask")).toContain("font: 700 18px");
+  });
+});
+
+describe("styles: settings dialog actions", () => {
+  it("gives Salvar and Fechar the same size: padding, border, font and width", () => {
+    const both = rule(".dialog-actions .btn,\n.dialog-actions .btn-ghost");
+    expect(both).toContain("min-width: 140px;");
+    expect(both).toContain("padding: 12px 24px;");
+    expect(both).toContain("border: 2px solid var(--panel-border);");
+    expect(both).toContain("font: 700 22px var(--font-sans);");
+  });
+});

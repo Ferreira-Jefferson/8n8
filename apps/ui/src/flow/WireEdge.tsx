@@ -7,6 +7,7 @@ import {
 } from "@xyflow/react";
 import { useEffect, useRef, useState } from "react";
 import { type MessageKey, useT } from "../i18n";
+import { NODE_HEIGHT } from "./layout";
 import { Side } from "./sides";
 
 export interface WireData extends Record<string, unknown> {
@@ -58,13 +59,26 @@ const LABEL_GAP = 4;
  * from: below the end of a wire that comes down into the port, above the end
  * of one that comes up or straight. So it never crosses its own wire. Into the
  * top or the bottom of a card, the label sits to the right of the port.
+ * A wire that turns into a later band comes down just left of the port, often
+ * at the left edge of the canvas: a label left of the port would leave the
+ * canvas and cross the wire. That label sits above the top-left corner of its
+ * card instead, still by its own card and clear of the wire.
  */
 export function branchLabelAt(
   targetX: number,
   targetY: number,
   sourceY: number,
   side: Side,
+  turns = false,
 ): { x: number; y: number; above: boolean; leftward: boolean } {
+  if (turns && side === Side.Left) {
+    return {
+      x: targetX + LABEL_GAP,
+      y: targetY - NODE_HEIGHT / 2 - LABEL_GAP,
+      above: true,
+      leftward: false,
+    };
+  }
   if (side === Side.Top || side === Side.Bottom) {
     const above = side === Side.Top;
     return {
@@ -235,7 +249,13 @@ export function WireEdge({
           );
   const drawAt = data?.drawAt ?? 0;
   const pulseAt = data?.pulseAt ?? 0;
-  const spot = branchLabelAt(targetX, targetY, sourceY, targetPosition);
+  const spot = branchLabelAt(
+    targetX,
+    targetY,
+    sourceY,
+    targetPosition,
+    data?.turnY !== undefined,
+  );
   const hasLabel = typeof label === "string" && label !== "";
   const showLabel = hasLabel && !data?.dep;
   const info = data?.info;

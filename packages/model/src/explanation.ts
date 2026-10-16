@@ -38,16 +38,21 @@ export type ReviewStatus = "full" | "cut";
 
 export type UpdateReason = "code" | "neighbours" | "model-or-prompt";
 
-/** Os nós que o servidor explica: todos menos pasta e arquivo (VID-28). */
-export type ExplainKind = Exclude<NodeKind, "folder" | "file">;
+/** Os nós que o servidor explica: todos menos pasta (VID-28). */
+export type ExplainKind = Exclude<NodeKind, "folder">;
 
-/** "full" = resumo de função, classe ou código solto; "step" = resumo de passo (VID-28, VID-29). */
+/** "full" = resumo de arquivo, função, classe ou código solto; "step" = resumo de passo (VID-28, VID-29). */
 export type ExplainStyle = "full" | "step";
 
+const FULL: ReadonlySet<ExplainKind> = new Set([
+  "file",
+  "function",
+  "class",
+  "module",
+]);
+
 export function explainStyle(kind: ExplainKind): ExplainStyle {
-  return kind === "function" || kind === "class" || kind === "module"
-    ? "full"
-    : "step";
+  return FULL.has(kind) ? "full" : "step";
 }
 
 export const STEP_SENTENCE_LIMIT = 2; // VID-28

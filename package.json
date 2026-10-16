@@ -1,5 +1,5 @@
 {
-  "name": "8n8",
+  "name": "8n8-monorepo",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -13,18 +13,18 @@
     "dev": "node scripts/dev.mjs",
     "dev:server": "tsx watch --env-file-if-exists=.env apps/cli/src/main.ts --no-open",
     "dev:ui": "pnpm --filter @8n8/ui dev",
-    "start": "pnpm --filter @8n8/cli build && node --env-file-if-exists=.env apps/cli/dist/8n8.mjs --no-open",
+    "start": "pnpm --filter 8n8 build && node --env-file-if-exists=.env apps/cli/dist/8n8.mjs --no-open",
     "build:all": "pnpm install && pnpm build:cli && pnpm build:ext",
-    "build:cli": "pnpm --filter @8n8/cli package",
+    "build:cli": "pnpm --filter 8n8 package",
     "build:ext": "pnpm --filter 8n8-vscode package",
-    "install:cli:global": "pnpm build:cli && npm install -g ./release/8n8-cli-0.0.1.tgz",
-    "open": "pnpm --filter @8n8/cli build && node scripts/open.mjs",
+    "install:cli:global": "pnpm build:cli && npm install -g ./release/8n8-0.0.1.tgz",
+    "open": "pnpm --filter 8n8 build && node scripts/open.mjs",
     "test": "pnpm -r --if-present test",
-    "e2e": "pnpm --filter @8n8/cli build && playwright test",
+    "e2e": "pnpm --filter 8n8 build && playwright test",
     "e2e:map": "node scripts/e2e-map.mjs",
     "verify": "node scripts/verify.mjs",
     "prepare": "git config core.hooksPath .githooks",
-    "prints": "pnpm --filter @8n8/cli build && node scripts/prints-readme.mjs"
+    "prints": "pnpm --filter 8n8 build && node scripts/prints-readme.mjs"
   },
   "devDependencies": {
     "@8n8/model": "workspace:*",

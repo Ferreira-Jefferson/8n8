@@ -55,6 +55,14 @@ function openTarget(node: FlowNode): NodeId | null {
   }
 }
 
+/**
+ * Whether a node has a panel: code, a summary or suggestions to show. A folder has none of
+ * these, so it never opens the panel, and its card has no button for it.
+ */
+export function hasPanel(node: FlowNode): boolean {
+  return node.kind !== "folder";
+}
+
 /** The node whose panel shows: a call shows its target's panel. */
 export function panelNodeOf(node: FlowNode): NodeId {
   return node.kind === "call" && node.target !== undefined

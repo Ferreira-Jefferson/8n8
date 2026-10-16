@@ -1,5 +1,7 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { box, canvas, generate, nodeById, nodes, OFFLINE } from "./mapa";
-import { expect, type Locator, test } from "./test";
+import { expect, type Locator, type Page, test } from "./test";
 
 // VID-21: the "true" and "false" labels of an `if` stay apart and clear of
 // every card, whether the `if` has an `else` or only raises.
@@ -49,20 +51,88 @@ for (const [name, source] of [
         expect(label && overlap(label, card)).toBe(false);
       }
     }
-    // Each label stands by the port of its own card: it ends just left of
-    // the card, by the height of the card's middle (VID-21).
+    // Each label stands by its own card (VID-21): it ends just left of the
+    // card, by the height of the card's middle; or, when its wire turns down
+    // into a later band, it sits just above the card's top-left corner.
     for (const branch of ["true", "false"] as const) {
       const label = await box(
         canvas(page).locator(`[data-branch-label="${branch}"]`),
       );
       const card = await box(nodeById(page, TARGETS[source][branch]));
       const gap = card.x - (label.x + label.width);
-      expect(gap).toBeGreaterThanOrEqual(0);
-      expect(gap).toBeLessThan(16);
       const port = card.y + card.height / 2;
-      expect(Math.abs(label.y + label.height / 2 - port)).toBeLessThan(
-        label.height,
+      const byPort =
+        gap >= 0 &&
+        gap < 16 &&
+        Math.abs(label.y + label.height / 2 - port) < label.height;
+      const rise = card.y - (label.y + label.height);
+      const onTop = rise >= 0 && rise < 16 && Math.abs(label.x - card.x) < 16;
+      expect(byPort || onTop).toBe(true);
+    }
+  });
+}
+
+// A branch whose wire turns into the next band of a wrapped level comes down
+// just left of its card: the label must stay on the canvas, clear of the cards
+// and of every wire.
+const ORDERS = readFileSync(
+  fileURLToPath(
+    new URL("../docs/sample-project/store/orders.py", import.meta.url),
+  ),
+  "utf8",
+);
+
+/** Points along every wire of the level, in screen coordinates. */
+async function wirePoints(page: Page): Promise<{ x: number; y: number }[]> {
+  return canvas(page)
+    .locator("path.wire")
+    .evaluateAll((paths) =>
+      paths.flatMap((el) => {
+        const path = el as SVGPathElement;
+        const m = path.getScreenCTM();
+        if (!m) return [];
+        const length = path.getTotalLength();
+        const out: { x: number; y: number }[] = [];
+        for (let at = 0; at <= length; at += 2) {
+          const p = path.getPointAtLength(at);
+          out.push({
+            x: m.a * p.x + m.c * p.y + m.e,
+            y: m.b * p.x + m.d * p.y + m.f,
+          });
+        }
+        return out;
+      }),
+    );
+}
+
+for (const [name, source, fn] of [
+  ["an if that only raises", RAISES, "fn:frete"],
+  ["the sample orders.py", ORDERS, "fn:process_order"],
+] as const) {
+  test(`the branch labels of ${name}, in a wrapped level, stay on the canvas, clear of every card and wire`, async ({
+    page,
+  }) => {
+    await generate(page, OFFLINE, source);
+    await nodeById(page, fn).dispatchEvent("click");
+    const labels = canvas(page).locator("[data-branch-label]");
+    await expect(labels).toHaveCount(2);
+    // The wires draw in: wait until they are complete.
+    await page.waitForTimeout(2500);
+    const area = await box(canvas(page));
+    const cards = await rects(canvas(page).locator(".node"));
+    const points = await wirePoints(page);
+    for (const label of await rects(labels)) {
+      expect(label.x).toBeGreaterThanOrEqual(area.x);
+      expect(label.x + label.width).toBeLessThanOrEqual(area.x + area.width);
+      for (const card of cards) expect(overlap(label, card)).toBe(false);
+      const crossed = points.filter(
+        (p) =>
+          p.x > label.x &&
+          p.x < label.x + label.width &&
+          p.y > label.y &&
+          p.y < label.y + label.height,
       );
+      expect(crossed).toEqual([]);
     }
   });
 }

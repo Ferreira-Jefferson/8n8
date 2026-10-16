@@ -49,7 +49,7 @@ Todos os comandos rodam na raiz do repositório.
 | `pnpm dev:ui` | Inicia só a tela, com o Vite. |
 | `pnpm start` | Constrói a tela e inicia o servidor e a tela juntos, sem recarga. Não abre o navegador. |
 | `pnpm open <pasta>` | Constrói o CLI e abre o mapa da pasta. Uma pasta relativa vale a partir de onde você digitou o comando. |
-| `pnpm build:cli` | Gera o pacote do CLI em `release/8n8-cli-0.0.1.tgz`. |
+| `pnpm build:cli` | Gera o pacote do CLI em `release/8n8-0.0.1.tgz`. |
 | `pnpm build:ext` | Gera o pacote da extensão em `release/8n8-vscode-0.0.1.vsix`. |
 | `pnpm build:all` | Instala as dependências e gera o CLI e a extensão. |
 | `pnpm install:cli:global` | Gera o CLI e instala o comando `8n8` no terminal. |

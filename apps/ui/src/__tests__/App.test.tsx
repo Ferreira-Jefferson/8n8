@@ -74,6 +74,7 @@ beforeEach(() => {
   localStorage.setItem("8n8.panelOpen", "1");
   graphMock.mockReset();
   explainMock.mockReset();
+  explainMock.mockResolvedValue({ status: "not-cached" });
   suggestMock.mockReset();
   suggestMock.mockResolvedValue({ status: "not-cached" });
   projectMock.mockReset();

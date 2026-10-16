@@ -710,6 +710,7 @@ export function FlowCanvas({
         onNodeClick={click}
         nodesDraggable
         nodesConnectable={false}
+        deleteKeyCode={null}
         zoomOnDoubleClick={false}
         minZoom={0.2}
         proOptions={{ hideAttribution: true }}
