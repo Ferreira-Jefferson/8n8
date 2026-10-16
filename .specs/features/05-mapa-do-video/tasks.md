@@ -370,7 +370,7 @@ T49 → T50
 - [x] `def x(): a = 1; return a` → `s0` code (linha 2) e `s1` return (linha 3) com `label` `a`, `openable: false` e uma aresta `next:s0->s1`.
 - [x] Nenhuma aresta sai do RETORNO: num `return` seguido de outro comando, o comando seguinte não recebe aresta do RETORNO.
 - [x] `if/else` com `return` nos dois ramos: os ramos têm um RETORNO cada, e a condição não deixa aresta pendente para depois do `if`.
-- [x] `if` sem `else` com `return` no ramo "sim": o "não" continua indo ao passo seguinte.
+- [x] `if` sem `else` com `return` no ramo "true": o "false" continua indo ao passo seguinte.
 - [x] `return` dentro de laço: RETORNO filho do laço.
 - [x] `return calcular(x)` (função do trecho) → RETORNO com `target`, e o grafo mantém `calls:<dono>->fn:calcular`. `return requests.get(u)` → RETORNO com `callee` e `category: "HTTP"`. `return` sozinho → `label` `""`.
 - [x] Em `pedido_frete.py`, `fn:calcular_frete/s2/b0/s0` e `b1/s0` são `return` com os mesmos IDs de antes.
@@ -398,7 +398,7 @@ T49 → T50
 
 - [x] O teste confere a lista de nós em pré-ordem com `id`, `kind`, `range`, `category`, `callee` e `target` de cada linha da tabela.
 - [x] O teste confere `openable` de cada nó contra a regra da VID-24.
-- [x] O teste confere as arestas: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); as arestas de `calcular_frete` (2 `next`, "sim" e "não"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhuma aresta sai de um nó `return`.
+- [x] O teste confere as arestas: os 7 `next` de `processar_pedido` (`s0→s1` até `s6→s7`); as arestas de `calcular_frete` (2 `next`, "true" e "false"); o único `calls` (`fn:processar_pedido → fn:calcular_frete`). Nenhuma aresta sai de um nó `return`.
 - [x] O teste confere que extrair duas vezes dá o mesmo grafo (CORE-04).
 - [x] O gate Build A passa (fecha a fase).
 
@@ -784,7 +784,7 @@ T49 → T50
 
 ---
 
-### T23: Posições em linhas e ramos "sim" acima
+### T23: Posições em linhas e ramos "true" acima
 
 **What**: Trocar as medidas para 320×140 com espaço de 60, criar `layoutRows` e criar `orderBranches` depois do dagre (C7).
 **Where**: `apps/ui/src/flow/layout.ts`
@@ -931,7 +931,7 @@ T49 → T50
 
 - [x] Um FUNÇÃO com título "Calcular frete" mostra `.tag` "FUNÇÃO", `.name` "Calcular frete" com `.open-mark` "›" e `.fn` `calcular_frete()`.
 - [x] Sem título, o cartão mostra o nome provisório. Uma folha (HTTP) não tem `.open-mark` (VID-26).
-- [x] `hasIn=false` esconde a porta de entrada, e `hasOut=false` esconde a de saída.
+- [x] `portsIn` vazio esconde as portas de entrada, e `portsOut` vazio esconde as de saída.
 - [x] `selected` → classe `on`; `dimmed` → classe `dim`.
 - [x] Os testes atuais trocam `.step-label` pela estrutura nova com a mesma intenção (rótulo, categoria, erro, selo, sem emoji).
 - [x] Gate passa.
@@ -958,7 +958,7 @@ T49 → T50
 
 - [x] O path tem `d` igual a `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2`, `class="wire"` e `pathLength="1"`.
 - [x] `data-draw-at` e `data-pulse-at` vêm da agenda. Com `reduced`, nenhum `circle.pulse` é renderizado.
-- [x] "sim" e "não" aparecem como `.branch-label`, com `data-branch-label`, perto do início da aresta.
+- [x] "true" e "false" aparecem como `.branch-label`, com `data-branch-label`, perto do início da aresta.
 - [x] Gate passa.
 
 **Tests**: unit
@@ -1400,8 +1400,8 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 - [x] VID-18: logo depois do clique, `data-phase="expanding"`, `.open-frame` com borda `rgb(212, 255, 63)` e 0 cartões novos. Depois, `data-phase="open"` e os 5 cartões.
 - [x] VID-19: a trilha mostra "Fluxo principal › Calcular frete". Num segundo nível, ela ganha o segundo título.
 - [x] VID-20: os dois RETORNO não têm aresta de saída, e o GATILHO de `processar_pedido`, aberto, mostra o RETORNO da linha 14 sem aresta de saída.
-- [x] VID-21: o primeiro passo do "sim" fica acima do primeiro do "não".
-- [ ] VID-21: os rótulos "sim" e "não" ficam mais perto da origem que do destino. Não vale: o rótulo fica junto ao cartão de destino (SPEC_DEVIATION em `WireEdge.tsx`); o "sim" fica a 188 px do início da aresta e a 84 px do fim.
+- [x] VID-21: o primeiro passo do "true" fica acima do primeiro do "false".
+- [ ] VID-21: os rótulos "true" e "false" ficam mais perto da origem que do destino. Não vale: o rótulo fica junto ao cartão de destino (SPEC_DEVIATION em `WireEdge.tsx`); o "true" fica a 188 px do início da aresta e a 84 px do fim.
 - [x] VID-22: clicar numa folha deixa a borda do cartão em `rgb(212, 255, 63)`.
 - [x] VID-24 e VID-26: cada cartão com "›" abre e cada cartão sem "›" não abre. Descer por todo "›" a partir do primeiro nível termina num nível só de folhas. Na recursão (`def contar`), abrir a chamada empilha o mesmo nível de novo.
 - [x] VID-25: clicar no HTTP mostra o painel e mantém os mesmos 5 cartões.

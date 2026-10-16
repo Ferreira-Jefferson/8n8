@@ -101,14 +101,14 @@ const edges: FlowEdge[] = [
     kind: "branch",
     source: `${C}/s2`,
     target: `${C}/s2/b0/s0`,
-    label: "sim",
+    label: "true",
   },
   {
     id: `branch:${C}/s2->${C}/s2/b1/s0`,
     kind: "branch",
     source: `${C}/s2`,
     target: `${C}/s2/b1/s0`,
-    label: "não",
+    label: "false",
   },
   { id: `calls:${P}->${C}`, kind: "calls", source: P, target: C },
 ];

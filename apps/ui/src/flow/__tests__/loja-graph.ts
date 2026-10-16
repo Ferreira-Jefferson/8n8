@@ -330,14 +330,14 @@ export const lojaGraph: Graph = {
       kind: "branch",
       source: "file:frete/calculo.py/fn:calcular_frete/s0",
       target: "file:frete/calculo.py/fn:calcular_frete/s0/b0/s0",
-      label: "sim",
+      label: "true",
     },
     {
       id: "branch:file:frete/calculo.py/fn:calcular_frete/s0->file:frete/calculo.py/fn:calcular_frete/s1",
       kind: "branch",
       source: "file:frete/calculo.py/fn:calcular_frete/s0",
       target: "file:frete/calculo.py/fn:calcular_frete/s1",
-      label: "não",
+      label: "false",
     },
     {
       id: "calls:file:main.py/fn:main->file:pedidos/pedidos.py/fn:processar_pedido",

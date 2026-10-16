@@ -192,7 +192,7 @@ function compareKeys(a: number[], b: number[]): number {
 
 /**
  * Within each column, gives the column's `y` values again in branch order, so
- * the "sim" branch (`b0`) sits above the "não" branch (`b1`) (VID-21). A tie
+ * the "true" branch (`b0`) sits above the "false" branch (`b1`) (VID-21). A tie
  * keeps the dagre order.
  */
 export function orderBranches(

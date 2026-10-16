@@ -107,7 +107,7 @@ Grafo esperado depois das trilhas A e C:
 | `fn:calcular_frete/s2/b0/s0` | 21 | return | RETORNO | Retorno | `return TABELA_PESADA[uf]` |
 | `fn:calcular_frete/s2/b1/s0` | 23 | return | RETORNO | Retorno | `return TABELA_PADRAO[uf]` |
 
-O fluxo principal tem uma linha: `fn:processar_pedido` e os passos `s0..s6`, ligados por 7 arestas. O passo `s7` fica fora porque não tem chamada. As arestas dentro de `calcular_frete` são `s0→s1` e `s1→s2` (`next`), `s2→b0/s0` ("sim") e `s2→b1/s0` ("não"). Nenhuma aresta sai de um RETORNO.
+O fluxo principal tem uma linha: `fn:processar_pedido` e os passos `s0..s6`, ligados por 7 arestas. O passo `s7` fica fora porque não tem chamada. As arestas dentro de `calcular_frete` são `s0→s1` e `s1→s2` (`next`), `s2→b0/s0` ("true") e `s2→b1/s0` ("false"). Nenhuma aresta sai de um RETORNO.
 
 ---
 
@@ -459,7 +459,7 @@ body { margin: 0; background: var(--ground); color: var(--second); font-family: 
 | Porta | `.port` (Handle) | `width: 16px`; `height: 16px`; `border-radius: 50%`; `background: var(--main)`; `border: 0`; `top: 50%`; `margin-top: -8px`. A entrada usa `left: -9px` e a saída `right: -9px`. Um lado sem aresta usa `visibility: hidden`. |
 | Aresta | `.wire` | `fill: none`; `stroke: var(--main)`; `stroke-width: 4`; `stroke-linecap: round` |
 | Ponto | `.pulse` | `fill: var(--main)`; `r = 9` |
-| Rótulo de ramo | `.branch-label` | `font-size: 22px`; `font-weight: 500`; `letter-spacing: .18em`; `text-transform: uppercase`; `white-space: nowrap`. "sim" em `var(--main)`; "não" e os rótulos de `elif` em `var(--accent)`. |
+| Rótulo de ramo | `.branch-label` | `font-size: 22px`; `font-weight: 500`; `letter-spacing: .18em`; `text-transform: uppercase`; `white-space: nowrap`. "true" em `var(--main)`; "false" e os rótulos de `elif` em `var(--accent)`. |
 | Cartão de sugestão | `.alert` | `display: flex`; `gap: 14px`; `align-items: center`; `padding: 14px 22px`; `border-radius: 6px`; `background: var(--second)`; `color: var(--ground)`; `font-size: 24px`; `font-weight: 700`; `white-space: nowrap`; `box-shadow: 0 12px 26px rgba(0,0,0,.3)`. `.alert .dot`: `14px` por `14px`, `border-radius: 50%`, `background: var(--ground)`. |
 | Botão principal | `.btn` | `padding: 16px 30px`; `border-radius: 6px`; `border: 0`; `background: var(--main)`; `color: var(--ground)`; `font: 700 26px var(--font-sans)` |
 | Botão secundário | `.btn-ghost` ("Abrir pasta", "Novo código", "Voltar") | `padding: 12px 22px`; `border-radius: 6px`; `background: transparent`; `border: 2px solid var(--panel-border)`; `color: var(--second)`; `font: 500 22px var(--font-sans)`. Desabilitado: `opacity: .4`. |
@@ -569,7 +569,7 @@ O nó `mod` aparece como GATILHO "Código solto". Nenhum cartão do primeiro ní
 - `NODE_WIDTH = 320`, `NODE_HEIGHT = 140`, `NODE_GAP = 60` e `ROW_GAP = 80`.
 - `layoutRows(rows)`: o nó `i` da linha `r` fica em `x = i * (320 + 60)` e `y = r * (140 + 90 + 80) − (i % 2) * 90`. Os nós ímpares sobem 90 px (`ZIGZAG`), como o 470/380 do vídeo.
 - `wrapRows(rows, perRow)` corta cada linha em linhas de no máximo `perRow` nós, na ordem. O fluxo segue da esquerda para a direita, linha após linha, como um texto. Uma entrada nova sempre começa uma linha nova.
-- `wrapColumns(posições, perBand)` corta um nível de dentro (dagre) em faixas de no máximo `perBand` colunas. Cada faixa começa na esquerda, `BAND_GAP = 120` px abaixo da faixa de cima, e mantém o próprio desenho (o "sim" continua acima do "não"). `rowBands(rows)` dá a mesma forma às linhas do fluxo principal. As duas retornam `positions`, a faixa de cada nó e `gapAbove`, o `y` do meio do vão acima de cada faixa.
+- `wrapColumns(posições, perBand)` corta um nível de dentro (dagre) em faixas de no máximo `perBand` colunas. Cada faixa começa na esquerda, `BAND_GAP = 120` px abaixo da faixa de cima, e mantém o próprio desenho (o "true" continua acima do "false"). `rowBands(rows)` dá a mesma forma às linhas do fluxo principal. As duas retornam `positions`, a faixa de cada nó e `gapAbove`, o `y` do meio do vão acima de cada faixa.
 - `chooseWrap(maisLonga, layoutFor, largura, altura)` (`flow/viewport.ts`) decide o corte, nesta ordem:
   1. um nível que cabe inteiro com zoom ≥ `LEGIBLE_ZOOM` (0,6) não é cortado;
   2. senão, vale a linha mais longa que cabe com zoom ≥ 0,8;
@@ -581,7 +581,7 @@ O nó `mod` aparece como GATILHO "Código solto". Nenhum cartão do primeiro ní
   - a chave é a lista de índices `j` dos segmentos `/b<j>/` do ID, depois do prefixo do nível;
   - a comparação é elemento a elemento, e um elemento ausente vale `0.5`;
   - num empate, vale a ordem do dagre.
-- Assim o ramo "sim" (`b0`) fica sempre acima do "não" (`b1`).
+- Assim o ramo "true" (`b0`) fica sempre acima do "false" (`b1`).
 
 ### C8. Movimento: `flow/motion.ts` (VID-06, VID-07)
 
@@ -648,13 +648,13 @@ export type NavAction =
   - `data-tag`;
   - `data-enter-at` em ms, com `style="animation-delay: <enterAt>ms"`;
   - as classes `on` (selecionado ou destacado) e `dim`;
-  - Handles `.port` com `visibility` conforme `hasIn` e `hasOut`.
+  - Handles `.port` com `visibility` conforme `portsIn` e `portsOut` (os lados onde chega ou sai uma aresta).
 - **`WireEdge.tsx`** (VID-05, VID-06, VID-21), tipo de aresta `wire`:
   - path `M x1 y1 C x1+60 y1, x2-60 y2, x2 y2` com `pathLength=1` e `class="wire"`;
   - a aresta que vai para uma faixa de baixo tem `data.turnY` (o `gapAbove` da faixa do destino) e usa `turnPath`: sai 24 px à direita, desce até `turnY`, corre até 24 px antes do cartão de destino e desce até a porta dele, com cantos de raio 20;
   - animação CSS de `stroke-dashoffset` de 1 a 0, com `data-draw-at` e `animation-delay`;
   - o ponto é `<circle class="pulse" r="9" data-pulse-at>` com `<animateMotion begin="<pulseAt>ms" dur="750ms" path=… fill="remove">` e visibilidade só durante o movimento. O ponto não é renderizado com movimento reduzido;
-  - o rótulo de ramo (`.branch-label`, via `EdgeLabelRenderer`) fica junto ao cartão de destino, alinhado à borda esquerda dele e a 8 px do cartão: acima quando a aresta sobe ("sim"), abaixo quando a aresta desce ou segue reto ("não"). Assim ele não toca aresta nem cartão. Ele tem `data-branch-label` igual ao texto e aparece em maiúsculas, como o `.eyebrow` do vídeo.
+  - o rótulo de ramo (`.branch-label`, via `EdgeLabelRenderer`) fica junto ao cartão de destino, alinhado à borda esquerda dele e a 8 px do cartão: acima quando a aresta sobe ("true"), abaixo quando a aresta desce ou segue reto ("false"). Assim ele não toca aresta nem cartão. Ele tem `data-branch-label` igual ao texto e aparece em maiúsculas, como o `.eyebrow` do vídeo.
 - **`SuggestionCard.tsx`** (VID-31, VID-33): um `button.alert` com `<i class="dot">`, o texto e `data-anchor-id` (ou `"frame"`).
   - Os cartões entram no `ViewportPortal` do React Flow. O de ordem `k` na mesma âncora fica em `x = âncora.x + 20` e `y = âncora.y − 64 − k * 64`.
   - Um cartão preso à moldura fica fora do viewport, em `left: 24px; top: 96px`, empilhado.

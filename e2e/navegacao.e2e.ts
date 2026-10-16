@@ -128,7 +128,7 @@ function labelSpots(page: Page, source: string) {
         b.top < a.bottom;
       const port = document
         .querySelector(
-          `[aria-roledescription="node"][data-id="${source}"] .port-out`,
+          `[aria-roledescription="node"][data-id="${source}"] .port-out.port-right`,
         )
         ?.getBoundingClientRect();
       const canvas = document.querySelector(".canvas")?.getBoundingClientRect();
@@ -331,7 +331,10 @@ test.describe("Navegação", () => {
       expect(await cardOf(page, id).getAttribute("data-tag")).toBe("RETORNO");
       expect(await wiresFrom(page, id)).toBe(0);
       expect(
-        await css(cardOf(page, id).locator(".port-out"), "visibility"),
+        await css(
+          cardOf(page, id).locator(".port-out.port-right"),
+          "visibility",
+        ),
       ).toBe("hidden");
     }
 
@@ -353,7 +356,7 @@ test.describe("Navegação", () => {
       ),
     ).toEqual([]);
 
-    // A step after the if: the "não" wire reaches it, the RETORNO's never does.
+    // A step after the if: the "false" wire reaches it, the RETORNO's never does.
     await generate(
       page,
       REAL,
@@ -368,21 +371,21 @@ test.describe("Navegação", () => {
     expect(await wiresFrom(page, "fn:f/s0/b0/s0")).toBe(0);
   });
 
-  test("VID-21: the first step of sim sits above the first step of não, each wire labelled", async ({
+  test("VID-21: the first step of true sits above the first step of false, each wire labelled", async ({
     page,
   }) => {
     await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     await clickCard(page, `${PEDIDO}/s3`);
     await expectLevel(page, FRETE_LEVEL);
-    const sim = await box(cardOf(page, `${FRETE}/s2/b0/s0`));
-    const nao = await box(cardOf(page, `${FRETE}/s2/b1/s0`));
-    expect(sim.y + sim.height).toBeLessThanOrEqual(nao.y);
+    const whenTrue = await box(cardOf(page, `${FRETE}/s2/b0/s0`));
+    const whenFalse = await box(cardOf(page, `${FRETE}/s2/b1/s0`));
+    expect(whenTrue.y + whenTrue.height).toBeLessThanOrEqual(whenFalse.y);
     await expect(page.locator("[data-branch-label]")).toHaveText([
-      "sim",
-      "não",
+      "true",
+      "false",
     ]);
-    expect(await css(page.locator('[data-branch-label="sim"]'), "color")).toBe(
+    expect(await css(page.locator('[data-branch-label="true"]'), "color")).toBe(
       MAIN,
     );
     // Each label sits next to the start of its wire, touches no card and no
@@ -396,9 +399,9 @@ test.describe("Navegação", () => {
     });
     await expect
       .poll(() => labelSpots(page, `${FRETE}/s2`))
-      .toEqual([clear("sim"), clear("não")]);
+      .toEqual([clear("true"), clear("false")]);
 
-    // A condition without else, on a larger screen: "não" goes on to the
+    // A condition without else, on a larger screen: "false" goes on to the
     // next step.
     await page.setViewportSize({ width: 1600, height: 900 });
     await generate(
@@ -411,7 +414,7 @@ test.describe("Navegação", () => {
     await expectLevel(page, ["fn:f/s0", "fn:f/s0/b0/s0", "fn:f/s1"]);
     await expect
       .poll(() => labelSpots(page, "fn:f/s0"))
-      .toEqual([clear("sim"), clear("não")]);
+      .toEqual([clear("true"), clear("false")]);
   });
 
   test("VID-22: clicking a leaf draws its border in Petróleo", async ({
@@ -517,7 +520,8 @@ test.describe("Descida até as folhas", () => {
     await clickCard(page, "dir:pedidos");
     await expect(nodes(page)).toHaveCount(3);
     expect(await cardTags(page)).toEqual(["ARQUIVO", "ARQUIVO", "ARQUIVO"]);
-    expect(await openMarks(page)).toEqual([true, true, true]);
+    // pedidos/__init__.py is empty, so it is a leaf and has no ›.
+    expect(await openMarks(page)).toEqual([false, true, true]);
   });
 
   test("VID-24 edge: opening a recursive call stacks the same level again, one click at a time", async ({

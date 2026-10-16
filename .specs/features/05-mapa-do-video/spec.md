@@ -86,7 +86,7 @@ Depende de: 01-fatia-central, 04-fidelidade-e-cache e 02-pasta-local.
 18. WHEN o usuário abre um nó THEN the system SHALL expandir o cartão até virar uma moldura com borda `#D4FF3F` que ocupa o canvas, e só depois mostrar os passos internos.  <!-- VID-18 -->
 19. The system SHALL mostrar na trilha de navegação "Fluxo principal" seguido do título de cada nó aberto, separados por "›".  <!-- VID-19 -->
 20. WHEN um comando `return` aparece no corpo de um nó THEN the system SHALL criar um passo RETORNO próprio, sem aresta de saída para o passo seguinte.  <!-- VID-20 -->
-21. WHEN uma condição tem os ramos "sim" e "não" THEN the system SHALL desenhar o primeiro passo do ramo "sim" acima do primeiro passo do ramo "não", com os rótulos "sim" e "não" junto ao início de cada aresta.  <!-- VID-21 -->
+21. WHEN uma condição tem os ramos "true" e "false" THEN the system SHALL desenhar o primeiro passo do ramo "true" acima do primeiro passo do ramo "false", com os rótulos "true" e "false" junto ao início de cada aresta.  <!-- VID-21 -->
 22. WHEN o usuário seleciona um nó THEN the system SHALL desenhar a borda do cartão em `#D4FF3F`.  <!-- VID-22 -->
 23. WHEN o usuário clica uma vez num nó que tem fluxo interno THEN the system SHALL abrir o fluxo interno desse nó no canvas e mostrar o painel do nó.  <!-- VID-23 -->
 24. The system SHALL considerar que um nó tem fluxo interno quando ele é PASTA, ARQUIVO, GATILHO, FUNÇÃO, LAÇO ou BLOCO, ou quando ele é uma chamada para uma função do código analisado. Nesse caso, o fluxo interno é o fluxo da função chamada. Os outros nós são folhas: CÓDIGO, SE, RETORNO, HTTP, BANCO, DISCO, E-MAIL e EXTERNO.  <!-- VID-24 -->
@@ -94,7 +94,7 @@ Depende de: 01-fatia-central, 04-fidelidade-e-cache e 02-pasta-local.
 26. The system SHALL marcar os cartões com fluxo interno com o sinal "›" depois do título, e SHALL não marcar as folhas.  <!-- VID-26 -->
 27. WHEN o usuário clica em "Voltar", no canto superior esquerdo do canvas, ou aperta Esc THEN the system SHALL voltar ao nível anterior e deixar selecionado e centralizado o nó que tinha sido aberto. No primeiro nível, "Voltar" fica desabilitado e Esc não faz nada.  <!-- VID-27 -->
 
-**Independent Test**: Colar o código do vídeo, que tem `processar_pedido`, `calcular_frete` e as chamadas `validar_pedido`, `db.salvar` e `enviar_email`. O primeiro nível deve mostrar GATILHO, FUNÇÃO, BANCO e E-MAIL ligados por arestas no canvas escuro. Um clique em `calcular_frete` deve mostrar HTTP, SE e dois RETORNO, com "sim" em cima e "não" embaixo. Clicar de novo em cada nó com "›" deve descer até chegar só a folhas. "Voltar" deve subir um nível por vez até o Fluxo principal, com o nó de onde se veio selecionado.
+**Independent Test**: Colar o código do vídeo, que tem `processar_pedido`, `calcular_frete` e as chamadas `validar_pedido`, `db.salvar` e `enviar_email`. O primeiro nível deve mostrar GATILHO, FUNÇÃO, BANCO e E-MAIL ligados por arestas no canvas escuro. Um clique em `calcular_frete` deve mostrar HTTP, SE e dois RETORNO, com "true" em cima e "false" embaixo. Clicar de novo em cada nó com "›" deve descer até chegar só a folhas. "Voltar" deve subir um nível por vez até o Fluxo principal, com o nó de onde se veio selecionado.
 
 ---
 

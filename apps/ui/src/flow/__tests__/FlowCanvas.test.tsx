@@ -37,7 +37,7 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
         kind: "branch",
         source: "fn:a/s1",
         target: "fn:a/s2",
-        label: "sim",
+        label: "true",
       },
     ];
     const times: Schedule = {
@@ -89,7 +89,7 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
         target: "fn:a/s2",
         type: "wire",
         data: data(1450, 5000),
-        label: "sim",
+        label: "true",
       },
     ]);
   });
@@ -403,7 +403,7 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
       [...container.querySelectorAll(".branch-label")].map(
         (l) => l.textContent,
       ),
-    ).toEqual(["sim", "não"]);
+    ).toEqual(["true", "false"]);
   });
 });
 

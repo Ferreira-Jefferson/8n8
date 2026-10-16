@@ -681,10 +681,10 @@ T48 → T49
 
 **Done when**:
 
-- [x] Teste (fixture do vídeo): `calcular_frete` abre para `external` HTTP → `code` → `condition` com rótulo `peso > 30` e duas arestas `branch`, `"sim"` e `"não"` (Independent Test 2).
-- [x] Teste: `if/elif/else` → arestas `"sim"`, o texto do `elif` e `"não"`.
-- [x] Teste: `if` sem `else` e com passo seguinte → a aresta `"não"` vai ao passo seguinte.
-- [x] Teste: `if` sem `else` e sem passo seguinte → não existe aresta `"não"`.
+- [x] Teste (fixture do vídeo): `calcular_frete` abre para `external` HTTP → `code` → `condition` com rótulo `peso > 30` e duas arestas `branch`, `"true"` e `"false"` (Independent Test 2).
+- [x] Teste: `if/elif/else` → arestas `"true"`, o texto do `elif` e `"false"`.
+- [x] Teste: `if` sem `else` e com passo seguinte → a aresta `"false"` vai ao passo seguinte.
+- [x] Teste: `if` sem `else` e sem passo seguinte → não existe aresta `"false"`.
 - [x] Teste: os passos de um ramo têm o mesmo `parentId` da condição e IDs `.../b0/s0`, `.../b1/s0`.
 - [x] Gate passa. Test count: ≥ 5 testes novos; nenhum anterior sumiu.
 

@@ -202,8 +202,8 @@ describe("projectLevel inside a container", () => {
     ],
     [
       edge("next", "f/s0", "f/s1"),
-      edge("branch", "f/s1", "f/s1/b0/s0", "sim"),
-      edge("branch", "f/s1", "f/s1/b1/s0", "não"),
+      edge("branch", "f/s1", "f/s1/b0/s0", "true"),
+      edge("branch", "f/s1", "f/s1/b1/s0", "false"),
       edge("next", "f/s1/b0/s0", "f/s2"),
       edge("next", "f/s1/b1/s0", "f/s2"),
       edge("next", "f/s2/s0", "f/s2/s1"),
@@ -227,8 +227,8 @@ describe("projectLevel inside a container", () => {
     const level = projectLevel(g, "f");
     const branches = level.edges.filter((e) => e.kind === "branch");
     expect(branches.map((e) => [e.source, e.target, e.label])).toEqual([
-      ["f/s1", "f/s1/b0/s0", "sim"],
-      ["f/s1", "f/s1/b1/s0", "não"],
+      ["f/s1", "f/s1/b0/s0", "true"],
+      ["f/s1", "f/s1/b1/s0", "false"],
     ]);
   });
 

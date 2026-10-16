@@ -356,7 +356,7 @@ test.describe("Mapa", () => {
 });
 
 test.describe("Drill-down", () => {
-  test("CORE-08/09/12/13, IT 2: calcular_frete opens to HTTP → Código → condition with sim/não", async ({
+  test("CORE-08/09/12/13, IT 2: calcular_frete opens to HTTP → Código → condition with true/false", async ({
     page,
   }) => {
     const graph = await generate(page, VIDEO);
@@ -388,11 +388,11 @@ test.describe("Drill-down", () => {
     const branch = (to: string) =>
       graph.edges.find((e) => e.source === `${FRETE}/s2` && e.target === to)
         ?.label;
-    expect(branch(`${FRETE}/s2/b0/s0`)).toBe("sim");
-    expect(branch(`${FRETE}/s2/b1/s0`)).toBe("não");
+    expect(branch(`${FRETE}/s2/b0/s0`)).toBe("true");
+    expect(branch(`${FRETE}/s2/b1/s0`)).toBe("false");
     await expect(canvas(page).locator("[data-branch-label]")).toHaveText([
-      "sim",
-      "não",
+      "true",
+      "false",
     ]);
 
     // Code order reads like text: left to right, and a level too wide for the

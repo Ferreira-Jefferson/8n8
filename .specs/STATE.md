@@ -191,6 +191,13 @@
 - **Consequence:** Cada linguagem nova custa as regras de extração, não a gramática. Um plugin genérico só ofereceria o caminho do arquivo e o nome das funções, e o mapa perderia as ligações entre front e back. Reabra a decisão se o pedido por muitas linguagens superar o valor dessas ligações. Nesse caso, um plugin genérico entra como plugin separado e declarado como de menor fidelidade.
 - **Status:** ativa.
 
+### AD-029 — Rótulos de ramo `true` e `false`
+- **Date:** 2026-10-15
+- **Context:** Os ramos de um `if` usavam "sim" e "não". A ferramenta é para programadores de qualquer país, e `true`/`false` são termos do próprio código.
+- **Decision:** Os rótulos das arestas `branch` de um `if` são `"true"` e `"false"`, iguais em Python e TypeScript. O `elif` segue com o texto da própria condição, e o `switch` não muda. Na tela o rótulo aparece em caixa alta (TRUE, FALSE), e o `true` usa o Petróleo. O resto da interface continua em Português Técnico Simplificado.
+- **Consequence:** CORE-09 e VID-21 passam a falar em `true` e `false`. Tornar o idioma da interface configurável fica como tarefa separada.
+- **Status:** ativa.
+
 ## Handoff
 
 *Atualizado em 2026-10-15. O roteiro pedido pelo usuário (08 a 13) está concluído e verificado. Nada foi enviado ao remoto.*

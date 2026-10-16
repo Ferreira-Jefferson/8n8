@@ -126,7 +126,7 @@ function sequence(
       openable: false,
     });
     const branches: { label: string; body: Node[] }[] = [
-      { label: "sim", body: blockOf(statement, "consequence") },
+      { label: "true", body: blockOf(statement, "consequence") },
     ];
     let hasElse = false;
     for (const alt of statement.childrenForFieldName("alternative")) {
@@ -137,7 +137,7 @@ function sequence(
         });
       } else {
         hasElse = true;
-        branches.push({ label: "não", body: blockOf(alt, "body") });
+        branches.push({ label: "false", body: blockOf(alt, "body") });
       }
     }
     const out: Pending[] = [];
@@ -153,7 +153,7 @@ function sequence(
         ]),
       );
     });
-    if (!hasElse) out.push({ source: id, kind: "branch", label: "não" });
+    if (!hasElse) out.push({ source: id, kind: "branch", label: "false" });
     pending = out;
   };
 

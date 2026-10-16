@@ -121,7 +121,7 @@ O 8n8 ainda não tem código. O reuso vem do roadmap.
   1. Nível superior: um nó por `def` e `class` (CORE-01). O resto vira passos de um nó `module` com rótulo "Módulo" (CORE-03). Os `import` não contam: eles alimentam o mapa de aliases, mas sozinhos não criam o nó `module`. Sem passos que não sejam `import`, o nó `module` não existe.
   2. Uma `class` abre para os métodos (nós `function`) e para as instruções do corpo.
   3. Cada instrução de um corpo vira um passo, na ordem do código (CORE-08):
-     - `if/elif/else` → `condition`, com o texto do `if` como rótulo. Os ramos ficam no mesmo nível, ligados por arestas `branch` (CORE-09). Os rótulos são `"sim"`, o texto de cada `elif` e `"não"`. Sem `else`, a aresta `"não"` vai ao passo seguinte ao `if`. Se não há passo seguinte, a aresta `"não"` não existe.
+     - `if/elif/else` → `condition`, com o texto do `if` como rótulo. Os ramos ficam no mesmo nível, ligados por arestas `branch` (CORE-09). Os rótulos são `"true"`, o texto de cada `elif` e `"false"`. Sem `else`, a aresta `"false"` vai ao passo seguinte ao `if`. Se não há passo seguinte, a aresta `"false"` não existe.
      - `for`/`while` → `loop`, que abre para o corpo (CORE-10).
      - `try`, `with`, `match` → `block`, que abre para o corpo. A expressão de um `with` é classificada como uma chamada comum.
      - Instrução com chamada a uma função ou classe do trecho → `call`, com `target` (CORE-11).
@@ -230,7 +230,7 @@ interface FlowEdge {
   kind: EdgeKind
   source: NodeId
   target: NodeId
-  label?: string              // só em 'branch': "sim", "não" ou o texto do elif
+  label?: string              // só em 'branch': "true", "false" ou o texto do elif
 }
 
 interface Graph {

@@ -101,7 +101,7 @@ export function lanePath(
   ].join(" ");
 }
 
-/** A Petróleo curve that draws itself, carries one pulse and a "sim"/"não" label (VID-05, 06, 07, 21). */
+/** A Petróleo curve that draws itself, carries one pulse and a "true"/"false" label (VID-05, 06, 07, 21). */
 export function WireEdge({
   sourceX,
   sourceY,

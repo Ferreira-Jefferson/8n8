@@ -86,8 +86,8 @@ describe("the pedido-frete fixture", () => {
     ]);
     expect(node(graph, "fn:calcularFrete/s0").category).toBe("HTTP");
     expect(wires(graph, "branch")).toEqual([
-      "fn:calcularFrete/s2 -> fn:calcularFrete/s2/b0/s0 [sim]",
-      "fn:calcularFrete/s2 -> fn:calcularFrete/s2/b1/s0 [não]",
+      "fn:calcularFrete/s2 -> fn:calcularFrete/s2/b0/s0 [true]",
+      "fn:calcularFrete/s2 -> fn:calcularFrete/s2/b1/s0 [false]",
     ]);
   });
 

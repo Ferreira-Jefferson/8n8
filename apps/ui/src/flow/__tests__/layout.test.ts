@@ -230,11 +230,11 @@ describe("VID-21: the yes branch on top", () => {
     expect(yes && no && yes.y < no.y).toBe(true);
   });
 
-  it("puts b0 above b1 even when the não wire comes first", () => {
+  it("puts b0 above b1 even when the false wire comes first", () => {
     const nodes = ["f/s0", "f/s0/b1/s0", "f/s0/b0/s0"].map(stepNode);
     const edges = [
-      branch("f/s0", "f/s0/b1/s0", "não"),
-      branch("f/s0", "f/s0/b0/s0", "sim"),
+      branch("f/s0", "f/s0/b1/s0", "false"),
+      branch("f/s0", "f/s0/b0/s0", "true"),
     ];
     const pos = layoutLR(nodes, edges, "f");
     const yes = pos.get("f/s0/b0/s0");

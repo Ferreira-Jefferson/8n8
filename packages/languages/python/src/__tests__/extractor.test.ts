@@ -87,7 +87,7 @@ describe("createPythonExtractor", () => {
       graph.edges
         .filter((e) => e.kind === "branch" && e.source === condition)
         .map((e) => e.label),
-    ).toEqual(["sim", "não"]);
+    ).toEqual(["true", "false"]);
 
     const httpLine =
       videoFixture.split("\n").findIndex((l) => l.includes("requests.get")) + 1;

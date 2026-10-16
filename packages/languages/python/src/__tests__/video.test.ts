@@ -125,14 +125,14 @@ describe("extractor: the video snippet (VID-10, VID-13, VID-20)", () => {
         kind: "branch",
         source: `${c}/s2`,
         target: `${c}/s2/b0/s0`,
-        label: "sim",
+        label: "true",
       },
       {
         id: `branch:${c}/s2->${c}/s2/b1/s0`,
         kind: "branch",
         source: `${c}/s2`,
         target: `${c}/s2/b1/s0`,
-        label: "não",
+        label: "false",
       },
       { id: `calls:${p}->${c}`, kind: "calls", source: p, target: c },
     ]);

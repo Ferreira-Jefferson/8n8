@@ -184,7 +184,7 @@ function branchesOf(
 }
 
 describe("buildSteps: condition and branches (CORE-09)", () => {
-  it("opens calcular_frete into HTTP, Código and the condition peso > 30 with sim and não", async () => {
+  it("opens calcular_frete into HTTP, Código and the condition peso > 30 with true and false", async () => {
     const graph = await graphOf(videoFixture);
 
     const top = stepsOf(graph, "fn:calcular_frete").filter(
@@ -212,19 +212,19 @@ describe("buildSteps: condition and branches (CORE-09)", () => {
         kind: "branch",
         source: "fn:calcular_frete/s2",
         target: "fn:calcular_frete/s2/b0/s0",
-        label: "sim",
+        label: "true",
       },
       {
         id: "branch:fn:calcular_frete/s2->fn:calcular_frete/s2/b1/s0",
         kind: "branch",
         source: "fn:calcular_frete/s2",
         target: "fn:calcular_frete/s2/b1/s0",
-        label: "não",
+        label: "false",
       },
     ]);
   });
 
-  it("labels if/elif/else wires sim, the elif text and não", async () => {
+  it("labels if/elif/else wires true, the elif text and false", async () => {
     const graph = await graphOf(
       lines(
         "def f(x):",
@@ -238,29 +238,29 @@ describe("buildSteps: condition and branches (CORE-09)", () => {
     );
 
     expect(branchesOf(graph, "fn:f/s0")).toEqual([
-      ["fn:f/s0/b0/s0", "sim"],
+      ["fn:f/s0/b0/s0", "true"],
       ["fn:f/s0/b1/s0", "x > 5"],
-      ["fn:f/s0/b2/s0", "não"],
+      ["fn:f/s0/b2/s0", "false"],
     ]);
   });
 
-  it("sends não to the next step when the if has no else", async () => {
+  it("sends false to the next step when the if has no else", async () => {
     const graph = await graphOf(
       lines("def f(x):", "    if x:", "        a = 1", "    return 0"),
     );
 
     expect(branchesOf(graph, "fn:f/s0")).toEqual([
-      ["fn:f/s0/b0/s0", "sim"],
-      ["fn:f/s1", "não"],
+      ["fn:f/s0/b0/s0", "true"],
+      ["fn:f/s1", "false"],
     ]);
   });
 
-  it("creates no não wire when the if has no else and no next step", async () => {
+  it("creates no false wire when the if has no else and no next step", async () => {
     const graph = await graphOf(
       lines("def f(x):", "    if x:", "        a = 1"),
     );
 
-    expect(branchesOf(graph, "fn:f/s0")).toEqual([["fn:f/s0/b0/s0", "sim"]]);
+    expect(branchesOf(graph, "fn:f/s0")).toEqual([["fn:f/s0/b0/s0", "true"]]);
   });
 
   it("gives branch steps the parent of the condition and ids b<j>/s<i>", async () => {
@@ -471,14 +471,14 @@ describe("buildSteps: return (VID-20)", () => {
     ]);
   });
 
-  it("keeps não going to the next step when only the sim branch returns", async () => {
+  it("keeps false going to the next step when only the true branch returns", async () => {
     const graph = await graphOf(
       lines("def f(x):", "    if x:", "        return 1", "    a = 2"),
     );
 
     expect(branchesOf(graph, "fn:f/s0")).toEqual([
-      ["fn:f/s0/b0/s0", "sim"],
-      ["fn:f/s1", "não"],
+      ["fn:f/s0/b0/s0", "true"],
+      ["fn:f/s1", "false"],
     ]);
     expect(wires(graph)).toEqual([
       ["fn:f/s0", "fn:f/s0/b0/s0"],

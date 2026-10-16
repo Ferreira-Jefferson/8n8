@@ -79,7 +79,7 @@ Esta feature entrega a menor fatia demonstrável do 8n8:
 *Drill-down*
 
 8. WHEN o usuário abre um nó de função THEN o sistema SHALL mostrar os passos internos na ordem do código.  <!-- CORE-08 -->
-9. WHEN um passo é um `if`/`elif`/`else` THEN o sistema SHALL mostrar um nó de condição com uma aresta rotulada por ramo ("sim", "não" ou a condição do `elif`).  <!-- CORE-09 -->
+9. WHEN um passo é um `if`/`elif`/`else` THEN o sistema SHALL mostrar um nó de condição com uma aresta rotulada por ramo ("true", "false" ou a condição do `elif`).  <!-- CORE-09 -->
 10. WHEN um passo é um `for` ou `while` THEN o sistema SHALL mostrar um nó de laço que pode ser aberto para ver o corpo.  <!-- CORE-10 -->
 11. WHEN o usuário abre um passo que chama uma função do trecho THEN o sistema SHALL mostrar o fluxo interno da função chamada.  <!-- CORE-11 -->
 12. WHEN um passo chama uma biblioteca externa THEN o sistema SHALL classificar o nó como HTTP, BANCO, ARQUIVO, E-MAIL ou EXTERNO pela tabela de prefixos. A comparação é por segmento inteiro do nome, nunca por pedaço de texto: `requests.get` é HTTP, `requests_cache.get` é EXTERNO. As entradas de método (`.execute`, `.commit`) valem para qualquer receptor, inclusive uma chamada ou um índice (`conn.cursor().execute(q)`, `c[0].commit()`).  <!-- CORE-12 -->

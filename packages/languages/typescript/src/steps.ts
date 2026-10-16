@@ -205,7 +205,7 @@ function sequence(
     });
     const branches = [
       {
-        label: "sim",
+        label: "true",
         body: blockOf(statement.childForFieldName("consequence")),
       },
     ];
@@ -221,11 +221,11 @@ function sequence(
         alt = inner.childForFieldName("alternative");
       } else {
         hasElse = true;
-        branches.push({ label: "não", body: blockOf(inner) });
+        branches.push({ label: "false", body: blockOf(inner) });
         alt = null;
       }
     }
-    branchesOf(id, branches, hasElse ? null : "não");
+    branchesOf(id, branches, hasElse ? null : "false");
   };
 
   /** `switch`: one condition, one branch per `case`, plus the `default`. */

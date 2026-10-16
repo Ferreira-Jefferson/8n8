@@ -148,14 +148,14 @@ export const pedidoFreteGraph: Graph = {
       kind: "branch",
       source: "fn:calcular_frete/s2",
       target: "fn:calcular_frete/s2/b0/s0",
-      label: "sim",
+      label: "true",
     },
     {
       id: "branch:fn:calcular_frete/s2->fn:calcular_frete/s2/b1/s0",
       kind: "branch",
       source: "fn:calcular_frete/s2",
       target: "fn:calcular_frete/s2/b1/s0",
-      label: "não",
+      label: "false",
     },
     {
       id: "next:fn:processar_pedido/s0->fn:processar_pedido/s1",

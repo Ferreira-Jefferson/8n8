@@ -263,7 +263,7 @@ describe("loose code and the module", () => {
 });
 
 describe("conditions", () => {
-  it("maps if with else: a branch `sim` and a branch `não`", () => {
+  it("maps if with else: a branch `true` and a branch `false`", () => {
     const graph = graphOf(
       "function f(a) {\n  if (a > 1) {\n    x();\n  } else {\n    y();\n  }\n}\n",
     );
@@ -276,8 +276,8 @@ describe("conditions", () => {
     ]);
     expect(node(graph, "fn:f/s0").openable).toBe(false);
     expect(wires(graph, "branch")).toEqual([
-      "fn:f/s0 -> fn:f/s0/b0/s0 [sim]",
-      "fn:f/s0 -> fn:f/s0/b1/s0 [não]",
+      "fn:f/s0 -> fn:f/s0/b0/s0 [true]",
+      "fn:f/s0 -> fn:f/s0/b1/s0 [false]",
     ]);
   });
 
@@ -287,9 +287,9 @@ describe("conditions", () => {
     );
 
     expect(wires(graph, "branch")).toEqual([
-      "fn:f/s0 -> fn:f/s0/b0/s0 [sim]",
+      "fn:f/s0 -> fn:f/s0/b0/s0 [true]",
       "fn:f/s0 -> fn:f/s0/b1/s0 [b]",
-      "fn:f/s0 -> fn:f/s0/b2/s0 [não]",
+      "fn:f/s0 -> fn:f/s0/b2/s0 [false]",
     ]);
     expect(wires(graph, "next")).toEqual([
       "fn:f/s0/b0/s0 -> fn:f/s1",
@@ -302,8 +302,8 @@ describe("conditions", () => {
     const graph = graphOf("function f(a) {\n  if (a) { x(); }\n  w();\n}\n");
 
     expect(wires(graph, "branch")).toEqual([
-      "fn:f/s0 -> fn:f/s0/b0/s0 [sim]",
-      "fn:f/s0 -> fn:f/s1 [não]",
+      "fn:f/s0 -> fn:f/s0/b0/s0 [true]",
+      "fn:f/s0 -> fn:f/s1 [false]",
     ]);
   });
 

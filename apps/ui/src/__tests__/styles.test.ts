@@ -122,7 +122,7 @@ describe("styles: branch labels (VID-21)", () => {
     expect(r).toContain("text-transform: uppercase;");
     expect(r).toContain("white-space: nowrap;");
     expect(r).toContain("color: var(--accent);");
-    expect(rule('.branch-label[data-branch-label="sim"]')).toContain(
+    expect(rule('.branch-label[data-branch-label="true"]')).toContain(
       "color: var(--main);",
     );
   });

@@ -71,7 +71,7 @@ describe("WireEdge (VID-05, VID-06)", () => {
 });
 
 describe("WireEdge branch labels (VID-21)", () => {
-  it.each(["sim", "não"])(
+  it.each(["true", "false"])(
     "shows %s as .branch-label next to the start of the wire",
     (text) => {
       const { container } = renderWire(timed, text);
@@ -98,7 +98,7 @@ describe("WireEdge branch labels (VID-21)", () => {
   });
 
   it("keeps the two labels of a condition next to the start, one on each side of the port line", () => {
-    // Sim goes up from 300 to 100, não goes down from 300 to 500.
+    // true goes up from 300 to 100, false goes down from 300 to 500.
     const yes = branchLabelAt(700, 300, 100);
     const no = branchLabelAt(700, 300, 500);
     expect(yes).toEqual({ x: 730, y: 296, above: true });
