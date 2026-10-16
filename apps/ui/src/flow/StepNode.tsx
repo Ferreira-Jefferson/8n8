@@ -19,11 +19,14 @@ export interface StepNodeData extends Record<string, unknown> {
   openable: boolean;
   /** Milliseconds until the card enters (VID-06). */
   enterAt: number;
-  /** Selected or anchoring a suggestion card (VID-22, 32). */
+  /** Selected, or its suggestion balloon is open (VID-22). */
   selected: boolean;
-  /** Another node has a suggestion card, and this one is not selected (VID-32). */
-  dimmed: boolean;
+  /** How many suggestions the badge shows; no badge without one. */
   suggestionCount?: number | undefined;
+  /** The suggestion balloon of this node is open. */
+  suggestionsOpen?: boolean | undefined;
+  /** A click on the suggestion badge, with the badge, to place the balloon on it. */
+  onSuggestions?: ((badge: HTMLElement) => void) | undefined;
   /** The open node, drawn as the parent of its level: it never opens again. */
   isHub?: boolean;
   /** How many nodes its level shows, as a number on the card: on the hub and on the cards that open into a sized level. */
@@ -34,7 +37,7 @@ export interface StepNodeData extends Record<string, unknown> {
 
 export type StepFlowNode = Node<StepNodeData, "step">;
 
-/** One card: tag, title with › when it opens, and a code line (VID-03, 04, 15, 22, 26, 32; CORE-06, 23). The hub of an inner level carries the back button. */
+/** One card: tag, title with › when it opens, and a code line (VID-03, 04, 15, 22, 26; CORE-06, 23). The hub of an inner level carries the back button; a node with suggestions, the badge that opens their balloon. */
 export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
   const t = useT();
   const { node, suggestionCount } = data;
@@ -43,11 +46,10 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
   const classes = [
     "node",
     data.selected ? "on" : "",
-    data.dimmed ? "dim" : "",
     data.isHub ? "hub" : "",
     data.childCount !== undefined ? "has-count" : "",
   ].filter(Boolean);
-  const { onBack } = data;
+  const { onBack, onSuggestions } = data;
   return (
     <div
       className={classes.join(" ")}
@@ -103,9 +105,21 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
         </span>
       )}
       {suggestionCount ? (
-        <span className="step-badge" title={t("step.suggestions")}>
+        <button
+          type="button"
+          className="step-badge nodrag nopan"
+          title={plural(t, "suggestion", suggestionCount)}
+          aria-label={plural(t, "suggestion", suggestionCount)}
+          aria-haspopup="dialog"
+          aria-expanded={data.suggestionsOpen ?? false}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSuggestions?.(e.currentTarget);
+          }}
+        >
+          <i className="dot" aria-hidden="true" />
           {suggestionCount}
-        </span>
+        </button>
       ) : null}
       {SIDES.map((side) => (
         <Handle

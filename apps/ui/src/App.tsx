@@ -437,12 +437,6 @@ export function App({ initialFolder = null }: AppProps) {
     setSuggestions((prev) => new Map(prev).set(id, list));
   }, []);
 
-  const suggestionCounts = useMemo(
-    () =>
-      new Map([...suggestions].map(([id, list]) => [id, list.length] as const)),
-    [suggestions],
-  );
-
   const graph = mapped ? graphOf(mapped) : null;
   const levelId = nav.path.at(-1)?.id ?? null;
   const level = useMemo(
@@ -656,7 +650,6 @@ export function App({ initialFolder = null }: AppProps) {
           titles={titles}
           codeLineOf={cardCode}
           suggestions={suggestions}
-          suggestionCounts={suggestionCounts}
           focusId={focusId}
           centerOn={center}
           onSelect={(id) => {

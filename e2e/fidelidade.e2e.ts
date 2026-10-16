@@ -186,10 +186,11 @@ test.describe("Fidelidade", () => {
         .getByRole("button", { name: /\(linha \d+, / }),
     ).toHaveText(["Tratar a lista vazia (linha 3, alta)"]);
     await expect(view).not.toContainText("Remover o laço repetido");
-    // The open level is the inside of media_notas; its card is one level up.
+    // The open level is the inside of media_notas; its card is one level up,
+    // and no other visible node there holds line 3.
     await page.keyboard.press("Escape");
     await expect(
-      nodeById(page, "fn:media_notas").getByTitle("Sugestões"),
+      nodeById(page, "fn:media_notas").locator(".step-badge"),
     ).toHaveText("1");
   });
 

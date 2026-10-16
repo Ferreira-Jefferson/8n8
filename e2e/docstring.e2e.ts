@@ -34,7 +34,10 @@ const drafts = (log: FakeCall[], marker: string) =>
 const lastUser = (call: FakeCall) =>
   call.messages.filter((m) => m.role === "user").at(-1)?.content ?? "";
 
-const alerts = (page: Page) => page.locator("button.alert");
+/** The suggestion badges on the canvas; a click opens the balloon with the list. */
+const badges = (page: Page) => page.locator(".step-badge");
+const balloonItems = (page: Page) =>
+  page.locator(".suggestion-pop .pop-command");
 /** Suggestion buttons of the panel: "<comando> (linha N, <severidade>)". */
 const suggestionButtons = (view: Locator) =>
   view
@@ -86,12 +89,14 @@ test.describe("Docstring", () => {
     expect(lastUser(summaries[0] as FakeCall)).not.toContain("Docstring (");
     expect(lastUser(summaries[0] as FakeCall)).not.toContain("Soma os preços");
 
-    await expect(alerts(page)).toHaveText([COMMAND]);
+    await expect(badges(page)).toHaveText(["1"]);
+    await badges(page).click();
+    await expect(balloonItems(page)).toHaveText([`média ${COMMAND}`]);
     await expect(suggestionButtons(view)).toHaveText([
       `${COMMAND} (linha 2, média)`,
     ]);
 
-    await alerts(page).click();
+    await balloonItems(page).click();
     await expect(view.locator('[aria-current="true"]')).toHaveCount(1);
     await expect(view.locator('[aria-current="true"]')).toHaveAttribute(
       "data-line",
@@ -102,7 +107,7 @@ test.describe("Docstring", () => {
     // Back on the first level the function's card carries the badge.
     await page.keyboard.press("Escape");
     await expect(
-      nodeById(page, "fn:total_mentiroso").getByTitle("Sugestões"),
+      nodeById(page, "fn:total_mentiroso").locator(".step-badge"),
     ).toHaveText("1");
   });
 
@@ -114,11 +119,11 @@ test.describe("Docstring", () => {
     const calls = drafts(await fakeLog(), "def total_fiel");
     expect(calls).toHaveLength(1);
     expect(lastUser(calls[0] as FakeCall)).toContain("Docstring (");
-    await expect(alerts(page)).toHaveCount(0);
+    await expect(badges(page)).toHaveCount(0);
     await expect(view.getByText("Atualize a docstring")).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(
-      nodeById(page, "fn:total_fiel").getByTitle("Sugestões"),
+      nodeById(page, "fn:total_fiel").locator(".step-badge"),
     ).toHaveCount(0);
   });
 
@@ -132,7 +137,7 @@ test.describe("Docstring", () => {
     const user = lastUser(calls[0] as FakeCall);
     expect(user).not.toContain("Docstring (");
     expect(user).not.toContain("docstring omitida");
-    await expect(alerts(page)).toHaveCount(0);
+    await expect(badges(page)).toHaveCount(0);
     await expect(view.getByText("Atualize a docstring")).toHaveCount(0);
   });
 });

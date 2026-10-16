@@ -195,7 +195,7 @@ describe("App", () => {
     );
   });
 
-  it("passes the suggestion count 2 to the canvas once the suggestions come (CORE-23, CFG-10)", async () => {
+  it("passes the 2 suggestions to the canvas once they come (CORE-23, CFG-10)", async () => {
     graphMock.mockResolvedValue(withLanguage(graph));
     explainMock.mockResolvedValue({
       status: "ok",
@@ -211,12 +211,14 @@ describe("App", () => {
     });
     await generate();
     await screen.findByTestId("canvas");
-    expect(currentCanvas().suggestionCounts.get("fn:calcular_frete")).toBe(
+    expect(currentCanvas().suggestions.get("fn:calcular_frete")).toBe(
       undefined,
     );
     act(() => currentCanvas().onSelect("fn:calcular_frete"));
     await waitFor(() =>
-      expect(currentCanvas().suggestionCounts.get("fn:calcular_frete")).toBe(2),
+      expect(currentCanvas().suggestions.get("fn:calcular_frete")?.length).toBe(
+        2,
+      ),
     );
     expect(explainMock).toHaveBeenCalledWith(
       { source },

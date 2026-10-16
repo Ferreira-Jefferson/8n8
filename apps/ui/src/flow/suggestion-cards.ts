@@ -1,4 +1,4 @@
-import type { FlowNode, NodeId, Suggestion } from "@8n8/model";
+import type { FlowNode, NodeId, Severity, Suggestion } from "@8n8/model";
 import type { Level } from "./project-level";
 
 export interface SuggestionCardModel {
@@ -6,10 +6,13 @@ export interface SuggestionCardModel {
   key: string;
   /** The node whose panel opens on click. */
   explainedId: NodeId;
-  /** `null` = stuck to the frame of the open node. */
+  /** `null` = no visible node holds the line: the badge of the level's hub shows it. */
   anchorId: NodeId | null;
   /** suggestion.command */
   text: string;
+  /** suggestion.reason */
+  reason: string;
+  severity: Severity;
   /** suggestion.line (absolute) */
   line: number;
 }
@@ -41,6 +44,8 @@ export function suggestionCards(
         explainedId,
         anchorId: anchorOf(level.nodes, s.line) ?? owner,
         text: s.command,
+        reason: s.reason,
+        severity: s.severity,
         line: s.line,
       });
     }
@@ -59,11 +64,19 @@ function anchorOf(nodes: FlowNode[], line: number): NodeId | null {
   return best?.id ?? null;
 }
 
-/** The anchored nodes, drawn with the `on` border while the others dim (VID-32). */
-export function highlighted(
+/**
+ * The suggestions each drawn node shows in its badge: by anchor, and the ones
+ * with no anchor on the hub of the level, when there is one.
+ */
+export function suggestionsByNode(
   cards: readonly SuggestionCardModel[],
-): ReadonlySet<NodeId> {
-  return new Set(
-    cards.flatMap((c) => (c.anchorId === null ? [] : [c.anchorId])),
-  );
+  hubId: NodeId | null,
+): ReadonlyMap<NodeId, SuggestionCardModel[]> {
+  const byNode = new Map<NodeId, SuggestionCardModel[]>();
+  for (const c of cards) {
+    const id = c.anchorId ?? hubId;
+    if (id === null) continue;
+    byNode.set(id, [...(byNode.get(id) ?? []), c]);
+  }
+  return byNode;
 }

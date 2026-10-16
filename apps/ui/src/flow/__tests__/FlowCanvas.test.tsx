@@ -227,7 +227,6 @@ function props(overrides: Partial<FlowCanvasProps> = {}): FlowCanvasProps {
     titles: new Map(),
     codeLineOf: (n) => codeLineOf(n, ""),
     suggestions: new Map(),
-    suggestionCounts: new Map(),
     focusId: null,
     centerOn: null,
     onSelect: vi.fn(),
@@ -442,7 +441,7 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
   });
 });
 
-describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
+describe("FlowCanvas suggestion badges (VID-31, VID-33)", () => {
   const suggestion = (id: string, line: number, command: string) => ({
     id,
     command,
@@ -455,52 +454,81 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
     suggestion("g1", 12, "Grave o pedido numa transação"),
     suggestion("g2", 13, "Envie o e-mail fora da requisição"),
   ];
+  const badge = (container: HTMLElement, id: string) =>
+    card(container, id).querySelector<HTMLElement>(".step-badge");
+  const balloon = () => document.querySelector(".suggestion-pop");
 
-  it("anchors the cards on BANCO and E-MAIL of the main flow, which get on while the rest dims", () => {
+  it("puts a badge with 1 on BANCO and on E-MAIL of the main flow, and no card floats or dims", () => {
     const { container } = render(
       <FlowCanvas {...props({ suggestions: new Map([[P, explanation]]) })} />,
     );
-    const cards = [...container.querySelectorAll<HTMLElement>(".alert")];
+    expect(badge(container, `${P}/s5`)?.textContent).toBe("1");
+    expect(badge(container, `${P}/s6`)?.textContent).toBe("1");
+    expect(badge(container, P)).toBeNull();
+    expect(container.querySelector(".alert")).toBeNull();
+    expect(container.querySelector(".node.dim")).toBeNull();
+    expect(container.querySelector(".node.on")).toBeNull();
+    expect(balloon()).toBeNull();
+  });
+
+  it("a badge click opens its balloon and marks the node; a second click closes it", () => {
+    const { container } = render(
+      <FlowCanvas {...props({ suggestions: new Map([[P, explanation]]) })} />,
+    );
+    const b = badge(container, `${P}/s6`) as HTMLElement;
+    fireEvent.click(b);
+    expect(balloon()?.getAttribute("role")).toBe("dialog");
     expect(
-      cards.map((c) => [c.textContent, c.getAttribute("data-anchor-id")]),
-    ).toEqual([
-      ["Grave o pedido numa transação", `${P}/s5`],
-      ["Envie o e-mail fora da requisição", `${P}/s6`],
-    ]);
-    for (const id of [`${P}/s5`, `${P}/s6`]) {
-      expect(card(container, id).classList.contains("on")).toBe(true);
-      expect(card(container, id).classList.contains("dim")).toBe(false);
-    }
-    for (const id of [P, `${P}/s0`, `${P}/s4`]) {
-      expect(card(container, id).classList.contains("dim")).toBe(true);
-      expect(card(container, id).classList.contains("on")).toBe(false);
-    }
+      [...document.querySelectorAll(".pop-item .pop-command")].map(
+        (el) => el.textContent,
+      ),
+    ).toEqual(["média Envie o e-mail fora da requisição"]);
+    expect(document.querySelector(".pop-reason")?.textContent).toBe("motivo");
+    expect(document.querySelector(".pop-line")?.textContent).toBe("linha 13");
+    expect(card(container, `${P}/s6`).classList.contains("on")).toBe(true);
+    expect(b.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(b);
+    expect(balloon()).toBeNull();
   });
 
-  it("never dims the selected node while suggestion cards show", () => {
-    const { container } = render(
-      <FlowCanvas
-        {...props({
-          selected: `${P}/s1`,
-          suggestions: new Map([[P, explanation]]),
-        })}
-      />,
+  it("the badge click neither selects nor opens the node", () => {
+    const p = props({ suggestions: new Map([[P, explanation]]) });
+    const { container } = render(<FlowCanvas {...p} />);
+    fireEvent.click(badge(container, `${P}/s6`) as HTMLElement);
+    expect(p.onSelect).not.toHaveBeenCalled();
+    expect(p.onOpen).not.toHaveBeenCalled();
+  });
+
+  it("a click on a suggestion calls onSuggestion with the explained node and the line, and closes", () => {
+    const p = props({ suggestions: new Map([[P, explanation]]) });
+    const { container } = render(<FlowCanvas {...p} />);
+    fireEvent.click(badge(container, `${P}/s6`) as HTMLElement);
+    fireEvent.click(
+      screen.getByRole("button", { name: /Envie o e-mail fora da requisição/ }),
     );
-    expect(card(container, `${P}/s1`).classList.contains("on")).toBe(true);
-    expect(card(container, `${P}/s1`).classList.contains("dim")).toBe(false);
-    expect(card(container, `${P}/s2`).classList.contains("dim")).toBe(true);
+    expect(p.onSuggestion).toHaveBeenCalledWith(P, 13);
+    expect(balloon()).toBeNull();
   });
 
-  it("places a card 20 px right of and 64 px above its anchor", () => {
+  it("Esc closes only the balloon, and a press outside it closes it too", () => {
     const { container } = render(
       <FlowCanvas {...props({ suggestions: new Map([[P, explanation]]) })} />,
     );
-    const first = container.querySelector<HTMLElement>(".alert");
-    // s5 sits at x = 6 * 380 on the main flow row.
-    expect(first?.style.transform).toBe("translate(2300px, -64px)");
+    const onKey = vi.fn();
+    window.addEventListener("keydown", onKey);
+    const b = badge(container, `${P}/s5`) as HTMLElement;
+    fireEvent.click(b);
+    fireEvent.keyDown(balloon() as Element, { key: "Escape" });
+    expect(balloon()).toBeNull();
+    expect(onKey).not.toHaveBeenCalled();
+    window.removeEventListener("keydown", onKey);
+
+    fireEvent.click(b);
+    fireEvent.pointerDown(document.body);
+    expect(balloon()).toBeNull();
   });
 
-  it("sticks a card without a visible line to the frame of the open node", () => {
+  it("a suggestion with no visible line goes to the badge of the open node's hub", () => {
     const outside: Suggestion[] = [suggestion("g9", 17, "Documente a função")];
     const { container } = render(
       <FlowCanvas
@@ -511,18 +539,8 @@ describe("FlowCanvas suggestion cards (VID-31, VID-32, VID-33)", () => {
         })}
       />,
     );
-    const framed = container.querySelector(".frame-cards .alert");
-    expect(framed?.textContent).toBe("Documente a função");
-    expect(framed?.getAttribute("data-anchor-id")).toBe("frame");
-  });
-
-  it("calls onSuggestion with the explained node and the line", () => {
-    const p = props({ suggestions: new Map([[P, explanation]]) });
-    render(<FlowCanvas {...p} />);
-    fireEvent.click(
-      screen.getByRole("button", { name: "Envie o e-mail fora da requisição" }),
-    );
-    expect(p.onSuggestion).toHaveBeenCalledWith(P, 13);
+    expect(badge(container, C)?.textContent).toBe("1");
+    expect(container.querySelector(".frame-cards")).toBeNull();
   });
 });
 

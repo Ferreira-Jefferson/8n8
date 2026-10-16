@@ -554,8 +554,11 @@ test.describe("Explicação", () => {
 
     // Opening shows the inside of calcular_frete; the badge sits on its card above.
     await page.keyboard.press("Escape");
-    await expect(nodeById(page, FRETE).getByTitle("Sugestões")).toHaveText("2");
-    await expect(nodeById(page, PEDIDO).getByTitle("Sugestões")).toHaveCount(0);
+    // Each suggestion goes to the visible node that holds its line: line 5 to
+    // the requests.get step, line 8 to calcular_frete itself.
+    await expect(nodeById(page, FRETE).locator(".step-badge")).toHaveText("1");
+    await expect(canvas(page).locator(".step-badge")).toHaveText(["1", "1"]);
+    await expect(nodeById(page, PEDIDO).locator(".step-badge")).toHaveCount(0);
 
     await expect(view.locator('[aria-current="true"]')).toHaveCount(0);
     await view
@@ -611,7 +614,7 @@ test.describe("Explicação", () => {
     await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
     await expect(suggestionButtons(panel(page))).toHaveCount(2);
     await page.keyboard.press("Escape");
-    await expect(nodeById(page, FRETE).getByTitle("Sugestões")).toHaveText("2");
+    await expect(canvas(page).locator(".step-badge")).toHaveText(["1", "1"]);
     // Within a map the app keeps the answer in memory: no new request.
     expect(calls).toEqual([FRETE, PEDIDO]);
 

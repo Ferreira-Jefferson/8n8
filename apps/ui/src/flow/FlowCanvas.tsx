@@ -9,7 +9,6 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
-  type CSSProperties,
   type MouseEvent,
   useCallback,
   useEffect,
@@ -35,9 +34,13 @@ import {
 import { type Schedule, schedule } from "./motion";
 import { levelSize, projectLevel } from "./project-level";
 import { type StepFlowNode, StepNode } from "./StepNode";
-import { SuggestionCard } from "./SuggestionCard";
+import { type BadgeAnchor, SuggestionPopover } from "./SuggestionPopover";
 import { FLOW_SIDES, pickSides, type Side } from "./sides";
-import { highlighted, suggestionCards } from "./suggestion-cards";
+import {
+  type SuggestionCardModel,
+  suggestionCards,
+  suggestionsByNode,
+} from "./suggestion-cards";
 import {
   chooseWrap,
   FIT_PAD,
@@ -58,9 +61,8 @@ export interface FlowCanvasProps {
   titles: ReadonlyMap<NodeId, string>;
   /** The card's code line, read from the node's own source (VID-03). */
   codeLineOf: (node: FlowNode) => string;
-  /** The suggestions each node got, for the cards (CFG-10). */
+  /** The suggestions each node got, for the badges (CFG-10). */
   suggestions: ReadonlyMap<NodeId, Suggestion[]>;
-  suggestionCounts: ReadonlyMap<NodeId, number>;
   /** The node to center, after "Voltar" or Esc (VID-27). */
   focusId: NodeId | null;
   /** A search pick on this level: the card to center, at the current zoom. */
@@ -69,7 +71,7 @@ export interface FlowCanvasProps {
   onSelect: (id: NodeId) => void;
   /** A click on a node with an inner flow, after the frame grows (VID-18, 23). */
   onOpen: (node: FlowNode) => void;
-  /** A click on a suggestion card (VID-33). */
+  /** A click on a suggestion in a badge's balloon (VID-33). */
   onSuggestion: (explainedId: NodeId, line: number) => void;
   /** The round button on the hub of an inner level. */
   onBack: () => void;
@@ -80,8 +82,6 @@ const edgeTypes = { wire: WireEdge };
 
 /** The frame grows from the card to the canvas in this time (VID-18). */
 const OPEN_MS = 1100;
-const CARD_LIFT = 64;
-const CARD_INDENT = 20;
 
 interface Rect {
   left: number;
@@ -139,6 +139,39 @@ function MeasureCards() {
     if (unmeasured !== "") update(unmeasured.split("\n"));
   }, [unmeasured, update]);
   return null;
+}
+
+/** The balloon of an open badge, placed on the badge in flow coordinates so it follows a pan or a zoom. */
+function Balloon({
+  badge,
+  cards,
+  onSuggestion,
+  onClose,
+}: {
+  badge: HTMLElement;
+  cards: readonly SuggestionCardModel[];
+  onSuggestion: (explainedId: NodeId, line: number) => void;
+  onClose: (byKey: boolean) => void;
+}) {
+  const { screenToFlowPosition } = useReactFlow();
+  const zoom = useStore((s) => s.transform[2]);
+  const [anchor] = useState<BadgeAnchor>(() => {
+    const r = badge.getBoundingClientRect();
+    const top = screenToFlowPosition({ x: r.left + r.width / 2, y: r.top });
+    const bottom = screenToFlowPosition({ x: r.left, y: r.bottom });
+    return { x: top.x, top: top.y, bottom: bottom.y };
+  });
+  return (
+    <ViewportPortal>
+      <SuggestionPopover
+        cards={cards}
+        anchor={anchor}
+        zoom={zoom}
+        onSuggestion={onSuggestion}
+        onClose={onClose}
+      />
+    </ViewportPortal>
+  );
 }
 
 /**
@@ -277,7 +310,6 @@ export function FlowCanvas({
   titles,
   codeLineOf,
   suggestions,
-  suggestionCounts,
   focusId,
   centerOn,
   onSelect,
@@ -350,7 +382,39 @@ export function FlowCanvas({
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const { nodes, edges, cards, positions, padX } = useMemo(() => {
+  // The node whose suggestion balloon is open; one at a time, on this level only.
+  const [pop, setPop] = useState<{
+    id: NodeId;
+    badge: HTMLElement;
+    level: string;
+  } | null>(null);
+  const openPop = pop?.level === levelKey ? pop : null;
+  const popId = openPop?.id ?? null;
+  const toggleSuggestions = useCallback(
+    (id: NodeId, badge: HTMLElement) =>
+      setPop((p) =>
+        p?.id === id && p.level === levelKey
+          ? null
+          : { id, badge, level: levelKey },
+      ),
+    [levelKey],
+  );
+  // A press anywhere but a balloon or a badge closes the balloon.
+  useEffect(() => {
+    if (popId === null) return;
+    const away = (e: PointerEvent) => {
+      if (
+        e.target instanceof Element &&
+        e.target.closest(".suggestion-pop, .step-badge")
+      )
+        return;
+      setPop(null);
+    };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [popId]);
+
+  const { nodes, edges, byNode, positions, padX } = useMemo(() => {
     if (cardSizes.current.level !== levelKey) {
       cardSizes.current = { level: levelKey, sizes: new Map() };
     }
@@ -438,8 +502,10 @@ export function FlowCanvas({
             positions,
             new Set(turnY.keys()),
           );
-    const cards = suggestionCards(level, suggestions, levelId, panelNodeOf);
-    const lit = highlighted(cards);
+    const byNode = suggestionsByNode(
+      suggestionCards(level, suggestions, levelId, panelNodeOf),
+      hub?.node.id ?? null,
+    );
     const portsIn = new Map<NodeId, Set<Side>>();
     const portsOut = new Map<NodeId, Set<Side>>();
     for (const e of level.edges) {
@@ -467,9 +533,10 @@ export function FlowCanvas({
           portsIn: portsIn.get(n.id) ?? noPorts,
           portsOut: portsOut.get(n.id) ?? noPorts,
           enterAt: times.enterAt.get(n.id) ?? 0,
-          selected: n.id === selected || lit.has(n.id),
-          dimmed: cards.length > 0 && !lit.has(n.id) && n.id !== selected,
-          suggestionCount: suggestionCounts.get(n.id),
+          selected: n.id === selected || n.id === popId,
+          suggestionCount: byNode.get(n.id)?.length,
+          suggestionsOpen: n.id === popId,
+          onSuggestions: (badge: HTMLElement) => toggleSuggestions(n.id, badge),
           ...(n === hub?.node
             ? {
                 isHub: true,
@@ -483,7 +550,7 @@ export function FlowCanvas({
     return {
       nodes,
       edges: toFlowEdges(level.edges, times, reduced, turnY, lanes, sides),
-      cards,
+      byNode,
       positions,
       padX: bands.gapAbove.length > 1 ? WRAP_PAD : FIT_PAD,
     };
@@ -495,7 +562,8 @@ export function FlowCanvas({
     titles,
     codeLineOf,
     suggestions,
-    suggestionCounts,
+    popId,
+    toggleSuggestions,
     size,
     levelMoved,
     onBack,
@@ -546,20 +614,11 @@ export function FlowCanvas({
     else onSelect(node.id);
   }
 
-  const perAnchor = new Map<NodeId, number>();
-  const anchored = cards.flatMap((card) => {
-    if (card.anchorId === null) return [];
-    const k = perAnchor.get(card.anchorId) ?? 0;
-    perAnchor.set(card.anchorId, k + 1);
-    const p = positions.get(card.anchorId) ?? { x: 0, y: 0 };
-    const style: CSSProperties = {
-      position: "absolute",
-      pointerEvents: "all",
-      transform: `translate(${p.x + CARD_INDENT}px, ${p.y - CARD_LIFT - k * CARD_LIFT}px)`,
-    };
-    return [{ card, style }];
-  });
-  const framed = cards.filter((c) => c.anchorId === null);
+  const popCards = popId === null ? undefined : byNode.get(popId);
+  function closePop(byKey: boolean) {
+    if (byKey) openPop?.badge.focus();
+    setPop(null);
+  }
 
   return (
     <div
@@ -597,28 +656,19 @@ export function FlowCanvas({
           padX={padX}
         />
         <CenterOn request={centerOn} positions={positions} size={size} />
-        <ViewportPortal>
-          {anchored.map(({ card, style }) => (
-            <SuggestionCard
-              key={card.key}
-              card={card}
-              onSuggestion={onSuggestion}
-              style={style}
-            />
-          ))}
-        </ViewportPortal>
+        {openPop && popCards && (
+          <Balloon
+            key={openPop.id}
+            badge={openPop.badge}
+            cards={popCards}
+            onSuggestion={(id, line) => {
+              setPop(null);
+              onSuggestion(id, line);
+            }}
+            onClose={closePop}
+          />
+        )}
       </ReactFlow>
-      {framed.length > 0 && (
-        <div className="frame-cards">
-          {framed.map((card) => (
-            <SuggestionCard
-              key={card.key}
-              card={card}
-              onSuggestion={onSuggestion}
-            />
-          ))}
-        </div>
-      )}
       {frame && (
         <div
           className="open-frame"

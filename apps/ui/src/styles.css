@@ -626,10 +626,6 @@ body {
   border-color: var(--main);
 }
 
-.node.dim {
-  opacity: 0.55;
-}
-
 /* The open node, drawn as the parent of its level. */
 .node.hub {
   border-style: dashed;
@@ -676,19 +672,41 @@ body {
   color: var(--main);
 }
 
+/* The suggestions of a node: a filled rectangle in the text color, apart from
+   the green rectangle with the count of inner nodes. A click opens their balloon. */
 .node .step-badge {
   position: absolute;
   right: 16px;
   top: 16px;
-  min-width: 26px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   height: 26px;
-  border-radius: 13px;
-  background: var(--main);
+  padding: 0 8px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--second);
   color: var(--ground);
+  font-family: var(--font-sans);
   font-size: 16px;
   font-weight: 700;
   line-height: 26px;
-  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px var(--shadow);
+}
+
+.node .step-badge .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ground);
+}
+
+.node .step-badge:hover,
+.node .step-badge:focus-visible,
+.node .step-badge[aria-expanded="true"] {
+  outline: 2px solid var(--main);
+  outline-offset: 2px;
 }
 
 /* How many nodes the level of a hub, or of a card that opens, shows; the main flow of a snippet has no hub and keeps the count in the corner. */
@@ -699,13 +717,13 @@ body {
   box-sizing: border-box;
   min-width: 26px;
   height: 26px;
-  padding: 0 6px;
-  border: 2px solid var(--main);
-  border-radius: 13px;
-  color: var(--main);
+  padding: 0 8px;
+  border-radius: 5px;
+  background: var(--main);
+  color: var(--ground);
   font-size: 16px;
   font-weight: 700;
-  line-height: 22px;
+  line-height: 26px;
   text-align: center;
 }
 
@@ -823,41 +841,175 @@ body {
   }
 }
 
-/* ---- Suggestion card (VID-31, 33) ---- */
+/* ---- Suggestion balloon (VID-33) ---- */
 
-.alert {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  padding: 14px 22px;
-  border-radius: 6px;
-  background: var(--second);
-  color: var(--ground);
-  font-size: 24px;
-  font-weight: 700;
-  white-space: nowrap;
-  box-shadow: 0 12px 26px var(--shadow-strong);
-  border: 0;
+/* Sits on the badge in flow coordinates; the inline scale keeps it at screen size. */
+.suggestion-pop-anchor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  transform-origin: 0 0;
+  pointer-events: all;
+}
+
+.suggestion-pop {
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-sizing: border-box;
+  width: 340px;
+  padding: 12px 14px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--panel-bg);
+  color: var(--second);
   font-family: var(--font-sans);
+  box-shadow: 0 16px 34px var(--shadow-strong);
+  animation: pop-in 140ms ease-out;
+}
+
+.suggestion-pop.above {
+  transform: translate(-50%, calc(-100% - 12px));
+}
+
+.suggestion-pop.below {
+  transform: translate(-50%, 12px);
+}
+
+/* The arrow points at the badge, as a map pin. */
+.suggestion-pop::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: var(--panel-bg);
+  border: 1px solid var(--card-border);
+  transform: rotate(45deg);
+}
+
+.suggestion-pop.above::after {
+  bottom: -7px;
+  border-top: 0;
+  border-left: 0;
+}
+
+.suggestion-pop.below::after {
+  top: -7px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.suggestion-pop .pop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.suggestion-pop .pop-title {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.suggestion-pop .pop-close {
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
 }
 
-.alert .dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--ground);
+.suggestion-pop .pop-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.frame-cards {
-  position: absolute;
-  left: 24px;
-  top: 96px;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
+.suggestion-pop .pop-entry + .pop-entry {
+  border-top: 1px solid var(--card-border);
+}
+
+.suggestion-pop .pop-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  width: 100%;
+  padding: 9px 4px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.suggestion-pop .pop-item:hover,
+.suggestion-pop .pop-item:focus-visible {
+  background: color-mix(in srgb, var(--main) 12%, transparent);
+  outline: none;
+}
+
+.suggestion-pop .pop-command {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.suggestion-pop .pop-severity {
+  margin-right: 6px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.suggestion-pop .pop-severity.alta {
+  color: var(--danger);
+}
+
+.suggestion-pop .pop-severity.media {
+  color: var(--warm);
+}
+
+.suggestion-pop .pop-severity.baixa {
+  color: var(--accent);
+}
+
+.suggestion-pop .pop-line {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--main);
+  white-space: nowrap;
+}
+
+.suggestion-pop .pop-reason {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--accent);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .suggestion-pop {
+    animation: none;
+  }
 }
 
 /* ---- Detail panel (VID-28, 29, 30) ---- */

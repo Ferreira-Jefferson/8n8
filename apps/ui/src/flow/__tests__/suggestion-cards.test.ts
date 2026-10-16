@@ -1,7 +1,7 @@
 import type { FlowNode, NodeId, Suggestion } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { projectLevel } from "../project-level";
-import { highlighted, suggestionCards } from "../suggestion-cards";
+import { suggestionCards, suggestionsByNode } from "../suggestion-cards";
 import { videoGraph } from "./video-graph";
 
 const P = "fn:processar_pedido";
@@ -46,6 +46,8 @@ describe("VID-31: anchors of the suggestion cards", () => {
         explainedId: P,
         anchorId: `${P}/s5`,
         text: "Grave o pedido numa transação",
+        reason: "motivo",
+        severity: "media",
         line: 12,
       },
       {
@@ -53,6 +55,8 @@ describe("VID-31: anchors of the suggestion cards", () => {
         explainedId: P,
         anchorId: `${P}/s6`,
         text: "Envie o e-mail fora da requisição",
+        reason: "motivo",
+        severity: "media",
         line: 13,
       },
     ]);
@@ -86,6 +90,8 @@ describe("VID-31: anchors of the suggestion cards", () => {
         explainedId: C,
         anchorId: `${P}/s3`,
         text: "Trate o erro HTTP",
+        reason: "motivo",
+        severity: "media",
         line: 18,
       },
     ]);
@@ -162,17 +168,29 @@ describe("VID-31: anchors of the suggestion cards", () => {
   });
 });
 
-describe("VID-32: highlighted", () => {
-  it("holds only the non-null anchors", () => {
-    const set = highlighted([
-      { key: "a", explainedId: P, anchorId: `${P}/s5`, text: "x", line: 12 },
-      { key: "b", explainedId: P, anchorId: null, text: "y", line: 6 },
-      { key: "c", explainedId: P, anchorId: `${P}/s6`, text: "z", line: 13 },
-    ]);
-    expect([...set]).toEqual([`${P}/s5`, `${P}/s6`]);
+describe("suggestionsByNode: the badge of each node", () => {
+  const card = (key: string, anchorId: NodeId | null) => ({
+    key,
+    explainedId: P,
+    anchorId,
+    text: key,
+    reason: "motivo",
+    severity: "media" as const,
+    line: 12,
   });
 
-  it("is empty with no card", () => {
-    expect(highlighted([]).size).toBe(0);
+  it("groups the cards by anchor, in order, and puts the ones with no anchor on the hub", () => {
+    const byNode = suggestionsByNode(
+      [card("a", `${P}/s5`), card("b", null), card("c", `${P}/s5`)],
+      P,
+    );
+    expect([...byNode].map(([id, cs]) => [id, cs.map((c) => c.key)])).toEqual([
+      [`${P}/s5`, ["a", "c"]],
+      [P, ["b"]],
+    ]);
+  });
+
+  it("drops a card with no anchor when the level has no hub", () => {
+    expect(suggestionsByNode([card("b", null)], null).size).toBe(0);
   });
 });

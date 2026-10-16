@@ -39,7 +39,6 @@ function renderStep(n: FlowNode, extra: Partial<StepNodeData> = {}) {
     portsOut: new Set([Side.Right]),
     enterAt: 0,
     selected: false,
-    dimmed: false,
     ...extra,
   };
   return render(
@@ -166,16 +165,14 @@ describe("StepNode ports (VID-03)", () => {
   });
 });
 
-describe("StepNode selection and dimming (VID-22, VID-32)", () => {
-  it("adds on when selected and nothing else", () => {
+describe("StepNode selection (VID-22)", () => {
+  it("adds on when selected", () => {
     const { container } = renderStep(node(), { selected: true });
     expect(card(container).classList.contains("on")).toBe(true);
-    expect(card(container).classList.contains("dim")).toBe(false);
   });
 
-  it("adds dim when dimmed", () => {
-    const { container } = renderStep(node(), { dimmed: true });
-    expect(card(container).classList.contains("dim")).toBe(true);
+  it("has no on when not selected", () => {
+    const { container } = renderStep(node());
     expect(card(container).classList.contains("on")).toBe(false);
   });
 });
@@ -186,19 +183,42 @@ describe("StepNode badges (CORE-06, CORE-23)", () => {
     expect(screen.getByText("Erro de sintaxe na linha 4")).toBeTruthy();
   });
 
-  it("shows a badge with the suggestion count (CORE-23)", () => {
-    renderStep(node(), { suggestionCount: 2 });
-    expect(screen.getByTitle("Sugestões").textContent).toBe("2");
+  it("shows a button badge with the suggestion count (CORE-23)", () => {
+    const { container } = renderStep(node(), { suggestionCount: 2 });
+    const badge = screen.getByRole("button", { name: "2 sugestões" });
+    expect(badge.textContent).toBe("2");
+    expect(badge.classList.contains("step-badge")).toBe(true);
+    expect(badge.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector(".step-badge > i.dot")).not.toBeNull();
+  });
+
+  it("names one suggestion in the singular", () => {
+    renderStep(node(), { suggestionCount: 1 });
+    expect(screen.getByRole("button", { name: "1 sugestão" })).toBeTruthy();
+  });
+
+  it("hands the badge to onSuggestions on a click, and marks it open", () => {
+    const onSuggestions = vi.fn();
+    renderStep(node(), {
+      suggestionCount: 2,
+      suggestionsOpen: true,
+      onSuggestions,
+    });
+    const badge = screen.getByRole("button", { name: "2 sugestões" });
+    expect(badge.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(badge);
+    expect(onSuggestions).toHaveBeenCalledTimes(1);
+    expect(onSuggestions).toHaveBeenCalledWith(badge);
   });
 
   it("shows no badge when the count is 0", () => {
-    renderStep(node(), { suggestionCount: 0 });
-    expect(screen.queryByTitle("Sugestões")).toBeNull();
+    const { container } = renderStep(node(), { suggestionCount: 0 });
+    expect(container.querySelector(".step-badge")).toBeNull();
   });
 
   it("shows no badge when the count is absent", () => {
-    renderStep(node());
-    expect(screen.queryByTitle("Sugestões")).toBeNull();
+    const { container } = renderStep(node());
+    expect(container.querySelector(".step-badge")).toBeNull();
   });
 });
 
