@@ -23,6 +23,7 @@ export {
   CHAT_MAX_TURNS,
   suggestionKey,
 } from "./chat";
+export { commandsWithCall, hasCommands, shownInFile } from "./commands";
 export type {
   Claim,
   ClaimId,
@@ -73,15 +74,23 @@ export type {
   Offer,
 } from "./plugin";
 export type {
+  FileDetail,
   IgnoredFile,
   IgnoreReason,
   ProjectData,
   ProjectExtractor,
-  ProjectFileResponse,
   ProjectResponse,
+  ProjectSkeleton,
+  SearchHit,
   SourceFile,
 } from "./project";
 export { fileNodeOf } from "./project";
+export {
+  fold,
+  SEARCHABLE_KINDS,
+  searchText,
+  searchWords,
+} from "./search";
 export type {
   Locale,
   SettingsField,
@@ -91,6 +100,7 @@ export type {
   Theme,
 } from "./settings";
 export { DEFAULT_LOCALE, LOCALES, THEMES } from "./settings";
+export { skeletonGraphOf } from "./skeleton";
 export type { SystemKey } from "./system-messages";
 export {
   LocalizedError,

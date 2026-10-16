@@ -23,6 +23,10 @@ export interface ProjectIndex {
   callsOut: Map<NodeId, NodeId[]>;
   /** Sources of the incoming `calls` edges, by target node, in the order of the graph. */
   callsIn: Map<NodeId, NodeId[]>;
+  /** The `file` node and all its descendants, by path, in the order of the graph. */
+  nodesByFile: Map<string, FlowNode[]>;
+  /** The edges with both ends in the same file, by path, in the order of the graph. */
+  edgesByFile: Map<string, FlowEdge[]>;
 }
 
 /** The `calls` edges by source and by target, in the order of the graph. */
@@ -86,6 +90,17 @@ export function indexOf(read: Found): ProjectIndex {
     if (n.docstring) push(docstrings, filePathOf(n.id), n.docstring);
   }
   const { callsOut, callsIn } = callMapsOf(graph.edges);
+  const nodesByFile = new Map<string, FlowNode[]>();
+  for (const n of graph.nodes) {
+    const path = filePathOf(n.id);
+    if (path !== "") push(nodesByFile, path, n);
+  }
+  const edgesByFile = new Map<string, FlowEdge[]>();
+  for (const e of graph.edges) {
+    const path = filePathOf(e.source);
+    if (path !== "" && path === filePathOf(e.target))
+      push(edgesByFile, path, e);
+  }
   const index: ProjectIndex = {
     byId,
     filePathOf,
@@ -93,6 +108,8 @@ export function indexOf(read: Found): ProjectIndex {
     docstrings,
     callsOut,
     callsIn,
+    nodesByFile,
+    edgesByFile,
   };
   indexes.set(read, index);
   return index;

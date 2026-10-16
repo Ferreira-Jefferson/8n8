@@ -1,4 +1,4 @@
-import type { FlowNode, Graph, NodeId } from "./graph";
+import type { FlowEdge, FlowNode, Graph, NodeId } from "./graph";
 
 /** `path` is POSIX and relative to the project root. */
 export interface SourceFile {
@@ -29,10 +29,32 @@ export interface ProjectData extends ProjectResponse {
   files: SourceFile[];
 }
 
-/** The source of one file of a project. */
-export interface ProjectFileResponse {
+/** The folders and files of a project, the wires between files and the counts: what the screen needs to draw the top. The inside of a file comes by `FileDetail`. */
+export interface ProjectSkeleton {
+  name: string;
+  ignored: IgnoredFile[];
+  stats: { files: number; nodes: number; edges: number };
+  version: string;
+  /** `nodes` hold only `folder` and `file`; `edges` hold every `imports` and, for calls and inheritance across files, one wire per pair of files and kind. */
+  graph: Graph;
+}
+
+/** The inside of one file: its source, its nodes and the wires between them. */
+export interface FileDetail {
   path: string;
   source: string;
+  /** The `file` node and all its descendants, with the same ids as the full graph. */
+  nodes: FlowNode[];
+  /** Only the wires with both ends in the file. */
+  edges: FlowEdge[];
+  /** The file of each node whose `target` lies outside this file. */
+  refs: Record<NodeId, string>;
+}
+
+/** One match of a search: the node and the ids of its parents, from the top. */
+export interface SearchHit {
+  node: FlowNode;
+  ancestry: NodeId[];
 }
 
 export interface ProjectExtractor {

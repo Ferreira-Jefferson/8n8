@@ -1,12 +1,12 @@
+import { fold, SEARCHABLE_KINDS, searchText, searchWords } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { lojaGraph } from "../../flow/__tests__/loja-graph";
+import { mistaGraph } from "../../flow/__tests__/mista-graph";
 import {
-  fold,
   highlight,
   matchEntries,
   type SearchEntry,
   searchEntries,
-  searchWords,
 } from "../match";
 
 const entry = (title: string, tech: string): SearchEntry => ({
@@ -23,13 +23,6 @@ const ENTRIES = [
 ];
 
 const ids = (list: SearchEntry[]) => list.map((e) => e.id);
-
-describe("fold", () => {
-  it("drops case and accents, and takes _ - and blanks as one space, keeping the length", () => {
-    expect(fold("Cálculo_de-Frete  X")).toBe("calculo de frete  x");
-    expect(fold("Ação").length).toBe("Ação".length);
-  });
-});
 
 describe("matchEntries", () => {
   it("finds by the technical name, even with the title rewritten", () => {
@@ -105,6 +98,22 @@ describe("highlight", () => {
 
   it("marks nothing for no words", () => {
     expect(highlight("frete", [])).toEqual([{ text: "frete", hit: false }]);
+  });
+});
+
+describe("searchEntries and the server's searchText", () => {
+  it("read the same text in every searchable node, so a search finds the same nodes on either side", () => {
+    for (const graph of [lojaGraph, mistaGraph]) {
+      const entries = searchEntries(graph, new Map());
+      const searchable = graph.nodes.filter((n) =>
+        SEARCHABLE_KINDS.has(n.kind),
+      );
+      expect(entries.length).toBe(searchable.length);
+      for (const [i, node] of searchable.entries()) {
+        const e = entries[i] as SearchEntry;
+        expect(searchText(node)).toBe(fold(`${e.title} ${e.tech}`));
+      }
+    }
   });
 });
 

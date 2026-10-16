@@ -1,4 +1,4 @@
-import type { NodeId } from "@8n8/model";
+import { type NodeId, searchWords } from "@8n8/model";
 import {
   Fragment,
   useCallback,
@@ -9,12 +9,7 @@ import {
   useState,
 } from "react";
 import { useT } from "../i18n";
-import {
-  highlight,
-  matchEntries,
-  type SearchEntry,
-  searchWords,
-} from "./match";
+import { highlight, matchEntries, type SearchEntry } from "./match";
 
 function Marked({ text, words }: { text: string; words: string[] }) {
   return highlight(text, words).map((part, i) =>

@@ -4,6 +4,7 @@ import type {
   ChatTurn,
   ExplainPart,
   ExplainResponse,
+  FileDetail,
   GraphResponse,
   HistoryEntry,
   HistoryItem,
@@ -11,7 +12,6 @@ import type {
   LanguagesResponse,
   NodeNotes,
   NodeTitle,
-  ProjectFileResponse,
   ProjectResponse,
   SettingsPatch,
   SettingsResponse,
@@ -114,7 +114,7 @@ export async function fetchProjectFile(
   });
   if (res.status === 409) return { status: "stale" };
   if (!res.ok) throw new Error(`Falha ao ler o arquivo (HTTP ${res.status})`);
-  const body = (await res.json()) as ProjectFileResponse;
+  const body = (await res.json()) as FileDetail;
   return { status: "ok", source: body.source };
 }
 

@@ -18,6 +18,7 @@ import {
   type ExplainPart,
   type ExplainRequest,
   type ExplainResponse,
+  type FileDetail,
   type FlowNode,
   type Graph,
   type GraphResponse,
@@ -25,7 +26,6 @@ import {
   type LanguagesResponse,
   type Locale,
   type NodeNotes,
-  type ProjectFileResponse,
   type StructureRequest,
   type StructureResponse,
   suggestionKey,
@@ -47,6 +47,7 @@ import {
   type ProjectIndex,
   type ProjectRead,
 } from "./project-index";
+import { detailOf, MAX_HITS, searchOf, skeletonOf } from "./project-views";
 import { InvalidSettings, type SettingsService } from "./settings";
 import { sameToken } from "./token";
 
@@ -105,12 +106,24 @@ const filePath = z
   );
 /** Files over 1 MB put on the map (CLEAN-06). */
 const include = z.array(filePath).max(100).optional();
-const projectBody = z.object({ path: z.string().min(1), include });
+const projectBody = z.object({
+  path: z.string().min(1),
+  include,
+  /** The top of the map only: folders, files and wires between files; the inside of a file comes by `/api/project/file`. */
+  lazy: z.boolean().optional(),
+});
 const projectFileBody = z.object({
   root: z.string().min(1),
   include,
   version: z.string().max(100).optional(),
   path: filePath,
+});
+const projectSearchBody = z.object({
+  root: z.string().min(1),
+  include,
+  version: z.string().max(100).optional(),
+  query: z.string().max(200),
+  limit: z.number().int().min(1).max(MAX_HITS).optional(),
 });
 const PROJECT_BODY_LIMIT = 1024 * 1024;
 const pickBody = z.object({ kind: z.enum(["folder", "file", "any"]) });
@@ -424,6 +437,7 @@ export function createApp(deps: AppDeps): Hono {
         response: read.response,
       });
     }
+    if (body.data.lazy) return c.json(skeletonOf(read));
     // The code goes by file, on demand (POST /api/project/file): the map needs none of it.
     const { files: _files, ...response } = read.response;
     return c.json(response);
@@ -452,9 +466,27 @@ export function createApp(deps: AppDeps): Hono {
     if (version !== undefined && built !== undefined && version !== built) {
       return c.json({ error: "stale", version: built }, 409);
     }
-    const source = indexOf(read).sources.get(path);
-    if (source === undefined) return c.json({ error: "not-found", path }, 404);
-    return c.json({ path, source } satisfies ProjectFileResponse);
+    const detail = detailOf(read, path);
+    if (!detail) return c.json({ error: "not-found", path }, 404);
+    return c.json(detail satisfies FileDetail);
+  });
+
+  /** The nodes of the whole folder whose name holds every word of the query. */
+  app.post("/api/project/search", async (c) => {
+    const body = projectSearchBody.safeParse(
+      await c.req.json().catch(() => null),
+    );
+    if (!body.success) return c.json({ error: "invalid body" }, 400);
+    const { root, include, version, query, limit } = body.data;
+    const read = await deps.readProject(root, include, version);
+    if (read.kind === "not-found") {
+      return c.json({ error: "not-found", path: root }, 404);
+    }
+    const built = read.response.version;
+    if (version !== undefined && built !== undefined && version !== built) {
+      return c.json({ error: "stale", version: built }, 409);
+    }
+    return c.json({ hits: searchOf(read, query, limit) });
   });
 
   // The server runs on the person's machine, so the chooser opens on their screen.

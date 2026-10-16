@@ -45,7 +45,13 @@ describe("POST /api/project/file", () => {
     const { calls, post } = setup(built);
     const res = await post({ root: "/tmp/loja", path: "a.py", version: "v1" });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ path: "a.py", source: "x = 1\n" });
+    expect(await res.json()).toEqual({
+      path: "a.py",
+      source: "x = 1\n",
+      nodes: [],
+      edges: [],
+      refs: {},
+    });
     expect(calls).toEqual([["/tmp/loja", undefined, "v1"]]);
   });
 

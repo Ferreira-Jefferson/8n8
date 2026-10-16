@@ -1,4 +1,11 @@
-import type { FlowNode, Graph, NodeId } from "@8n8/model";
+import {
+  type FlowNode,
+  fold,
+  type Graph,
+  type NodeId,
+  SEARCHABLE_KINDS,
+  searchWords,
+} from "@8n8/model";
 import { codeLineOf, provisionalLabel, tagLabel, tagOf } from "../flow/card";
 import { defaultT, type Translate } from "../i18n";
 
@@ -18,36 +25,8 @@ export interface Part {
   hit: boolean;
 }
 
-/** The kinds worth a search: the ones with a name. Calls, steps and returns only repeat them. */
-const SEARCHABLE = new Set([
-  "folder",
-  "file",
-  "function",
-  "class",
-  "loop",
-  "block",
-]);
-
 /** Most results shown at once. */
 export const MAX_RESULTS = 50;
-
-/**
- * Lowercase, no accents, and `_`, `-` and blanks as one space. It keeps the
- * length, so a match in the folded text points at the same place in the original.
- */
-export function fold(text: string): string {
-  let out = "";
-  for (let i = 0; i < text.length; i++) {
-    const c = (text[i] ?? "").normalize("NFD").toLowerCase().charAt(0);
-    out += c === "" ? (text[i] ?? "") : /[\s_-]/.test(c) ? " " : c;
-  }
-  return out;
-}
-
-/** The words of a query, folded; none for a blank query. */
-export function searchWords(query: string): string[] {
-  return fold(query).split(" ").filter(Boolean);
-}
 
 /** The entries that hold every word in the title or in the technical name, in order. */
 export function matchEntries(
@@ -108,7 +87,7 @@ export function searchEntries(
     return node;
   };
   return graph.nodes
-    .filter((n) => SEARCHABLE.has(n.kind))
+    .filter((n) => SEARCHABLE_KINDS.has(n.kind))
     .map((n) => {
       const container = n.kind === "folder" || n.kind === "file";
       const file = container ? undefined : fileOf(n)?.path;
