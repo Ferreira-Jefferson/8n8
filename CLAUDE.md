@@ -6,7 +6,7 @@ Não é migração para n8n. Do n8n só vem o modelo mental.
 
 ## Princípios do produto
 
-- Um único grafo hierárquico (repositório → módulo → arquivo → função → bloco), desenhado como fluxo de nós e arestas.
+- Um único diagrama de fluxo hierárquico (repositório → módulo → arquivo → função → bloco), desenhado como nós e arestas.
 - A estrutura vem de parsing determinístico (Tree-sitter, um plugin por linguagem: Python e TypeScript), nunca de LLM. O LLM só escreve resumos e sugestões, sempre apontando o nó e a linha de origem.
 - Todo nó leva de volta ao código real (arquivo e linhas).
 - O objetivo é supervisionar e entender rápido um código, muitas vezes escrito por IA, e não ler linha por linha.

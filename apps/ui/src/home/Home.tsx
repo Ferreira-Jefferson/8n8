@@ -149,7 +149,7 @@ export function Home({
   return (
     <div className="home-grid">
       <div className="home-start">
-        <p className="home-title">Seu código, desenhado.</p>
+        <p className="home-title">O mapa do seu código.</p>
         <form
           className="home-card home-folder"
           aria-label="Abrir pasta"
