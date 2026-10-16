@@ -47,7 +47,7 @@ import type { Hono } from "hono";
 import { createApp, type ProjectRead } from "./app";
 import { type History, openHistory } from "./history";
 import { createPicker } from "./pick-path";
-import { createProjectCache, fingerprintOf } from "./project-cache";
+import { createProjectCache, fingerprintOf, versionOf } from "./project-cache";
 import {
   createSettingsService,
   type LlmSetup,
@@ -315,7 +315,7 @@ export function composeReadProject(
     if (folder.kind === "not-found") return folder;
     const { name, root, files, ignored } = folder;
     const key = [root, [...include].sort().join(","), ignoring].join("|");
-    const fingerprint = fingerprintOf(files, ignored);
+    const fingerprint = versionOf(key, fingerprintOf(files, ignored));
     return cache.get(key, fingerprint, () => {
       const { graph: built, offers, requests } = analyzeProject(files, plugins);
       // Wires between languages (D3, D4); the nodes stay as the plugins made them.

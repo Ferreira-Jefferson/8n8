@@ -713,6 +713,19 @@ describe("composeReadProject", () => {
     expect(other).toBe(first);
   });
 
+  it("the same files in two folders are two builds: asking for the version of one never serves the other", async () => {
+    const one = makeLoja();
+    const two = makeLoja();
+    const a = await readProject(one);
+    const b = await readProject(two);
+    if (a.kind !== "ok" || b.kind !== "ok") throw new Error("expected ok");
+    expect(a.response.version).not.toBe(b.response.version);
+    expect(await readProject(one, [], a.response.version)).toBe(a);
+    expect(await readProject(two, [], b.response.version)).toBe(b);
+    rmSync(join(one, ".."), { recursive: true, force: true });
+    rmSync(join(two, ".."), { recursive: true, force: true });
+  });
+
   it("gives not-found for a missing path (PROJ-05)", async () => {
     const loja = makeLoja();
     const missing = await readProject(join(loja, "nao-existe"));

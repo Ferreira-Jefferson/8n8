@@ -15,6 +15,11 @@ export function fingerprintOf(
   return hash.digest("hex");
 }
 
+/** Names one build: the same files in another folder, or read with another set of options, are another build. */
+export function versionOf(key: string, fingerprint: string): string {
+  return createHash("sha1").update(`${key}\0${fingerprint}`).digest("hex");
+}
+
 /**
  * The last results, by key, each valid while its fingerprint holds. A request for
  * a result that is still being made waits for it instead of making it again, and
