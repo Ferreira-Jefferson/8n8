@@ -504,7 +504,13 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
         name: "CÓDIGO · frete/calculo.py, linhas 1 a 4",
       }),
     ).toBeTruthy();
-    expect(screen.getByText("def calcular_frete(peso):")).toBeTruthy();
+    expect(
+      screen.getByText(
+        (_, el) =>
+          el?.tagName === "CODE" &&
+          el.textContent === "def calcular_frete(peso):",
+      ),
+    ).toBeTruthy();
     expect(explainMock).toHaveBeenCalledWith(
       { root: lojaRoot },
       "file:frete/calculo.py/fn:calcular_frete",

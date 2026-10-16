@@ -28,6 +28,38 @@ describe("CodeView", () => {
     ]);
   });
 
+  it("colors Python and TypeScript by file extension without changing the text", () => {
+    const py = render(<CodeView code={code} start={12} file="a/preco.py" />);
+    expect(py.container.querySelector(".hljs-keyword")?.textContent).toBe("if");
+    expect(lines(py.container).map((l) => l.text)).toEqual(code.split("\n"));
+    cleanup();
+    const ts = render(
+      <CodeView code="const x: number = 1;" start={1} file="a.ts" />,
+    );
+    expect(ts.container.querySelector(".hljs-keyword")?.textContent).toBe(
+      "const",
+    );
+    expect(ts.container.querySelector(".hljs-number")?.textContent).toBe("1");
+  });
+
+  it("keeps a multiline string colored on every line", () => {
+    const doc = ['x = """um', 'dois"""'].join("\n");
+    const { container } = render(<CodeView code={doc} start={1} file="a.py" />);
+    const rows = [...container.querySelectorAll("[data-line]")];
+    expect(rows).toHaveLength(2);
+    for (const row of rows) {
+      expect(row.querySelector(".hljs-string")).not.toBeNull();
+    }
+  });
+
+  it("shows plain text when the extension is unknown", () => {
+    const { container } = render(
+      <CodeView code="if x" start={1} file="a.zzz" />,
+    );
+    expect(container.querySelector(".hljs-keyword")).toBeNull();
+    expect(lines(container)[0]?.text).toBe("if x");
+  });
+
   it("marks only the highlighted line (CORE-24)", () => {
     const { container } = render(
       <CodeView code={code} start={12} highlightedLines={new Set([13])} />,

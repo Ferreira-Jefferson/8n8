@@ -270,6 +270,7 @@ export function DetailPanel({
           code={nodeCode(source, node)}
           start={node.range.start}
           highlightedLines={highlighted}
+          file={filePath ?? snippetFile}
         />
       </section>
       <section
