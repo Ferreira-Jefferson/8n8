@@ -691,12 +691,19 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     await mapVideo();
     expect(screen.queryByLabelText("Trecho de código")).toBeNull();
     expect(screen.queryByRole("region", { name: "Editor" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Início" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Novo código" }));
     expect(screen.queryByTestId("canvas")).toBeNull();
     expect(
       (screen.getByLabelText("Trecho de código") as HTMLTextAreaElement).value,
     ).toBe(videoSource);
+  });
+
+  it("the logo stays on a snippet map and leads to the launcher; Novo código is still there", async () => {
+    await mapVideo();
+    expect(screen.getByRole("button", { name: "Novo código" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Início" }));
+    expect(screen.queryByTestId("canvas")).toBeNull();
+    expect(screen.getByRole("button", { name: "Mapear pasta" })).toBeTruthy();
   });
 
   it("a folder map has Início, not Novo código, and it goes back to the launcher with the folder kept (HOME-03)", async () => {
@@ -710,6 +717,14 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     expect(
       (screen.getByLabelText("Caminho da pasta") as HTMLInputElement).value,
     ).toBe(lojaRoot);
+  });
+
+  it("a map with a hub keeps no node count in the corner: the hub carries it", async () => {
+    projectMock.mockResolvedValue(loja);
+    const { container } = render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    expect(container.querySelector(".node-count")).toBeNull();
   });
 
   it("Início leaves a folder map from an inner level too, and a new map starts at the top (HOME-03)", async () => {
@@ -996,7 +1011,7 @@ describe("App: history", () => {
     graphMock.mockResolvedValue(withLanguage(graph));
     render(<App />);
     fireEvent.click(
-      screen.getByRole("button", { name: "Ver todo o histórico" }),
+      await screen.findByRole("button", { name: "Ver todo o histórico" }),
     );
     fireEvent.click(
       await within(drawer()).findByRole("button", {
@@ -1027,7 +1042,7 @@ describe("App: history", () => {
     });
     render(<App />);
     fireEvent.click(
-      screen.getByRole("button", { name: "Ver todo o histórico" }),
+      await screen.findByRole("button", { name: "Ver todo o histórico" }),
     );
     fireEvent.click(
       await within(drawer()).findByRole("button", { name: /^loja/ }),
@@ -1051,7 +1066,7 @@ describe("App: history", () => {
     });
     render(<App />);
     fireEvent.click(
-      screen.getByRole("button", { name: "Ver todo o histórico" }),
+      await screen.findByRole("button", { name: "Ver todo o histórico" }),
     );
     fireEvent.click(
       await within(drawer()).findByRole("button", { name: /^loja/ }),

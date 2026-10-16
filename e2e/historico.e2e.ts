@@ -77,14 +77,15 @@ const levelIds = (page: Page) =>
   nodes(page).evaluateAll((els) => els.map((el) => el.getAttribute("data-id")));
 
 test.describe("Histórico", () => {
-  test("the drawer is empty at first, on the launcher", async ({ page }) => {
+  test("with no history the launcher says so and offers no way to open the drawer", async ({
+    page,
+  }) => {
     await page.goto("/");
-    await toggle(page).click();
-    await expect(drawer(page)).toBeVisible();
     await expect(
-      drawer(page).getByText("Nenhuma pesquisa guardada."),
+      page.getByText("Os mapas que você gerar aparecem aqui."),
     ).toBeVisible();
-    await expect(rows(page)).toHaveCount(0);
+    await expect(toggle(page)).toHaveCount(0);
+    await expect(drawer(page)).toHaveCount(0);
   });
 
   test("a snippet appears in the drawer on the map and on the editor screen, with title, tag and sizes", async ({

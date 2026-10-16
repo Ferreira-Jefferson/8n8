@@ -254,4 +254,19 @@ describe("the hub card", () => {
     renderStep(file, { isHub: true });
     expect(screen.queryByRole("button", { name: "Nível anterior" })).toBeNull();
   });
+
+  it("shows how many nodes its level has, in a badge", () => {
+    renderStep(file, { isHub: true, childCount: 7 });
+    expect(screen.getByTitle("7 nós").textContent).toBe("7");
+  });
+
+  it("says 1 nó for a level of one", () => {
+    renderStep(file, { isHub: true, childCount: 1 });
+    expect(screen.getByTitle("1 nó").textContent).toBe("1");
+  });
+
+  it("shows no count on a card that is not a hub", () => {
+    const { container } = renderStep(file, { childCount: 7 });
+    expect(container.querySelector(".hub-count")).toBeNull();
+  });
 });

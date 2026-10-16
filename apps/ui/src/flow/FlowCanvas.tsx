@@ -412,7 +412,11 @@ export function FlowCanvas({
           dimmed: cards.length > 0 && !lit.has(n.id) && n.id !== selected,
           suggestionCount: suggestionCounts.get(n.id),
           ...(n === hub?.node
-            ? { isHub: true, onBack: levelId === null ? undefined : onBack }
+            ? {
+                isHub: true,
+                childCount: level.nodes.length,
+                onBack: levelId === null ? undefined : onBack,
+              }
             : {}),
         },
       };

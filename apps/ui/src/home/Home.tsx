@@ -221,15 +221,17 @@ export function Home({
             um mapa nos favoritos.
           </p>
         )}
-        <button
-          type="button"
-          className="home-more"
-          data-history-toggle=""
-          aria-expanded={historyOpen}
-          onClick={onShowHistory}
-        >
-          Ver todo o histórico
-        </button>
+        {items.length > 0 && (
+          <button
+            type="button"
+            className="home-more"
+            data-history-toggle=""
+            aria-expanded={historyOpen}
+            onClick={onShowHistory}
+          >
+            Ver todo o histórico
+          </button>
+        )}
       </div>
     </div>
   );

@@ -311,6 +311,24 @@ body {
   align-items: center;
 }
 
+/* The logo, fixed at the top-left of the map and the editor where the launcher has it. */
+.logo-link {
+  position: fixed;
+  left: clamp(16px, 5vw, 64px);
+  top: 38px;
+  z-index: 12;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--second);
+  cursor: pointer;
+  line-height: 0;
+}
+
+.logo-link:focus-visible {
+  outline: 2px solid var(--main);
+  outline-offset: 6px;
+}
 .map-area > .new-code {
   position: absolute;
   right: 168px;
@@ -322,8 +340,8 @@ body {
    last item stays whole (VID-19). */
 .breadcrumb {
   position: absolute;
-  left: 24px;
-  top: 34px;
+  left: calc(clamp(16px, 5vw, 64px) + 70px);
+  top: 40px;
   right: 392px;
   z-index: 10;
   display: flex;
@@ -660,6 +678,28 @@ body {
   font-weight: 700;
   line-height: 26px;
   text-align: center;
+}
+
+/* How many nodes the level of a hub shows; the main flow of a snippet has no hub and keeps the count in the corner. */
+.node .hub-count {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  box-sizing: border-box;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  border: 2px solid var(--main);
+  border-radius: 13px;
+  color: var(--main);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+.node.hub .step-badge {
+  right: 56px;
 }
 
 .react-flow__handle.port {

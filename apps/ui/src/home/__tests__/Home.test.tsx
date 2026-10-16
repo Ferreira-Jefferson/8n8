@@ -211,15 +211,28 @@ describe("Home", () => {
   });
 
   it("Colar trecho and Ver todo o histórico call their handlers", async () => {
-    listMock.mockResolvedValue([]);
+    listMock.mockResolvedValue([loja]);
     const { onPaste, onShowHistory } = setup();
     fireEvent.click(screen.getByRole("button", { name: /Colar trecho/ }));
     fireEvent.click(
-      screen.getByRole("button", { name: "Ver todo o histórico" }),
+      await screen.findByRole("button", { name: "Ver todo o histórico" }),
     );
     expect(onPaste).toHaveBeenCalled();
     expect(onShowHistory).toHaveBeenCalled();
   });
+
+  it("offers no Ver todo o histórico while there is no history", async () => {
+    listMock.mockResolvedValue([]);
+    setup();
+    await waitFor(() => expect(listMock).toHaveBeenCalled());
+    expect(
+      screen.queryByRole("button", { name: "Ver todo o histórico" }),
+    ).toBeNull();
+    expect(
+      screen.getByText(/Os mapas que você gerar aparecem aqui/),
+    ).toBeTruthy();
+  });
+
 
   it("reloads the lists when the drawer closes, not while it is open", async () => {
     listMock.mockResolvedValue([]);

@@ -104,7 +104,8 @@ test.describe("Nó-pai", () => {
       els.map((el) => Math.round(el.getBoundingClientRect().left)),
     );
     expect(new Set(xs).size).toBeGreaterThan(1);
-    await expect(page.locator(".node-count")).toHaveText("6 nós");
+    await expect(hub(page).getByTitle("6 nós")).toHaveText("6");
+    await expect(page.locator(".node-count")).toHaveCount(0);
   });
 
   test("acesso.py shows the file as hub and its two functions, never the docstring as GATILHO", async ({
@@ -125,7 +126,8 @@ test.describe("Nó-pai", () => {
       ),
     ).toEqual(["file:acesso.py/fn:ativo", "file:acesso.py/fn:pode_acessar"]);
     await expect(canvas(page).locator('[data-tag="GATILHO"]')).toHaveCount(0);
-    await expect(page.locator(".node-count")).toHaveText("2 nós");
+    await expect(hub(page).getByTitle("2 nós")).toHaveText("2");
+    await expect(page.locator(".node-count")).toHaveCount(0);
     // pode_acessar calls ativo: only pode_acessar hangs from the hub.
     await expect(containsWires(page)).toHaveCount(1);
     await expect(

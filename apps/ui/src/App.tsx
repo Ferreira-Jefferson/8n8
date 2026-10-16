@@ -198,6 +198,20 @@ function Logo() {
   );
 }
 
+/** The logo as a button, fixed at the top-left of the map and the editor: it leads back to the launcher (HOME-03). */
+function HomeLink({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      className="logo-link"
+      aria-label="Início"
+      onClick={onClick}
+    >
+      <Logo />
+    </button>
+  );
+}
+
 /** The launcher, the snippet editor, then the map: one level at a time, one click opens, "Voltar" and Esc go back, the panel shows the node (VID-08, 09, 14, 19, 23, 27, 33). */
 export interface AppProps {
   /** The folder the CLI asked to open (`#pasta=`); its map opens on load. */
@@ -354,11 +368,16 @@ export function App({ initialFolder = null }: AppProps) {
     }
   }
 
-  /** A snippet map goes back to its text ("Novo código"); a folder map goes back to the launcher ("Início", HOME-03). */
+  /** A snippet map goes back to its text ("Novo código"). */
   function newCode() {
-    const from = mapped?.kind;
     clearMap();
-    setView(from === "project" ? "home" : "editor");
+    setView("editor");
+  }
+
+  /** The logo on a map leaves it for the launcher, with the folder field kept (HOME-03). */
+  function leaveMap() {
+    clearMap();
+    setView("home");
   }
 
   function goHome() {
@@ -478,6 +497,7 @@ export function App({ initialFolder = null }: AppProps) {
 
     return (
       <main className="editor">
+        <HomeLink onClick={goHome} />
         <div className="panel editor-panel">
           <section aria-label="Editor">
             <header className="editor-head">
@@ -501,9 +521,6 @@ export function App({ initialFolder = null }: AppProps) {
           <button type="button" className="btn" onClick={() => generate()}>
             Gerar mapa
           </button>
-          <button type="button" className="btn-ghost" onClick={goHome}>
-            Início
-          </button>
         </div>
         {drawer}
         {settingsDialog}
@@ -522,6 +539,7 @@ export function App({ initialFolder = null }: AppProps) {
       }
     >
       <div className="map-area">
+        <HomeLink onClick={leaveMap} />
         <Breadcrumb
           graph={graph}
           path={nav.path}
@@ -537,9 +555,15 @@ export function App({ initialFolder = null }: AppProps) {
             dispatch({ type: "goTo", index });
           }}
         />
-        <button type="button" className="btn-ghost new-code" onClick={newCode}>
-          {mapped.kind === "project" ? "Início" : "Novo código"}
-        </button>
+        {mapped.kind === "snippet" && (
+          <button
+            type="button"
+            className="btn-ghost new-code"
+            onClick={newCode}
+          >
+            Novo código
+          </button>
+        )}
         <HistoryButton
           open={historyOpen}
           onToggle={() => setHistoryOpen((o) => !o)}
@@ -558,9 +582,11 @@ export function App({ initialFolder = null }: AppProps) {
               : mapped.language.label}
           </p>
         )}
-        <span className="node-count">
-          {levelNodes.length === 1 ? "1 nó" : `${levelNodes.length} nós`}
-        </span>
+        {!level?.hub && (
+          <span className="node-count">
+            {levelNodes.length === 1 ? "1 nó" : `${levelNodes.length} nós`}
+          </span>
+        )}
         <FlowCanvas
           graph={graph}
           levelId={levelId}

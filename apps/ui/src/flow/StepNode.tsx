@@ -24,6 +24,8 @@ export interface StepNodeData extends Record<string, unknown> {
   suggestionCount?: number | undefined;
   /** The open node, drawn as the parent of its level: it never opens again. */
   isHub?: boolean;
+  /** Only on the hub: how many nodes its level shows, as a number on the card. */
+  childCount?: number | undefined;
   /** Only on the hub of an inner level: the round button that goes back one level. */
   onBack?: (() => void) | undefined;
 }
@@ -82,6 +84,14 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
         )}
       </b>
       <code className="fn">{data.codeLine}</code>
+      {data.isHub && data.childCount !== undefined && (
+        <span
+          className="hub-count"
+          title={data.childCount === 1 ? "1 nó" : `${data.childCount} nós`}
+        >
+          {data.childCount}
+        </span>
+      )}
       {node.syntaxError && (
         <span className="step-error">
           {`Erro de sintaxe na linha ${node.syntaxError.line}`}
