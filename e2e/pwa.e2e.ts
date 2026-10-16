@@ -44,11 +44,11 @@ test("every icon of the manifest is a PNG of the size it declares", async ({
 test("8n8.localhost reaches the same app and the Host guard still refuses other names", async ({
   page,
 }) => {
-  await page.goto("http://8n8.localhost:8148/");
+  await page.goto(`http://8n8.localhost:${process.env.E2E_PORT ?? 8148}/`);
   await expect(page).toHaveTitle("8n8");
   // Node does not resolve *.localhost as a browser does: the Host header carries the name.
   const evil = await page.request.get(`${OFFLINE}/`, {
-    headers: { host: "evil.localhost:8148" },
+    headers: { host: `evil.localhost:${process.env.E2E_PORT ?? 8148}` },
   });
   expect(evil.status()).toBe(403);
 });

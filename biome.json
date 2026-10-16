@@ -11,8 +11,7 @@
       "**",
       "!.specs",
       "!.cache",
-      "!docs/marca",
-      "!docs/guia-visual.html",
+      "!docs/design",
       "!dist",
       "!node_modules",
       "!pnpm-lock.yaml"

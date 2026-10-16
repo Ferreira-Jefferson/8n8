@@ -15,7 +15,7 @@ Não é migração para n8n. Do n8n só vem o modelo mental.
 
 O produto segue os degraus do método do Karpathy. Cada degrau aprofunda o anterior:
 
-1. **Texto:** o resumo de cada nó e as sugestões são escritos em Português Técnico Simplificado. As regras estão em [docs/portugues-tecnico-simplificado.md](docs/portugues-tecnico-simplificado.md).
+1. **Texto:** o resumo de cada nó e as sugestões são escritos em Português Técnico Simplificado. As regras estão em [docs/writing-rules/portugues-tecnico-simplificado.md](docs/writing-rules/portugues-tecnico-simplificado.md).
 2. **Diagrama:** o fluxo de nós e arestas, com etapas, responsabilidades e dependências.
 3. **Página interativa:** drill-down, filtros, busca e comparação.
 4. **Vídeo (futuro):** um tour animado que percorre o caminho dos dados pelo fluxo.
@@ -34,14 +34,14 @@ As visualizações podem ser descartáveis: uma vista gerada para responder a um
 - `pnpm build:ext`: Gera o pacote da extensão em `release/8n8-vscode-0.0.1.vsix`.
 - `pnpm build:all`: Instala as dependências e gera o CLI e a extensão.
 - `pnpm install:cli:global`: Gera o CLI e instala o comando `8n8` no terminal.
-- `pnpm prints`: Constrói o CLI e refaz as imagens do README em `docs/imagens`.
+- `pnpm prints`: Constrói o CLI e refaz as imagens do README em `docs/images`.
 - `pnpm test`: Roda os testes unitários (Vitest) de todos os pacotes.
 - `pnpm typecheck`: Roda o TypeScript em todos os pacotes e em `e2e`.
 - `pnpm check`: Roda o Biome (estilo) e o dependency-cruiser (fronteiras).
 - `pnpm e2e`: Constrói o CLI e roda os testes de ponta a ponta (Playwright).
 - `pnpm --filter 8n8-vscode test:integration`: Constrói a extensão e roda o teste dela num VS Code de verdade. Usa o VS Code instalado ou baixa um.
 
-Guias: [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md), [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md), [docs/adicionar-editor.md](docs/adicionar-editor.md). Contribuição: [CONTRIBUTING.md](CONTRIBUTING.md).
+Guias: [docs/guides/adicionar-linguagem.md](docs/guides/adicionar-linguagem.md), [docs/guides/adicionar-provedor-llm.md](docs/guides/adicionar-provedor-llm.md), [docs/guides/adicionar-editor.md](docs/guides/adicionar-editor.md). Contribuição: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Antes de codar
 
@@ -82,7 +82,7 @@ Guias: [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md), [docs/adicion
 
 ## Marca
 
-- Todo ícone ou logo do 8n8 vem do manual da marca ([docs/marca/manual.html](docs/marca/manual.html), símbolo `#wordmark`) ou de `scripts/icones.mjs`. Nunca desenhe um "parecido" nem copie só parte dele. O logo tem quatro blocos (dois ligados, dois a 20%), a aresta e as duas portas.
+- Todo ícone ou logo do 8n8 vem do manual da marca ([docs/design/manual-marca.html](docs/design/manual-marca.html), símbolo `#wordmark`) ou de `scripts/icones.mjs`. Nunca desenhe um "parecido" nem copie só parte dele. O logo tem quatro blocos (dois ligados, dois a 20%), a aresta e as duas portas.
 - Se o contexto não aceitar o logo inteiro (ex.: ícone de uma cor só), adapte as cores e mantenha todas as partes. Se não der, pergunte.
 - Depois de gerar o ícone, renderize e compare com o manual antes de dar como pronto.
 

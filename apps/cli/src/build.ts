@@ -101,11 +101,11 @@ export async function buildCli(outDir = join(cliRoot, "dist")): Promise<void> {
   copyGrammars(outDir);
   cpSync(web, join(outDir, "web"), { recursive: true });
   cpSync(
-    join(repoRoot, "docs/portugues-tecnico-simplificado.md"),
+    join(repoRoot, "docs/writing-rules/portugues-tecnico-simplificado.md"),
     join(outDir, "pts.md"),
   );
   cpSync(
-    join(repoRoot, "docs/ingles-tecnico-simplificado.md"),
+    join(repoRoot, "docs/writing-rules/ingles-tecnico-simplificado.md"),
     join(outDir, "ste.md"),
   );
 }

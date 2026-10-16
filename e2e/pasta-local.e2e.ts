@@ -475,7 +475,10 @@ test.describe("Pasta local", () => {
       .find((a) => a !== undefined && a.family === "IPv4" && !a.internal);
     test.skip(ipv4 === undefined, "sem IPv4 externo");
     const outcome = await new Promise<string>((resolve) => {
-      const socket = connect({ host: ipv4?.address, port: 8148 });
+      const socket = connect({
+        host: ipv4?.address,
+        port: Number(process.env.E2E_PORT ?? 8148),
+      });
       socket.on("connect", () => {
         socket.destroy();
         resolve("connected");

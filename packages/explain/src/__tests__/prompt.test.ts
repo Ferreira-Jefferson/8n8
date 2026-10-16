@@ -10,7 +10,7 @@ import { PY } from "./py";
 
 const ptsRules = readFileSync(
   new URL(
-    "../../../../docs/portugues-tecnico-simplificado.md",
+    "../../../../docs/writing-rules/portugues-tecnico-simplificado.md",
     import.meta.url,
   ),
   "utf8",

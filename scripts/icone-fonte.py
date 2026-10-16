@@ -1,6 +1,6 @@
 """Gera a fonte de ícones da extensão do VS Code (apps/editors/vscode/media/8n8-icones.woff).
 
-O desenho vem do manual de marca (docs/marca/manual.html):
+O desenho vem do manual de marca (docs/design/manual-marca.html):
   - U+E000 "simbolo-8n8": símbolo #mark (viewBox 96 x 76), para tamanhos pequenos.
   - U+E001 "logotipo-8n8": logotipo #wordmark (viewBox 124 x 80), os quatro blocos.
 Uma fonte tem uma cor só e não tem opacidade: no logotipo, os blocos que no manual

@@ -1,6 +1,6 @@
 /* The video theme (VID-01, 02, 03, 05, 08, 22, 32). Sizes come from the
    video's base.css, on its 1920x1080 stage; colors come from the 8n8 brand
-   manual (docs/marca/manual.html): Grafite, Névoa, Pedra and Petróleo.
+   manual (docs/design/manual-marca.html): Grafite, Névoa, Pedra and Petróleo.
    SPEC_DEVIATION: Biome writes `.55`, `.18em` and `rgba(0,0,0,.25)` as
    `0.55`, `0.18em` and `var(--shadow)`.
    Reason: `pnpm check` formats CSS; the computed values are the same. */

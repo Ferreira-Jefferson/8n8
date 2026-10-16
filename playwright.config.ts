@@ -2,7 +2,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
-const URL = "http://127.0.0.1:8148";
+// The offline server takes this port; E2E_PORT moves it when 8148 is busy (a dev server).
+const MAIN_PORT = Number(process.env.E2E_PORT ?? 8148);
+const URL = `http://127.0.0.1:${MAIN_PORT}`;
 // Every test server runs with this session token, and every page request carries it (DIST-20).
 // Obviously fake and low entropy, so gitleaks does not take it for a secret.
 export const E2E_TOKEN = "e2e-session-token-not-a-secret-0000";
@@ -36,11 +38,11 @@ const SHARED_STATE = [
 const PANEL_OPEN = {
   cookies: [],
   origins: [
-    ...[8148, 4319, 4320, 4321, 4322, 4330].map(
+    ...[MAIN_PORT, 4319, 4320, 4321, 4322, 4330].map(
       (port) => `http://127.0.0.1:${port}`,
     ),
     // The installed CLI prints 8n8.localhost, another origin for the same port.
-    "http://8n8.localhost:8148",
+    `http://8n8.localhost:${MAIN_PORT}`,
     "http://8n8.localhost:4330",
   ].map((origin) => ({
     origin,
@@ -115,6 +117,7 @@ export default defineConfig({
       timeout: 180_000,
       env: {
         APP8N8_TOKEN: E2E_TOKEN,
+        APP8N8_PORT: String(MAIN_PORT),
         ...NO_CLAUDE,
         // Set and empty: .env never supplies the key.
         OPENROUTER_API_KEY: "",

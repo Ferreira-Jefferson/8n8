@@ -53,7 +53,7 @@ Todos os comandos rodam na raiz do repositório.
 | `pnpm build:ext` | Gera o pacote da extensão em `release/8n8-vscode-0.0.1.vsix`. |
 | `pnpm build:all` | Instala as dependências e gera o CLI e a extensão. |
 | `pnpm install:cli:global` | Gera o CLI e instala o comando `8n8` no terminal. |
-| `pnpm prints` | Constrói o CLI e refaz as imagens do README em `docs/imagens`. |
+| `pnpm prints` | Constrói o CLI e refaz as imagens do README em `docs/images`. |
 | `pnpm test` | Roda os testes unitários (Vitest) de todos os pacotes. |
 | `pnpm typecheck` | Roda o TypeScript em todos os pacotes e em `e2e`. |
 | `pnpm check` | Roda o Biome (estilo) e o dependency-cruiser (fronteiras). |
@@ -101,11 +101,11 @@ A estrutura do grafo vem de parsing determinístico (Tree-sitter). O LLM nunca d
 
 ## Acrescentar uma linguagem
 
-Uma linguagem é um plugin em `packages/languages/<id>`. Siga o guia [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md). O plugin precisa passar na suíte de conformidade (`describeLanguagePlugin`).
+Uma linguagem é um plugin em `packages/languages/<id>`. Siga o guia [docs/guides/adicionar-linguagem.md](docs/guides/adicionar-linguagem.md). O plugin precisa passar na suíte de conformidade (`describeLanguagePlugin`).
 
 ## Acrescentar um provedor de LLM
 
-Um provedor é um arquivo em `packages/llm`. Siga o guia [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md).
+Um provedor é um arquivo em `packages/llm`. Siga o guia [docs/guides/adicionar-provedor-llm.md](docs/guides/adicionar-provedor-llm.md).
 
 ## Estilo de commit
 
@@ -122,7 +122,7 @@ Os tipos em uso: `feat`, `fix`, `refactor`, `test`, `docs`, `chore` e `merge`. F
 
 ## Textos para humanos
 
-Os resumos, as sugestões e a documentação usam Português Técnico Simplificado: frases curtas, voz ativa, um termo por conceito. Veja [docs/portugues-tecnico-simplificado.md](docs/portugues-tecnico-simplificado.md).
+Os resumos, as sugestões e a documentação usam Português Técnico Simplificado: frases curtas, voz ativa, um termo por conceito. Veja [docs/writing-rules/portugues-tecnico-simplificado.md](docs/writing-rules/portugues-tecnico-simplificado.md).
 
 ## Licença
 

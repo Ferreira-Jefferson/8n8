@@ -126,11 +126,11 @@ export async function buildExtension(
     join(outDir, "8n8-icones.woff"),
   );
   cpSync(
-    join(repoRoot, "docs/portugues-tecnico-simplificado.md"),
+    join(repoRoot, "docs/writing-rules/portugues-tecnico-simplificado.md"),
     join(outDir, "pts.md"),
   );
   cpSync(
-    join(repoRoot, "docs/ingles-tecnico-simplificado.md"),
+    join(repoRoot, "docs/writing-rules/ingles-tecnico-simplificado.md"),
     join(outDir, "ste.md"),
   );
 }

@@ -97,6 +97,11 @@ td.n { white-space: nowrap; }
 
 .stage { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; overflow-x: auto;
   background-image: radial-gradient(var(--line) 1.2px, transparent 1.2px); background-size: 40px 40px; }
+.shot { position: relative; padding: 0; overflow: hidden; }
+.shot img { display: block; width: 100%; height: auto; }
+.shot .leads { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; pointer-events: none; }
+.shot .leads path { stroke: var(--cobre); stroke-width: 1.5; fill: none; }
+.shot .pin { position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; background: var(--cobre); color: var(--bg); font: 700 13px/24px var(--font-sans); text-align: center; }
 .stage svg { display: block; min-width: 680px; width: 100%; height: auto; }
 
 .axes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 14px; }
@@ -170,6 +175,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <li><a href="#cores">Cores</a></li>
       <li><a href="#formas">A forma do cartão</a></li>
       <li><a href="#regra">Arestas: a regra</a></li>
+      <li><a href="#etiqueta">A etiqueta da aresta</a></li>
       <li><a href="#direcao">Direção</a></li>
       <li><a href="#catalogo">As nove arestas</a></li>
       <li><a href="#especiais">Casos especiais</a></li>
@@ -208,15 +214,36 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
 
   <section id="tela">
     <h2>A tela do mapa</h2>
-    <p>O mapa de um trecho, com um nó aberto e o painel à direita. Cada número abaixo aponta uma peça.</p>
-    <div class="stage" id="screen"></div>
+    <p>O mapa de um trecho colado, com um nó aberto e o painel à direita. Cada número abaixo aponta uma peça.</p>
+    <div class="stage shot">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="tela-light.png">
+        <img src="tela-dark.png" width="1600" height="900" alt="A tela real do 8n8: um trecho colado, com o nó Process order aberto, o logotipo, a trilha, os botões da barra e o painel de detalhe à direita">
+      </picture>
+      <svg class="leads" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M89 108 V72"/><path d="M423 108 V72"/><path d="M774 108 V82"/><path d="M906 108 V84"/><path d="M978 108 V84"/><path d="M1050 108 V84"/>
+        <path d="M141 600 V562"/><path d="M415 600 V562"/><path d="M552 440 V500"/>
+      </svg>
+      <span class="pin" style="left:5.56%;top:13%">1</span>
+      <span class="pin" style="left:26.4%;top:13%">2</span>
+      <span class="pin" style="left:48.4%;top:13%">3</span>
+      <span class="pin" style="left:56.6%;top:13%">4</span>
+      <span class="pin" style="left:61.1%;top:13%">5</span>
+      <span class="pin" style="left:65.6%;top:13%">6</span>
+      <span class="pin" style="left:35%;top:30%">7</span>
+      <span class="pin" style="left:8.8%;top:67%">8</span>
+      <span class="pin" style="left:25.9%;top:67%">9</span>
+      <span class="pin" style="left:34.5%;top:48.9%">10</span>
+      <span class="pin" style="left:84.5%;top:78%">11</span>
+    </div>
+    <p class="small muted">A imagem é uma captura do app real, gerada por <code>pnpm prints</code>. Ela muda junto com a tela.</p>
     <ul class="callouts">
-      <li><span class="n">1</span><span><b>Logotipo.</b> Leva ao início. Volta à tela de abrir pasta ou colar trecho.</span></li>
+      <li><span class="n">1</span><span><b>Logotipo.</b> Quatro blocos, dois deles ligados por uma aresta com duas portas. Leva ao início: volta à tela de abrir pasta ou colar trecho.</span></li>
       <li><span class="n">2</span><span><b>Trilha.</b> O caminho até o nível aberto. Cada item volta àquele nível. O último é o nó aberto e não encolhe.</span></li>
       <li><span class="n">3</span><span><b>Novo código.</b> Só num trecho colado. Volta ao editor com o texto mantido.</span></li>
-      <li><span class="n">4</span><span><b>Busca.</b> A lupa vira um campo. Procura nós por título ou nome técnico, em todos os níveis, e leva ao escolhido.</span></li>
-      <li><span class="n">5</span><span><b>Configurações.</b> Provedor de LLM, modelo, tema e idioma.</span></li>
-      <li><span class="n">6</span><span><b>Histórico.</b> Abre a gaveta com os mapas já gerados e os favoritos.</span></li>
+      <li><span class="n">4</span><span><b>Busca.</b> A lupa. Ao clicar, vira um campo. Procura nós por título ou nome técnico, em todos os níveis, e leva ao escolhido.</span></li>
+      <li><span class="n">5</span><span><b>Configurações.</b> A engrenagem. Abre provedor de LLM, modelo, tema e idioma.</span></li>
+      <li><span class="n">6</span><span><b>Histórico.</b> O relógio. Abre a gaveta com os mapas já gerados e os favoritos.</span></li>
       <li><span class="n">7</span><span><b>Canvas.</b> O fundo com grade de pontos. Todo nó e toda aresta vivem aqui.</span></li>
       <li><span class="n">8</span><span><b>Hub.</b> O nó aberto, com borda tracejada, a contagem de nós do nível e o botão de voltar à esquerda.</span></li>
       <li><span class="n">9</span><span><b>Nó.</b> Um cartão do nível. O que está dentro dele é o assunto do próximo capítulo.</span></li>
@@ -374,6 +401,32 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     <p class="small muted">Um par de nós tem uma aresta de dependência só. Se há chamada e herança entre os mesmos dois nós, a linha é a de chamada. Se há chamada e import, também. A ordem de força é chama, herda, importa.</p>
   </section>
 
+  <section id="etiqueta">
+    <h2>A etiqueta da aresta</h2>
+    <p>Uma aresta de dependência não leva texto à vista. Quem quer saber o que ela liga passa o mouse sobre ela. Depois de uma pausa curta, abre uma etiqueta ao lado do ponteiro.</p>
+    <div class="stage shot tagshot">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="etiqueta-light.png">
+        <img src="etiqueta-dark.png" width="1600" height="900" alt="O mouse sobre a aresta entre orders.py e server.ts abre uma etiqueta com o tipo, o alcance, o canal HTTP e os dois arquivos">
+      </picture>
+    </div>
+    <p class="small muted">Captura do app real: o mapa da pasta de exemplo, com o mouse sobre a ligação HTTP entre <code>orders.py</code> e <code>server.ts</code>.</p>
+    <dl class="terms box">
+      <dt>Tipo e alcance</dt><dd>A primeira linha, em caixa alta: <b>Chama</b>, <b>Herda</b> ou <b>Importa</b>, mais o alcance (<b>no mesmo arquivo</b>, <b>entre arquivos</b> ou <b>entre linguagens</b>).</dd>
+      <dt>Canal</dt><dd>Só existe numa ligação entre linguagens, como <code>HTTP POST /api/approval</code>, <code>processo</code> ou <code>nome</code>.</dd>
+      <dt>De e Para</dt><dd>Os dois nós que a aresta liga, só pelo nome. Entre arquivos, o nome do arquivo. Dentro de um arquivo, o nome da função.</dd>
+      <dt>Cor</dt><dd>Cobre na borda e no tipo quando a ligação cruza de uma linguagem para outra. Verde nos demais casos.</dd>
+    </dl>
+    <ul class="findings">
+      <li><span class="n">1</span><span><b>Só sobre a linha.</b> A linha fina tem uma faixa invisível de 22 px de largura para o mouse acertar. Sobre a faixa, a linha engrossa.</span></li>
+      <li><span class="n">2</span><span><b>Com uma pausa.</b> A etiqueta abre depois de 180 ms com o mouse parado. Passar o mouse de passagem não mostra nada.</span></li>
+      <li><span class="n">3</span><span><b>Uma por vez, junto do ponteiro.</b> A etiqueta acompanha o mouse enquanto ele está sobre a linha e some quando ele sai.</span></li>
+      <li><span class="n">4</span><span><b>Sem ação.</b> A etiqueta não recebe clique e não atrapalha arrastar ou dar zoom no mapa.</span></li>
+      <li><span class="n">5</span><span><b>Só nas arestas de dependência.</b> Os rótulos <b>true</b> e <b>false</b> de um ramo continuam à vista, junto do cartão de destino, porque fazem parte do fluxo.</span></li>
+      <li><span class="n">6</span><span><b>Sem vão extra.</b> Como o rótulo não fica à vista, o layout não abre espaço entre as colunas para ele.</span></li>
+    </ul>
+  </section>
+
   <section id="direcao">
     <h2>Como a direção se lê, sem seta</h2>
     <p>Uma linha tracejada simétrica não diz quem chama quem. O 8n8 usa duas pistas ao mesmo tempo. Uma confirma a outra.</p>
@@ -520,7 +573,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
         <tr><td class="k">O padrão de traço e a cor de uma aresta</td><td>As regras <code>.edge-calls</code>, <code>.edge-imports</code>, <code>.edge-extends</code>, <code>.reach-inside</code> e <code>.reach-across</code> do <code>styles.css</code>.</td></tr>
         <tr><td class="k">Qual tipo de aresta ganha qual classe</td><td><code>toFlowEdges</code> em <code>apps/ui/src/flow/FlowCanvas.tsx</code>.</td></tr>
         <tr><td class="k">Os extremos cheio e oco</td><td>As classes <code>port-dep</code>, <code>port-in</code>, <code>port-inside</code> e <code>port-across</code> do <code>styles.css</code>, postas pelo <code>StepNode.tsx</code>.</td></tr>
-        <tr><td class="k">A alça de recursão e o rótulo no meio da linha</td><td><code>apps/ui/src/flow/WireEdge.tsx</code>, que desenha o caminho de cada aresta.</td></tr>
+        <tr><td class="k">A alça de recursão e a etiqueta ao passar o mouse</td><td><code>apps/ui/src/flow/WireEdge.tsx</code>, que desenha o caminho de cada aresta e a etiqueta. Os dados da etiqueta (tipo, alcance, nomes) saem de <code>toFlowEdges</code>, e os textos estão em <code>apps/ui/src/i18n</code>.</td></tr>
         <tr><td class="k">Os lados das portas de uma aresta que volta</td><td><code>apps/ui/src/flow/dependency.ts</code> e <code>sides.ts</code>.</td></tr>
         <tr><td class="k">Quem aparece no nível de fora</td><td><code>apps/ui/src/flow/main-flow.ts</code> e <code>project-level.ts</code>.</td></tr>
         <tr><td class="k">Um tipo novo de nó ou de relação</td><td>O tipo <code>NodeKind</code> ou <code>EdgeKind</code> em <code>packages/model/src/graph.ts</code>, o extrator da linguagem e uma linha neste documento.</td></tr>
@@ -577,50 +630,6 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     var l = (tx !== undefined) ? '<path class="lead" d="M' + x + ' ' + y + ' L' + tx + ' ' + ty + '"/>' : '';
     return l + '<circle class="co" cx="' + x + '" cy="' + y + '" r="11"/><text class="con" x="' + x + '" y="' + (y + 3.5) + '">' + n + '</text>';
   }
-
-  /* A tela do mapa */
-  (function () {
-    var s = '';
-    s += '<rect x="716" y="14" width="270" height="492" rx="8" class="card"/>';
-    s += '<text class="tn" x="734" y="50" style="font-size:16px">Processar pedido</text>';
-    s += '<text class="tt" x="734" y="72" style="font-size:7.5px">O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO</text>';
-    s += '<rect x="734" y="82" width="120" height="30" rx="4" fill="none" style="stroke:var(--ink)" stroke-width="1.5"/><text class="tl" x="746" y="102" style="font-size:11px">Gerar resumo</text>';
-    s += '<text class="tt" x="734" y="140" style="font-size:7.5px;fill:var(--muted)">CÓDIGO · TRECHO.PY, LINHAS 11 A 15</text>';
-    s += '<rect x="734" y="148" width="234" height="90" rx="4" style="fill:var(--bg)"/>';
-    ['def processar_pedido(itens):', '    for item in itens:', '        calcular_frete(item)', '    print("ok")', '    return 1'].forEach(function (t, i) {
-      s += '<text class="tc" x="760" y="' + (166 + i * 16) + '" style="font-size:9px">' + esc(t) + '</text><text class="tc" x="742" y="' + (166 + i * 16) + '" style="font-size:8px;fill:var(--dim)">' + (11 + i) + '</text>';
-    });
-    s += '<text class="tn" x="734" y="270" style="font-size:12px">Efeitos externos</text><text class="tc" x="734" y="288" style="font-size:10px">• print (EXTERNO, linha 14)</text>';
-    s += '<text class="tn" x="734" y="318" style="font-size:12px">Sugestões</text><rect x="734" y="326" width="130" height="28" rx="4" fill="none" style="stroke:var(--ink)" stroke-width="1.5"/><text class="tl" x="746" y="344" style="font-size:11px">Pedir sugestões</text>';
-    s += '<g><rect x="30" y="22" width="14" height="14" rx="3" fill="none" style="stroke:var(--ink)" stroke-width="2"/><rect x="48" y="22" width="14" height="14" rx="3" fill="none" style="stroke:var(--dim)" stroke-width="2"/><rect x="30" y="40" width="14" height="14" rx="3" fill="none" style="stroke:var(--dim)" stroke-width="2"/><rect x="48" y="40" width="14" height="14" rx="3" fill="none" style="stroke:var(--ink)" stroke-width="2"/></g>';
-    s += '<text class="tc" x="76" y="44" style="font-size:12px;fill:var(--muted)">Fluxo principal › <tspan style="fill:var(--fg)">Processar pedido</tspan></text>';
-    var bx = [{ x: 470, w: 92 }, { x: 572, w: 34 }, { x: 614, w: 34 }, { x: 656, w: 34 }];
-    bx.forEach(function (b) { s += '<rect x="' + b.x + '" y="22" width="' + b.w + '" height="34" rx="5" fill="none" style="stroke:var(--line)" stroke-width="1.5"/>'; });
-    s += '<text class="tn" x="482" y="44" style="font-size:11px">Novo código</text>';
-    s += '<circle cx="587" cy="38" r="6" fill="none" style="stroke:var(--fg)" stroke-width="2"/><path d="M591 42 L597 48" style="stroke:var(--fg)" stroke-width="2" stroke-linecap="round"/>';
-    s += '<circle cx="631" cy="39" r="6" fill="none" style="stroke:var(--fg)" stroke-width="2"/><circle cx="631" cy="39" r="2" style="fill:var(--fg)"/>';
-    s += '<circle cx="673" cy="39" r="8" fill="none" style="stroke:var(--fg)" stroke-width="2"/><path d="M673 33 V39 L677 42" fill="none" style="stroke:var(--fg)" stroke-width="2" stroke-linecap="round"/>';
-    s += '<rect x="14" y="14" width="690" height="492" rx="3" fill="none" style="stroke:var(--ink)" stroke-width="1.5"/>';
-    var y = 256;
-    s += '<path class="wire" d="M154 ' + (y + 35) + ' H190"/><path class="wire" d="M318 ' + (y + 35) + ' H354"/><path class="wire" d="M482 ' + (y + 35) + ' H518"/>';
-    function mini(x, tag, name, code, extra) {
-      var c = '<rect class="card' + (extra === 'hub' ? ' hub' : '') + (extra === 'on' ? ' on' : '') + '" x="' + x + '" y="' + y + '" width="128" height="70" rx="5"/>';
-      c += '<text class="tt ' + (FAM[tag] || '') + '" x="' + (x + 10) + '" y="' + (y + 20) + '">' + tag + '</text><text class="tn" x="' + (x + 10) + '" y="' + (y + 40) + '" style="font-size:12px">' + name + '</text><text class="tc" x="' + (x + 10) + '" y="' + (y + 58) + '">' + code + '</text>';
-      return c;
-    }
-    s += mini(26, 'FUNÇÃO', 'Processar pedido', 'processar_pedido()', 'hub');
-    s += '<rect x="122" y="' + (y + 6) + '" width="24" height="18" rx="4" style="fill:var(--ink)"/><text class="badge-num" x="131" y="' + (y + 19) + '">3</text>';
-    s += mini(190, 'LAÇO', 'for item in itens ›', 'for item in itens');
-    s += mini(354, 'EXTERNO', 'Print', 'print()');
-    s += mini(518, 'RETORNO', 'Retorno', 'return 1', 'on');
-    s += '<rect x="298" y="' + (y + 44) + '" width="18" height="16" rx="3" fill="none" style="stroke:var(--ink)" stroke-width="1.5"/><path d="M308 ' + (y + 44) + ' V' + (y + 60) + '" style="stroke:var(--ink)" stroke-width="1.5"/>';
-    s += '<circle cx="26" cy="' + (y + 35) + '" r="14" style="fill:var(--bg);stroke:var(--ink)" stroke-width="2"/><path d="M22 ' + (y + 33) + ' l-4 -4 l4 -4 M18 ' + (y + 29) + ' h6 a4 4 0 0 1 0 8 h-3" fill="none" style="stroke:var(--ink)" stroke-width="1.6" stroke-linecap="round" transform="translate(4 2)"/>';
-    [[154, y + 35], [190, y + 35], [318, y + 35], [354, y + 35], [482, y + 35], [518, y + 35]].forEach(function (p) { s += '<circle class="port" cx="' + p[0] + '" cy="' + p[1] + '" r="5"/>'; });
-    s += co(22, 74, 1, 36, 52);
-    s += co(250, 18, 2, 250, 30) + co(450, 12, 3, 480, 22) + co(580, 12, 4, 584, 28) + co(622, 12, 5, 628, 28) + co(664, 12, 6, 670, 28);
-    s += co(110, 150, 7) + co(26, 226, 8, 40, 256) + co(254, 230, 9, 254, 256) + co(336, 330, 10, 336, 291) + co(960, 450, 11);
-    document.getElementById('screen').innerHTML = svgOf(1000, 520, 'Mapa de um trecho com o nó Processar pedido aberto e o painel de detalhe à direita', s);
-  })();
 
   /* O cartão, em tamanho grande */
   (function () {

@@ -11,7 +11,7 @@ import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 // drafts and reviews (D2).
 
 const REAL = "http://127.0.0.1:4319";
-const OFFLINE = "http://127.0.0.1:8148";
+const OFFLINE = `http://127.0.0.1:${process.env.E2E_PORT ?? 8148}`;
 const CACHE = fileURLToPath(new URL("../.cache/e2e-real", import.meta.url));
 /** Keyed server with no model set (CORE-21). */
 const DEFAULT_MODEL_SERVER = "http://127.0.0.1:4320";
@@ -27,7 +27,10 @@ const VIDEO = readFileSync(
   "utf8",
 ).replace(/\r\n/g, "\n");
 const PTS_FIRST_LINE = readFileSync(
-  new URL("../docs/portugues-tecnico-simplificado.md", import.meta.url),
+  new URL(
+    "../docs/writing-rules/portugues-tecnico-simplificado.md",
+    import.meta.url,
+  ),
   "utf8",
 ).split(/\r?\n/)[0] as string;
 

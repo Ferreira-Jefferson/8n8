@@ -23,25 +23,25 @@ Com a IA, o código muda e cresce rápido demais para ler linha por linha. Eu pe
 **1. Você aponta uma pasta ou cola um trecho.**
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/imagens/inicio-dark.png">
-  <img src="docs/imagens/inicio-light.png" alt="Tela inicial do 8n8: abrir uma pasta ou colar um trecho de código">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/inicio-dark.png">
+  <img src="docs/images/inicio-light.png" alt="Tela inicial do 8n8: abrir uma pasta ou colar um trecho de código">
 </picture>
 
 **2. O mapa começa amplo:** a pasta, os arquivos (de linguagens diferentes) e como eles se ligam.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/imagens/pasta-dark.png">
-  <img src="docs/imagens/pasta-light.png" alt="Mapa de uma pasta: a pasta loja, arquivos .py e .ts e a subpasta servicos">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/pasta-dark.png">
+  <img src="docs/images/pasta-light.png" alt="Mapa de uma pasta: a pasta store, arquivos .py e .ts e a subpasta services">
 </picture>
 
 **3. Você abre um nó e vê o fluxo por dentro:** funções, um `if`, uma chamada HTTP, o banco e o retorno.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/imagens/fluxo-dark.png">
-  <img src="docs/imagens/fluxo-light.png" alt="Fluxo interno de uma função: três funções, um SE, uma chamada HTTP, o banco e o retorno">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/fluxo-dark.png">
+  <img src="docs/images/fluxo-light.png" alt="Fluxo interno de uma função: três funções, um SE, uma chamada HTTP, o banco e o retorno">
 </picture>
 
-O código de exemplo está em [docs/imagens/exemplo](docs/imagens/exemplo). Para refazer as imagens: `pnpm prints`.
+O código de exemplo está em [docs/sample-project](docs/sample-project). Para refazer as imagens: `pnpm prints`.
 
 ### O que o mapa oferece
 
@@ -69,7 +69,7 @@ Em `apps/` há três pastas. Uma é a tela e duas são as formas de rodar o 8n8,
 
 A tela e o terminal falam português (pt-BR) ou inglês. O botão **BR/EN** nas Configurações troca o idioma, e a LLM responde no mesmo idioma.
 
-Os textos usam Português Técnico Simplificado: frases curtas, voz ativa, um termo por conceito. As regras estão em [docs/portugues-tecnico-simplificado.md](docs/portugues-tecnico-simplificado.md). Em inglês, valem as regras de [docs/ingles-tecnico-simplificado.md](docs/ingles-tecnico-simplificado.md).
+Os textos usam Português Técnico Simplificado: frases curtas, voz ativa, um termo por conceito. As regras estão em [docs/writing-rules/portugues-tecnico-simplificado.md](docs/writing-rules/portugues-tecnico-simplificado.md). Em inglês, valem as regras de [docs/writing-rules/ingles-tecnico-simplificado.md](docs/writing-rules/ingles-tecnico-simplificado.md).
 
 ## Linguagens suportadas
 
@@ -80,7 +80,7 @@ Os textos usam Português Técnico Simplificado: frases curtas, voz ativa, um te
 
 Uma pasta com as duas linguagens vira um mapa só. Os arquivos se ligam por rota HTTP, por processo e por nome.
 
-Para acoplar outra linguagem, siga o guia [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md).
+Para acoplar outra linguagem, siga o guia [docs/guides/adicionar-linguagem.md](docs/guides/adicionar-linguagem.md).
 
 ## Instalar
 
@@ -120,11 +120,11 @@ code --install-extension release/8n8-vscode-0.0.1.vsix
 
 Depois, rode **8n8: Abrir mapa** na paleta de comandos. Ele abre a tela inicial, sem mapa: lá você digita a pasta ou cola um trecho. Para mapear uma pasta direto, clique nela com o botão direito no Explorer e escolha **8n8: Abrir mapa desta pasta**. No mapa de uma pasta, o botão **Início** volta à tela inicial.
 
-Para acrescentar outro editor, veja [docs/adicionar-editor.md](docs/adicionar-editor.md).
+Para acrescentar outro editor, veja [docs/guides/adicionar-editor.md](docs/guides/adicionar-editor.md).
 
 ### Como app (PWA)
 
-A tela é um PWA: o navegador pode instalá-la como um app, com ícone e janela própria. Rode o 8n8 (`8n8 .` ou `pnpm open .`) e use a opção **Instalar** do Chrome ou do Edge. O ícone do app segue o [manual da marca](docs/marca/manual.html).
+A tela é um PWA: o navegador pode instalá-la como um app, com ícone e janela própria. Rode o 8n8 (`8n8 .` ou `pnpm open .`) e use a opção **Instalar** do Chrome ou do Edge. O ícone do app segue o [manual da marca](docs/design/manual-marca.html).
 
 O app instalado é só a janela. O núcleo continua local: o 8n8 precisa estar rodando para o app funcionar.
 
@@ -136,7 +136,7 @@ Os resumos e as sugestões pedem um provedor de LLM. O 8n8 escolhe o provedor ne
 2. O provedor que você escolheu nas Configurações.
 3. Sem escolha, o 8n8 procura o Claude Code na sua máquina. Se acha, usa o `claude-code`, que aproveita a sua assinatura e não pede chave. Se não acha, usa o `openrouter`, que pede uma chave.
 
-Para usar a sua própria chave, escolha um provedor nas Configurações e cole a chave. Falta o seu provedor? Acrescente um: o guia [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md) mostra como, e o projeto aceita contribuições.
+Para usar a sua própria chave, escolha um provedor nas Configurações e cole a chave. Falta o seu provedor? Acrescente um: o guia [docs/guides/adicionar-provedor-llm.md](docs/guides/adicionar-provedor-llm.md) mostra como, e o projeto aceita contribuições.
 
 O jeito mais simples de configurar é pela tela: clique no botão **Configurações** (no canto de cima, em todas as telas) e preencha:
 
@@ -198,7 +198,7 @@ O 8n8 roda o processo numa pasta vazia própria (`8n8-claude`, dentro da pasta t
 
 O modelo padrão é o `claude-sonnet-5-5`, com esforço baixo. Para não esperar a abertura do Claude Code a cada pedido, o 8n8 deixa até 2 processos já abertos (cerca de 300 MB cada). Cada processo responde um pedido só. Um processo sem uso fecha depois de 10 minutos, e todos fecham junto com o 8n8.
 
-Para acrescentar um provedor, veja [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md).
+Para acrescentar um provedor, veja [docs/guides/adicionar-provedor-llm.md](docs/guides/adicionar-provedor-llm.md).
 
 ## Dados e segurança
 
@@ -264,7 +264,7 @@ Todos os comandos rodam na raiz do repositório.
 | `pnpm build:ext` | Gera o pacote da extensão em `release/8n8-vscode-0.0.1.vsix`. |
 | `pnpm build:all` | Instala as dependências e gera o CLI e a extensão. |
 | `pnpm install:cli:global` | Gera o CLI e instala o comando `8n8` no terminal. |
-| `pnpm prints` | Constrói o CLI e refaz as imagens do README em `docs/imagens`. |
+| `pnpm prints` | Constrói o CLI e refaz as imagens do README em `docs/images`. |
 | `pnpm test` | Roda os testes unitários (Vitest) de todos os pacotes. |
 | `pnpm typecheck` | Roda o TypeScript em todos os pacotes e em `e2e`. |
 | `pnpm check` | Roda o Biome (estilo) e o dependency-cruiser (fronteiras). |
@@ -288,7 +288,7 @@ Todos os comandos rodam na raiz do repositório.
 | `packages/server` | O núcleo: as rotas da API, montadas por `createCore`. |
 | `e2e` | Testes de ponta a ponta com Playwright. |
 | `scripts` | `dev.mjs` (o `pnpm dev`), `open.mjs` (o `pnpm open`) e `prints-readme.mjs` (o `pnpm prints`). |
-| `docs` | Guias, o manual da marca e as imagens do README (`docs/imagens`). |
+| `docs` | Guias (`guias`), regras de idioma (`idioma`), manual e guia visual da marca (`marca`) e as imagens do README (`imagens`). |
 | `release` | Os pacotes gerados (`.tgz` e `.vsix`). O git ignora o conteúdo. |
 
 ### Como contribuir
@@ -305,7 +305,7 @@ O 8n8 é software livre, sob a GNU General Public License versão 3 (GPL-3.0). O
 
 O 8n8 é livre e gratuito. Se ele ajuda você, uma doação por Pix mantém o projeto vivo. Ela é opcional e não libera nada a mais.
 
-<img src="docs/doacao-pix.svg" alt="QR Code Pix para doação" width="200">
+<img src="docs/images/doacao-pix.svg" alt="QR Code Pix para doação" width="200">
 
 <details>
 <summary>Pix copia e cola</summary>

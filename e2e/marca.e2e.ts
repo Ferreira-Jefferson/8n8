@@ -10,7 +10,7 @@ import {
   VIDEO,
 } from "./mapa";
 
-// The 8n8 brand in the app (docs/marca/manual.html): name, logo, favicon and
+// The 8n8 brand in the app (docs/design/manual-marca.html): name, logo, favicon and
 // the two themes, which follow the system's color scheme.
 
 const PAPEL = "rgb(242, 243, 240)";

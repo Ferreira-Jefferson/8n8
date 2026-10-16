@@ -148,7 +148,7 @@ function savedPanelCollapsed(): boolean {
 }
 
 /**
- * The 8n8 logo (docs/marca/manual.html): two 8s of stacked blocks. The two
+ * The 8n8 logo (docs/design/manual-marca.html): two 8s of stacked blocks. The two
  * linked blocks and the edge between them are Petróleo; the other two are
  * the text color at 20%.
  */

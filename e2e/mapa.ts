@@ -8,7 +8,7 @@ import { resetFake } from "./fake-llm";
 // detalhe, sugestoes). Not a spec: Playwright only runs *.e2e.ts.
 
 /** The server with no key (titles and summaries never come). */
-export const OFFLINE = "http://127.0.0.1:8148";
+export const OFFLINE = `http://127.0.0.1:${process.env.E2E_PORT ?? 8148}`;
 /** The server with the real pipeline against the fake LLM (e2e/fake-llm.ts). */
 export const REAL = "http://127.0.0.1:4319";
 /** The cache dir of the REAL server, wiped before each test that uses it. */
@@ -48,7 +48,7 @@ export const FRETE_LEVEL = [
   `${FRETE}/s2/b1/s0`,
 ];
 
-/** The brand colours (docs/marca/manual.html), dark theme. */
+/** The brand colours (docs/design/manual-marca.html), dark theme. */
 export const MAIN = "rgb(61, 191, 168)";
 export const GROUND = "rgb(22, 24, 24)";
 export const SECOND = "rgb(233, 235, 234)";

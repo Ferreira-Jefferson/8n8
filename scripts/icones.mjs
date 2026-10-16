@@ -1,5 +1,5 @@
 // Gera os ícones do app (favicon, ICO e PNGs do PWA) a partir do logotipo do
-// manual de marca (docs/marca/manual.html, símbolo #wordmark: 124 × 80 u).
+// manual de marca (docs/design/manual-marca.html, símbolo #wordmark: 124 × 80 u).
 //
 // Até 48 px o desenho é refeito em pixels inteiros: cada linha cai no grid e
 // não vira meio-tom. Acima disso, o logotipo escala sem ajuste. Fundo transparente.

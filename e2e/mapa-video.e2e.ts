@@ -148,7 +148,9 @@ test.describe("O visual do vídeo", () => {
       await css(cardOf(page, PEDIDO).locator(".fn"), "font-family"),
     ).toMatch(/^"DM Mono"/);
     expect(fontHosts.length).toBeGreaterThan(0);
-    expect(new Set(fontHosts)).toEqual(new Set(["127.0.0.1:8148"]));
+    expect(new Set(fontHosts)).toEqual(
+      new Set([`127.0.0.1:${process.env.E2E_PORT ?? 8148}`]),
+    );
   });
 
   test("VID-03: each card has tag, title and code line in that order, with Petróleo round ports only where a wire is", async ({
