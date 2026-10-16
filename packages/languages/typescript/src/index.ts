@@ -1,5 +1,5 @@
 import type { LanguagePlugin } from "@8n8/model";
-import { analyzeFiles } from "./analyze";
+import { analyzeFiles, openSlice } from "./analyze";
 import { detectTypescript } from "./detect";
 import { extractSnippet } from "./extract";
 
@@ -13,4 +13,5 @@ export const typescriptPlugin: LanguagePlugin = {
   detect: detectTypescript,
   extract: extractSnippet,
   analyze: analyzeFiles,
+  openSlice,
 };

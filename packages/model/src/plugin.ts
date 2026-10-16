@@ -57,4 +57,21 @@ export interface LanguagePlugin {
   extract(source: string): Graph;
   /** Entende um conjunto de arquivos desta linguagem. Os caminhos são POSIX, relativos à raiz do projeto. */
   analyze(files: SourceFile[]): LanguageAnalysis;
+  /**
+   * Optional. Lets the core split `analyze` among worker threads. `files` is one contiguous
+   * slice of the project's files of this language, in the order `analyze` sorts them.
+   * Opening all the slices and running both phases below must give the same result as
+   * `analyze` of all the files together. A plugin without it always runs in one piece.
+   */
+  openSlice?(files: SourceFile[]): AnalysisSlice;
+}
+
+/** A slice of the files of one language, with its parse trees kept until `dispose`. */
+export interface AnalysisSlice {
+  /** Phase 1: what these files add to the project-wide context (module index, names). Plain data that a structured clone carries. */
+  contribute(): unknown;
+  /** Phase 2: the analysis of these files only, given the contributions of ALL the slices, in slice order. */
+  analyze(contributions: unknown[]): LanguageAnalysis;
+  /** Frees the parse trees. */
+  dispose(): void;
 }

@@ -1,5 +1,6 @@
 import { lastLine } from "@8n8/lang-treesitter";
 import {
+  type AnalysisSlice,
   type FlowEdge,
   type FlowNode,
   fileId,
@@ -138,47 +139,79 @@ function importsEdges(parsed: Parsed[], index: ModuleIndex): FlowEdge[] {
   return [...edges.values()];
 }
 
+/** What a slice adds to the project context: its module index and its top-level names. */
+interface Contribution {
+  index: ModuleIndex;
+  names: string[];
+}
+
 /**
- * Analyzes the files of a project (PROJ-02, 03, 04, 09): one pass indexes the
- * modules, a second builds each file under its `file:` prefix. The folders
- * are the project's job, not the plugin's.
+ * Parses the files of one slice and keeps the trees until `dispose`. Phase 1 gives the
+ * slice's part of the project context; phase 2 builds each file under its `file:` prefix
+ * (PROJ-02, 03, 04, 09), with the context of every slice. The folders are the project's job.
  */
-export function analyzeFiles(
-  parser: Parser,
-  files: SourceFile[],
-): LanguageAnalysis {
+export function openSlice(parser: Parser, files: SourceFile[]): AnalysisSlice {
   const parsed: Parsed[] = [];
+  const dispose = () => {
+    for (const { tree } of parsed) tree.delete();
+  };
   try {
     for (const file of [...files].sort((a, b) => byCode(a.path, b.path))) {
       const tree = parser.parse(file.source);
       if (!tree) throw new Error(`tree-sitter could not parse ${file.path}`);
       parsed.push({ file, tree });
     }
-    const index = buildModuleIndex(
-      parsed.map(({ file, tree }) => ({
-        path: file.path,
-        root: tree.rootNode,
-      })),
-    );
-    const projectNames = new Set(
-      parsed.flatMap(({ tree }) => [
+  } catch (error) {
+    dispose();
+    throw error;
+  }
+  return {
+    contribute: (): Contribution => ({
+      index: buildModuleIndex(
+        parsed.map(({ file, tree }) => ({
+          path: file.path,
+          root: tree.rootNode,
+        })),
+      ),
+      names: parsed.flatMap(({ tree }) => [
         ...allocateTopLevel(tree.rootNode).topLevel.keys(),
       ]),
-    );
-    const graphs = parsed.map((p) => ({
-      path: p.file.path,
-      graph: fileGraph(p, index, projectNames),
-    }));
-    const links = parsed.map((p, i) =>
-      collectLinks(p.file.path, p.tree.rootNode, graphs[i]?.graph.nodes ?? []),
-    );
-    return {
-      files: graphs,
-      imports: importsEdges(parsed, index),
-      offers: links.flatMap((l) => l.offers),
-      requests: links.flatMap((l) => l.requests),
-    };
+    }),
+    analyze(contributions) {
+      const all = contributions as Contribution[];
+      const index: ModuleIndex = new Map(all.flatMap((c) => [...c.index]));
+      const projectNames = new Set(all.flatMap((c) => c.names));
+      const graphs = parsed.map((p) => ({
+        path: p.file.path,
+        graph: fileGraph(p, index, projectNames),
+      }));
+      const links = parsed.map((p, i) =>
+        collectLinks(
+          p.file.path,
+          p.tree.rootNode,
+          graphs[i]?.graph.nodes ?? [],
+        ),
+      );
+      return {
+        files: graphs,
+        imports: importsEdges(parsed, index),
+        offers: links.flatMap((l) => l.offers),
+        requests: links.flatMap((l) => l.requests),
+      };
+    },
+    dispose,
+  };
+}
+
+/** Analyzes the files of a project: one slice with all of them. */
+export function analyzeFiles(
+  parser: Parser,
+  files: SourceFile[],
+): LanguageAnalysis {
+  const slice = openSlice(parser, files);
+  try {
+    return slice.analyze([slice.contribute()]);
   } finally {
-    for (const { tree } of parsed) tree.delete();
+    slice.dispose();
   }
 }
