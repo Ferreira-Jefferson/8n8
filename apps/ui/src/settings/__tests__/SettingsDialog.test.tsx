@@ -204,6 +204,32 @@ describe("SettingsDialog theme button", () => {
   });
 });
 
+describe("SettingsDialog language button", () => {
+  it("shows BR, with no select, and saves English on the click", async () => {
+    saveMock.mockResolvedValue(view({ locale: "en" }));
+    const { onSaved } = open();
+    const btn = screen.getByRole("button", {
+      name: "Idioma: Português (Brasil)",
+    });
+    expect(btn.textContent).toBe("BR");
+    expect(screen.queryByLabelText("Idioma")).toBeNull();
+    fireEvent.click(btn);
+    await waitFor(() =>
+      expect(saveMock).toHaveBeenCalledWith({ locale: "en" }),
+    );
+    expect(onSaved).toHaveBeenCalledWith(view({ locale: "en" }));
+  });
+
+  it("goes from EN back to BR", async () => {
+    saveMock.mockResolvedValue(view());
+    open(view({ locale: "en" }));
+    fireEvent.click(screen.getByRole("button", { name: /Idioma: English/ }));
+    await waitFor(() =>
+      expect(saveMock).toHaveBeenCalledWith({ locale: "pt-BR" }),
+    );
+  });
+});
+
 describe("SettingsDialog with the environment (CFG-22)", () => {
   it("disables each field a variable sets and names the variable", () => {
     open(

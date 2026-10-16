@@ -31,7 +31,7 @@ export const en: Record<MessageKey, string> = {
   "settings.theme.system": "Follow the system",
   "settings.theme.light": "Light",
   "settings.theme.dark": "Dark",
-  "settings.locale": "Language",
+  "settings.localeNow": "Language: {name}",
   "app.home": "Home",
   "app.mapFailed": "Could not generate the map.",
   "app.folderNotFound": "Folder not found: {path}",

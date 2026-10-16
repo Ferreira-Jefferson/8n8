@@ -39,6 +39,13 @@ const LOCALE_LABELS: Record<Locale, string> = {
   en: "English",
 };
 
+/** The short code on the language button. */
+const LOCALE_CODES: Record<Locale, string> = { "pt-BR": "BR", en: "EN" };
+
+/** Each click moves to the next language, back to the first after the last. */
+const nextLocale = (locale: Locale): Locale =>
+  LOCALES[(LOCALES.indexOf(locale) + 1) % LOCALES.length] ?? "pt-BR";
+
 /** Each click moves to the next theme, back to the first after the last. */
 const nextTheme = (theme: Theme): Theme =>
   THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length] ?? "system";
@@ -171,19 +178,36 @@ export function SettingsDialog({
       >
         <div className="settings-head">
           <h2 id={titleId}>{t("settings.title")}</h2>
-          {theme && (
-            <button
-              type="button"
-              className="btn-ghost theme-btn"
-              aria-label={t("settings.theme", {
-                name: t(THEME_LABELS[theme]),
-              })}
-              title={t("settings.theme", { name: t(THEME_LABELS[theme]) })}
-              onClick={() => switchTheme(theme)}
-            >
-              <ThemeIcon theme={theme} />
-            </button>
-          )}
+          <div className="head-btns">
+            {settings && (
+              <button
+                type="button"
+                className="btn-ghost head-btn locale-btn"
+                aria-label={t("settings.localeNow", {
+                  name: LOCALE_LABELS[settings.locale],
+                })}
+                title={t("settings.localeNow", {
+                  name: LOCALE_LABELS[settings.locale],
+                })}
+                onClick={() => switchLocale(nextLocale(settings.locale))}
+              >
+                {LOCALE_CODES[settings.locale]}
+              </button>
+            )}
+            {theme && (
+              <button
+                type="button"
+                className="btn-ghost head-btn"
+                aria-label={t("settings.theme", {
+                  name: t(THEME_LABELS[theme]),
+                })}
+                title={t("settings.theme", { name: t(THEME_LABELS[theme]) })}
+                onClick={() => switchTheme(theme)}
+              >
+                <ThemeIcon theme={theme} />
+              </button>
+            )}
+          </div>
         </div>
         {!settings || !form ? (
           <p>{t("settings.unreadable")}</p>
@@ -194,19 +218,6 @@ export function SettingsDialog({
               save(patchOf(formOf(settings), form));
             }}
           >
-            <label>
-              {t("settings.locale")}
-              <select
-                value={settings.locale}
-                onChange={(e) => switchLocale(e.target.value as Locale)}
-              >
-                {LOCALES.map((l) => (
-                  <option key={l} value={l}>
-                    {LOCALE_LABELS[l]}
-                  </option>
-                ))}
-              </select>
-            </label>
             <label>
               {t("settings.provider")}
               <select

@@ -30,7 +30,7 @@ export const ptBR = {
   "settings.theme.system": "Seguir o sistema",
   "settings.theme.light": "Claro",
   "settings.theme.dark": "Escuro",
-  "settings.locale": "Idioma",
+  "settings.localeNow": "Idioma: {name}",
   "app.home": "Início",
   "app.mapFailed": "Não foi possível gerar o mapa.",
   "app.folderNotFound": "Pasta não encontrada: {path}",

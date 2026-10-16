@@ -1780,13 +1780,22 @@ body {
   font: 400 30px var(--font-display);
 }
 
-.theme-btn {
+.head-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.head-btn {
   width: 44px;
   height: 44px;
   padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.locale-btn {
+  font: 700 16px var(--font-sans);
 }
 
 .settings-dialog form {
