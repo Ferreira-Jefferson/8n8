@@ -288,7 +288,7 @@ Todos os comandos rodam na raiz do repositório.
 | `packages/server` | O núcleo: as rotas da API, montadas por `createCore`. |
 | `e2e` | Testes de ponta a ponta com Playwright. |
 | `scripts` | `dev.mjs` (o `pnpm dev`), `open.mjs` (o `pnpm open`) e `prints-readme.mjs` (o `pnpm prints`). |
-| `docs` | Guias (`guias`), regras de idioma (`idioma`), manual e guia visual da marca (`marca`) e as imagens do README (`imagens`). |
+| `docs` | Guias (`guides`), regras de texto (`writing-rules`), manual da marca e guia visual (`design`), todas as imagens (`images`) e o projeto de exemplo (`sample-project`). |
 | `release` | Os pacotes gerados (`.tgz` e `.vsix`). O git ignora o conteúdo. |
 
 ### Como contribuir

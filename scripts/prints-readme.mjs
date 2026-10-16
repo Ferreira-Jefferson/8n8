@@ -69,8 +69,8 @@ async function novaPagina(browser, tema) {
   return { ctx, page };
 }
 
-const shot = (page, nome, tema, pasta = out) =>
-  page.screenshot({ path: join(pasta, `${nome}-${tema}.png`) });
+const shot = (page, nome, tema) =>
+  page.screenshot({ path: join(out, `${nome}-${tema}.png`) });
 
 /** A tela inicial vem antes de abrir qualquer pasta: o histórico (Recentes) tem de estar vazio. */
 async function inicio(browser, tema) {
@@ -114,7 +114,7 @@ async function telaDoGuia(browser, tema) {
   await page.locator("nav.breadcrumb").getByText("Process order").click();
   await page.getByRole("button", { name: "Expandir painel" }).click();
   await page.waitForTimeout(1500);
-  await shot(page, "tela", tema, join(root, "docs", "design"));
+  await shot(page, "tela", tema);
   if (tema === "dark") {
     const alvos = {
       1: ".logo-link",
@@ -163,7 +163,7 @@ async function etiquetaDoGuia(browser, tema) {
   });
   await page.mouse.move(ponto.x, ponto.y);
   await page.waitForTimeout(600);
-  await shot(page, "etiqueta", tema, join(root, "docs", "design"));
+  await shot(page, "etiqueta", tema);
   await ctx.close();
 }
 

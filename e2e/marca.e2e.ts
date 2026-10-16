@@ -82,7 +82,7 @@ test.describe("dark theme", () => {
   }) => {
     await page.goto("/");
     expect(await css(page.locator("body"), "background-color")).toBe(GROUND);
-    const map = page.getByRole("button", { name: "Mapear pasta" });
+    const map = page.getByRole("button", { name: "Buscar no PC" });
     expect(await css(map, "background-color")).toBe(MAIN);
 
     await generate(page, OFFLINE, VIDEO);
@@ -101,7 +101,7 @@ test.describe("light theme", () => {
     const body = page.locator("body");
     expect(await css(body, "background-color")).toBe(PAPEL);
     expect(await css(body, "color")).toBe(TINTA);
-    const map = page.getByRole("button", { name: "Mapear pasta" });
+    const map = page.getByRole("button", { name: "Buscar no PC" });
     expect(await css(map, "background-color")).toBe(PETROLEO_ESCURO);
     expect(await css(map, "color")).toBe(PAPEL);
   });

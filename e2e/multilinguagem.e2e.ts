@@ -157,6 +157,25 @@ test.describe("Multilinguagem", () => {
     await expect(page.locator(".snippet-language")).toHaveCount(0);
   });
 
+  test("the breadcrumb never runs under the New code button, with the panel open on a narrow screen", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.goto("/");
+    await page.getByRole("button", { name: /Colar trecho/ }).click();
+    await page.getByLabel("Trecho de código").fill(PY_SNIPPET);
+    await page.getByRole("button", { name: "Gerar mapa" }).click();
+    await page
+      .locator('[aria-roledescription="node"]')
+      .first()
+      .dispatchEvent("click");
+
+    const crumb = await page.locator("nav.breadcrumb").boundingBox();
+    const button = await page.locator(".new-code").boundingBox();
+    if (!crumb || !button) throw new Error("breadcrumb or button missing");
+    expect(crumb.x + crumb.width).toBeLessThanOrEqual(button.x);
+  });
+
   test("an uncertain language shows no warning in the corner", async ({
     page,
   }) => {
