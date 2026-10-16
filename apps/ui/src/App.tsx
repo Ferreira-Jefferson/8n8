@@ -437,6 +437,11 @@ export function App({ initialFolder = null }: AppProps) {
     setSuggestions((prev) => new Map(prev).set(id, list));
   }, []);
 
+  const select = useCallback((id: NodeId) => {
+    setMark(undefined);
+    dispatch({ type: "select", id });
+  }, []);
+
   const graph = mapped ? graphOf(mapped) : null;
   const levelId = nav.path.at(-1)?.id ?? null;
   const level = useMemo(
@@ -652,10 +657,7 @@ export function App({ initialFolder = null }: AppProps) {
           suggestions={suggestions}
           focusId={focusId}
           centerOn={center}
-          onSelect={(id) => {
-            setMark(undefined);
-            dispatch({ type: "select", id });
-          }}
+          onSelect={select}
           onOpen={(node) => {
             setFocusId(null);
             setMark(undefined);

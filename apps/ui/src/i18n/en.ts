@@ -113,6 +113,8 @@ export const en: Record<MessageKey, string> = {
   "label.module": "Loose code",
   "step.back": "Previous level",
   "step.backTitle": "Back",
+  "step.inspect": "Show node details",
+  "step.inspectTitle": "See code and explanation, without entering",
   "step.syntaxError": "Syntax error on line {line}",
   "panel.aria": "Node detail",
   "panel.folder": "Folder: {path}",

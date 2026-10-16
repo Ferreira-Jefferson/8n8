@@ -27,6 +27,8 @@ export interface StepNodeData extends Record<string, unknown> {
   suggestionsOpen?: boolean | undefined;
   /** A click on the suggestion badge, with the badge, to place the balloon on it. */
   onSuggestions?: ((badge: HTMLElement) => void) | undefined;
+  /** A card that opens: the button that shows its panel without entering it. */
+  onInspect?: (() => void) | undefined;
   /** The open node, drawn as the parent of its level: it never opens again. */
   isHub?: boolean;
   /** How many nodes its level shows, as a number on the card: on the hub and on the cards that open into a sized level. */
@@ -49,7 +51,7 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
     data.isHub ? "hub" : "",
     data.childCount !== undefined ? "has-count" : "",
   ].filter(Boolean);
-  const { onBack, onSuggestions } = data;
+  const { onBack, onSuggestions, onInspect } = data;
   return (
     <div
       className={classes.join(" ")}
@@ -103,6 +105,23 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
         <span className="step-error">
           {t("step.syntaxError", { line: node.syntaxError.line })}
         </span>
+      )}
+      {onInspect && data.openable && !data.isHub && (
+        <button
+          type="button"
+          className="step-inspect nodrag nopan"
+          title={t("step.inspectTitle")}
+          aria-label={t("step.inspect")}
+          onClick={(e) => {
+            e.stopPropagation();
+            onInspect();
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <path d="M14 4v16" />
+          </svg>
+        </button>
       )}
       {suggestionCount ? (
         <button

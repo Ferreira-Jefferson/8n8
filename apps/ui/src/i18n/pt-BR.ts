@@ -112,6 +112,8 @@ export const ptBR = {
   "label.module": "Código solto",
   "step.back": "Nível anterior",
   "step.backTitle": "Voltar",
+  "step.inspect": "Ver detalhes do nó",
+  "step.inspectTitle": "Ver código e explicação, sem entrar",
   "step.syntaxError": "Erro de sintaxe na linha {line}",
   "panel.aria": "Detalhe do nó",
   "panel.folder": "Pasta: {path}",

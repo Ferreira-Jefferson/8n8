@@ -563,6 +563,7 @@ export function FlowCanvas({
           suggestionCount: byNode.get(n.id)?.length,
           suggestionsOpen: n.id === popId,
           onSuggestions: (badge: HTMLElement) => toggleSuggestions(n.id, badge),
+          onInspect: () => onSelect(n.id),
           ...(n === hub?.node
             ? {
                 isHub: true,
@@ -593,6 +594,7 @@ export function FlowCanvas({
     size,
     levelMoved,
     onBack,
+    onSelect,
     t,
   ]);
 

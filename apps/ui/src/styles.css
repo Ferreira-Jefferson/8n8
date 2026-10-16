@@ -727,6 +727,39 @@ body {
   text-align: center;
 }
 
+/* Shows the panel of a card that opens, without entering it. */
+.node .step-inspect {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  width: 30px;
+  height: 26px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--main);
+  border-radius: 5px;
+  background: var(--ground);
+  color: var(--main);
+  cursor: pointer;
+}
+
+.node .step-inspect svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.node .step-inspect:hover,
+.node .step-inspect:focus-visible {
+  background: var(--main);
+  color: var(--ground);
+}
+
 .node.has-count .step-badge {
   right: 56px;
 }

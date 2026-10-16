@@ -211,6 +211,18 @@ describe("StepNode badges (CORE-06, CORE-23)", () => {
     expect(onSuggestions).toHaveBeenCalledWith(badge);
   });
 
+  it("shows the inspect button only on a card that opens, and calls onInspect", () => {
+    const onInspect = vi.fn();
+    const { unmount } = renderStep(node(), { openable: true, onInspect });
+    fireEvent.click(screen.getByRole("button", { name: "Ver detalhes do nó" }));
+    expect(onInspect).toHaveBeenCalledTimes(1);
+    unmount();
+    renderStep(node(), { openable: false, onInspect });
+    expect(
+      screen.queryByRole("button", { name: "Ver detalhes do nó" }),
+    ).toBeNull();
+  });
+
   it("shows no badge when the count is 0", () => {
     const { container } = renderStep(node(), { suggestionCount: 0 });
     expect(container.querySelector(".step-badge")).toBeNull();
