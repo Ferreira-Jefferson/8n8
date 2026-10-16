@@ -1,10 +1,12 @@
 import {
+  buildChatPrompt,
   buildReviewerPrompt,
   buildStepSummaryPrompt,
   buildSuggestionsPrompt,
   buildSummaryPrompt,
   buildTitlePrompt,
   buildTitleReviewerPrompt,
+  chatNode,
   createSuggestionsCache,
   createSummaryCache,
   createTitleCache,
@@ -21,6 +23,8 @@ import { typescriptPlugin } from "@8n8/lang-typescript";
 import { linkProject } from "@8n8/links";
 import { resolveLlmConfig } from "@8n8/llm";
 import {
+  type ChatRequest,
+  type ChatResponse,
   DEFAULT_LOCALE,
   type ExplainPart,
   type ExplainRequest,
@@ -119,6 +123,27 @@ export function composeExplain(
     return part === "summary"
       ? summarizeNode(req, explainDeps, options)
       : suggestNode(req, explainDeps, options);
+  };
+}
+
+/** Wires chatNode with the current client, model and prompt of the language of the system and of the code (no cache: a conversation is not worth keeping). */
+export function composeChat(
+  deps: ComposeDeps,
+): (req: ChatRequest) => Promise<ChatResponse> {
+  const promptOf = memo((key) => {
+    const [locale, id] = key.split("|") as [Locale, string];
+    const plugin = deps.plugins.find((p) => p.id === id);
+    return (
+      plugin &&
+      buildChatPrompt(rulesOf(deps, locale), promptLanguageOf(plugin), locale)
+    );
+  });
+  return async (req) => {
+    const locale = (await deps.locale?.()) ?? DEFAULT_LOCALE;
+    const prompt = promptOf(`${locale}|${req.language}`);
+    if (!prompt) return noPrompt(req.language, locale);
+    const { client, config } = await deps.llm();
+    return chatNode(req, { llm: client, model: config.model, prompt, locale });
   };
 }
 
@@ -305,6 +330,7 @@ export function createCore(options: CoreOptions): Hono {
     plugins: languagePlugins,
     explain: composeExplain(options.env, compose),
     titles: composeTitles(options.env, compose),
+    chat: composeChat(compose),
     readProject: composeReadProject(readSourceFolder, languagePlugins),
     pick: createPicker(),
     history:

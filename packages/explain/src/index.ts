@@ -1,5 +1,8 @@
 export type { CacheEntry, PartCache } from "./cache";
 export { createSuggestionsCache, createSummaryCache } from "./cache";
+export type { ChatDeps } from "./chat";
+export { chatNode, clampReply } from "./chat";
+export { buildChatPrompt, chatContextText } from "./chat-prompt";
 export type { ExplainDeps, ExplainOptions } from "./explain";
 export { suggestNode, summarizeNode } from "./explain";
 export type { PromptLanguage } from "./language";

@@ -5,6 +5,18 @@ export type {
   SnippetLanguage,
 } from "./api";
 export type {
+  ChatContext,
+  ChatRequest,
+  ChatResponse,
+  ChatTurn,
+} from "./chat";
+export {
+  CHAT_MAX_CHARS,
+  CHAT_MAX_QUESTION_CHARS,
+  CHAT_MAX_TURN_CHARS,
+  CHAT_MAX_TURNS,
+} from "./chat";
+export type {
   Claim,
   ClaimId,
   ExplainKind,

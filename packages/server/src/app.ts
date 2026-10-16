@@ -1,4 +1,9 @@
 import {
+  CHAT_MAX_QUESTION_CHARS,
+  CHAT_MAX_TURN_CHARS,
+  CHAT_MAX_TURNS,
+  type ChatRequest,
+  type ChatResponse,
   DEFAULT_LOCALE,
   type ExplainPart,
   type ExplainRequest,
@@ -39,6 +44,8 @@ export interface AppDeps {
     options: { cachedOnly: boolean },
   ) => Promise<ExplainResponse<unknown>>;
   titles: (req: TitleRequest) => Promise<TitlesResponse>;
+  /** One question about a node and its parent; absent in tests that do not need it. */
+  chat?: ((req: ChatRequest) => Promise<ChatResponse>) | undefined;
   /** `include`: files over 1 MB the person put on the map (CLEAN-06). */
   readProject: (path: string, include?: string[]) => Promise<ProjectRead>;
   port: number;
@@ -91,6 +98,24 @@ const explainBody = z.object({
   nodeId: z.string(),
   cachedOnly,
 });
+const chatTail = {
+  nodeId: z.string(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().max(CHAT_MAX_TURN_CHARS),
+      }),
+    )
+    .max(CHAT_MAX_TURNS),
+  question: z.string().trim().min(1).max(CHAT_MAX_QUESTION_CHARS),
+};
+const projectChatBody = z.object({
+  root: z.string().min(1),
+  include,
+  ...chatTail,
+});
+const chatBody = z.object({ source: z.string(), ...chatTail });
 const nodeIds = z.array(z.string()).max(200);
 const projectTitlesBody = z.object({
   root: z.string().min(1),
@@ -421,6 +446,65 @@ export function createApp(deps: AppDeps): Hono {
   };
   app.post("/api/summary", explainRoute("summary"));
   app.post("/api/suggestions", explainRoute("suggestions"));
+
+  /** A question about a node and its parent: the server builds the context from its own graph, like the explain routes. */
+  app.post("/api/chat", async (c) => {
+    if (!deps.chat) return c.json({ error: "chat unavailable" }, 404);
+    const raw = await c.req.json().catch(() => null);
+    const project = projectChatBody.safeParse(raw);
+    const snippet = chatBody.safeParse(raw);
+    const body = project.success
+      ? project.data
+      : snippet.success
+        ? snippet.data
+        : null;
+    if (!body) return c.json({ error: "invalid body" }, 400);
+
+    let request: ChatRequest;
+    try {
+      const origin = await loadOrigin(
+        "root" in body
+          ? { root: body.root, include: body.include }
+          : { source: body.source },
+        deps,
+      );
+      if ("notFound" in origin) {
+        return c.json({ error: "not-found", path: origin.notFound }, 404);
+      }
+      const { graph, codeOf, nameOf, pluginOf } = origin;
+      const node = graph.nodes.find((n) => n.id === body.nodeId);
+      if (!node) return c.json({ error: "unknown node" }, 404);
+      if (node.kind === "folder") {
+        return c.json({ error: "node has no explanation" }, 400);
+      }
+      const parent = graph.nodes.find((n) => n.id === node.parentId);
+      request = {
+        language: pluginOf(node).id,
+        nodeName: nameOf(node, node),
+        nodeKind: node.kind,
+        code: codeOf(node).code,
+        range: node.range,
+        ...(parent && parent.kind !== "folder"
+          ? {
+              parent: {
+                name: nameOf(parent, node),
+                kind: parent.kind,
+                code: codeOf(parent).code,
+                range: parent.range,
+              },
+            }
+          : {}),
+        ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+        history: body.history,
+        question: body.question,
+      };
+    } catch (err) {
+      return extractFailed(c, err);
+    }
+
+    const result = await deps.chat(request);
+    return c.json(result, result.status === "error" ? 502 : 200);
+  });
 
   // The key goes in through PUT and never comes back: the view says only whether one exists (CFG-12, CFG-13).
   app.get("/api/settings", async (c) => {

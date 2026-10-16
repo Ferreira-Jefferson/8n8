@@ -79,6 +79,8 @@ async function clickAndExplain(
       (r.request().postDataJSON() as { nodeId: string }).nodeId === explained,
   );
   await clickCard(page, card);
+  // The tests read the summary tab; the tab stays across nodes.
+  await panel(page).getByRole("tab", { name: "Resumo" }).click();
   return (await response).json();
 }
 

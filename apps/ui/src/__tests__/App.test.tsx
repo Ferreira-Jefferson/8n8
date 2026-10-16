@@ -260,10 +260,13 @@ describe("App", () => {
     expect(
       await screen.findByText("Configure um provedor de LLM em Configurações."),
     ).toBeTruthy();
-    const list = screen.getByRole("list", { name: "Efeitos externos" });
+    const list = screen.getByRole("list", {
+      name: "Efeitos externos",
+      hidden: true,
+    });
     expect(
       within(list)
-        .getAllByRole("listitem")
+        .getAllByRole("listitem", { hidden: true })
         .map((li) => li.textContent),
     ).toEqual(["requests.get (HTTP, linha 5)"]);
   });
@@ -496,6 +499,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     ).toBeTruthy();
     expect(
       screen.getByRole("heading", {
+        hidden: true,
         name: "CÓDIGO · frete/calculo.py, linhas 1 a 4",
       }),
     ).toBeTruthy();
@@ -907,7 +911,9 @@ describe("App, titles, code lines and suggestion cards (VID-14, VID-33)", () => 
     expect(
       screen.getByRole("heading", { level: 2, name: "Processar pedido" }),
     ).toBeTruthy();
-    fireEvent.click(await screen.findByRole("button", { name: "L6" }));
+    fireEvent.click(
+      await screen.findByRole("button", { name: "L6", hidden: true }),
+    );
     expect(marked()).toEqual(["6"]);
     act(() => currentCanvas().onSuggestion(P, 13));
     expect(marked()).toEqual(["13"]);
@@ -1181,6 +1187,7 @@ describe("App, languages from the server (7.1, 7.2)", () => {
     act(() => currentCanvas().onSelect("fn:calcular_frete"));
     expect(
       await screen.findByRole("heading", {
+        hidden: true,
         name: "CÓDIGO · trecho.ts, linhas 1 a 2",
       }),
     ).toBeTruthy();
@@ -1194,6 +1201,7 @@ describe("App, languages from the server (7.1, 7.2)", () => {
     act(() => currentCanvas().onSelect("fn:calcular_frete"));
     expect(
       await screen.findByRole("heading", {
+        hidden: true,
         name: "CÓDIGO · trecho, linhas 1 a 2",
       }),
     ).toBeTruthy();
@@ -1268,7 +1276,10 @@ describe("App settings (CFG-08, CFG-20)", () => {
     await screen.findByTestId("canvas");
     act(() => currentCanvas().onSelect("fn:calcular_frete"));
     fireEvent.click(
-      await screen.findByRole("button", { name: "Abrir configurações" }),
+      await screen.findByRole("button", {
+        name: "Abrir configurações",
+        hidden: true,
+      }),
     );
     expect(
       await screen.findByRole("dialog", { name: "Configurações" }),

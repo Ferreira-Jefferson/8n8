@@ -1,13 +1,23 @@
 import type { ExternalEffect, FlowNode, Suggestion, Summary } from "@8n8/model";
 import {
   cleanup,
+  configure,
   fireEvent,
   render,
   screen,
   waitFor,
   within,
 } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import {
   fetchSuggestions,
   fetchSummary,
@@ -27,6 +37,9 @@ const suggestMock = vi.mocked(fetchSuggestions);
 /** Both parts asked as soon as the node is selected: the behaviour before CFG-06. */
 const AUTO = { summary: true, suggestions: true };
 afterEach(cleanup);
+// The parts live in tabs and the others stay in the DOM, hidden: these tests read the content, the tab tests below read what shows.
+beforeAll(() => configure({ defaultHidden: true }));
+afterAll(() => configure({ defaultHidden: false }));
 
 const source = [
   "import requests",
@@ -307,7 +320,7 @@ describe("DetailPanel", () => {
     );
   });
 
-  it("shows Resumo indisponível with Tentar de novo, and retrying shows the summary (CORE-20)", async () => {
+  it("shows Resumo indisponível with the Gerar resumo button, and retrying shows the summary (CORE-20)", async () => {
     fetchMock
       .mockResolvedValueOnce({ status: "error", message: "HTTP 502" })
       .mockResolvedValueOnce(ok);
@@ -322,10 +335,11 @@ describe("DetailPanel", () => {
       />,
     );
     expect(await screen.findByText("Resumo indisponível")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Gerar resumo" }));
+    // The button runs the shortcut in the chat: the summary shows there and in its tab.
     expect(
-      await screen.findByText("Calcula o frete pelo peso e pela distância."),
-    ).toBeTruthy();
+      await screen.findAllByText("Calcula o frete pelo peso e pela distância."),
+    ).toHaveLength(2);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(screen.queryByText("Resumo indisponível")).toBeNull();
   });
@@ -478,7 +492,7 @@ describe("DetailPanel", () => {
     expect(screen.queryByRole("status")).toBeNull();
   });
 
-  it("shows the unfaithful message with Tentar de novo, which fetches again (FID-10)", async () => {
+  it("shows the unfaithful message with the Gerar resumo button, which fetches again (FID-10)", async () => {
     fetchMock
       .mockResolvedValueOnce({ status: "unfaithful" })
       .mockResolvedValueOnce(ok);
@@ -495,8 +509,10 @@ describe("DetailPanel", () => {
     expect(
       await screen.findByText("Não foi possível gerar um resumo fiel."),
     ).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
-    expect(await screen.findByRole("list", { name: "Resumo" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Gerar resumo" }));
+    expect(
+      (await screen.findAllByRole("list", { name: "Resumo" })).length,
+    ).toBeGreaterThan(0);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(
       screen.queryByText("Não foi possível gerar um resumo fiel."),
@@ -675,18 +691,18 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
     );
   }
 
-  it("orders a step's panel: title, eyebrow, badge, summary, rules, code, input and output", async () => {
+  it("orders a step's panel: title, code, eyebrow, badge, summary, rules, input and output", async () => {
     const { container } = renderStep(stepOk);
     await screen.findByRole("list", { name: "Resumo" });
     const aside = screen.getByRole("complementary", { name: "Detalhe do nó" });
     const parts = [
       screen.getByRole("heading", { level: 2, name: "Buscar UF pelo CEP" }),
+      screen.getByRole("heading", { name: "CÓDIGO · trecho, linha 5" }),
+      container.querySelector("pre"),
       screen.getByText("O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO"),
       screen.getByText("Revisado"),
       screen.getByRole("list", { name: "Resumo" }),
       screen.getByText("2 frases · voz ativa · um termo por conceito"),
-      screen.getByRole("heading", { name: "CÓDIGO · trecho, linha 5" }),
-      container.querySelector("pre"),
       screen.getByRole("heading", { name: "ENTRADA E SAÍDA" }),
       screen.getByLabelText("Entrada e saída"),
     ];
@@ -753,7 +769,7 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
         .getAllByRole("listitem")
         .map((li) => li.textContent),
     ).toEqual(["open (DISCO, linha 6)", "enviar_email (E-MAIL, linha 7)"]);
-    expect(screen.getByRole("heading", { name: "Sugestões" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /^Sugestões/ })).toBeTruthy();
   });
 
   it("shows the provisional name without a title (VID-15)", () => {
@@ -959,14 +975,20 @@ describe("DetailPanel on demand (CFG-06..11)", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Gerar resumo" }),
     );
-    expect(await screen.findByText("Gerando resumo…")).toBeTruthy();
+    // The button runs the shortcut in the chat: the loading shows there and in the tab.
+    expect(await screen.findAllByText("Gerando resumo…")).toHaveLength(2);
+    expect(
+      screen.getByRole("tab", { name: "Conversa", selected: true }),
+    ).toBeTruthy();
     expect(fetchMock).toHaveBeenLastCalledWith(
       { source },
       "fn:calcular_frete",
       false,
     );
     answer(ok);
-    expect(await screen.findByRole("list", { name: "Resumo" })).toBeTruthy();
+    expect(await screen.findAllByRole("list", { name: "Resumo" })).toHaveLength(
+      2,
+    );
     expect(suggestMock).toHaveBeenCalledTimes(1);
     expect(
       screen.getByRole("button", { name: "Pedir sugestões" }),
@@ -988,13 +1010,13 @@ describe("DetailPanel on demand (CFG-06..11)", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Pedir sugestões" }),
     );
-    expect(await screen.findByText("Pedindo sugestões…")).toBeTruthy();
+    expect(await screen.findAllByText("Pedindo sugestões…")).toHaveLength(2);
     answer(suggestionsOk);
     expect(
-      await screen.findByText(
+      await screen.findAllByText(
         "Defina um timeout na chamada HTTP (linha 5, alta)",
       ),
-    ).toBeTruthy();
+    ).toHaveLength(2);
     expect(suggestMock).toHaveBeenLastCalledWith(
       { source },
       "fn:calcular_frete",
@@ -1063,13 +1085,40 @@ describe("DetailPanel on demand (CFG-06..11)", () => {
       .mockResolvedValueOnce(suggestionsOk);
     render(panel({ auto: AUTO }));
     expect(await screen.findByText("Sugestões indisponíveis")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pedir sugestões" }));
     expect(
-      await screen.findByText(
-        "Defina um timeout na chamada HTTP (linha 5, alta)",
-      ),
-    ).toBeTruthy();
+      (
+        await screen.findAllByText(
+          "Defina um timeout na chamada HTTP (linha 5, alta)",
+        )
+      ).length,
+    ).toBeGreaterThan(0);
     expect(suggestMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps one button for the summary: disabled while it loads, the same one enabled again after a failure", async () => {
+    let fail: (r: SummaryResult) => void = () => {};
+    fetchMock
+      .mockResolvedValueOnce({ status: "not-cached" })
+      .mockReturnValueOnce(
+        new Promise((resolve) => {
+          fail = resolve;
+        }),
+      );
+    suggestMock.mockResolvedValue({ status: "not-cached" });
+    render(panel());
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Gerar resumo" }),
+    );
+    const busy = await screen.findAllByRole("button", {
+      name: "Gerando resumo…",
+    });
+    expect(busy.every((b) => (b as HTMLButtonElement).disabled)).toBe(true);
+    fail({ status: "error", message: "caiu" });
+    expect((await screen.findAllByText("Resumo indisponível")).length).toBe(2);
+    const again = screen.getAllByRole("button", { name: "Gerar resumo" });
+    expect(again.every((b) => !(b as HTMLButtonElement).disabled)).toBe(true);
+    expect(screen.queryByRole("button", { name: "Tentar de novo" })).toBeNull();
   });
 
   it("a click on one node never asks for real on the next one", async () => {
@@ -1087,5 +1136,71 @@ describe("DetailPanel on demand (CFG-06..11)", () => {
       "fn:calcular_frete/s0",
       true,
     );
+  });
+});
+
+describe("DetailPanel tabs", () => {
+  // Here the hidden panels stay hidden, as for the user.
+  beforeAll(() => configure({ defaultHidden: false }));
+  afterAll(() => configure({ defaultHidden: true }));
+
+  const renderFn = () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
+    suggestMock.mockResolvedValue({ status: "no-key" });
+    render(
+      <DetailPanel
+        source={source}
+        origin={{ source }}
+        node={fnNode}
+        effects={[]}
+        auto={AUTO}
+        onSuggestions={() => {}}
+      />,
+    );
+  };
+
+  it("starts on the code and shows one part at a time", async () => {
+    renderFn();
+    const code = screen.getByRole("tab", { name: "Código" });
+    expect(code.getAttribute("aria-selected")).toBe("true");
+    expect(
+      screen.queryByRole("heading", { name: "Efeitos externos" }),
+    ).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "Resumo" }));
+    expect(screen.queryByRole("heading", { name: /^CÓDIGO/ })).toBeNull();
+    expect(code.getAttribute("aria-selected")).toBe("false");
+  });
+
+  it("keeps the tab when another node opens, so summaries can be read one after the other", () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
+    suggestMock.mockResolvedValue({ status: "no-key" });
+    const props = {
+      source,
+      origin: { source },
+      effects: [],
+      auto: AUTO,
+      onSuggestions: () => {},
+    };
+    const { rerender } = render(<DetailPanel {...props} node={fnNode} />);
+    fireEvent.click(screen.getByRole("tab", { name: "Resumo" }));
+    rerender(<DetailPanel {...props} node={{ ...fnNode, id: "fn:outra" }} />);
+    expect(
+      screen.getByRole("tab", { name: "Resumo" }).getAttribute("aria-selected"),
+    ).toBe("true");
+  });
+
+  it("moves between the tabs with the arrow keys", () => {
+    renderFn();
+    const code = screen.getByRole("tab", { name: "Código" });
+    fireEvent.keyDown(code, { key: "ArrowRight" });
+    expect(
+      screen
+        .getByRole("tab", { name: "Conversa" })
+        .getAttribute("aria-selected"),
+    ).toBe("true");
+    fireEvent.keyDown(screen.getByRole("tab", { name: "Conversa" }), {
+      key: "ArrowLeft",
+    });
+    expect(code.getAttribute("aria-selected")).toBe("true");
   });
 });

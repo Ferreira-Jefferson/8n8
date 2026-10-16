@@ -9,6 +9,7 @@ import {
   freshReal,
   generate,
   MAIN_FLOW,
+  openTab,
   PEDIDO,
   panel,
   REAL,
@@ -35,9 +36,9 @@ const ioLine = (view: Locator) =>
     for (const b of copy.querySelectorAll("button")) b.remove();
     return copy.textContent?.replace(/\s+/g, " ").trim();
   });
-/** The panel's sections in DOM order: tag, class and text (VID-29). */
-const sections = (view: Locator) =>
-  view.evaluate((el) =>
+/** The parts of one tab of the panel in DOM order: tag, class and text (VID-29). */
+const sections = (view: Locator, tab: string) =>
+  view.locator(`#panel-${tab}`).evaluate((el) =>
     [...el.children].map((c) => {
       const tag = c.tagName.toLowerCase();
       if (tag === "ol") return "ol:Resumo";
@@ -60,6 +61,7 @@ async function openFrete(page: Page): Promise<void> {
 /** Selects a step and waits for its summary. */
 async function showStep(page: Page, id: string, first: string) {
   await clickCard(page, id);
+  await openTab(page, "Resumo");
   await expect(summary(panel(page)).first()).toHaveText(first);
 }
 
@@ -115,17 +117,28 @@ test("VID-29: the step panel follows the video order; the rules line shows on st
   await showStep(page, HTTP, "A função consulta uma API externa com o CEP.");
   const view = panel(page);
   await expect(view.getByLabel("Entrada e saída")).toBeVisible();
-  expect(await sections(view)).toEqual([
-    "h2:Buscar UF pelo CEP",
+  await expect(view.getByRole("heading", { level: 2 })).toHaveText(
+    "Buscar UF pelo CEP",
+  );
+  // The code is the first tab: it is the one part that always exists.
+  await expect(view.getByRole("tab")).toHaveText([
+    "Código",
+    "Conversa",
+    "Resumo",
+    /^Sugestões/,
+  ]);
+  expect(await sections(view, "summary")).toEqual([
     "p:O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO",
     "span:review-badge",
     "ol:Resumo",
     "p:2 frases · voz ativa · um termo por conceito",
-    "h3:CÓDIGO · trecho.py, linha 18",
-    "pre:code",
     "h3:ENTRADA E SAÍDA",
     "section:Entrada e saída",
-    "section:null",
+  ]);
+  await openTab(page, "Código");
+  expect(await sections(view, "code")).toEqual([
+    "h3:CÓDIGO · trecho.py, linha 18",
+    "pre:code",
   ]);
   const code = view.locator("pre .code-line");
   await expect(code).toHaveCount(1);
@@ -140,24 +153,23 @@ test("VID-29: the step panel follows the video order; the rules line shows on st
   await expect(view.getByRole("heading", { level: 2 })).toHaveText(
     "Calcular frete",
   );
+  await expect(
+    view.getByText("CÓDIGO · trecho.py, linhas 17 a 23", { exact: true }),
+  ).toHaveCount(1);
+  await openTab(page, "Resumo");
   await expect(summary(view).first()).toHaveText(
     "A função busca a UF com `requests.get`.",
   );
   await expect(
     view.getByText("2 frases · voz ativa · um termo por conceito"),
   ).toHaveCount(0);
-  await expect(
-    view.getByText("CÓDIGO · trecho.py, linhas 17 a 23", { exact: true }),
-  ).toHaveCount(1);
-  const order = await sections(view);
-  expect(order.slice(0, 5)).toEqual([
-    "h2:Calcular frete",
+  const order = await sections(view, "summary");
+  expect(order.slice(0, 3)).toEqual([
     "p:O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO",
     "span:review-badge",
     "ol:Resumo",
-    "h3:CÓDIGO · trecho.py, linhas 17 a 23",
   ]);
-  expect(order.indexOf("h3:ENTRADA E SAÍDA")).toBe(6);
+  expect(order.indexOf("h3:ENTRADA E SAÍDA")).toBe(3);
 });
 
 test("VID-30: inputs → outputs in DM Mono; a RETORNO with neither omits the section", async ({
@@ -175,6 +187,7 @@ test("VID-30: inputs → outputs in DM Mono; a RETORNO with neither omits the se
   );
 
   await showStep(page, PESADA, "Retorna o valor da tabela pesada para a `uf`.");
+  await openTab(page, "Código");
   await expect(
     view.getByText("CÓDIGO · trecho.py, linha 21", { exact: true }),
   ).toHaveCount(1);

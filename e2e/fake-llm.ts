@@ -26,7 +26,9 @@ export interface FakeCall {
     | "suggest"
     | "suggest-review"
     | "title"
-    | "title-review";
+    | "title-review"
+    /** The chat of a node (a question and its answer). */
+    | "chat";
   model: string;
   messages: Message[];
 }
@@ -445,10 +447,19 @@ function verdicts(user: string, scenario: Scenario): string {
   });
 }
 
+/** The chat answer, scripted by a word of the question; "falha" gets the 500 of an unscripted call. */
+function chatReply(question: string): string | undefined {
+  if (question.includes("falha")) return undefined;
+  if (question.includes("longo")) return "palavra ".repeat(300);
+  if (question.includes("linha")) return "A chamada de rede fica na linha L18.";
+  return `Resposta sobre: ${question}`;
+}
+
 /** Scripted answer, or undefined for content the script does not know. */
 function answer(call: FakeCall): string | undefined {
   const users = call.messages.filter((m) => m.role === "user");
   const last = users.at(-1)?.content ?? "";
+  if (call.role === "chat") return chatReply(last);
   if (call.role === "title") return titles(last);
   if (call.role === "title-review") return titleVerdicts(last);
   const scenario = SCENARIOS.find((s) =>
@@ -471,6 +482,7 @@ function roleOf(
   user: string | undefined,
 ): FakeCall["role"] {
   const text = system ?? "";
+  if (text.startsWith("Você conversa com quem revisa")) return "chat";
   if (text.startsWith("Você revisa títulos de nós")) return "title-review";
   if (text.startsWith("Você escreve títulos de nós")) return "title";
   if (text.includes('"verdicts"')) {

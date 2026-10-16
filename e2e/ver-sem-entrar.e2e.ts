@@ -116,11 +116,13 @@ test("the inspect button explains a whole file without entering it: summary, eff
     .getByRole("button", { name: "Ver detalhes do nó" })
     .click();
   const view = panel(page);
+  await view.getByRole("tab", { name: "Resumo" }).click();
   await expect(view.getByRole("list", { name: "Resumo" })).toContainText(
     "O arquivo processa um pedido em",
   );
   await expect(view.getByText("Revisado", { exact: true })).toBeVisible();
   await expect(view).toContainText("requests.post");
+  await view.getByRole("tab", { name: /^Sugestões/ }).click();
   await expect(view.getByText("Nenhuma sugestão para este nó.")).toBeVisible();
   // Still on the folder level: the file was not entered.
   await expect(nodeById(page, "file:orders.py")).toBeVisible();

@@ -229,6 +229,7 @@ export interface AppProps {
 const emptyPanelCache = (): PanelCache => ({
   summary: new Map(),
   suggestions: new Map(),
+  chat: new Map(),
 });
 
 export function App({ initialFolder = null }: AppProps) {

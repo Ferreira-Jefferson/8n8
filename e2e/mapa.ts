@@ -72,6 +72,13 @@ export const breadcrumb = (page: Page) =>
 export const panel = (page: Page) =>
   page.getByRole("complementary", { name: "Detalhe do nó" });
 
+/** Opens a tab of the node panel by its name: "Código", "Resumo", "Sugestões" or "Conversa". */
+export async function openTab(page: Page, name: string): Promise<void> {
+  await panel(page)
+    .getByRole("tab", { name: new RegExp(`^${name}`) })
+    .click();
+}
+
 /** Clears the fake log and the REAL server's cache. */
 export async function freshReal(): Promise<void> {
   await resetFake();

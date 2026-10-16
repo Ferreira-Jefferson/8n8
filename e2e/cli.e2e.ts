@@ -221,7 +221,9 @@ test("DIST-09: data lives in <home>/.8n8: an explained node lands in the cache, 
   await clickCard(page, "file:contagem.py");
   await clickCard(page, COUNT_FN);
   // The installed CLI asks for nothing on its own: the summary waits for the click (CFG-06).
-  await page.getByRole("button", { name: "Gerar resumo" }).click();
+  const view = page.getByRole("complementary", { name: "Detalhe do nó" });
+  await view.getByRole("tab", { name: "Resumo" }).click();
+  await view.getByRole("button", { name: "Gerar resumo" }).click();
   const nodesDir = join(home, ".8n8", "cache", "nodes");
   await expect
     .poll(

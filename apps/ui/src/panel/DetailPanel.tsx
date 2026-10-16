@@ -10,7 +10,7 @@ import {
   type Summary,
   type UpdateReason,
 } from "@8n8/model";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, type KeyboardEvent, useEffect, useState } from "react";
 import {
   type ExplainOrigin,
   type ExplainResult,
@@ -21,6 +21,7 @@ import {
 } from "../api";
 import { categoryTag, provisionalLabel, tagLabel } from "../flow/card";
 import { type MessageKey, type Translate, useT } from "../i18n";
+import { type ChatEntry, ChatTab } from "./ChatTab";
 import { CodeView } from "./CodeView";
 import { formatLines } from "./format-lines";
 
@@ -61,6 +62,8 @@ export interface Auto {
 export interface PanelCache {
   summary: Map<NodeId, SummaryResult>;
   suggestions: Map<NodeId, SuggestionsResult>;
+  /** What was talked about each node; absent where the panel is tested without a chat. */
+  chat?: Map<NodeId, ChatEntry[]>;
 }
 
 /** `idle` shows the button at once, while the cache is asked behind it. */
@@ -113,6 +116,18 @@ export function DetailPanel({
   const t = useT();
   const kind = explainKind(node);
   const [highlighted, setHighlighted] = useState<ReadonlySet<number>>();
+  const [tab, setTab] = useState<TabId>("code");
+  // A "Gerar" button of an empty tab runs the shortcut in the chat; the nonce makes a second click run it again.
+  const [command, setCommand] = useState<ChatCommand>();
+  const runInChat = (part: ExplainPart) => {
+    setTab("chat");
+    setCommand({ part, nodeId: node.id, nonce: (command?.nonce ?? 0) + 1 });
+  };
+  // A mark always lands on the code, so the tab follows it.
+  const showLines: Mark = (lines) => {
+    setHighlighted(lines);
+    setTab("code");
+  };
   const target = { source, origin, node, explains: kind !== null };
   const summary = usePart<Summary>(
     "summary",
@@ -128,7 +143,7 @@ export function DetailPanel({
     onSuggestions,
   );
 
-  // A new node starts with no marked lines.
+  // A new node starts with no marked lines; the tab stays, so a reader of summaries keeps reading summaries.
   // biome-ignore lint/correctness/useExhaustiveDependencies: node.id is the trigger, not a value read here
   useEffect(() => {
     setHighlighted(undefined);
@@ -136,61 +151,207 @@ export function DetailPanel({
 
   // Declared after the clearing effect, so a card that also changes the node keeps its mark.
   useEffect(() => {
-    if (mark) setHighlighted(new Set([mark.line]));
+    if (mark) {
+      setHighlighted(new Set([mark.line]));
+      setTab("code");
+    }
   }, [mark]);
 
   const name = title ?? provisionalLabel(node, t);
 
   const io = summary.result.status === "ok" ? summary.result.result : null;
+  const count =
+    suggestions.result.status === "ok" ? suggestions.result.result.length : 0;
+  const tabs: { id: TabId; label: string; count?: number }[] = [
+    { id: "code", label: t("panel.tabCode") },
+    ...(kind !== null
+      ? [{ id: "chat" as const, label: t("panel.tabChat") }]
+      : []),
+    { id: "summary", label: t("panel.tabSummary") },
+    ...(kind !== null
+      ? [{ id: "suggestions" as const, label: t("panel.suggestions"), count }]
+      : []),
+  ];
   return (
     <aside className="panel detail-panel" aria-label={t("panel.aria")}>
       <h2>{name}</h2>
-      {kind !== null && <p className="eyebrow">{t("panel.eyebrow")}</p>}
-      {kind !== null && (
-        <SummaryView
-          result={summary.result}
-          onAsk={summary.ask}
-          onOpenSettings={onOpenSettings}
-          claudeMissing={claudeMissing}
-          onMark={setHighlighted}
-        />
-      )}
-      {kind !== null && explainStyle(kind) === "step" && (
-        <p className="rules">{t("panel.rules")}</p>
-      )}
-      <h3 className="eyebrow">
-        {codeHeading(filePath ?? snippetFile ?? t("snippet.file"), node, t)}
-      </h3>
-      <CodeView
-        code={nodeCode(source, node)}
-        start={node.range.start}
-        highlightedLines={highlighted}
+      <Tabs
+        tabs={tabs}
+        current={tab}
+        onChange={setTab}
+        label={t("panel.tabsAria")}
       />
-      {io && (io.inputs.length > 0 || io.outputs.length > 0) && (
-        <>
-          <h3 className="eyebrow">{t("panel.io")}</h3>
-          {/* SPEC_DEVIATION: a section, not a p (C13). Reason: Biome refuses aria-label on a p. */}
-          <section className="io" aria-label={t("panel.ioAria")}>
-            <IoClaims claims={io.inputs} onMark={setHighlighted} />{" "}
-            <span className="arrow">→</span>{" "}
-            <IoClaims claims={io.outputs} onMark={setHighlighted} />
-          </section>
-        </>
-      )}
-      {(node.kind === "file" ||
-        node.kind === "function" ||
-        node.kind === "class" ||
-        node.kind === "module") && <EffectsView effects={effects} />}
-      {kind !== null && (
-        <SuggestionsView
-          result={suggestions.result}
-          onAsk={suggestions.ask}
-          onOpenSettings={onOpenSettings}
-          claudeMissing={claudeMissing}
-          onMark={setHighlighted}
+      <section
+        role="tabpanel"
+        id="panel-code"
+        aria-labelledby="tab-code"
+        className="tab-body"
+        hidden={tab !== "code"}
+      >
+        <h3 className="eyebrow">
+          {codeHeading(filePath ?? snippetFile ?? t("snippet.file"), node, t)}
+        </h3>
+        <CodeView
+          code={nodeCode(source, node)}
+          start={node.range.start}
+          highlightedLines={highlighted}
         />
+      </section>
+      <section
+        role="tabpanel"
+        id="panel-summary"
+        aria-labelledby="tab-summary"
+        className="tab-body"
+        hidden={tab !== "summary"}
+      >
+        {kind !== null && <p className="eyebrow">{t("panel.eyebrow")}</p>}
+        {kind !== null && (
+          <SummaryView
+            result={summary.result}
+            onAsk={summary.ask}
+            onStart={() => runInChat("summary")}
+            onOpenSettings={onOpenSettings}
+            claudeMissing={claudeMissing}
+            onMark={showLines}
+          />
+        )}
+        {kind !== null && explainStyle(kind) === "step" && (
+          <p className="rules">{t("panel.rules")}</p>
+        )}
+        {io && (io.inputs.length > 0 || io.outputs.length > 0) && (
+          <>
+            <h3 className="eyebrow">{t("panel.io")}</h3>
+            {/* SPEC_DEVIATION: a section, not a p (C13). Reason: Biome refuses aria-label on a p. */}
+            <section className="io" aria-label={t("panel.ioAria")}>
+              <IoClaims claims={io.inputs} onMark={showLines} />{" "}
+              <span className="arrow">→</span>{" "}
+              <IoClaims claims={io.outputs} onMark={showLines} />
+            </section>
+          </>
+        )}
+        {(node.kind === "file" ||
+          node.kind === "function" ||
+          node.kind === "class" ||
+          node.kind === "module") && <EffectsView effects={effects} />}
+      </section>
+      {kind !== null && (
+        <section
+          role="tabpanel"
+          id="panel-suggestions"
+          aria-labelledby="tab-suggestions"
+          className="tab-body"
+          hidden={tab !== "suggestions"}
+        >
+          <SuggestionsView
+            result={suggestions.result}
+            onAsk={suggestions.ask}
+            onStart={() => runInChat("suggestions")}
+            onOpenSettings={onOpenSettings}
+            claudeMissing={claudeMissing}
+            onMark={showLines}
+          />
+        </section>
+      )}
+      {kind !== null && (
+        <section
+          role="tabpanel"
+          id="panel-chat"
+          aria-labelledby="tab-chat"
+          className="tab-body"
+          hidden={tab !== "chat"}
+        >
+          <ChatTab
+            key={node.id}
+            command={command}
+            node={node}
+            origin={origin}
+            store={cache?.chat}
+            renderPart={(part) =>
+              part === "summary" ? (
+                <SummaryView
+                  result={summary.result}
+                  onAsk={summary.ask}
+                  onOpenSettings={onOpenSettings}
+                  claudeMissing={claudeMissing}
+                  onMark={showLines}
+                />
+              ) : (
+                <SuggestionsView
+                  result={suggestions.result}
+                  onAsk={suggestions.ask}
+                  onOpenSettings={onOpenSettings}
+                  claudeMissing={claudeMissing}
+                  onMark={showLines}
+                />
+              )
+            }
+            askPart={(part) => {
+              const p = part === "summary" ? summary : suggestions;
+              if (p.result.status !== "ok" && p.result.status !== "loading") {
+                p.ask();
+              }
+            }}
+            onMark={showLines}
+            onOpenSettings={onOpenSettings}
+            claudeMissing={claudeMissing}
+          />
+        </section>
       )}
     </aside>
+  );
+}
+
+/** A shortcut the panel asks the chat to run, for one node. */
+export interface ChatCommand {
+  part: ExplainPart;
+  nodeId: NodeId;
+  nonce: number;
+}
+
+type TabId = "summary" | "code" | "suggestions" | "chat";
+
+/** The panel's tabs; the arrow keys move between them. */
+function Tabs({
+  tabs,
+  current,
+  onChange,
+  label,
+}: {
+  tabs: { id: TabId; label: string; count?: number }[];
+  current: TabId;
+  onChange: (id: TabId) => void;
+  label: string;
+}) {
+  const move = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
+    const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    if (step === 0) return;
+    const next = tabs[(i + step + tabs.length) % tabs.length];
+    if (!next) return;
+    e.preventDefault();
+    onChange(next.id);
+    document.getElementById(`tab-${next.id}`)?.focus();
+  };
+  return (
+    <div className="panel-tabs" role="tablist" aria-label={label}>
+      {tabs.map((tb, i) => (
+        <button
+          key={tb.id}
+          type="button"
+          role="tab"
+          id={`tab-${tb.id}`}
+          aria-selected={tb.id === current}
+          aria-controls={`panel-${tb.id}`}
+          tabIndex={tb.id === current ? 0 : -1}
+          onClick={() => onChange(tb.id)}
+          onKeyDown={(e) => move(e, i)}
+        >
+          {tb.label}
+          {tb.count !== undefined && tb.count > 0 && (
+            <span className="tab-count">{tb.count}</span>
+          )}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -331,7 +492,11 @@ function PartState({
         </button>
       );
     case "loading":
-      return <p>{loading}</p>;
+      return (
+        <button type="button" className="ask" disabled>
+          {loading}
+        </button>
+      );
     case "no-key":
       return (
         <div className="explanation-state">
@@ -350,14 +515,21 @@ function PartState({
   }
 }
 
-/** A failed or unfaithful answer, with a retry. */
-function Failed({ text, onAsk }: { text: string; onAsk: () => void }) {
-  const t = useT();
+/** A failed or unfaithful answer: the message, and the same button of the part, enabled again. */
+function Failed({
+  text,
+  ask,
+  onAsk,
+}: {
+  text: string;
+  ask: string;
+  onAsk: () => void;
+}) {
   return (
-    <div className="explanation-state">
+    <div className="ask-state">
       <p>{text}</p>
-      <button type="button" onClick={onAsk}>
-        {t("panel.retry")}
+      <button type="button" className="ask" onClick={onAsk}>
+        {ask}
       </button>
     </div>
   );
@@ -366,12 +538,15 @@ function Failed({ text, onAsk }: { text: string; onAsk: () => void }) {
 function SummaryView({
   result,
   onAsk,
+  onStart,
   onOpenSettings,
   claudeMissing,
   onMark,
 }: {
   result: Loaded<Summary>;
   onAsk: () => void;
+  /** What the button of an empty part does; the retry of a failure is `onAsk`. */
+  onStart?: (() => void) | undefined;
   onOpenSettings: (() => void) | undefined;
   claudeMissing?: boolean | undefined;
   onMark: Mark;
@@ -379,9 +554,21 @@ function SummaryView({
   const t = useT();
   switch (result.status) {
     case "error":
-      return <Failed text={t("panel.summaryFail")} onAsk={onAsk} />;
+      return (
+        <Failed
+          text={t("panel.summaryFail")}
+          ask={t("panel.askSummary")}
+          onAsk={onStart ?? onAsk}
+        />
+      );
     case "unfaithful":
-      return <Failed text={t("panel.unfaithful")} onAsk={onAsk} />;
+      return (
+        <Failed
+          text={t("panel.unfaithful")}
+          ask={t("panel.askSummary")}
+          onAsk={onStart ?? onAsk}
+        />
+      );
     case "ok":
       return (
         <>
@@ -412,7 +599,7 @@ function SummaryView({
           result={result}
           ask={t("panel.askSummary")}
           loading={t("panel.loadingSummary")}
-          onAsk={onAsk}
+          onAsk={onStart ?? onAsk}
           onOpenSettings={onOpenSettings}
           claudeMissing={claudeMissing}
         />
@@ -423,12 +610,14 @@ function SummaryView({
 function SuggestionsView({
   result,
   onAsk,
+  onStart,
   onOpenSettings,
   claudeMissing,
   onMark,
 }: {
   result: Loaded<Suggestion[]>;
   onAsk: () => void;
+  onStart?: (() => void) | undefined;
   onOpenSettings: (() => void) | undefined;
   claudeMissing?: boolean | undefined;
   onMark: Mark;
@@ -436,17 +625,20 @@ function SuggestionsView({
   const t = useT();
   return (
     <section className="suggestions">
-      <h3>{t("panel.suggestions")}</h3>
       {result.status === "ok" ? (
         <SuggestionList suggestions={result.result} onMark={onMark} />
       ) : result.status === "error" || result.status === "unfaithful" ? (
-        <Failed text={t("panel.suggestionsFail")} onAsk={onAsk} />
+        <Failed
+          text={t("panel.suggestionsFail")}
+          ask={t("panel.askSuggestions")}
+          onAsk={onStart ?? onAsk}
+        />
       ) : (
         <PartState
           result={result}
           ask={t("panel.askSuggestions")}
           loading={t("panel.loadingSuggestions")}
-          onAsk={onAsk}
+          onAsk={onStart ?? onAsk}
           onOpenSettings={onOpenSettings}
           claudeMissing={claudeMissing}
         />

@@ -42,6 +42,11 @@ const nodeById = (page: Page, id: string) =>
   canvas(page).locator(`[aria-roledescription="node"][data-id="${id}"]`);
 const panel = (page: Page) =>
   page.getByRole("complementary", { name: "Detalhe do nó" });
+/** Opens a tab of the node panel by its name. */
+const openTab = (page: Page, name: string) =>
+  panel(page)
+    .getByRole("tab", { name: new RegExp(`^${name}`) })
+    .click();
 const badge = (view: Locator) => view.locator(".review-badge");
 const summaryItems = (view: Locator) =>
   view.getByRole("list", { name: "Resumo" }).locator(":scope > li > span");
@@ -71,6 +76,7 @@ async function openFrete(
   clearLog = true,
 ): Promise<void> {
   await clickCard(page, "fn:processar_pedido/s1");
+  await openTab(page, "Resumo");
   // Without a provider both parts say so: the first one is enough here (CFG-09).
   await expect(
     panel(page).getByText(loopState, { exact: true }).first(),
@@ -80,6 +86,7 @@ async function openFrete(
   await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
     "Calcular frete",
   );
+  await openTab(page, "Resumo");
 }
 
 async function generate(page: Page, base: string, source: string) {
@@ -117,6 +124,7 @@ test.describe("Fidelidade", () => {
       "def pesar_caixa(caixa):\n    return caixa.peso\n",
     );
     await clickCard(page, "fn:pesar_caixa");
+    await openTab(page, "Resumo");
 
     const view = panel(page);
     await expect(badge(view)).toHaveText("Revisado com cortes");
@@ -149,6 +157,7 @@ test.describe("Fidelidade", () => {
       "def somar_itens(itens):\n    return sum(itens)\n",
     );
     await clickCard(page, "fn:somar_itens");
+    await openTab(page, "Resumo");
 
     const view = panel(page);
     await expect(badge(view)).toHaveText("Revisado com cortes");
@@ -165,6 +174,7 @@ test.describe("Fidelidade", () => {
       "def contar_partes(texto):\n    partes = texto.split()\n    return len(partes)\n",
     );
     await clickCard(page, "fn:contar_partes");
+    await openTab(page, "Resumo");
 
     const view = panel(page);
     await expect(badge(view)).toHaveText("Revisado com cortes");
@@ -182,13 +192,14 @@ test.describe("Fidelidade", () => {
       "def media_notas(notas):\n    total = sum(notas)\n    return total / len(notas)\n",
     );
     await clickCard(page, "fn:media_notas");
+    await openTab(page, "Resumo");
 
     const view = panel(page);
     await expect(badge(view)).toHaveText("Revisado");
+    await openTab(page, "Sugestões");
     await expect(
       view
-        .getByRole("heading", { name: "Sugestões", exact: true })
-        .locator("xpath=following-sibling::ul[1]")
+        .locator("#panel-suggestions ul")
         .getByRole("button", { name: /\(linha \d+, / }),
     ).toHaveText(["Tratar a lista vazia (linha 3, alta)"]);
     await expect(view).not.toContainText("Remover o laço repetido");
@@ -211,6 +222,7 @@ test.describe("Fidelidade", () => {
     await expect(evidence(view, "s1")).toHaveText(["L5"]);
     await expect(evidence(view, "s2")).toHaveText(["L8–9"]);
     await expect(evidence(view, "o1")).toHaveText(["L9, L11"]);
+    await openTab(page, "Sugestões");
     await expect(
       view.getByRole("button", {
         name: "Guardar a tabela de frete em cache (linha 5, média)",
@@ -219,9 +231,11 @@ test.describe("Fidelidade", () => {
     ).toHaveCount(1);
 
     await expect(view.locator('[aria-current="true"]')).toHaveCount(0);
+    await openTab(page, "Resumo");
     await evidence(view, "s2").click();
     await expect(view.locator('[aria-current="true"]')).toHaveCount(2);
     expect(await markedLines(view)).toEqual(["8", "9"]);
+    await openTab(page, "Resumo");
 
     await expect(
       view
@@ -363,13 +377,14 @@ test.describe("Fidelidade", () => {
   }) => {
     await generate(page, REAL, "def esperar(fila):\n    return fila.pop()\n");
     await clickCard(page, "fn:esperar");
+    await openTab(page, "Resumo");
 
     const view = panel(page);
     await expect(
       view.getByText("Não foi possível gerar um resumo fiel.", { exact: true }),
     ).toHaveCount(1);
     await expect(
-      view.getByRole("button", { name: "Tentar de novo" }),
+      view.getByRole("button", { name: "Gerar resumo" }),
     ).toHaveCount(1);
     await expect(badge(view)).toHaveCount(0);
     let log = await fakeLog();
@@ -377,7 +392,7 @@ test.describe("Fidelidade", () => {
     expect(reviews(log)).toHaveLength(0);
 
     const retried = page.waitForResponse(`${REAL}/api/summary`);
-    await view.getByRole("button", { name: "Tentar de novo" }).click();
+    await view.getByRole("button", { name: "Gerar resumo" }).click();
     expect(await (await retried).json()).toEqual({ status: "unfaithful" });
     log = await fakeLog();
     expect(drafts(log)).toHaveLength(6);

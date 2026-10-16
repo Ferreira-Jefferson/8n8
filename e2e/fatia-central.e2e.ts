@@ -68,14 +68,19 @@ const cardTags = (page: Page) =>
     els.map((el) => el.querySelector("[data-tag]")?.getAttribute("data-tag")),
   );
 
+/** Opens a tab of the node panel by its name. */
+const openTab = (page: Page, name: string) =>
+  panel(page)
+    .getByRole("tab", { name: new RegExp(`^${name}`) })
+    .click();
+
 /** Texts of the summary sentences, one per item of the "Resumo" list. */
 const summaryItems = (view: Locator) =>
   view.getByRole("list", { name: "Resumo" }).locator(":scope > li > span");
 /** Suggestion buttons: "<comando> (linha N, <severidade>)". */
 const suggestionButtons = (view: Locator) =>
   view
-    .getByRole("heading", { name: "Sugestões", exact: true })
-    .locator("xpath=following-sibling::ul[1]")
+    .locator("#panel-suggestions ul")
     .getByRole("button", { name: /\(linha \d+, / });
 
 /** Generates the map and returns the graph the server sent. */
@@ -536,11 +541,13 @@ test.describe("Explicação", () => {
     await clickCard(page, FRETE);
 
     const view = panel(page);
+    await openTab(page, "Resumo");
     await expect(summaryItems(view)).toHaveText([FRETE_SUMMARY]);
     // VID-30: the inputs, an arrow and the outputs, in one line.
     await expect
       .poll(() => ioLine(view))
       .toBe("peso, distancia → valor do frete");
+    await openTab(page, "Sugestões");
     const suggestions = suggestionButtons(view);
     await expect(suggestions).toHaveText([
       "Guardar a tabela de frete em cache (linha 5, média)",
@@ -570,6 +577,7 @@ test.describe("Explicação", () => {
     );
     await shot(page, "08-suggestion-line-5");
 
+    await openTab(page, "Sugestões");
     await view
       .getByRole("button", {
         name: "Dar nome ao limite de peso (linha 8, baixa)",
@@ -600,14 +608,18 @@ test.describe("Explicação", () => {
     await generate(page, TWO_ENTRIES);
 
     await clickCard(page, FRETE);
+    await openTab(page, "Resumo");
     await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
     await page.keyboard.press("Escape");
     await clickCard(page, PEDIDO);
+    await openTab(page, "Resumo");
     await expect(summaryItems(panel(page))).toHaveText([PEDIDO_SUMMARY]);
     await page.keyboard.press("Escape");
     await clickCard(page, FRETE);
 
+    await openTab(page, "Resumo");
     await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
+    await openTab(page, "Sugestões");
     await expect(suggestionButtons(panel(page))).toHaveCount(2);
     await page.keyboard.press("Escape");
     await expect(canvas(page).locator(".step-badge")).toHaveText(["1", "1"]);
@@ -617,7 +629,9 @@ test.describe("Explicação", () => {
     // A new map asks the server again, and its disk cache answers.
     await generate(page, TWO_ENTRIES);
     await clickCard(page, FRETE);
+    await openTab(page, "Resumo");
     await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
+    await openTab(page, "Sugestões");
     await expect(suggestionButtons(panel(page))).toHaveCount(2);
     expect(calls).toEqual([FRETE, PEDIDO, FRETE]);
     await expect.poll(() => fromCache).toEqual([false, false, true]);
@@ -631,12 +645,13 @@ test.describe("Explicação", () => {
     );
     await generate(page, TWO_ENTRIES);
     await clickCard(page, FRETE);
+    await openTab(page, "Resumo");
 
     await expect(
       panel(page).getByText("Resumo indisponível", { exact: true }),
     ).toHaveCount(1);
     await expect(
-      panel(page).getByRole("button", { name: "Tentar de novo" }),
+      panel(page).getByRole("button", { name: "Gerar resumo" }),
     ).toHaveCount(1);
     await shot(page, "09-explain-error");
 
@@ -654,10 +669,11 @@ test.describe("Explicação", () => {
     await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
       "Calcular frete",
     );
+    await openTab(page, "Resumo");
     await expect(
       panel(page).getByText("Resumo indisponível", { exact: true }),
     ).toHaveCount(1);
-    await panel(page).getByRole("button", { name: "Tentar de novo" }).click();
+    await panel(page).getByRole("button", { name: "Gerar resumo" }).click();
 
     await expect(summaryItems(panel(page))).toHaveText([FRETE_SUMMARY]);
     await expect(panel(page).getByText("Resumo indisponível")).toHaveCount(0);

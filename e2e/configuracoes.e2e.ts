@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { E2E_TOKEN } from "../playwright.config";
 import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 import { LANE_PORT, laneDir, lanePort } from "./lane";
-import { clickCard, generate, panel } from "./mapa";
+import { clickCard, generate, openTab, panel } from "./mapa";
 import { expect, type Page, test } from "./test";
 
 // Feature 08, end to end: the server of 4322 starts with no key and no automatic
@@ -123,18 +123,23 @@ test.describe("Configurações e LLM sob demanda", () => {
   }) => {
     await openFunction(page);
     const view = panel(page);
+    await openTab(page, "Resumo");
     await expect(
       view.getByRole("button", { name: "Gerar resumo" }),
     ).toBeVisible();
+    await openTab(page, "Sugestões");
     await expect(
       view.getByRole("button", { name: "Pedir sugestões" }),
     ).toBeVisible();
 
+    // The button runs the shortcut in the chat, where the notice shows.
+    await openTab(page, "Resumo");
     await view.getByRole("button", { name: "Gerar resumo" }).click();
+    const chat = view.locator("#panel-chat");
     await expect(
-      view.getByText("Configure um provedor de LLM em Configurações."),
+      chat.getByText("Configure um provedor de LLM em Configurações."),
     ).toBeVisible();
-    await view.getByRole("button", { name: "Abrir configurações" }).click();
+    await chat.getByRole("button", { name: "Abrir configurações" }).click();
     await expect(
       page.getByRole("dialog", { name: "Configurações" }),
     ).toBeVisible();
@@ -156,6 +161,7 @@ test.describe("Configurações e LLM sob demanda", () => {
     // Selecting again asks the cache only: nothing is spent on the explanation.
     await clickCard(page, FN);
     const view = panel(page);
+    await openTab(page, "Resumo");
     await expect(
       view.getByRole("button", { name: "Gerar resumo" }),
     ).toBeVisible();
@@ -166,12 +172,14 @@ test.describe("Configurações e LLM sob demanda", () => {
     const afterClick = roles(await fakeLog());
     expect(afterClick).toContain("draft");
     expect(afterClick).not.toContain("suggest");
+    await openTab(page, "Sugestões");
     await expect(
       view.getByRole("button", { name: "Pedir sugestões" }),
     ).toBeVisible();
 
     // A new map of the same code: the summary comes from the cache, with no click.
     await openFunction(page);
+    await openTab(page, "Resumo");
     await expect(
       panel(page).getByRole("list", { name: "Resumo" }),
     ).toBeVisible();
@@ -190,7 +198,9 @@ test.describe("Configurações e LLM sob demanda", () => {
 
     await openFunction(page);
     const view = panel(page);
+    await openTab(page, "Resumo");
     await expect(view.getByRole("list", { name: "Resumo" })).toBeVisible();
+    await openTab(page, "Sugestões");
     await expect(
       view.getByText("Nenhuma sugestão para este nó."),
     ).toBeVisible();

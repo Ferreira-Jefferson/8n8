@@ -6,6 +6,7 @@ import {
   generate,
   nodeById,
   OFFLINE,
+  openTab,
   panel,
   REAL,
 } from "./mapa";
@@ -41,8 +42,7 @@ const balloonItems = (page: Page) =>
 /** Suggestion buttons of the panel: "<comando> (linha N, <severidade>)". */
 const suggestionButtons = (view: Locator) =>
   view
-    .getByRole("heading", { name: "Sugestões", exact: true })
-    .locator("xpath=following-sibling::ul[1]")
+    .locator("#panel-suggestions ul")
     .getByRole("button", { name: /\(linha \d+, / });
 
 /** Generates the map, opens the function and waits for its summary. */
@@ -53,6 +53,7 @@ async function openFunction(
 ): Promise<Locator> {
   await generate(page, REAL, source);
   await clickCard(page, id);
+  await openTab(page, "Resumo");
   const view = panel(page);
   await expect(view.getByRole("list", { name: "Resumo" })).toBeVisible();
   return view;
@@ -89,12 +90,13 @@ test.describe("Docstring", () => {
     expect(lastUser(summaries[0] as FakeCall)).not.toContain("Docstring (");
     expect(lastUser(summaries[0] as FakeCall)).not.toContain("Soma os preços");
 
-    await expect(badges(page)).toHaveText(["1"]);
-    await badges(page).click();
-    await expect(balloonItems(page)).toHaveText([`média ${COMMAND}`]);
+    await openTab(page, "Sugestões");
     await expect(suggestionButtons(view)).toHaveText([
       `${COMMAND} (linha 2, média)`,
     ]);
+    await expect(badges(page)).toHaveText(["1"]);
+    await badges(page).click();
+    await expect(balloonItems(page)).toHaveText([`média ${COMMAND}`]);
 
     await balloonItems(page).click();
     await expect(view.locator('[aria-current="true"]')).toHaveCount(1);

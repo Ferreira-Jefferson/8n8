@@ -1,4 +1,6 @@
 import type {
+  ChatResponse,
+  ChatTurn,
   ExplainPart,
   ExplainResponse,
   GraphResponse,
@@ -122,6 +124,38 @@ async function fetchPart<T>(
     return {
       status: "error",
       message: body?.message ?? `Falha na explicação (HTTP ${res.status})`,
+    };
+  } catch (err) {
+    return {
+      status: "error",
+      message: err instanceof Error ? err.message : "Falha de rede",
+    };
+  }
+}
+
+/** One answer of the chat, or `stale` when the server no longer has the node (404). */
+export type ChatResult = ChatResponse | { status: "stale" };
+
+/** One question about a node and its parent; `history` is the past of the conversation (the server keeps none). */
+export async function fetchChat(
+  origin: ExplainOrigin,
+  nodeId: string,
+  history: ChatTurn[],
+  question: string,
+): Promise<ChatResult> {
+  try {
+    const res = await post("/api/chat", {
+      ...origin,
+      nodeId,
+      history,
+      question,
+    });
+    if (res.status === 404) return { status: "stale" };
+    const body = (await res.json().catch(() => null)) as ChatResponse | null;
+    if (body && (res.status === 200 || body.status === "error")) return body;
+    return {
+      status: "error",
+      message: `Falha na conversa (HTTP ${res.status})`,
     };
   } catch (err) {
     return {
