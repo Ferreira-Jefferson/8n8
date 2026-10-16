@@ -89,13 +89,28 @@ function originOf(mapped: Mapped): ExplainOrigin {
 }
 
 /** The code, file and explain origin of a node: the snippet, or the node's file in a project (AD-015). */
-function panelInput(mapped: Mapped, node: FlowNode): PanelInput {
+function panelInput(
+  mapped: Mapped,
+  node: FlowNode,
+  lookup: Lookup,
+): PanelInput {
   if (mapped.kind === "snippet") {
     return { source: mapped.source, origin: originOf(mapped) };
   }
-  const filePath = fileNodeOf(mapped.response.graph, node.id)?.path;
-  const file = mapped.response.files.find((f) => f.path === filePath);
-  return { source: file?.source ?? "", origin: originOf(mapped), filePath };
+  const filePath = fileNodeOf(
+    mapped.response.graph,
+    node.id,
+    lookup.byId,
+  )?.path;
+  const source =
+    filePath === undefined ? undefined : lookup.sources.get(filePath);
+  return { source: source ?? "", origin: originOf(mapped), filePath };
+}
+
+/** What every card asks again on each render: the nodes by id and the source of each file, made once per map. */
+interface Lookup {
+  byId: Map<NodeId, FlowNode>;
+  sources: Map<string, string>;
 }
 
 /** A call into another file of a project jumps to the target's ancestry; anything else stacks (PROJ-04). */
@@ -465,9 +480,21 @@ export function App({ initialFolder = null }: AppProps) {
     mapVersion,
     titled,
   );
+  const lookup = useMemo<Lookup>(
+    () => ({
+      byId: new Map(graph?.nodes.map((n) => [n.id, n])),
+      sources: new Map(
+        mapped?.kind === "project"
+          ? mapped.response.files.map((f) => [f.path, f.source])
+          : [],
+      ),
+    }),
+    [graph, mapped],
+  );
   const cardCode = useCallback(
-    (n: FlowNode) => codeLineOf(n, mapped ? panelInput(mapped, n).source : ""),
-    [mapped],
+    (n: FlowNode) =>
+      codeLineOf(n, mapped ? panelInput(mapped, n, lookup).source : ""),
+    [mapped, lookup],
   );
 
   // The search covers the whole graph, not only the open level.
@@ -729,7 +756,7 @@ export function App({ initialFolder = null }: AppProps) {
       )}
       {panelNode && !panelCollapsed && (
         <DetailPanel
-          {...panelInput(mapped, panelNode)}
+          {...panelInput(mapped, panelNode, lookup)}
           snippetFile={snippetFileName(
             mapped.kind === "snippet" ? mapped.language : undefined,
             languages,

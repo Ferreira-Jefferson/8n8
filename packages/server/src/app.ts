@@ -19,7 +19,6 @@ import {
   type ExplainRequest,
   type ExplainResponse,
   type FlowNode,
-  fileNodeOf,
   type Graph,
   type GraphResponse,
   type LanguagePlugin,
@@ -41,12 +40,16 @@ import { z } from "zod";
 import { maskDocstring } from "./docstring";
 import type { History, MadeMap } from "./history";
 import type { PickPath } from "./pick-path";
+import {
+  callMapsOf,
+  indexOf,
+  type ProjectIndex,
+  type ProjectRead,
+} from "./project-index";
 import { InvalidSettings, type SettingsService } from "./settings";
 import { sameToken } from "./token";
 
-export type ProjectRead =
-  | { kind: "ok"; root: string; response: ProjectResponse }
-  | { kind: "not-found"; dependency?: true };
+export type { ProjectRead };
 
 export interface AppDeps {
   /** The registered languages, in a stable order: a snippet is read by the best score, a file by its extension. */
@@ -187,6 +190,11 @@ interface Origin {
   graph: Graph;
   /** The code of `node`, with its docstring masked when it has one. */
   codeOf: (node: FlowNode) => Pick<ExplainRequest, "code" | "docstring">;
+  /** The names of what `node` calls and what calls it. */
+  neighbours: (
+    node: FlowNode,
+    nameOf: (other: FlowNode) => string,
+  ) => { calls: string[]; calledBy: string[] };
   /** The name of `node` as seen from `home`. */
   nameOf: (node: FlowNode, home: FlowNode) => string;
   /** The language of `node`: the detected one in a snippet, the one of its file in a project. */
@@ -212,8 +220,12 @@ async function loadOrigin(
   if ("source" in body) {
     const { source } = body;
     const { plugin } = detectLanguage(source, deps.plugins);
+    const graph = plugin.extract(source);
+    const byId = new Map(graph.nodes.map((n) => [n.id, n]));
     return {
-      graph: plugin.extract(source),
+      graph,
+      neighbours: (node, nameOf) =>
+        neighboursOf({ byId, ...callMapsOf(graph.edges) }, node, nameOf),
       codeOf: (node) =>
         maskDocstring(
           node.range,
@@ -231,7 +243,8 @@ async function loadOrigin(
   if (read.kind === "not-found") return { notFound: body.root };
   const { response } = read;
   const graph = response.graph;
-  const filePath = (node: FlowNode) => fileNodeOf(graph, node.id)?.path ?? "";
+  const index = indexOf(read);
+  const filePath = (node: FlowNode) => index.filePathOf(node.id);
   // A file is read by its extension, so every node has the plugin of its file.
   const pluginOf = (node: FlowNode) => {
     const plugin = pluginForPath(filePath(node), deps.plugins);
@@ -240,20 +253,16 @@ async function loadOrigin(
   };
   return {
     graph,
+    neighbours: (node, nameOf) => neighboursOf(index, node, nameOf),
     codeOf: (node) => {
       const path = filePath(node);
-      const file = response.files.find((f) => f.path === path);
       // A file hides the docstrings of every node in it, like each node hides its own.
       const docstrings =
-        node.kind === "file"
-          ? graph.nodes.flatMap((n) =>
-              n.docstring && filePath(n) === path ? [n.docstring] : [],
-            )
-          : node.docstring;
+        node.kind === "file" ? index.docstrings.get(path) : node.docstring;
       return maskDocstring(
         node.range,
         docstrings,
-        (file?.source ?? "").split(/\r?\n/),
+        (index.sources.get(path) ?? "").split(/\r?\n/),
         pluginOf(node).commentPrefix,
         locale,
       );
@@ -270,24 +279,20 @@ async function loadOrigin(
 
 /** calls: targets of the outgoing `calls` wires plus `node.target`, once each; calledBy: sources of the incoming `calls` wires. */
 function neighboursOf(
-  graph: Graph,
+  index: Pick<ProjectIndex, "byId" | "callsOut" | "callsIn">,
   node: FlowNode,
   nameOf: (other: FlowNode) => string,
 ): { calls: string[]; calledBy: string[] } {
-  const byId = new Map(graph.nodes.map((n) => [n.id, n]));
-  const names = (ids: string[]) =>
+  const names = (ids: readonly string[]) =>
     ids.flatMap((id) => {
-      const other = byId.get(id);
+      const other = index.byId.get(id);
       return other ? [nameOf(other)] : [];
     });
-  const wires = graph.edges.filter((e) => e.kind === "calls");
-  const out = wires.filter((e) => e.source === node.id).map((e) => e.target);
+  const out = [...(index.callsOut.get(node.id) ?? [])];
   if (node.target) out.push(node.target);
   return {
     calls: names([...new Set(out)]),
-    calledBy: names(
-      wires.filter((e) => e.target === node.id).map((e) => e.source),
-    ),
+    calledBy: names(index.callsIn.get(node.id) ?? []),
   };
 }
 
@@ -484,7 +489,7 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
+      const { graph, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
       const node = graph.nodes.find((n) => n.id === body.nodeId);
       if (!node) return c.json({ error: "unknown node" }, 404);
       if (node.kind === "folder") {
@@ -497,7 +502,7 @@ export function createApp(deps: AppDeps): Hono {
         nodeKind: node.kind,
         ...codeOf(node),
         range: node.range,
-        ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+        ...neighbours(node, (other) => nameOf(other, node)),
       };
     } catch (err) {
       return extractFailed(c, err);
@@ -530,7 +535,7 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
+      const { graph, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
       const node = graph.nodes.find((n) => n.id === body.nodeId);
       if (!node) return c.json({ error: "unknown node" }, 404);
       if (node.kind === "folder") {
@@ -557,7 +562,7 @@ export function createApp(deps: AppDeps): Hono {
                 },
               }
             : {}),
-          ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+          ...neighbours(node, (other) => nameOf(other, node)),
         },
       };
     } catch (err) {
@@ -716,7 +721,7 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
+      const { graph, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
       const byId = new Map(graph.nodes.map((n) => [n.id, n]));
       // Each id once, in the order received; unknown, folder and file ids are dropped.
       items = [...new Set(body.nodeIds)].flatMap((id) => {
@@ -731,7 +736,7 @@ export function createApp(deps: AppDeps): Hono {
             name: nameOf(node, node),
             code: codeOf(node).code,
             range: node.range,
-            ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+            ...neighbours(node, (other) => nameOf(other, node)),
           },
         ];
       });

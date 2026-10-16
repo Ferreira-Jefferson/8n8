@@ -26,9 +26,17 @@ export interface ProjectExtractor {
   extractProject(files: SourceFile[]): Graph;
 }
 
-/** Walks up `parentId` from `id` to the enclosing `file` node. */
-export function fileNodeOf(graph: Graph, id: NodeId): FlowNode | undefined {
-  const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+/**
+ * Walks up `parentId` from `id` to the enclosing `file` node. A caller that asks
+ * many times passes `byId`, made once, because making it walks every node.
+ */
+export function fileNodeOf(
+  graph: Graph,
+  id: NodeId,
+  byId: ReadonlyMap<NodeId, FlowNode> = new Map(
+    graph.nodes.map((n) => [n.id, n]),
+  ),
+): FlowNode | undefined {
   let node = byId.get(id);
   while (node) {
     if (node.kind === "file") return node;
