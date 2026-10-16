@@ -16,7 +16,7 @@ O mapa começa amplo. Você abre um nó para ver o fluxo interno dele e vai desc
 
 ## Por que o 8n8 existe
 
-Com a IA, o código muda e cresce rápido demais para ler linha por linha. Eu perdia tempo para entender o que tinha mudado e como as partes se ligavam. Procurei uma ferramenta visual que mostrasse o fluxo de forma rápida e intuitiva, e não achei nenhuma. Lembrei do [n8n](https://n8n.io), me inspirei nele e criei o 8n8. O nome é uma brincadeira com ele. Fora o desenho de nós e arestas, os dois projetos não têm relação nenhuma.
+Com a IA, o código muda e cresce rápido demais para ler linha por linha. Eu perdia tempo para entender o que tinha mudado e como as partes se ligavam. Procurei uma ferramenta visual que mostrasse o fluxo de forma rápida e intuitiva, e não achei nenhuma. Lembrei do [n8n](https://n8n.io), me inspirei nele e criei o 8n8. O nome é uma brincadeira com ele. Particularmente, acho que "eight-en-eight" soa melhor que "oito-ene-oito", mas cada um pronuncia como preferir. Fora o desenho de nós e arestas, os dois projetos não têm relação nenhuma.
 
 ## Como fica
 
