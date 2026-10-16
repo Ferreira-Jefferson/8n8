@@ -647,6 +647,10 @@ export function App({ initialFolder = null }: AppProps) {
           focusId={focusId}
           centerOn={center}
           onSelect={select}
+          onInspect={(id) => {
+            select(id);
+            setPanelCollapsed(false);
+          }}
           onOpen={(node) => {
             setFocusId(null);
             setMark(undefined);

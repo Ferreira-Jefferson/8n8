@@ -340,6 +340,7 @@ function props(overrides: Partial<FlowCanvasProps> = {}): FlowCanvasProps {
     focusId: null,
     centerOn: null,
     onSelect: vi.fn(),
+    onInspect: vi.fn(),
     onOpen: vi.fn(),
     onSuggestion: vi.fn(),
     onBack: vi.fn(),

@@ -270,8 +270,8 @@ body {
   top: 50%;
   right: 24px;
   transform: translateY(-50%);
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
 }
 
 .panel-toggle:hover {
@@ -307,12 +307,13 @@ body {
 .history-btn {
   position: absolute;
   right: 24px;
-  top: 24px;
+  top: 29px;
   z-index: 10;
   box-sizing: border-box;
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   padding: 0;
+  background: var(--ground);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -339,9 +340,14 @@ body {
 
 .map-area > .new-code {
   position: absolute;
-  right: 240px; /* to the left of the search magnifier (168px + 60px + gap) */
-  top: 24px;
+  right: 210px; /* to the left of the search magnifier (148px + 50px + gap) */
+  top: 29px;
   z-index: 10;
+  box-sizing: border-box;
+  height: 50px; /* same height as the icon buttons beside it */
+  display: flex;
+  align-items: center;
+  background: var(--ground);
 }
 
 /* One line: the middle items shrink with "…" first, then the first one; the
@@ -350,7 +356,7 @@ body {
   position: absolute;
   left: calc(clamp(16px, 5vw, 64px) + 70px);
   top: 40px;
-  right: 440px; /* clear of the "Novo código" button (240px + its width) */
+  right: 410px; /* clear of the "Novo código" button (210px + its width) */
   z-index: 10;
   display: flex;
   align-items: baseline;
@@ -1715,13 +1721,14 @@ body {
 
 .settings-btn {
   position: absolute;
-  right: 96px;
-  top: 24px;
+  right: 86px;
+  top: 29px;
   z-index: 10;
   box-sizing: border-box;
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   padding: 0;
+  background: var(--ground);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1736,11 +1743,11 @@ body {
 
 .node-search {
   position: absolute;
-  right: 168px;
-  top: 24px;
+  right: 148px;
+  top: 29px;
   z-index: 10;
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
 }
 
 .search-field {
@@ -1750,8 +1757,8 @@ body {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   overflow: hidden;
   border: 2px solid var(--panel-border);
   border-radius: 6px;
@@ -1771,8 +1778,8 @@ body {
   flex: none;
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 46px;
+  height: 46px;
   padding: 0;
   border: 0;
   background: none;
@@ -1808,7 +1815,7 @@ body {
 .search-results {
   position: absolute;
   right: 0;
-  top: 68px;
+  top: 58px;
   box-sizing: border-box;
   width: min(480px, calc(100vw - 260px));
   max-height: 60vh;
