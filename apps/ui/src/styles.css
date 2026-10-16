@@ -1571,7 +1571,6 @@ body {
   }
 }
 
-
 .settings-dialog form {
   display: flex;
   flex-direction: column;
@@ -1602,6 +1601,11 @@ body {
   font: 400 18px var(--font-sans);
 }
 
+.settings-dialog select option {
+  background: var(--panel-bg);
+  color: var(--second);
+}
+
 .settings-dialog input::placeholder {
   color: var(--dim);
 }
@@ -1623,11 +1627,6 @@ body {
   align-items: center;
   gap: 12px;
   color: var(--accent);
-.settings-dialog select option {
-  background: var(--panel-bg);
-  color: var(--second);
-}
-
 }
 
 .dialog-actions {

@@ -196,6 +196,7 @@ function props(overrides: Partial<FlowCanvasProps> = {}): FlowCanvasProps {
     suggestions: new Map(),
     suggestionCounts: new Map(),
     focusId: null,
+    centerOn: null,
     onSelect: vi.fn(),
     onOpen: vi.fn(),
     onSuggestion: vi.fn(),
@@ -229,7 +230,6 @@ function card(container: HTMLElement, id: NodeId): HTMLElement {
 // it out of whichever test comes first, like src/__tests__/setup.tsx.
 beforeAll(() => {
   render(<FlowCanvas {...props()} />);
-    centerOn: null,
   cleanup();
 }, 30_000);
 

@@ -233,12 +233,12 @@ describe("Home", () => {
     ).toBeTruthy();
   });
 
-
   it("reloads the lists when the drawer closes, not while it is open", async () => {
     listMock.mockResolvedValue([]);
     const handlers = {
       onFolderChange: vi.fn(),
       onOpenFolder: vi.fn(),
+      onPick: vi.fn(),
       onPaste: vi.fn(),
       onOpenEntry: vi.fn(),
       onShowHistory: vi.fn(),

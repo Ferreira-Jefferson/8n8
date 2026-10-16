@@ -568,6 +568,7 @@ export function FlowCanvas({
           size={size}
           padX={padX}
         />
+        <CenterOn request={centerOn} positions={positions} size={size} />
         <ViewportPortal>
           {anchored.map(({ card, style }) => (
             <SuggestionCard
@@ -595,7 +596,6 @@ export function FlowCanvas({
           className="open-frame"
           style={{
             left: frame.left,
-        <CenterOn request={centerOn} positions={positions} size={size} />
             top: frame.top,
             width: frame.width,
             height: frame.height,
