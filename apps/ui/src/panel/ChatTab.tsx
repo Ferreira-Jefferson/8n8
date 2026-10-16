@@ -1,6 +1,7 @@
 import {
   CHAT_MAX_QUESTION_CHARS,
   CHAT_MAX_TURNS,
+  type ChatSuggestion,
   type ChatTurn,
   type ExplainPart,
   type FlowNode,
@@ -15,13 +16,23 @@ import {
   useRef,
   useState,
 } from "react";
-import { type ExplainOrigin, fetchChat } from "../api";
+import { type ExplainOrigin, fetchChat, fetchStructure } from "../api";
 import { useT } from "../i18n";
 
 /** One bubble of the conversation. A summary or suggestions bubble shows the node's own part, so it stays in step with the Resumo and Sugestões tabs. */
 export type ChatEntry =
   | { role: "user"; kind: "text"; text: string; command?: ExplainPart }
-  | { role: "assistant"; kind: "text"; text: string }
+  | {
+      role: "assistant";
+      kind: "text";
+      text: string;
+      /** What the model, or the structuring, found in this answer. */
+      suggestion?: ChatSuggestion | undefined;
+      /** Set while the suggestion is kept in the notes of the node. */
+      savedId?: string | undefined;
+      /** Why nothing was kept, when the person asked and there was nothing to keep. */
+      note?: "none" | "failed" | undefined;
+    }
   | { role: "assistant"; kind: "part"; part: ExplainPart }
   | { role: "assistant"; kind: "no-key" }
   | { role: "assistant"; kind: "failed"; message: string; question: string };
@@ -41,7 +52,14 @@ export interface ChatTabProps {
   onMark: (lines: ReadonlySet<number>) => void;
   onOpenSettings?: (() => void) | undefined;
   claudeMissing?: boolean | undefined;
+  /** The ids of the suggestions kept from the chat that are still kept (the person can remove one in the list). */
+  savedIds: ReadonlySet<string>;
+  /** Keeps a suggestion; gives its id, or null when the server refused. */
+  onSave: (suggestion: ChatSuggestion) => Promise<string | null>;
+  onUnsave: (id: string) => Promise<boolean>;
 }
+
+type TextEntry = Extract<ChatEntry, { role: "assistant"; kind: "text" }>;
 
 const COMMANDS: Record<string, ExplainPart> = {
   "/resumo": "summary",
@@ -100,6 +118,52 @@ function WithLines({
   });
 }
 
+/** Under an answer: the icon that keeps it as a suggestion (and takes it back), and what happened. */
+function SaveBar({
+  entry,
+  kept,
+  busy,
+  onToggle,
+}: {
+  entry: TextEntry;
+  kept: boolean;
+  busy: boolean;
+  onToggle: () => void;
+}) {
+  const t = useT();
+  const label = t(kept ? "chat.unsaveSuggestion" : "chat.saveSuggestion");
+  return (
+    <div className={kept ? "msg-actions kept" : "msg-actions"}>
+      {kept && <span className="save-note">{t("chat.savedNote")}</span>}
+      {!kept && entry.note === "none" && (
+        <span className="save-note">{t("chat.noSuggestionFound")}</span>
+      )}
+      {!kept && entry.note === "failed" && (
+        <span className="save-note">{t("chat.failed")}</span>
+      )}
+      <button
+        type="button"
+        className={kept ? "save-btn on" : "save-btn"}
+        aria-pressed={kept}
+        aria-label={label}
+        title={label}
+        disabled={busy}
+        onClick={onToggle}
+      >
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path
+            d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z"
+            fill={kept ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 /** The conversation about one node and its parent: questions, short answers, and the two shortcuts for the summary and the suggestions. */
 export function ChatTab({
   node,
@@ -111,6 +175,9 @@ export function ChatTab({
   onMark,
   onOpenSettings,
   claudeMissing,
+  savedIds,
+  onSave,
+  onUnsave,
 }: ChatTabProps) {
   const t = useT();
   const local = useRef(new Map<NodeId, ChatEntry[]>());
@@ -157,6 +224,17 @@ export function ChatTab({
     if (live.current) setEntries(next);
   };
 
+  /** Changes one answer, also when the tab closed meanwhile: the store is the truth. */
+  const patch = (index: number, change: Partial<TextEntry>) =>
+    commit(
+      (memory.get(node.id) ?? []).map((e, i) =>
+        i === index && e.role === "assistant" && e.kind === "text"
+          ? { ...e, ...change }
+          : e,
+      ),
+    );
+  const [saving, setSaving] = useState<number | null>(null);
+
   function ask(question: string, past: ChatEntry[]) {
     const withQuestion: ChatEntry[] = [
       ...past,
@@ -167,7 +245,12 @@ export function ChatTab({
     fetchChat(origin, node.id, historyOf(past), question).then((r) => {
       const reply: ChatEntry =
         r.status === "ok"
-          ? { role: "assistant", kind: "text", text: r.reply }
+          ? {
+              role: "assistant",
+              kind: "text",
+              text: r.reply,
+              suggestion: r.suggestion,
+            }
           : r.status === "no-key"
             ? { role: "assistant", kind: "no-key" }
             : {
@@ -178,7 +261,39 @@ export function ChatTab({
               };
       commit([...withQuestion, reply]);
       if (live.current) setPending(false);
+      // A suggestion the model found is kept at once; the person can undo it.
+      if (r.status === "ok" && r.suggestion) {
+        const at = withQuestion.length;
+        onSave(r.suggestion).then((id) => {
+          if (id) patch(at, { savedId: id });
+        });
+      }
     });
+  }
+
+  /** The icon of an answer: keeps it as a suggestion, or removes it from them. */
+  async function toggleSave(index: number, entry: TextEntry) {
+    setSaving(index);
+    try {
+      if (entry.savedId !== undefined && savedIds.has(entry.savedId)) {
+        if (await onUnsave(entry.savedId)) patch(index, { savedId: undefined });
+        return;
+      }
+      let suggestion = entry.suggestion;
+      if (!suggestion) {
+        const found = await fetchStructure(origin, node.id, entry.text);
+        if (found.status !== "ok") {
+          patch(index, { note: found.status === "none" ? "none" : "failed" });
+          return;
+        }
+        suggestion = found.suggestion;
+        patch(index, { suggestion, note: undefined });
+      }
+      const id = await onSave(suggestion);
+      patch(index, id ? { savedId: id, note: undefined } : { note: "failed" });
+    } finally {
+      setSaving(null);
+    }
   }
 
   function runCommand(part: ExplainPart, label: string) {
@@ -245,9 +360,17 @@ export function ChatTab({
           <article key={i} className={`msg ${e.role}`} data-kind={e.kind}>
             {e.kind === "text" &&
               (e.role === "assistant" ? (
-                <p>
-                  <WithLines text={e.text} node={node} onMark={onMark} />
-                </p>
+                <>
+                  <p>
+                    <WithLines text={e.text} node={node} onMark={onMark} />
+                  </p>
+                  <SaveBar
+                    entry={e}
+                    kept={e.savedId !== undefined && savedIds.has(e.savedId)}
+                    busy={saving === i}
+                    onToggle={() => toggleSave(i, e)}
+                  />
+                </>
               ) : (
                 <p>{e.text}</p>
               ))}

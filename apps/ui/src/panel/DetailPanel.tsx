@@ -6,16 +6,27 @@ import {
   explainStyle,
   type FlowNode,
   type NodeId,
+  type NodeNotes,
   type Suggestion,
   type Summary,
+  suggestionKey,
   type UpdateReason,
 } from "@8n8/model";
-import { Fragment, type KeyboardEvent, useEffect, useState } from "react";
+import {
+  Fragment,
+  type KeyboardEvent,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import {
   type ExplainOrigin,
   type ExplainResult,
+  fetchNotes,
   fetchSuggestions,
   fetchSummary,
+  type NotesOp,
   type SuggestionsResult,
   type SummaryResult,
 } from "../api";
@@ -64,6 +75,8 @@ export interface PanelCache {
   suggestions: Map<NodeId, SuggestionsResult>;
   /** What was talked about each node; absent where the panel is tested without a chat. */
   chat?: Map<NodeId, ChatEntry[]>;
+  /** What the person kept from the chat and removed, by node. */
+  notes?: Map<NodeId, NodeNotes>;
 }
 
 /** `idle` shows the button at once, while the cache is asked behind it. */
@@ -71,6 +84,7 @@ type Loaded<T> = ExplainResult<T> | { status: "idle" } | { status: "loading" };
 type Mark = (lines: ReadonlySet<number>) => void;
 
 const MANUAL: Auto = { summary: false, suggestions: false };
+const NO_NOTES: NodeNotes = { saved: [], dismissed: [] };
 
 const UPDATE_LABELS: Record<UpdateReason, MessageKey> = {
   code: "update.code",
@@ -135,13 +149,73 @@ export function DetailPanel({
     auto.summary,
     cache?.summary,
   );
+  // The suggestions of a node on the map: the generated ones that were not removed, and the ones kept from the chat.
+  const [, refresh] = useReducer((n: number) => n + 1, 0);
+  const localNotes = useRef(new Map<NodeId, NodeNotes>());
+  const notesOf = cache?.notes ?? localNotes.current;
+  const generated = useRef(new Map<NodeId, Suggestion[]>());
+  const emitted = useRef(new Set<NodeId>());
+  const latest = useRef(onSuggestions);
+  latest.current = onSuggestions;
+  const emit = (id: NodeId) => {
+    const gen = generated.current.get(id);
+    const notes = notesOf.get(id) ?? NO_NOTES;
+    if (!gen && notes.saved.length === 0 && !emitted.current.has(id)) return;
+    emitted.current.add(id);
+    latest.current(id, [...withoutDismissed(gen ?? [], notes), ...notes.saved]);
+  };
   const suggestions = usePart<Suggestion[]>(
     "suggestions",
     target,
     auto.suggestions,
     cache?.suggestions,
-    onSuggestions,
+    (id, list) => {
+      generated.current.set(id, list);
+      emit(id);
+    },
   );
+  const originKey = JSON.stringify(origin);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the node and the origin are the triggers; the rest is read from refs
+  useEffect(() => {
+    if (kind === null || notesOf.has(node.id)) return;
+    const id = node.id;
+    let live = true;
+    fetchNotes(origin, id, { action: "get" }).then((n) => {
+      if (!n) return;
+      notesOf.set(id, n);
+      emit(id);
+      if (live) refresh();
+    });
+    return () => {
+      live = false;
+    };
+  }, [node.id, originKey]);
+  const notes = notesOf.get(node.id) ?? NO_NOTES;
+  /** One change of the notes; the screen shows what the server answers. */
+  async function changeNotes(op: NotesOp): Promise<NodeNotes | null> {
+    const id = node.id;
+    const next = await fetchNotes(origin, id, op);
+    if (next) {
+      notesOf.set(id, next);
+      emit(id);
+      refresh();
+    }
+    return next;
+  }
+  const removeSuggestion = (s: Suggestion) =>
+    changeNotes(
+      s.origin === "chat"
+        ? { action: "unsave", id: s.id }
+        : { action: "dismiss", command: s.command, reason: s.reason },
+    );
+  // What the suggestions tab and the chat show: generated minus removed.
+  const shown: Loaded<Suggestion[]> =
+    suggestions.result.status === "ok"
+      ? {
+          ...suggestions.result,
+          result: withoutDismissed(suggestions.result.result, notes),
+        }
+      : suggestions.result;
 
   // A new node starts with no marked lines; the tab stays, so a reader of summaries keeps reading summaries.
   // biome-ignore lint/correctness/useExhaustiveDependencies: node.id is the trigger, not a value read here
@@ -161,7 +235,7 @@ export function DetailPanel({
 
   const io = summary.result.status === "ok" ? summary.result.result : null;
   const count =
-    suggestions.result.status === "ok" ? suggestions.result.result.length : 0;
+    (shown.status === "ok" ? shown.result.length : 0) + notes.saved.length;
   const tabs: { id: TabId; label: string; count?: number }[] = [
     { id: "code", label: t("panel.tabCode") },
     ...(kind !== null
@@ -243,7 +317,9 @@ export function DetailPanel({
           hidden={tab !== "suggestions"}
         >
           <SuggestionsView
-            result={suggestions.result}
+            result={shown}
+            saved={notes.saved}
+            onRemove={removeSuggestion}
             onAsk={suggestions.ask}
             onStart={() => runInChat("suggestions")}
             onOpenSettings={onOpenSettings}
@@ -277,7 +353,9 @@ export function DetailPanel({
                 />
               ) : (
                 <SuggestionsView
-                  result={suggestions.result}
+                  result={shown}
+                  saved={notes.saved}
+                  onRemove={removeSuggestion}
                   onAsk={suggestions.ask}
                   onOpenSettings={onOpenSettings}
                   claudeMissing={claudeMissing}
@@ -294,6 +372,17 @@ export function DetailPanel({
             onMark={showLines}
             onOpenSettings={onOpenSettings}
             claudeMissing={claudeMissing}
+            savedIds={new Set(notes.saved.map((x) => x.id))}
+            onSave={async (suggestion) => {
+              const next = await changeNotes({ action: "save", suggestion });
+              const key = suggestionKey(suggestion);
+              return (
+                next?.saved.find((x) => suggestionKey(x) === key)?.id ?? null
+              );
+            }}
+            onUnsave={async (id) =>
+              (await changeNotes({ action: "unsave", id })) !== null
+            }
           />
         </section>
       )}
@@ -609,6 +698,8 @@ function SummaryView({
 
 function SuggestionsView({
   result,
+  saved,
+  onRemove,
   onAsk,
   onStart,
   onOpenSettings,
@@ -616,6 +707,9 @@ function SuggestionsView({
   onMark,
 }: {
   result: Loaded<Suggestion[]>;
+  /** The ones kept from the chat. */
+  saved: Suggestion[];
+  onRemove: (s: Suggestion) => void;
   onAsk: () => void;
   onStart?: (() => void) | undefined;
   onOpenSettings: (() => void) | undefined;
@@ -626,7 +720,13 @@ function SuggestionsView({
   return (
     <section className="suggestions">
       {result.status === "ok" ? (
-        <SuggestionList suggestions={result.result} onMark={onMark} />
+        <SuggestionList
+          suggestions={result.result}
+          onMark={onMark}
+          onRemove={onRemove}
+          // The tab is not empty when the chat kept something.
+          quietEmpty={saved.length > 0}
+        />
       ) : result.status === "error" || result.status === "unfaithful" ? (
         <Failed
           text={t("panel.suggestionsFail")}
@@ -643,20 +743,39 @@ function SuggestionsView({
           claudeMissing={claudeMissing}
         />
       )}
+      {saved.length > 0 && (
+        <>
+          <h3 className="eyebrow">{t("panel.fromChat")}</h3>
+          <SuggestionList
+            suggestions={saved}
+            onMark={onMark}
+            onRemove={onRemove}
+          />
+        </>
+      )}
     </section>
   );
+}
+
+/** The generated suggestions the person did not remove. */
+function withoutDismissed(list: Suggestion[], notes: NodeNotes): Suggestion[] {
+  return list.filter((s) => !notes.dismissed.includes(suggestionKey(s)));
 }
 
 function SuggestionList({
   suggestions,
   onMark,
+  onRemove,
+  quietEmpty = false,
 }: {
   suggestions: Suggestion[];
   onMark: Mark;
+  onRemove: (s: Suggestion) => void;
+  quietEmpty?: boolean;
 }) {
   const t = useT();
   if (suggestions.length === 0) {
-    return <p>{t("panel.noSuggestions")}</p>;
+    return quietEmpty ? null : <p>{t("panel.noSuggestions")}</p>;
   }
   return (
     <ul>
@@ -671,6 +790,23 @@ function SuggestionList({
           </button>
           <span>{s.reason}</span>
           <Evidence lines={s.lines} onMark={onMark} />
+          <button
+            type="button"
+            className="remove-btn"
+            aria-label={t("panel.removeSuggestion")}
+            title={t("panel.removeSuggestion")}
+            onClick={() => onRemove(s)}
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <path
+                d="M6 6l12 12M18 6L6 18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
         </li>
       ))}
     </ul>

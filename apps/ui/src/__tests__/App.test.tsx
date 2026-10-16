@@ -41,6 +41,7 @@ vi.mock("../api", () => ({
   fetchLanguages: vi.fn(),
   fetchSummary: vi.fn(),
   fetchSuggestions: vi.fn(),
+  fetchNotes: vi.fn(async () => null),
   fetchSettings: vi.fn(async () => null),
   saveSettings: vi.fn(),
   fetchProject: vi.fn(),

@@ -28,7 +28,9 @@ export interface FakeCall {
     | "title"
     | "title-review"
     /** The chat of a node (a question and its answer). */
-    | "chat";
+    | "chat"
+    /** The text of an answer shaped into a suggestion. */
+    | "structure";
   model: string;
   messages: Message[];
 }
@@ -447,9 +449,32 @@ function verdicts(user: string, scenario: Scenario): string {
   });
 }
 
+const CHAT_SUGGESTION = {
+  command: "Defina um timeout na chamada HTTP.",
+  reason: "Sem timeout a chamada pode travar.",
+  line: 18,
+  severity: "media",
+};
+
+/** The structuring answer: a suggestion when the text talks about a timeout, null otherwise. */
+function structureReply(text: string): string {
+  return JSON.stringify({
+    suggestion: text.includes("timeout") ? CHAT_SUGGESTION : null,
+  });
+}
+
 /** The chat answer, scripted by a word of the question; "falha" gets the 500 of an unscripted call. */
 function chatReply(question: string): string | undefined {
   if (question.includes("falha")) return undefined;
+  // The chat answers in JSON; a "melhoria" question gets a suggestion with it.
+  if (question.includes("melhoria")) {
+    return JSON.stringify({
+      reply: "Defina um timeout na chamada (L18).",
+      suggestion: CHAT_SUGGESTION,
+    });
+  }
+  if (question.includes("timeout"))
+    return "Um timeout evita que a chamada trave (L18).";
   if (question.includes("longo")) return "palavra ".repeat(300);
   if (question.includes("linha")) return "A chamada de rede fica na linha L18.";
   return `Resposta sobre: ${question}`;
@@ -460,6 +485,7 @@ function answer(call: FakeCall): string | undefined {
   const users = call.messages.filter((m) => m.role === "user");
   const last = users.at(-1)?.content ?? "";
   if (call.role === "chat") return chatReply(last);
+  if (call.role === "structure") return structureReply(last);
   if (call.role === "title") return titles(last);
   if (call.role === "title-review") return titleVerdicts(last);
   const scenario = SCENARIOS.find((s) =>
@@ -483,6 +509,9 @@ function roleOf(
 ): FakeCall["role"] {
   const text = system ?? "";
   if (text.startsWith("Você conversa com quem revisa")) return "chat";
+  if (text.startsWith("Você transforma uma resposta de conversa")) {
+    return "structure";
+  }
   if (text.startsWith("Você revisa títulos de nós")) return "title-review";
   if (text.startsWith("Você escreve títulos de nós")) return "title";
   if (text.includes('"verdicts"')) {

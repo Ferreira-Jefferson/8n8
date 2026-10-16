@@ -1,4 +1,4 @@
-import type { FlowNode } from "@8n8/model";
+import type { ChatSuggestion, FlowNode } from "@8n8/model";
 import {
   cleanup,
   fireEvent,
@@ -6,12 +6,19 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type ChatResult, fetchChat } from "../../api";
+import {
+  type ChatResult,
+  fetchChat,
+  fetchStructure,
+  type StructureResult,
+} from "../../api";
 import { type ChatEntry, ChatTab, commandOf } from "../ChatTab";
 
-vi.mock("../../api", () => ({ fetchChat: vi.fn() }));
+vi.mock("../../api", () => ({ fetchChat: vi.fn(), fetchStructure: vi.fn() }));
 const chatMock = vi.mocked(fetchChat);
+const structureMock = vi.mocked(fetchStructure);
 
 const node: FlowNode = {
   id: "fn:f",
@@ -35,6 +42,9 @@ function setup(
     askPart: vi.fn(),
     onMark: vi.fn(),
     onOpenSettings: vi.fn(),
+    savedIds: new Set<string>(),
+    onSave: vi.fn().mockResolvedValue("chat-1"),
+    onUnsave: vi.fn().mockResolvedValue(true),
     ...overrides,
   };
   render(<ChatTab {...props} />);
@@ -48,7 +58,10 @@ async function say(text: string) {
 }
 const ok = (reply: string): ChatResult => ({ status: "ok", reply });
 
-beforeEach(() => chatMock.mockReset());
+beforeEach(() => {
+  chatMock.mockReset();
+  structureMock.mockReset();
+});
 afterEach(cleanup);
 
 describe("commandOf", () => {
@@ -225,6 +238,9 @@ describe("ChatTab", () => {
       renderPart: (part: string) => <p>PART {part}</p>,
       askPart,
       onMark: vi.fn(),
+      savedIds: new Set<string>(),
+      onSave: vi.fn(),
+      onUnsave: vi.fn(),
     };
     const { rerender } = render(<ChatTab {...props} />);
     rerender(<ChatTab {...props} command={command} />);
@@ -238,5 +254,187 @@ describe("ChatTab", () => {
     expect(askPart).toHaveBeenCalledTimes(1);
     rerender(<ChatTab {...props} command={{ ...command, nonce: 3 }} />);
     expect(askPart).toHaveBeenCalledTimes(2);
+  });
+});
+
+const found: ChatSuggestion = {
+  command: "Defina um timeout.",
+  reason: "A chamada pode travar.",
+  line: 6,
+  severity: "media",
+};
+
+/** Keeps the ids the way the panel does: what onSave gives is kept until onUnsave. */
+function Harness({
+  onSave,
+  onUnsave,
+}: {
+  onSave: (s: ChatSuggestion) => Promise<string | null>;
+  onUnsave: (id: string) => Promise<boolean>;
+}) {
+  const [ids, setIds] = useState<ReadonlySet<string>>(new Set());
+  return (
+    <ChatTab
+      node={node}
+      origin={origin}
+      renderPart={() => null}
+      askPart={() => {}}
+      onMark={() => {}}
+      savedIds={ids}
+      onSave={async (suggestion) => {
+        const id = await onSave(suggestion);
+        if (id) setIds((now) => new Set(now).add(id));
+        return id;
+      }}
+      onUnsave={async (id) => {
+        const done = await onUnsave(id);
+        if (done) {
+          setIds((now) => {
+            const next = new Set(now);
+            next.delete(id);
+            return next;
+          });
+        }
+        return done;
+      }}
+    />
+  );
+}
+
+describe("ChatTab keeps answers as suggestions", () => {
+  const onSave = vi.fn();
+  const onUnsave = vi.fn();
+  beforeEach(() => {
+    onSave.mockReset().mockResolvedValue("chat-1");
+    onUnsave.mockReset().mockResolvedValue(true);
+  });
+  const mount = () => render(<Harness onSave={onSave} onUnsave={onUnsave} />);
+
+  it("keeps at once the suggestion the model found, and says so", async () => {
+    chatMock.mockResolvedValue({
+      status: "ok",
+      reply: "Pode travar.",
+      suggestion: found,
+    });
+    mount();
+    await say("algo a melhorar?");
+    expect(await screen.findByText("Salva nas sugestões")).toBeTruthy();
+    expect(onSave).toHaveBeenCalledWith(found);
+    expect(
+      screen
+        .getByRole("button", { name: "Remover das sugestões" })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
+
+  it("takes it back with the same icon, even when the model chose it", async () => {
+    chatMock.mockResolvedValue({
+      status: "ok",
+      reply: "Pode travar.",
+      suggestion: found,
+    });
+    mount();
+    await say("x");
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Remover das sugestões" }),
+    );
+    await waitFor(() => expect(onUnsave).toHaveBeenCalledWith("chat-1"));
+    expect(
+      await screen.findByRole("button", { name: "Salvar como sugestão" }),
+    ).toBeTruthy();
+    expect(screen.queryByText("Salva nas sugestões")).toBeNull();
+    // Keeping it again uses the suggestion already found: no structuring call.
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar como sugestão" }),
+    );
+    expect(await screen.findByText("Salva nas sugestões")).toBeTruthy();
+    expect(structureMock).not.toHaveBeenCalled();
+    expect(onSave).toHaveBeenCalledTimes(2);
+  });
+
+  it("shapes an answer into a suggestion when the person keeps it by hand", async () => {
+    chatMock.mockResolvedValue(ok("Use um timeout na linha L6."));
+    structureMock.mockResolvedValue({ status: "ok", suggestion: found });
+    mount();
+    await say("x");
+    await screen.findByText("Use um timeout na linha", { exact: false });
+    expect(onSave).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar como sugestão" }),
+    );
+    expect(await screen.findByText("Salva nas sugestões")).toBeTruthy();
+    expect(structureMock).toHaveBeenCalledWith(
+      origin,
+      "fn:f",
+      "Use um timeout na linha L6.",
+    );
+    expect(onSave).toHaveBeenCalledWith(found);
+  });
+
+  it("says when an answer holds no suggestion, and keeps nothing", async () => {
+    chatMock.mockResolvedValue(ok("Soma os itens."));
+    structureMock.mockResolvedValue({ status: "none" } as StructureResult);
+    mount();
+    await say("x");
+    await screen.findByText("Soma os itens.");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar como sugestão" }),
+    );
+    expect(
+      await screen.findByText(
+        "Não achei uma sugestão concreta nessa resposta.",
+      ),
+    ).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("shows the icon only for the answers, never for the person's messages", async () => {
+    chatMock.mockResolvedValue(ok("Resposta."));
+    mount();
+    await say("pergunta");
+    await screen.findByText("Resposta.");
+    expect(
+      screen.getAllByRole("button", { name: "Salvar como sugestão" }),
+    ).toHaveLength(1);
+  });
+
+  it("follows the list: a suggestion removed there turns the icon off", async () => {
+    chatMock.mockResolvedValue({
+      status: "ok",
+      reply: "Pode travar.",
+      suggestion: found,
+    });
+    const store = new Map();
+    const view = render(
+      <ChatTab
+        node={node}
+        origin={origin}
+        store={store}
+        renderPart={() => null}
+        askPart={() => {}}
+        onMark={() => {}}
+        savedIds={new Set(["chat-1"])}
+        onSave={onSave}
+        onUnsave={onUnsave}
+      />,
+    );
+    await say("x");
+    await screen.findByRole("button", { name: "Remover das sugestões" });
+    view.rerender(
+      <ChatTab
+        node={node}
+        origin={origin}
+        store={store}
+        renderPart={() => null}
+        askPart={() => {}}
+        onMark={() => {}}
+        savedIds={new Set()}
+        onSave={onSave}
+        onUnsave={onUnsave}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Salvar como sugestão" }),
+    ).toBeTruthy();
   });
 });

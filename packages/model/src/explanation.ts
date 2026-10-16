@@ -14,6 +14,8 @@ export interface Claim {
 
 export interface Suggestion {
   id: ClaimId;
+  /** Set on a suggestion the person kept from the chat; the generated ones have none. */
+  origin?: "chat";
   command: string;
   reason: string;
   line: number;

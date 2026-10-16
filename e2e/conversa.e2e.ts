@@ -1,5 +1,6 @@
 import { type FakeCall, fakeLog } from "./fake-llm";
 import {
+  canvas,
   cardNames,
   clickCard,
   expectLevel,
@@ -251,4 +252,134 @@ test("the send button is square, in a bar below the text, and the field grows wi
   const moved = await at(send(page));
   expect(moved.y).toBeGreaterThanOrEqual(after.y + after.height);
   expect(moved.height).toBe(button.height);
+});
+
+// The suggestions of a node, kept from the chat or removed from the list.
+
+const KEPT = "Defina um timeout na chamada HTTP. (linha 18, média)";
+const suggestionsTab = (page: Page) =>
+  panel(page).locator("#panel-suggestions");
+const keepIcon = (page: Page) =>
+  log(page).getByRole("button", { name: "Salvar como sugestão" });
+const keptIcon = (page: Page) =>
+  log(page).getByRole("button", { name: "Remover das sugestões" });
+
+test("a suggestion the model finds in an answer is kept at once, shows under Da conversa, and the icon takes it back", async ({
+  page,
+}) => {
+  await openStep(page);
+  await ask(page, "alguma melhoria?");
+  await expect(log(page).getByText("Salva nas sugestões")).toBeVisible();
+  await expect(keptIcon(page)).toHaveAttribute("aria-pressed", "true");
+
+  await openTab(page, "Sugestões");
+  await expect(suggestionsTab(page).getByText("Da conversa")).toBeVisible();
+  await expect(suggestionsTab(page).getByText(KEPT)).toBeVisible();
+  await expect(
+    panel(page).getByRole("tab", { name: /^Sugestões/ }),
+  ).toContainText("1");
+
+  // The same icon, in the chat, takes it back: it leaves the list.
+  await openTab(page, "Conversa");
+  await keptIcon(page).click();
+  await expect(keepIcon(page)).toBeVisible();
+  await openTab(page, "Sugestões");
+  await expect(suggestionsTab(page).getByText(KEPT)).toHaveCount(0);
+  await expect(
+    panel(page).getByRole("tab", { name: /^Sugestões/ }),
+  ).not.toContainText("1");
+});
+
+test("the person can keep any answer by hand, and an answer with no suggestion says so", async ({
+  page,
+}) => {
+  await openStep(page);
+  await ask(page, "e o timeout?");
+  await expect(
+    log(page).getByText("Um timeout evita que a chamada trave"),
+  ).toBeVisible();
+  // Nothing was kept on its own.
+  await expect(log(page).getByText("Salva nas sugestões")).toHaveCount(0);
+  await keepIcon(page).click();
+  await expect(log(page).getByText("Salva nas sugestões")).toBeVisible();
+  await openTab(page, "Sugestões");
+  await expect(suggestionsTab(page).getByText(KEPT)).toBeVisible();
+
+  await openTab(page, "Conversa");
+  await ask(page, "o que faz?");
+  await expect(log(page).getByText("Resposta sobre: o que faz?")).toBeVisible();
+  await keepIcon(page).click();
+  await expect(
+    log(page).getByText("Não achei uma sugestão concreta nessa resposta."),
+  ).toBeVisible();
+});
+
+test("a removed suggestion stays removed, and the kept ones stay, in a new map of the same code", async ({
+  page,
+}) => {
+  await generate(page, REAL, VIDEO);
+  await expectLevel(page, MAIN_FLOW);
+  await clickCard(page, FRETE);
+  await openTab(page, "Sugestões");
+  const generated = suggestionsTab(page).getByText(
+    "Trate o erro da chamada HTTP (linha 18, alta)",
+  );
+  await expect(generated).toBeVisible();
+  await suggestionsTab(page)
+    .locator("li", { hasText: "Trate o erro da chamada HTTP" })
+    .getByRole("button", { name: "Remover sugestão" })
+    .click();
+  await expect(generated).toHaveCount(0);
+  // The badge of the card loses it too.
+  await page.keyboard.press("Escape");
+  await expect(canvas(page).locator(".step-badge")).toHaveCount(0);
+
+  // A new map of the same code: the server remembers.
+  await generate(page, REAL, VIDEO);
+  await expectLevel(page, MAIN_FLOW);
+  await clickCard(page, FRETE);
+  await openTab(page, "Sugestões");
+  await expect(
+    panel(page).getByText("Nenhuma sugestão para este nó."),
+  ).toBeVisible();
+  await expect(generated).toHaveCount(0);
+});
+
+test("a kept suggestion adds to the badge of the card of its line, and removing it from the list takes it off", async ({
+  page,
+}) => {
+  await openStep(page);
+  await ask(page, "alguma melhoria?");
+  await expect(log(page).getByText("Salva nas sugestões")).toBeVisible();
+  // The step already had one generated suggestion: the badge counts both.
+  await expect(canvas(page).locator(".step-badge")).toHaveText(["2"]);
+  await openTab(page, "Sugestões");
+  await suggestionsTab(page)
+    .locator("li", { hasText: "Defina um timeout" })
+    .getByRole("button", { name: "Remover sugestão" })
+    .click();
+  await expect(canvas(page).locator(".step-badge")).toHaveText(["1"]);
+  // The icon of the chat follows the list.
+  await openTab(page, "Conversa");
+  await expect(keepIcon(page)).toBeVisible();
+});
+
+test("the save icon shows on hover and stays when the answer is kept", async ({
+  page,
+}) => {
+  await openStep(page);
+  await ask(page, "alguma melhoria?");
+  await expect(keptIcon(page)).toBeVisible();
+  expect(
+    await keptIcon(page).evaluate((el) => getComputedStyle(el).opacity),
+  ).toBe("1");
+  await keptIcon(page).click();
+  await expect(keepIcon(page)).toBeAttached();
+  // Away from the bubble the icon hides.
+  await page.mouse.move(0, 0);
+  expect(
+    await keepIcon(page).evaluate((el) => getComputedStyle(el).opacity),
+  ).toBe("0");
+  await log(page).locator(".msg.assistant").last().hover();
+  await expect(keepIcon(page)).toHaveCSS("opacity", "1");
 });

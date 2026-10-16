@@ -19,6 +19,7 @@ import {
   vi,
 } from "vitest";
 import {
+  fetchNotes,
   fetchSuggestions,
   fetchSummary,
   type SuggestionsResult,
@@ -30,7 +31,9 @@ import { DetailPanel } from "../DetailPanel";
 vi.mock("../../api", () => ({
   fetchSummary: vi.fn(),
   fetchSuggestions: vi.fn(),
+  fetchNotes: vi.fn(),
 }));
+const notesMock = vi.mocked(fetchNotes);
 const fetchMock = vi.mocked(fetchSummary);
 const suggestMock = vi.mocked(fetchSuggestions);
 
@@ -119,6 +122,8 @@ beforeEach(() => {
   fetchMock.mockReset();
   suggestMock.mockReset();
   suggestMock.mockResolvedValue(suggestionsOk);
+  notesMock.mockReset();
+  notesMock.mockResolvedValue({ saved: [], dismissed: [] });
 });
 
 const requestsGet: ExternalEffect = {

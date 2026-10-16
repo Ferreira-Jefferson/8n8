@@ -2,16 +2,20 @@ import {
   buildChatPrompt,
   buildReviewerPrompt,
   buildStepSummaryPrompt,
+  buildStructurePrompt,
   buildSuggestionsPrompt,
   buildSummaryPrompt,
   buildTitlePrompt,
   buildTitleReviewerPrompt,
   chatNode,
+  createNotesStore,
   createSuggestionsCache,
   createSummaryCache,
   createTitleCache,
   type ExplainDeps,
+  type NotesStore,
   type PromptLanguage,
+  structureText,
   suggestNode,
   summarizeNode,
   type TitleDeps,
@@ -31,6 +35,8 @@ import {
   type ExplainResponse,
   type LanguagePlugin,
   type Locale,
+  type StructureRequest,
+  type StructureResponse,
   type TitleItem,
   type TitleRequest,
   type TitlesResponse,
@@ -127,24 +133,57 @@ export function composeExplain(
 }
 
 /** Wires chatNode with the current client, model and prompt of the language of the system and of the code (no cache: a conversation is not worth keeping). */
-export function composeChat(
-  deps: ComposeDeps,
-): (req: ChatRequest) => Promise<ChatResponse> {
-  const promptOf = memo((key) => {
+export function composeChat(deps: ComposeDeps): {
+  chat: (req: ChatRequest) => Promise<ChatResponse>;
+  structure: (req: StructureRequest) => Promise<StructureResponse>;
+} {
+  const promptsOf = memo((key) => {
     const [locale, id] = key.split("|") as [Locale, string];
     const plugin = deps.plugins.find((p) => p.id === id);
-    return (
-      plugin &&
-      buildChatPrompt(rulesOf(deps, locale), promptLanguageOf(plugin), locale)
-    );
+    if (!plugin) return undefined;
+    const lang = promptLanguageOf(plugin);
+    const rules = rulesOf(deps, locale);
+    return {
+      chat: buildChatPrompt(rules, lang, locale),
+      structure: buildStructurePrompt(rules, lang, locale),
+    };
   });
-  return async (req) => {
-    const locale = (await deps.locale?.()) ?? DEFAULT_LOCALE;
-    const prompt = promptOf(`${locale}|${req.language}`);
-    if (!prompt) return noPrompt(req.language, locale);
-    const { client, config } = await deps.llm();
-    return chatNode(req, { llm: client, model: config.model, prompt, locale });
+  return {
+    chat: async (req) => {
+      const locale = (await deps.locale?.()) ?? DEFAULT_LOCALE;
+      const prompts = promptsOf(`${locale}|${req.language}`);
+      if (!prompts) return noPrompt(req.language, locale);
+      const { client, config } = await deps.llm();
+      return chatNode(req, {
+        llm: client,
+        model: config.model,
+        prompt: prompts.chat,
+        locale,
+      });
+    },
+    structure: async (req) => {
+      const locale = (await deps.locale?.()) ?? DEFAULT_LOCALE;
+      const prompts = promptsOf(`${locale}|${req.language}`);
+      if (!prompts) return noPrompt(req.language, locale);
+      const { client, config } = await deps.llm();
+      return structureText(req, {
+        llm: client,
+        model: config.model,
+        prompt: prompts.structure,
+        locale,
+      });
+    },
   };
+}
+
+/** The store of what the person kept from the chat and removed, in `<cache>/notes`; one per language of the system. */
+export function composeNotes(
+  env: Record<string, string | undefined>,
+  deps: ComposeDeps,
+): (locale: Locale) => NotesStore {
+  const dir = env.APP8N8_CACHE_DIR || deps.cacheDir;
+  const storeOf = memo((locale) => createNotesStore(dir, locale as Locale));
+  return (locale) => storeOf(locale);
 }
 
 /** Wires titleNodes with the same client, provider, models and cache folder rules as composeExplain; titles live in `<cache>/titles` (VID-14, VID-17). */
@@ -330,7 +369,8 @@ export function createCore(options: CoreOptions): Hono {
     plugins: languagePlugins,
     explain: composeExplain(options.env, compose),
     titles: composeTitles(options.env, compose),
-    chat: composeChat(compose),
+    ...composeChat(compose),
+    notes: composeNotes(options.env, compose),
     readProject: composeReadProject(readSourceFolder, languagePlugins),
     pick: createPicker(),
     history:

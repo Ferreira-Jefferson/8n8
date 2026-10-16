@@ -8,13 +8,20 @@ export type {
   ChatContext,
   ChatRequest,
   ChatResponse,
+  ChatSuggestion,
   ChatTurn,
+  NodeNotes,
+  SavedSuggestions,
+  StructureRequest,
+  StructureResponse,
 } from "./chat";
 export {
   CHAT_MAX_CHARS,
   CHAT_MAX_QUESTION_CHARS,
+  CHAT_MAX_TEXT_CHARS,
   CHAT_MAX_TURN_CHARS,
   CHAT_MAX_TURNS,
+  suggestionKey,
 } from "./chat";
 export type {
   Claim,

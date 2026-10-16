@@ -60,7 +60,7 @@ const SEVERITY_ALIASES: Record<string, string> = {
   low: "baixa",
 };
 
-const suggestionSchema = z.object({
+export const suggestionSchema = z.object({
   command: z.string(),
   reason: z.string(),
   // SPEC_DEVIATION: design.md says `line: int ≥ 1`; here only `int`.
@@ -108,7 +108,7 @@ const suggestionsSchema = z.object({
 });
 
 /** Strips the code fences some models add and parses the JSON. */
-function jsonOf(raw: string): unknown {
+export function jsonOf(raw: string): unknown {
   const cleaned = raw
     .trim()
     .replace(/^```(?:json)?\s*/i, "")

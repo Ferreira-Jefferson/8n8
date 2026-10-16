@@ -1,7 +1,17 @@
 import {
+  acceptSuggestion,
+  type NotesStore,
+  type StoredNotes,
+  withDismissed,
+  withoutSaved,
+  withSaved,
+} from "@8n8/explain";
+import {
   CHAT_MAX_QUESTION_CHARS,
+  CHAT_MAX_TEXT_CHARS,
   CHAT_MAX_TURN_CHARS,
   CHAT_MAX_TURNS,
+  type ChatContext,
   type ChatRequest,
   type ChatResponse,
   DEFAULT_LOCALE,
@@ -15,7 +25,11 @@ import {
   type LanguagePlugin,
   type LanguagesResponse,
   type Locale,
+  type NodeNotes,
   type ProjectResponse,
+  type StructureRequest,
+  type StructureResponse,
+  suggestionKey,
   type TitleItem,
   type TitleRequest,
   type TitlesResponse,
@@ -46,6 +60,12 @@ export interface AppDeps {
   titles: (req: TitleRequest) => Promise<TitlesResponse>;
   /** One question about a node and its parent; absent in tests that do not need it. */
   chat?: ((req: ChatRequest) => Promise<ChatResponse>) | undefined;
+  /** The text of an answer shaped into a suggestion; absent in tests that do not need it. */
+  structure?:
+    | ((req: StructureRequest) => Promise<StructureResponse>)
+    | undefined;
+  /** What the person kept from the chat and removed, by language of the system; absent in tests that do not need it. */
+  notes?: ((locale: Locale) => NotesStore) | undefined;
   /** `include`: files over 1 MB the person put on the map (CLEAN-06). */
   readProject: (path: string, include?: string[]) => Promise<ProjectRead>;
   port: number;
@@ -116,6 +136,44 @@ const projectChatBody = z.object({
   ...chatTail,
 });
 const chatBody = z.object({ source: z.string(), ...chatTail });
+const structureTail = {
+  nodeId: z.string(),
+  text: z.string().trim().min(1).max(CHAT_MAX_TEXT_CHARS),
+};
+const projectStructureBody = z.object({
+  root: z.string().min(1),
+  include,
+  ...structureTail,
+});
+const structureBody = z.object({ source: z.string(), ...structureTail });
+const notesAction = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("get") }),
+  z.object({ action: z.literal("save"), suggestion: z.unknown() }),
+  z.object({ action: z.literal("unsave"), id: z.string().max(40) }),
+  z.object({
+    action: z.literal("dismiss"),
+    command: z.string().max(300),
+    reason: z.string().max(600),
+  }),
+]);
+const projectNotesBody = z
+  .object({ root: z.string().min(1), include, nodeId: z.string() })
+  .and(notesAction);
+const notesBody = z
+  .object({ source: z.string(), nodeId: z.string() })
+  .and(notesAction);
+
+/** The first schema the body fits; null when none does. */
+function either<T extends z.ZodType>(
+  raw: unknown,
+  schemas: T[],
+): z.infer<T> | null {
+  for (const schema of schemas) {
+    const parsed = schema.safeParse(raw);
+    if (parsed.success) return parsed.data;
+  }
+  return null;
+}
 const nodeIds = z.array(z.string()).max(200);
 const projectTitlesBody = z.object({
   root: z.string().min(1),
@@ -447,20 +505,14 @@ export function createApp(deps: AppDeps): Hono {
   app.post("/api/summary", explainRoute("summary"));
   app.post("/api/suggestions", explainRoute("suggestions"));
 
-  /** A question about a node and its parent: the server builds the context from its own graph, like the explain routes. */
-  app.post("/api/chat", async (c) => {
-    if (!deps.chat) return c.json({ error: "chat unavailable" }, 404);
-    const raw = await c.req.json().catch(() => null);
-    const project = projectChatBody.safeParse(raw);
-    const snippet = chatBody.safeParse(raw);
-    const body = project.success
-      ? project.data
-      : snippet.success
-        ? snippet.data
-        : null;
-    if (!body) return c.json({ error: "invalid body" }, 400);
-
-    let request: ChatRequest;
+  /** What the chat reads about a node, built from the server graph (like the explain routes), or the answer to send instead. */
+  async function chatContextOf(
+    c: Context,
+    body: (
+      | { source: string }
+      | { root: string; include?: string[] | undefined }
+    ) & { nodeId: string },
+  ): Promise<{ context: ChatContext; key: string; code: string } | Response> {
     try {
       const origin = await loadOrigin(
         "root" in body
@@ -471,39 +523,116 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, pluginOf } = origin;
+      const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
       const node = graph.nodes.find((n) => n.id === body.nodeId);
       if (!node) return c.json({ error: "unknown node" }, 404);
       if (node.kind === "folder") {
         return c.json({ error: "node has no explanation" }, 400);
       }
       const parent = graph.nodes.find((n) => n.id === node.parentId);
-      request = {
-        language: pluginOf(node).id,
-        nodeName: nameOf(node, node),
-        nodeKind: node.kind,
-        code: codeOf(node).code,
-        range: node.range,
-        ...(parent && parent.kind !== "folder"
-          ? {
-              parent: {
-                name: nameOf(parent, node),
-                kind: parent.kind,
-                code: codeOf(parent).code,
-                range: parent.range,
-              },
-            }
-          : {}),
-        ...neighboursOf(graph, node, (other) => nameOf(other, node)),
-        history: body.history,
-        question: body.question,
+      const { code } = codeOf(node);
+      return {
+        key: `${idPrefix}${node.id}`,
+        code,
+        context: {
+          language: pluginOf(node).id,
+          nodeName: nameOf(node, node),
+          nodeKind: node.kind,
+          code,
+          range: node.range,
+          ...(parent && parent.kind !== "folder"
+            ? {
+                parent: {
+                  name: nameOf(parent, node),
+                  kind: parent.kind,
+                  code: codeOf(parent).code,
+                  range: parent.range,
+                },
+              }
+            : {}),
+          ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+        },
       };
     } catch (err) {
       return extractFailed(c, err);
     }
+  }
 
-    const result = await deps.chat(request);
+  /** A question about a node and its parent. */
+  app.post("/api/chat", async (c) => {
+    if (!deps.chat) return c.json({ error: "chat unavailable" }, 404);
+    const body = either(await c.req.json().catch(() => null), [
+      projectChatBody,
+      chatBody,
+    ]);
+    if (!body) return c.json({ error: "invalid body" }, 400);
+    const made = await chatContextOf(c, body);
+    if (made instanceof Response) return made;
+    const result = await deps.chat({
+      ...made.context,
+      history: body.history,
+      question: body.question,
+    });
     return c.json(result, result.status === "error" ? 502 : 200);
+  });
+
+  /** The text of an answer shaped into a suggestion, when the person keeps it by hand. */
+  app.post("/api/chat/structure", async (c) => {
+    if (!deps.structure) return c.json({ error: "chat unavailable" }, 404);
+    const body = either(await c.req.json().catch(() => null), [
+      projectStructureBody,
+      structureBody,
+    ]);
+    if (!body) return c.json({ error: "invalid body" }, 400);
+    const made = await chatContextOf(c, body);
+    if (made instanceof Response) return made;
+    const result = await deps.structure({ ...made.context, text: body.text });
+    return c.json(result, result.status === "error" ? 502 : 200);
+  });
+
+  /** What the person kept from the chat and what they removed, for one node; every change answers with the whole state. */
+  app.post("/api/notes", async (c) => {
+    if (!deps.notes) return c.json({ error: "notes unavailable" }, 404);
+    const body = either(await c.req.json().catch(() => null), [
+      projectNotesBody,
+      notesBody,
+    ]);
+    if (!body) return c.json({ error: "invalid body" }, 400);
+    const made = await chatContextOf(c, body);
+    if (made instanceof Response) return made;
+    const { range } = made.context;
+    const locale = (await deps.settings?.locale?.()) ?? DEFAULT_LOCALE;
+    const store = deps.notes(locale);
+    const change = (op: (notes: StoredNotes) => StoredNotes) =>
+      store.update(made.key, made.code, op);
+    let notes: StoredNotes;
+    if (body.action === "save") {
+      const kept = acceptSuggestion(body.suggestion, range);
+      if (!kept) return c.json({ error: "invalid suggestion" }, 400);
+      notes = await change((n) =>
+        withSaved(n, { ...kept, line: kept.line - range.start + 1 }),
+      );
+    } else if (body.action === "unsave") {
+      const { id } = body;
+      notes = await change((n) => withoutSaved(n, id));
+    } else if (body.action === "dismiss") {
+      const key = suggestionKey(body);
+      notes = await change((n) => withDismissed(n, key));
+    } else {
+      notes = await store.get(made.key, made.code);
+    }
+    return c.json({
+      saved: notes.saved.map((s) => ({
+        id: s.id,
+        origin: "chat",
+        command: s.command,
+        reason: s.reason,
+        line: s.line + range.start - 1,
+        severity: s.severity,
+        lines: [s.line + range.start - 1],
+      })),
+      dismissed: notes.dismissed,
+    } satisfies NodeNotes);
   });
 
   // The key goes in through PUT and never comes back: the view says only whether one exists (CFG-12, CFG-13).

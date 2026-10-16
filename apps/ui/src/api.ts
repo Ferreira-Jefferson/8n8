@@ -1,5 +1,6 @@
 import type {
   ChatResponse,
+  ChatSuggestion,
   ChatTurn,
   ExplainPart,
   ExplainResponse,
@@ -8,10 +9,12 @@ import type {
   HistoryItem,
   LanguageInfo,
   LanguagesResponse,
+  NodeNotes,
   NodeTitle,
   ProjectResponse,
   SettingsPatch,
   SettingsResponse,
+  StructureResponse,
   Suggestion,
   Summary,
   TitlesResponse,
@@ -152,6 +155,54 @@ export async function fetchChat(
     });
     if (res.status === 404) return { status: "stale" };
     const body = (await res.json().catch(() => null)) as ChatResponse | null;
+    if (body && (res.status === 200 || body.status === "error")) return body;
+    return {
+      status: "error",
+      message: `Falha na conversa (HTTP ${res.status})`,
+    };
+  } catch (err) {
+    return {
+      status: "error",
+      message: err instanceof Error ? err.message : "Falha de rede",
+    };
+  }
+}
+
+/** What the person asks of the notes of a node: read them, keep a suggestion, remove a kept one, or remove a generated one. */
+export type NotesOp =
+  | { action: "get" }
+  | { action: "save"; suggestion: ChatSuggestion }
+  | { action: "unsave"; id: string }
+  | { action: "dismiss"; command: string; reason: string };
+
+/** The notes of a node after the op; null when the server cannot answer (the screen then keeps what it had). */
+export async function fetchNotes(
+  origin: ExplainOrigin,
+  nodeId: string,
+  op: NotesOp,
+): Promise<NodeNotes | null> {
+  try {
+    const res = await post("/api/notes", { ...origin, nodeId, ...op });
+    return res.ok ? ((await res.json()) as NodeNotes) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** An answer of the chat shaped into a suggestion, or `stale` when the server no longer has the node (404). */
+export type StructureResult = StructureResponse | { status: "stale" };
+
+export async function fetchStructure(
+  origin: ExplainOrigin,
+  nodeId: string,
+  text: string,
+): Promise<StructureResult> {
+  try {
+    const res = await post("/api/chat/structure", { ...origin, nodeId, text });
+    if (res.status === 404) return { status: "stale" };
+    const body = (await res
+      .json()
+      .catch(() => null)) as StructureResponse | null;
     if (body && (res.status === 200 || body.status === "error")) return body;
     return {
       status: "error",
