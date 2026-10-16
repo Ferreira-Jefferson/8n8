@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <title>8n8</title>
+  <rect stroke="#12292a" stroke-opacity="0.2" x="0.5" y="8.5" width="5" height="4" rx="0.661"/>
+  <rect stroke="#12292a" stroke-opacity="0.2" x="10.5" y="3.5" width="5" height="4" rx="0.661"/>
+  <rect stroke="#0f7a6b" x="0.5" y="3.5" width="5" height="4" rx="0.661"/>
+  <rect stroke="#0f7a6b" x="10.5" y="8.5" width="5" height="4" rx="0.661"/>
+  <path stroke="#0f7a6b" d="M6 4C8.444 4 7.556 12 10 12" stroke-linecap="round"/>
+  <circle fill="#0f7a6b" cx="6" cy="4" r="1"/>
+  <circle fill="#0f7a6b" cx="10" cy="12" r="1"/>
+</svg>

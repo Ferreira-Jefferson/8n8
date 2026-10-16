@@ -84,6 +84,14 @@ export function activate(
         vscode.ViewColumn.Beside,
         panelOptions(webRoot),
       );
+      created.iconPath = {
+        light: vscode.Uri.joinPath(
+          context.extensionUri,
+          "dist",
+          "8n8-light.svg",
+        ),
+        dark: vscode.Uri.joinPath(context.extensionUri, "dist", "8n8-dark.svg"),
+      };
       created.webview.onDidReceiveMessage(
         async (message: unknown) => {
           if ((message as { type?: unknown } | null)?.type === "ready") {
@@ -130,9 +138,28 @@ export function activate(
   // Only the Explorer names a folder; the palette opens the start screen (HOME-01, HOME-02).
   const open = (uri?: vscode.Uri) => show(uri?.fsPath ?? null);
 
+  // The editor title button runs this command and hands over the open file, which is not a folder: it opens the start screen.
+  const openStart = () => {
+    // An open map keeps its state: only bring it forward.
+    if (panel) panel.reveal(vscode.ViewColumn.Beside);
+    else show(null);
+  };
+
+  // The title button only exists while a file is open; the status bar is always
+  // there. It shows the logo through the icon font of the manifest.
+  const statusItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    0,
+  );
+  statusItem.text = "$(logotipo-8n8)";
+  statusItem.tooltip = "Abrir mapa";
+  statusItem.command = "8n8.abrirMapa";
+  statusItem.show();
+
   context.subscriptions.push(
-    vscode.commands.registerCommand("8n8.abrirMapa", open),
+    vscode.commands.registerCommand("8n8.abrirMapa", openStart),
     vscode.commands.registerCommand("8n8.abrirMapaDaPasta", open),
+    statusItem,
   );
 
   if (context.extensionMode !== vscode.ExtensionMode.Test) return undefined;

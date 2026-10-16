@@ -116,6 +116,15 @@ export async function buildExtension(
   await bundleExtension(join(outDir, "extension.cjs"));
   copyGrammars(outDir);
   cpSync(web, join(outDir, "web"), { recursive: true });
+  // The logo in brand colors, for the map tab and the editor title button.
+  for (const icon of ["8n8-dark", "8n8-light"]) {
+    cpSync(join(extRoot, `media/${icon}.svg`), join(outDir, `${icon}.svg`));
+  }
+  // The logo as an icon font, for the status bar (scripts/icone-fonte.py makes it).
+  cpSync(
+    join(extRoot, "media/8n8-icones.woff"),
+    join(outDir, "8n8-icones.woff"),
+  );
   cpSync(
     join(repoRoot, "docs/portugues-tecnico-simplificado.md"),
     join(outDir, "pts.md"),

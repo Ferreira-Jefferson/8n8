@@ -80,6 +80,12 @@ Guias: [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md), [docs/adicion
 - Diga quando não tiver certeza, antes de seguir, e não depois.
 - Se enxergar um jeito melhor ou de impacto mais duradouro do que o pedido, sugira. A decisão continua sendo minha.
 
+## Marca
+
+- Todo ícone ou logo do 8n8 vem do manual da marca ([docs/marca/manual.html](docs/marca/manual.html), símbolo `#wordmark`) ou de `scripts/icones.mjs`. Nunca desenhe um "parecido" nem copie só parte dele. O logo tem quatro blocos (dois ligados, dois a 20%), a aresta e as duas portas.
+- Se o contexto não aceitar o logo inteiro (ex.: ícone de uma cor só), adapte as cores e mantenha todas as partes. Se não der, pergunte.
+- Depois de gerar o ícone, renderize e compare com o manual antes de dar como pronto.
+
 ## Este arquivo
 
 - Quando o Claude errar algo que uma regra evitaria, acrescente a regra aqui, curta.

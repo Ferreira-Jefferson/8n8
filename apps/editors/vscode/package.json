@@ -18,12 +18,35 @@
     "Visualization"
   ],
   "main": "./dist/extension.cjs",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
+    "icons": {
+      "simbolo-8n8": {
+        "description": "Símbolo do 8n8: dois blocos ligados por uma aresta",
+        "default": {
+          "fontPath": "dist/8n8-icones.woff",
+          "fontCharacter": "\\E000"
+        }
+      },
+      "logotipo-8n8": {
+        "description": "Logotipo do 8n8: dois 8 de blocos ligados por uma aresta",
+        "default": {
+          "fontPath": "dist/8n8-icones.woff",
+          "fontCharacter": "\\E001"
+        }
+      }
+    },
     "commands": [
       {
         "command": "8n8.abrirMapa",
         "title": "Abrir mapa",
-        "category": "8n8"
+        "category": "8n8",
+        "icon": {
+          "light": "dist/8n8-light.svg",
+          "dark": "dist/8n8-dark.svg"
+        }
       },
       {
         "command": "8n8.abrirMapaDaPasta",
@@ -31,6 +54,12 @@
       }
     ],
     "menus": {
+      "editor/title": [
+        {
+          "command": "8n8.abrirMapa",
+          "group": "navigation@90"
+        }
+      ],
       "explorer/context": [
         {
           "command": "8n8.abrirMapaDaPasta",

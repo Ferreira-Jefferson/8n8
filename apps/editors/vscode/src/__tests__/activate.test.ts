@@ -10,7 +10,10 @@ vi.mock("vscode", () => ({
     }),
   },
   commands: { registerCommand: () => ({ dispose: () => {} }) },
-  window: {},
+  StatusBarAlignment: { Left: 1, Right: 2 },
+  window: {
+    createStatusBarItem: () => ({ show: () => {}, dispose: () => {} }),
+  },
   workspace: { workspaceFolders: [] },
 }));
 
@@ -45,9 +48,9 @@ describe("activate exposes the test API only to its own tests (VSC-11)", () => {
     expect(api?.dataDir()).toBe("C:/storage/8n8");
   });
 
-  it("registers both commands in every mode", () => {
+  it("registers both commands and the status bar item in every mode", () => {
     const ctx = context(1);
     activate(ctx);
-    expect(ctx.subscriptions).toHaveLength(2);
+    expect(ctx.subscriptions).toHaveLength(3);
   });
 });
