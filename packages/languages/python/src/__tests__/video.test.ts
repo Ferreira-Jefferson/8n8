@@ -126,6 +126,7 @@ describe("extractor: the video snippet (VID-10, VID-13, VID-20)", () => {
         source: `${c}/s2`,
         target: `${c}/s2/b0/s0`,
         label: "true",
+        labelKey: "true",
       },
       {
         id: `branch:${c}/s2->${c}/s2/b1/s0`,
@@ -133,6 +134,7 @@ describe("extractor: the video snippet (VID-10, VID-13, VID-20)", () => {
         source: `${c}/s2`,
         target: `${c}/s2/b1/s0`,
         label: "false",
+        labelKey: "false",
       },
       { id: `calls:${p}->${c}`, kind: "calls", source: p, target: c },
     ]);

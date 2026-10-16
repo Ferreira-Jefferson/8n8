@@ -1,8 +1,12 @@
 export {
   type ClaudeCodeDeps,
+  type ClaudeLocation,
   claudeArgs,
   createClaudeCodeProvider,
+  findClaude,
+  isClaudeName,
   locateClaude,
+  whereIsClaude,
 } from "./claude-code";
 export { resolveLlmConfig } from "./config";
 export type { ModelProfile } from "./profiles";

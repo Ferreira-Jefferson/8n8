@@ -36,6 +36,7 @@ import { type Schedule, schedule } from "./motion";
 import { levelSize, projectLevel } from "./project-level";
 import { type StepFlowNode, StepNode } from "./StepNode";
 import { SuggestionCard } from "./SuggestionCard";
+import { FLOW_SIDES, pickSides, type Side } from "./sides";
 import { highlighted, suggestionCards } from "./suggestion-cards";
 import {
   chooseWrap,
@@ -62,9 +63,9 @@ export interface FlowCanvasProps {
   suggestionCounts: ReadonlyMap<NodeId, number>;
   /** The node to center, after "Voltar" or Esc (VID-27). */
   focusId: NodeId | null;
-  /** A click on a leaf (VID-25). */
   /** A search pick on this level: the card to center, at the current zoom. */
   centerOn: { id: NodeId; nonce: number } | null;
+  /** A click on a leaf (VID-25). */
   onSelect: (id: NodeId) => void;
   /** A click on a node with an inner flow, after the frame grows (VID-18, 23). */
   onOpen: (node: FlowNode) => void;
@@ -210,7 +211,6 @@ function KeepInView({
   return null;
 }
 
-/** Wires drawn by `WireEdge`; `imports` wires get the dashed `edge-imports` class (VID-05, PROJ-03), `contains` wires the faint `edge-contains` one. */
 /** Centers the card of each new `request`, at the current zoom; a request already there at mount is not served. */
 function CenterOn({
   request,
@@ -237,17 +237,21 @@ function CenterOn({
   return null;
 }
 
+/** Wires drawn by `WireEdge`; `imports` wires get the dashed `edge-imports` class (VID-05, PROJ-03), `contains` wires the faint `edge-contains` one. */
 export function toFlowEdges(
   edges: FlowEdge[],
   times: Schedule,
   reduced: boolean,
   turnY: ReadonlyMap<string, number> = new Map(),
   lanes: ReadonlyMap<string, number> = new Map(),
+  sides: ReadonlyMap<string, readonly [Side, Side]> = new Map(),
 ): WireFlowEdge[] {
   return edges.map((e) => ({
     id: e.id,
     source: e.source,
     target: e.target,
+    sourceHandle: (sides.get(e.id) ?? FLOW_SIDES)[0],
+    targetHandle: (sides.get(e.id) ?? FLOW_SIDES)[1],
     type: "wire",
     data: {
       drawAt: times.drawAt.get(e.id) ?? 0,
@@ -255,6 +259,7 @@ export function toFlowEdges(
       reduced,
       ...(turnY.has(e.id) ? { turnY: turnY.get(e.id) } : {}),
       ...(lanes.has(e.id) ? { lane: lanes.get(e.id) } : {}),
+      ...(e.labelKey === undefined ? {} : { labelKey: e.labelKey }),
     },
     ...(e.label === undefined ? {} : { label: e.label }),
     ...(e.kind === "imports" || e.kind === "contains"
@@ -274,11 +279,11 @@ export function FlowCanvas({
   suggestions,
   suggestionCounts,
   focusId,
+  centerOn,
   onSelect,
   onOpen,
   onSuggestion,
   onBack,
-  centerOn,
 }: FlowCanvasProps) {
   const box = useRef<HTMLDivElement>(null);
   const timer = useRef<number | undefined>(undefined);
@@ -412,14 +417,37 @@ export function FlowCanvas({
       const y = bands.gapAbove[to];
       if (to > from && y !== undefined && !levelMoved) turnY.set(e.id, y);
     }
+    // A wire that touches a card the viewer moved picks the sides that face
+    // each other; the others keep the layout's right and left.
+    const sides = new Map<string, readonly [Side, Side]>();
+    for (const e of level.edges) {
+      const from = positions.get(e.source);
+      const to = positions.get(e.target);
+      if (
+        from &&
+        to &&
+        (levelMoved?.has(e.source) || levelMoved?.has(e.target))
+      )
+        sides.set(e.id, pickSides(from, to));
+    }
     const lanes =
       gridLanes && !levelMoved
         ? gridLanes
-        : wireLanes(level.edges, positions, new Set(turnY.keys()));
+        : wireLanes(
+            level.edges.filter((e) => !sides.has(e.id)),
+            positions,
+            new Set(turnY.keys()),
+          );
     const cards = suggestionCards(level, suggestions, levelId, panelNodeOf);
     const lit = highlighted(cards);
-    const sources = new Set(level.edges.map((e) => e.source));
-    const targets = new Set(level.edges.map((e) => e.target));
+    const portsIn = new Map<NodeId, Set<Side>>();
+    const portsOut = new Map<NodeId, Set<Side>>();
+    for (const e of level.edges) {
+      const [out, into] = sides.get(e.id) ?? FLOW_SIDES;
+      portsOut.set(e.source, (portsOut.get(e.source) ?? new Set()).add(out));
+      portsIn.set(e.target, (portsIn.get(e.target) ?? new Set()).add(into));
+    }
+    const noPorts: ReadonlySet<Side> = new Set();
     const nodes: StepFlowNode[] = drawn.map((n) => {
       const measured = sizes.get(n.id);
       const openable = isOpenable(n, graph);
@@ -436,8 +464,8 @@ export function FlowCanvas({
           codeLine: codeLineOf(n),
           openable,
           childCount: openable ? levelSize(graph, n) : undefined,
-          hasIn: targets.has(n.id),
-          hasOut: sources.has(n.id),
+          portsIn: portsIn.get(n.id) ?? noPorts,
+          portsOut: portsOut.get(n.id) ?? noPorts,
           enterAt: times.enterAt.get(n.id) ?? 0,
           selected: n.id === selected || lit.has(n.id),
           dimmed: cards.length > 0 && !lit.has(n.id) && n.id !== selected,
@@ -454,7 +482,7 @@ export function FlowCanvas({
     });
     return {
       nodes,
-      edges: toFlowEdges(level.edges, times, reduced, turnY, lanes),
+      edges: toFlowEdges(level.edges, times, reduced, turnY, lanes, sides),
       cards,
       positions,
       padX: bands.gapAbove.length > 1 ? WRAP_PAD : FIT_PAD,

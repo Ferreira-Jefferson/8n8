@@ -6,20 +6,27 @@ import {
   fetchHistoryEntry,
   starHistory,
 } from "../api";
+import { tagLabel } from "../flow/card";
+import { defaultT, plural, type Translate, useLocale, useT } from "../i18n";
 import { StarButton } from "./StarButton";
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-/** "há 2 h": the age of a date in short pt-BR form; older than a month shows the date. */
-export function relativeDate(then: number, now = Date.now()): string {
+/** "há 2 h": the age of a date in short form; older than a month shows the date. */
+export function relativeDate(
+  then: number,
+  now = Date.now(),
+  t: Translate = defaultT,
+  locale = "pt-BR",
+): string {
   const age = Math.max(0, now - then);
-  if (age < MINUTE) return "agora";
-  if (age < HOUR) return `há ${Math.floor(age / MINUTE)} min`;
-  if (age < DAY) return `há ${Math.floor(age / HOUR)} h`;
-  if (age < 30 * DAY) return `há ${Math.floor(age / DAY)} d`;
-  return new Date(then).toLocaleDateString("pt-BR");
+  if (age < MINUTE) return t("time.now");
+  if (age < HOUR) return t("time.min", { n: Math.floor(age / MINUTE) });
+  if (age < DAY) return t("time.hour", { n: Math.floor(age / HOUR) });
+  if (age < 30 * DAY) return t("time.day", { n: Math.floor(age / DAY) });
+  return new Date(then).toLocaleDateString(locale);
 }
 
 export function humanBytes(bytes: number): string {
@@ -28,15 +35,11 @@ export function humanBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function count(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
-}
-
-function sizes(item: HistoryItem): string {
+function sizes(item: HistoryItem, t: Translate): string {
   return [
-    count(item.lines, "linha", "linhas"),
-    count(item.files, "arquivo", "arquivos"),
-    count(item.nodes, "nó", "nós"),
+    plural(t, "line", item.lines),
+    plural(t, "file", item.files),
+    plural(t, "node", item.nodes),
     humanBytes(item.bytes),
   ].join(" · ");
 }
@@ -49,6 +52,8 @@ export function HistoryDrawer({
   onClose: () => void;
   onOpenEntry: (entry: HistoryEntry) => void;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [items, setItems] = useState<HistoryItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -60,12 +65,12 @@ export function HistoryDrawer({
     let live = true;
     fetchHistory().then(
       (list) => live && setItems(list),
-      () => live && setError("Não foi possível ler o histórico."),
+      () => live && setError(t("history.errRead")),
     );
     return () => {
       live = false;
     };
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -102,7 +107,7 @@ export function HistoryDrawer({
     try {
       onOpenEntry(await fetchHistoryEntry(item.id));
     } catch {
-      setError("Não foi possível abrir a pesquisa.");
+      setError(t("history.errOpen"));
     }
   }
 
@@ -111,7 +116,7 @@ export function HistoryDrawer({
       await deleteHistory(item.id);
       setItems((prev) => prev?.filter((i) => i.id !== item.id) ?? null);
     } catch {
-      setError("Não foi possível apagar a pesquisa.");
+      setError(t("history.errDelete"));
     }
   }
 
@@ -125,7 +130,7 @@ export function HistoryDrawer({
           ) ?? null,
       );
     } catch {
-      setError("Não foi possível marcar o favorito.");
+      setError(t("history.errStar"));
     }
   }
 
@@ -133,19 +138,23 @@ export function HistoryDrawer({
     item.kind === "project" ? "PASTA" : "TRECHO";
 
   return (
-    <aside ref={drawer} className="history-drawer" aria-label="Histórico">
+    <aside
+      ref={drawer}
+      className="history-drawer"
+      aria-label={t("history.title")}
+    >
       <input
         ref={search}
         type="search"
-        aria-label="Buscar no histórico"
-        placeholder="Buscar pesquisa"
+        aria-label={t("history.searchAria")}
+        placeholder={t("history.searchPlaceholder")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         spellCheck={false}
       />
       {error !== null && <p role="alert">{error}</p>}
       {items !== null && items.length === 0 && (
-        <p className="history-empty">Nenhuma pesquisa guardada.</p>
+        <p className="history-empty">{t("history.none")}</p>
       )}
       {shown !== null && shown.length > 0 && (
         <ul>
@@ -159,11 +168,13 @@ export function HistoryDrawer({
                 <span className="history-title">{item.title}</span>
                 <span className="history-meta">
                   <span className="history-tag" data-tag={tag(item)}>
-                    {tag(item)}
+                    {tagLabel(tag(item), t)}
                   </span>
-                  <span>{relativeDate(item.openedAt)}</span>
+                  <span>
+                    {relativeDate(item.openedAt, Date.now(), t, locale)}
+                  </span>
                 </span>
-                <span className="history-sizes">{sizes(item)}</span>
+                <span className="history-sizes">{sizes(item, t)}</span>
               </button>
               <StarButton
                 title={item.title}
@@ -173,7 +184,7 @@ export function HistoryDrawer({
               <button
                 type="button"
                 className="history-delete"
-                aria-label={`Apagar ${item.title}`}
+                aria-label={t("history.delete", { title: item.title })}
                 onClick={() => remove(item)}
               >
                 ×
@@ -183,7 +194,7 @@ export function HistoryDrawer({
         </ul>
       )}
       {items !== null && items.length > 0 && shown?.length === 0 && (
-        <p className="history-empty">Nada encontrado.</p>
+        <p className="history-empty">{t("history.noMatch")}</p>
       )}
     </aside>
   );

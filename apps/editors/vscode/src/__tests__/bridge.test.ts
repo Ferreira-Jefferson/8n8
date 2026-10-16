@@ -68,6 +68,7 @@ describe("createBridge: what passes (VSC-11)", () => {
     const app = createCore({
       env: {},
       ptsRules: "regras",
+      steRules: "regras",
       cacheDir: "unused",
       historyFile: undefined,
       port: BRIDGE_PORT,

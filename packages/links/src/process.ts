@@ -40,4 +40,5 @@ export const processLinker: Linker = {
     return candidatePaths(request.key, fromDir).has(target);
   },
   label: () => "processo",
+  labelKey: "process",
 };

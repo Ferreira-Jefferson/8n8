@@ -29,9 +29,9 @@ vi.mock("node:child_process", async () => {
         stderr: new PassThrough(),
         kill: () => true,
       });
-      child.stdin.on("finish", () => {
+      child.stdin.on("data", () => {
         child.stdout.write(
-          JSON.stringify({ type: "result", is_error: false, result: "ok" }),
+          `${JSON.stringify({ type: "result", is_error: false, result: "ok" })}\n`,
         );
         setImmediate(() => child.emit("close", 0));
       });
@@ -60,7 +60,9 @@ describe("the registered claude-code provider, real deps (CC-03, CC-04)", () => 
       json: "native",
     });
     expect(text).toBe("ok");
-    expect(spawned).toHaveLength(1);
+    // The process that answered, and the one started for the next call (CC-13).
+    expect(spawned).toHaveLength(2);
+    expect(spawned[1]?.options).toEqual(spawned[0]?.options);
     const [run] = spawned;
     expect(run?.command).toBe(process.execPath);
     expect(run?.options.shell).toBe(false);

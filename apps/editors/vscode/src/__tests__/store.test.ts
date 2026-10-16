@@ -67,6 +67,15 @@ describe("createVscodeSettingsStore (VSC-05)", () => {
     expect(await e.store.read()).toEqual({ provider: "openrouter" });
   });
 
+  it("keeps the picked Claude Code path, and drops one that is not text (CC-18)", async () => {
+    const e = editor();
+    await e.store.write({ claudePath: "D:\\tools\\claude.exe" });
+    expect(await e.store.read()).toEqual({
+      claudePath: "D:\\tools\\claude.exe",
+    });
+    expect(await editor({ claudePath: 1 }).store.read()).toEqual({});
+  });
+
   it("keeps a valid theme and drops an unknown one", async () => {
     expect(await editor({ theme: "dark" }).store.read()).toEqual({
       theme: "dark",

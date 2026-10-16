@@ -55,6 +55,10 @@ try {
     extensionTestsEnv: {
       APP8N8_AUTO_SUMMARY: "1",
       APP8N8_TEST_USER_DATA: join(tmp, "user-data"),
+      // A real summary through the user's Claude Code, only when asked (CC-15).
+      ...(process.env.APP8N8_CLAUDE_SMOKE === "1"
+        ? { APP8N8_CLAUDE_SMOKE: "1" }
+        : {}),
     },
     ...(existsSync(installed) ? { vscodeExecutablePath: installed } : {}),
     launchArgs: [

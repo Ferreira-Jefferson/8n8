@@ -1,4 +1,4 @@
-import type { LlmClient } from "@8n8/model";
+import { type LlmClient, LocalizedError } from "@8n8/model";
 import { anthropic } from "./anthropic";
 import { claudeCode } from "./claude-code";
 import { openai } from "./openai";
@@ -20,9 +20,10 @@ export const DEFAULT_PROVIDER = openrouter.id;
 export function providerOf(id: string): LlmProvider {
   const provider = PROVIDERS.find((p) => p.id === id);
   if (!provider) {
-    throw new Error(
-      `Provedor de LLM desconhecido: "${id}". Use um destes: ${PROVIDERS.map((p) => p.id).join(", ")}.`,
-    );
+    throw new LocalizedError("llm.unknownProvider", {
+      id,
+      known: PROVIDERS.map((p) => p.id).join(", "),
+    });
   }
   return provider;
 }

@@ -11,6 +11,11 @@ const cacheDir = (name: string) => join(repoRoot, ".cache", name);
 // The specs written before feature 08 test the pipeline, not the way to ask: their
 // servers explain a node as soon as it is selected. configuracoes.e2e.ts covers the clicks.
 const AUTO = { APP8N8_AUTO_SUMMARY: "1", APP8N8_AUTO_SUGGESTIONS: "1" };
+// A variable that names no file turns the Claude Code lookup off (CC-15, CC-16): no test
+// server reaches the claude of the machine running the tests, and none defaults to it.
+export const NO_CLAUDE = {
+  APP8N8_CLAUDE_PATH: join(cacheDir("e2e-no-claude"), "claude.exe"),
+};
 
 // These specs share the fake LLM's request log and the e2e-real cache (4319): they wipe
 // and count them, so they run one at a time. Every other spec runs in parallel.
@@ -110,6 +115,7 @@ export default defineConfig({
       timeout: 180_000,
       env: {
         APP8N8_TOKEN: E2E_TOKEN,
+        ...NO_CLAUDE,
         // Set and empty: .env never supplies the key.
         OPENROUTER_API_KEY: "",
         // A cache dir of its own (<repo>/.cache/e2e-offline), apart from the user's entries;
@@ -130,6 +136,7 @@ export default defineConfig({
       timeout: 180_000,
       env: {
         APP8N8_TOKEN: E2E_TOKEN,
+        ...NO_CLAUDE,
         APP8N8_PORT: "4319",
         // A fake key and a local base URL: no request ever reaches openrouter.ai.
         OPENROUTER_API_KEY: "e2e-fake-key",
@@ -151,6 +158,7 @@ export default defineConfig({
       timeout: 180_000,
       env: {
         APP8N8_TOKEN: E2E_TOKEN,
+        ...NO_CLAUDE,
         APP8N8_PORT: "4320",
         OPENROUTER_API_KEY: "e2e-fake-key",
         OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
@@ -172,6 +180,7 @@ export default defineConfig({
       timeout: 180_000,
       env: {
         APP8N8_TOKEN: E2E_TOKEN,
+        ...NO_CLAUDE,
         APP8N8_PORT: "4321",
         OPENROUTER_API_KEY: "",
         APP8N8_CACHE_DIR: cacheDir("e2e-history-offline"),
@@ -190,6 +199,7 @@ export default defineConfig({
       timeout: 180_000,
       env: {
         APP8N8_TOKEN: E2E_TOKEN,
+        ...NO_CLAUDE,
         APP8N8_PORT: "4322",
         OPENROUTER_API_KEY: "",
         // The URL only comes from here; the key and the rest go in through the dialog.

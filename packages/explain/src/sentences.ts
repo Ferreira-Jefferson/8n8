@@ -7,6 +7,9 @@ export interface DraftClaim {
   kind: "sentence" | "input" | "output" | "suggestion";
 }
 
+/** An abbreviation that ends in a full stop does not end the sentence. */
+const ABBREVIATION = /\b(?:e\.g|i\.e|vs|p\.ex)\.$/i;
+
 /** Cuts after `.`, `!` or `?` followed by whitespace, outside backticks; trims and drops empty parts (C1). */
 export function splitSentences(text: string): string[] {
   const parts: string[] = [];
@@ -16,7 +19,12 @@ export function splitSentences(text: string): string[] {
     const ch = text[i] as string;
     current += ch;
     if (ch === "`") inCode = !inCode;
-    else if (!inCode && /[.!?]/.test(ch) && /\s/.test(text[i + 1] ?? "")) {
+    else if (
+      !inCode &&
+      /[.!?]/.test(ch) &&
+      /\s/.test(text[i + 1] ?? "") &&
+      !ABBREVIATION.test(current)
+    ) {
       parts.push(current);
       current = "";
     }

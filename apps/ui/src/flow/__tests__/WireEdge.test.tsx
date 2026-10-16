@@ -2,7 +2,14 @@ import { cleanup, render } from "@testing-library/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { branchLabelAt, turnPath, type WireData, WireEdge } from "../WireEdge";
+import { Side } from "../sides";
+import {
+  branchLabelAt,
+  curvePath,
+  turnPath,
+  type WireData,
+  WireEdge,
+} from "../WireEdge";
 
 // The label portal needs a mounted React Flow; here it renders in place.
 vi.mock("@xyflow/react", async (importOriginal) => ({
@@ -24,6 +31,8 @@ function renderWire(data: WireData, label?: string) {
           sourceY={0}
           targetX={400}
           targetY={200}
+          sourcePosition={Side.Right}
+          targetPosition={Side.Left}
           data={data}
           {...(label === undefined ? {} : { label })}
         />
@@ -72,42 +81,93 @@ describe("WireEdge (VID-05, VID-06)", () => {
 
 describe("WireEdge branch labels (VID-21)", () => {
   it.each(["true", "false"])(
-    "shows %s as .branch-label next to the start of the wire",
+    "shows %s as .branch-label by the port of the card the branch leads to",
     (text) => {
       const { container } = renderWire(timed, text);
       const label = container.querySelector<HTMLElement>(".branch-label");
       expect(label?.textContent).toBe(text);
       expect(label?.getAttribute("data-branch-label")).toBe(text);
-      // The wire leaves the port at (0, 0) and goes down: the label starts
-      // 30 px right of the port, 4 px below its line.
-      expect(label?.style.transform).toBe("translate(30px, 4px)");
+      // The wire comes down into the left port at (400, 200): the label ends
+      // 8 px before the port, 4 px below its line.
+      expect(label?.style.transform).toBe(
+        "translate(392px, 204px) translateX(-100%)",
+      );
     },
   );
 
-  it("puts the label of a wire that goes up above the port line", () => {
-    expect(branchLabelAt(100, 200, 0)).toEqual({ x: 130, y: 196, above: true });
-  });
-
-  it("puts the label of a wire that goes down or straight below the port line", () => {
-    expect(branchLabelAt(0, 0, 200)).toEqual({ x: 30, y: 4, above: false });
-    expect(branchLabelAt(0, 100, 100)).toEqual({
-      x: 30,
-      y: 104,
-      above: false,
+  it("puts the label above the end of a wire that comes up into the port", () => {
+    expect(branchLabelAt(400, 100, 300, Side.Left)).toEqual({
+      x: 392,
+      y: 96,
+      above: true,
+      leftward: true,
     });
   });
 
-  it("keeps the two labels of a condition next to the start, one on each side of the port line", () => {
-    // true goes up from 300 to 100, false goes down from 300 to 500.
-    const yes = branchLabelAt(700, 300, 100);
-    const no = branchLabelAt(700, 300, 500);
-    expect(yes).toEqual({ x: 730, y: 296, above: true });
-    expect(no).toEqual({ x: 730, y: 304, above: false });
+  it("puts the label above the end of a straight wire, and below the end of one that comes down", () => {
+    expect(branchLabelAt(400, 100, 100, Side.Left)).toEqual({
+      x: 392,
+      y: 96,
+      above: true,
+      leftward: true,
+    });
+    expect(branchLabelAt(400, 300, 100, Side.Left)).toEqual({
+      x: 392,
+      y: 304,
+      above: false,
+      leftward: true,
+    });
+  });
+
+  it("gives the two labels of a condition two places, each by its own card", () => {
+    // true comes up from 300 into a card at 100, false down into one at 500.
+    const yes = branchLabelAt(1100, 100, 300, Side.Left);
+    const no = branchLabelAt(1100, 500, 300, Side.Left);
+    expect(yes).toEqual({ x: 1092, y: 96, above: true, leftward: true });
+    expect(no).toEqual({ x: 1092, y: 504, above: false, leftward: true });
   });
 
   it("shows no label on a wire without one", () => {
     const { container } = renderWire(timed);
     expect(container.querySelector(".branch-label")).toBeNull();
+  });
+});
+
+describe("WireEdge on the sides of the cards", () => {
+  it("leaves and arrives straight out of the sides the wire uses", () => {
+    expect(curvePath(0, 0, Side.Right, 400, 0, Side.Left)).toBe(
+      "M 0 0 C 60 0, 340 0, 400 0",
+    );
+    expect(curvePath(0, 0, Side.Bottom, 100, 300, Side.Top)).toBe(
+      "M 0 0 C 0 60, 100 240, 100 300",
+    );
+    expect(curvePath(400, 0, Side.Left, 0, 100, Side.Right)).toBe(
+      "M 400 0 C 340 0, 60 100, 0 100",
+    );
+  });
+
+  it("puts a label on a wire that comes into a right port to the right of the port", () => {
+    expect(branchLabelAt(100, 200, 100, Side.Right)).toEqual({
+      x: 108,
+      y: 204,
+      above: false,
+      leftward: false,
+    });
+  });
+
+  it("puts a label on a wire into the top of a card above the port, and into the bottom below it", () => {
+    expect(branchLabelAt(100, 200, 0, Side.Top)).toEqual({
+      x: 104,
+      y: 196,
+      above: true,
+      leftward: false,
+    });
+    expect(branchLabelAt(100, 200, 400, Side.Bottom)).toEqual({
+      x: 104,
+      y: 204,
+      above: false,
+      leftward: false,
+    });
   });
 });
 
@@ -136,6 +196,8 @@ describe("WireEdge turning to the next row (VID-10)", () => {
             sourceY={70}
             targetX={0}
             targetY={380}
+            sourcePosition={Side.Right}
+            targetPosition={Side.Left}
             data={{ ...timed, turnY: 180 }}
           />
         </svg>

@@ -2,7 +2,13 @@ import { randomBytes } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { createCore, createFileSettingsStore, resolvePort } from "@8n8/server";
+import {
+  createCore,
+  createFileSettingsStore,
+  DEFAULT_LOCALE,
+  resolvePort,
+  translateSystem,
+} from "@8n8/server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import type { Hono } from "hono";
 
@@ -18,6 +24,8 @@ export interface RunDeps {
     web: string | undefined;
     /** The Português Técnico Simplificado rules file. */
     ptsRules: string;
+    /** The Simplified Technical English rules file. */
+    steRules: string;
   };
   out: (line: string) => void;
   err: (line: string) => void;
@@ -26,32 +34,6 @@ export interface RunDeps {
   /** `app` asks for a window with no address bar; the host falls back to a tab. */
   openBrowser: (url: string, app: boolean) => void;
 }
-
-const HELP = `Uso: 8n8 [pasta] [--no-open] [--no-app]
-
-Abre o mapa da pasta (ou a tela inicial, sem pasta) numa janela própria do
-Chrome ou do Edge, sem barra de endereço. Sem eles, abre no navegador padrão.
-
-Opções:
-  --no-open   sobe o servidor sem abrir o navegador
-  --no-app    abre numa aba do navegador padrão, em vez da janela própria
-  --help      mostra este texto
-
-Variáveis de ambiente:
-  APP8N8_PORT          porta do servidor (padrão 8148)
-  APP8N8_CACHE_DIR     pasta do cache (padrão ~/.8n8/cache)
-  APP8N8_HISTORY_DIR   pasta do historico.db (padrão ~/.8n8)
-  APP8N8_CONFIG_DIR    pasta do config.json, gravado pela tela (padrão ~/.8n8)
-  APP8N8_TOKEN         token de sessão fixo, com 32 caracteres ou mais (testes)
-
-LLM (opcional; sem chave, o mapa funciona). Configure pela tela, em
-Configurações. Uma variável definida ganha da tela:
-  APP8N8_LLM_PROVIDER  openrouter (padrão), openai, anthropic, openai-compatible ou claude-code
-  OPENROUTER_API_KEY, OPENROUTER_BASE_URL
-  OPENAI_API_KEY, ANTHROPIC_API_KEY
-  APP8N8_LLM_API_KEY, APP8N8_LLM_BASE_URL   openai-compatible (a URL só vem daqui)
-  APP8N8_MODEL, APP8N8_REVIEW_MODEL
-  APP8N8_AUTO_SUMMARY, APP8N8_AUTO_SUGGESTIONS   1 gera sem clique, 0 só com clique`;
 
 const isFolder = (path: string) => {
   try {
@@ -63,45 +45,53 @@ const isFolder = (path: string) => {
 
 /** `8n8 [pasta] [--no-open] [--no-app] [--help]`; the result is the exit code. */
 export async function run(argv: string[], deps: RunDeps): Promise<number> {
+  const data = join(deps.home, ".8n8");
+  const settings = createFileSettingsStore(
+    join(deps.env.APP8N8_CONFIG_DIR || data, "config.json"),
+  );
+  // The terminal speaks the language chosen on the screen; a missing file reads as the default.
+  const locale = (await settings.read()).locale ?? DEFAULT_LOCALE;
+  const t = (
+    key: Parameters<typeof translateSystem>[1],
+    vars?: Record<string, string | number>,
+  ) => translateSystem(locale, key, vars);
   let args: ReturnType<typeof parse>;
   try {
     args = parse(argv);
   } catch (e) {
     deps.err(e instanceof Error ? e.message : String(e));
-    deps.err("Veja 8n8 --help.");
+    deps.err(t("cli.seeHelp"));
     return 1;
   }
   if (args.values.help) {
-    deps.out(HELP);
+    deps.out(t("cli.help"));
     return 0;
   }
 
   const given = args.positionals[0];
   const folder = given === undefined ? undefined : resolve(deps.cwd, given);
   if (given !== undefined && (folder === undefined || !isFolder(folder))) {
-    deps.err(`Pasta não encontrada: ${given}`);
+    deps.err(t("cli.folderNotFound", { path: given }));
     return 1;
   }
 
   const fixed = deps.env.APP8N8_TOKEN ?? "";
   if (fixed !== "" && fixed.length < 32) {
-    deps.err("APP8N8_TOKEN precisa de 32 caracteres ou mais.");
+    deps.err(t("cli.tokenShort"));
     return 1;
   }
   const token = fixed || randomBytes(32).toString("hex");
 
   const port = resolvePort(deps.env);
-  const data = join(deps.home, ".8n8");
   const app = createCore({
     env: deps.env,
     ptsRules: readFileSync(deps.paths.ptsRules, "utf8"),
+    steRules: readFileSync(deps.paths.steRules, "utf8"),
     cacheDir: join(data, "cache"),
     historyFile: join(deps.env.APP8N8_HISTORY_DIR || data, "historico.db"),
     port,
     token,
-    settings: createFileSettingsStore(
-      join(deps.env.APP8N8_CONFIG_DIR || data, "config.json"),
-    ),
+    settings,
   });
   if (deps.paths.web !== undefined) {
     app.use("/*", serveStatic({ root: deps.paths.web }));
@@ -113,8 +103,8 @@ export async function run(argv: string[], deps: RunDeps): Promise<number> {
     const error = e as NodeJS.ErrnoException;
     deps.err(
       error.code === "EADDRINUSE"
-        ? `A porta ${port} já está em uso. Feche o outro processo e tente de novo.`
-        : `Erro ao subir o servidor: ${error.message}`,
+        ? t("cli.portInUse", { port })
+        : t("cli.serverError", { message: error.message }),
     );
     return 1;
   }
@@ -125,7 +115,7 @@ export async function run(argv: string[], deps: RunDeps): Promise<number> {
     ...(folder === undefined ? {} : { pasta: folder }),
   });
   const url = `http://8n8.localhost:${port}/#${launch}`;
-  deps.out(`8n8 em ${url}`);
+  deps.out(t("cli.running", { url }));
   if (!args.values["no-open"]) deps.openBrowser(url, !args.values["no-app"]);
   return 0;
 }

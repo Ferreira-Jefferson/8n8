@@ -1,3 +1,5 @@
+import { useT } from "../i18n";
+
 /** The clock that opens the history drawer, at the top right of both screens. */
 export function HistoryButton({
   open,
@@ -6,11 +8,12 @@ export function HistoryButton({
   open: boolean;
   onToggle: () => void;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
       className="btn-ghost history-btn"
-      aria-label="Histórico"
+      aria-label={t("history.title")}
       aria-expanded={open}
       data-history-toggle=""
       onClick={onToggle}

@@ -54,6 +54,10 @@ const app = createApp({
       work++;
       throw new Error("never reached");
     },
+    setClaudePath: async () => {
+      work++;
+      throw new Error("never reached");
+    },
   },
 });
 
@@ -185,6 +189,7 @@ describe("the API key never reaches a response (DIST-22, CFG-23)", () => {
     const { port } = provider.address() as AddressInfo;
     const base = {
       ptsRules: "regras",
+      steRules: "regras",
       historyFile: ":memory:",
       port: 8148,
       token: TEST_TOKEN,

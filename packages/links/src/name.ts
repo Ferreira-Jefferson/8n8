@@ -5,4 +5,5 @@ export const nameLinker: Linker = {
   sameLanguage: false,
   matches: (request, offer) => request.key === offer.key,
   label: () => "nome",
+  labelKey: "name",
 };

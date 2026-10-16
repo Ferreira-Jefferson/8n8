@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useT } from "../i18n";
 import {
   highlight,
   matchEntries,
@@ -39,6 +40,7 @@ export function NodeSearch({
   entries: readonly SearchEntry[];
   onPick: (id: NodeId) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(-1);
@@ -100,12 +102,12 @@ export function NodeSearch({
           ref={input}
           type="text"
           role="combobox"
-          aria-label="Buscar nó"
+          aria-label={t("search.aria")}
           aria-expanded={open}
           aria-controls={`${base}-list`}
           aria-autocomplete="list"
           aria-activedescendant={active >= 0 ? optionId(active) : undefined}
-          placeholder="Título ou nome da função"
+          placeholder={t("search.placeholder")}
           autoComplete="off"
           spellCheck={false}
           tabIndex={open ? 0 : -1}
@@ -120,7 +122,7 @@ export function NodeSearch({
           ref={lupa}
           type="button"
           className="search-lupa"
-          aria-label="Buscar nó"
+          aria-label={t("search.aria")}
           aria-expanded={open}
           aria-controls={`${base}-list`}
           onClick={() => (open ? close() : setOpen(true))}
@@ -141,7 +143,7 @@ export function NodeSearch({
       </div>
       {open && (
         <div className="search-results">
-          <div id={`${base}-list`} role="listbox" aria-label="Nós achados">
+          <div id={`${base}-list`} role="listbox" aria-label={t("search.list")}>
             {results.map((entry, i) => (
               <button
                 key={entry.id}
@@ -167,7 +169,7 @@ export function NodeSearch({
             ))}
           </div>
           {results.length === 0 && (
-            <p className="search-none">Nenhum nó achado.</p>
+            <p className="search-none">{t("search.none")}</p>
           )}
         </div>
       )}

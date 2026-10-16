@@ -39,7 +39,7 @@ import {
   resolvePort,
 } from "../core";
 import { createSettingsService } from "../settings";
-import { llmOf as llmFrom } from "./llm-of";
+import { llmOf as llmFrom, NO_CLAUDE } from "./llm-of";
 import { TEST_TOKEN } from "./test-token";
 
 const ptsRules = readFileSync(
@@ -157,6 +157,7 @@ describe("composeExplain", () => {
       {
         llm: llmOf({}, f),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("a"),
       },
@@ -172,6 +173,7 @@ describe("composeExplain", () => {
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k-123" }, f),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("b"),
       },
@@ -188,6 +190,7 @@ describe("composeExplain", () => {
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k", APP8N8_MODEL: "x/y" }, withModel),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("c"),
       },
@@ -200,6 +203,7 @@ describe("composeExplain", () => {
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k" }, withDefault),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("d"),
       },
@@ -216,6 +220,7 @@ describe("composeExplain", () => {
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("e"),
       },
@@ -242,6 +247,7 @@ describe("composeExplain", () => {
           f,
         ),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("f"),
       },
@@ -267,6 +273,7 @@ describe("composeExplain", () => {
       await composeSummary(env, {
         llm: llmOf(env, f),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir(name),
       })(req);
@@ -281,6 +288,7 @@ describe("composeExplain", () => {
       await composeSummary(env, {
         llm: llmOf(env, f),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir(name),
       })(req);
@@ -311,6 +319,7 @@ describe("composeExplain", () => {
           fakeFactory(),
         ),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("j"),
       },
@@ -325,6 +334,7 @@ describe("composeExplain", () => {
       await composeSummary(env, {
         llm: llmOf(env, fakeFactory()),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir(name),
       })(req);
@@ -341,6 +351,7 @@ describe("composeExplain for a step (VID-28)", () => {
       {
         llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("step"),
       },
@@ -365,6 +376,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
       const titles = composeTitles(env, {
         llm: llmOf(env, f),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("t-a"),
       });
@@ -393,6 +405,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
           f,
         ),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("t-b"),
       },
@@ -433,6 +446,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
           f,
         ),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("t-c"),
       },
@@ -454,6 +468,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
           fakeFactory(),
         ),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("t-d"),
       },
@@ -469,6 +484,7 @@ describe("composeTitles (VID-14, VID-17)", () => {
       const titles = composeTitles(env, {
         llm: llmOf(env, f),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir(name),
       });
@@ -507,12 +523,14 @@ describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
     const explain = composeSummary(env, {
       llm,
       ptsRules,
+      steRules: ptsRules,
       plugins: [pythonPlugin],
       cacheDir: dir("one-a"),
     });
     const titles = composeTitles(env, {
       llm,
       ptsRules,
+      steRules: ptsRules,
       plugins: [pythonPlugin],
       cacheDir: dir("one-b"),
     });
@@ -523,7 +541,8 @@ describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
   });
 
   it("the default factory builds the real client for a configured provider and none without a key", async () => {
-    const real = (env: Env) => createSettingsService(env, noSettings()).llm();
+    const real = (env: Env) =>
+      createSettingsService(env, noSettings(), undefined, NO_CLAUDE).llm();
     expect((await real({})).client).toBeUndefined();
     expect((await real({ OPENROUTER_API_KEY: "k" })).client).toHaveProperty(
       "complete",
@@ -547,6 +566,7 @@ describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
       createCore({
         env: { APP8N8_LLM_PROVIDER: "nope" },
         ptsRules: "regras",
+        steRules: "regras",
         cacheDir: dir("nope"),
         historyFile: undefined,
         port: 8148,
@@ -564,6 +584,7 @@ describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
       await composeSummary(env, {
         llm,
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("nk-a"),
       })(req),
@@ -572,6 +593,7 @@ describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
       await composeTitles(env, {
         llm,
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("nk-b"),
       })(titleReq),
@@ -590,6 +612,7 @@ describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
       const res = await composeSummary(env, {
         llm: llmOf(env, f),
         ptsRules,
+        steRules: ptsRules,
         plugins: [pythonPlugin],
         cacheDir: dir("prov"),
       })(req);
@@ -742,6 +765,7 @@ describe("composeReadProject", () => {
         {
           llm: llmOf({ OPENROUTER_API_KEY: "k" }, f),
           ptsRules,
+          steRules: ptsRules,
           plugins: [pythonPlugin],
           cacheDir: cache,
         },
@@ -881,6 +905,7 @@ describe("createCore (DIST-13)", () => {
     createCore({
       env: {},
       ptsRules: "regras",
+      steRules: "regras",
       cacheDir: join(dir, "cache"),
       historyFile,
       port: 8148,

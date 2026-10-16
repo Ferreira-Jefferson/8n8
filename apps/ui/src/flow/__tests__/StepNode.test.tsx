@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StepNode, type StepNodeData } from "../StepNode";
+import { Side } from "../sides";
 
 afterEach(cleanup);
 
@@ -34,8 +35,8 @@ function renderStep(n: FlowNode, extra: Partial<StepNodeData> = {}) {
     isTrigger: false,
     codeLine: "",
     openable: n.openable,
-    hasIn: true,
-    hasOut: true,
+    portsIn: new Set([Side.Left]),
+    portsOut: new Set([Side.Right]),
     enterAt: 0,
     selected: false,
     dimmed: false,
@@ -113,30 +114,55 @@ describe("StepNode ports (VID-03)", () => {
     const handles = [
       ...container.querySelectorAll<HTMLElement>(".react-flow__handle.port"),
     ];
-    const of = (type: string) =>
-      handles.find((h) => h.classList.contains(`port-${type}`));
-    return { in: of("in"), out: of("out") };
+    return (kind: "in" | "out", side: Side) =>
+      handles.find(
+        (h) =>
+          h.classList.contains(`port-${kind}`) &&
+          h.classList.contains(`port-${side}`),
+      )?.style.visibility;
   }
 
-  it("shows both ports when the card has wires on both sides", () => {
+  it("has an input and an output port on each of the four sides", () => {
     const { container } = renderStep(node());
-    const p = ports(container);
-    expect(p.in?.style.visibility).toBe("visible");
-    expect(p.out?.style.visibility).toBe("visible");
+    expect(container.querySelectorAll(".react-flow__handle.port")).toHaveLength(
+      8,
+    );
   });
 
-  it("hides the input port with hasIn=false", () => {
-    const { container } = renderStep(node(), { hasIn: false });
-    const p = ports(container);
-    expect(p.in?.style.visibility).toBe("hidden");
-    expect(p.out?.style.visibility).toBe("visible");
+  it("shows only the ports of the sides where a wire arrives or leaves", () => {
+    const { container } = renderStep(node());
+    const port = ports(container);
+    expect(port("in", Side.Left)).toBe("visible");
+    expect(port("out", Side.Right)).toBe("visible");
+    expect(port("in", Side.Right)).toBe("hidden");
+    expect(port("out", Side.Left)).toBe("hidden");
+    expect(port("in", Side.Top)).toBe("hidden");
+    expect(port("out", Side.Bottom)).toBe("hidden");
   });
 
-  it("hides the output port with hasOut=false", () => {
-    const { container } = renderStep(node(), { hasOut: false });
-    const p = ports(container);
-    expect(p.in?.style.visibility).toBe("visible");
-    expect(p.out?.style.visibility).toBe("hidden");
+  it("hides the input ports with no wire arriving", () => {
+    const { container } = renderStep(node(), { portsIn: new Set() });
+    const port = ports(container);
+    expect(port("in", Side.Left)).toBe("hidden");
+    expect(port("out", Side.Right)).toBe("visible");
+  });
+
+  it("hides the output ports with no wire leaving", () => {
+    const { container } = renderStep(node(), { portsOut: new Set() });
+    const port = ports(container);
+    expect(port("in", Side.Left)).toBe("visible");
+    expect(port("out", Side.Right)).toBe("hidden");
+  });
+
+  it("shows the port of the side a wire uses, whichever it is", () => {
+    const { container } = renderStep(node(), {
+      portsIn: new Set([Side.Top]),
+      portsOut: new Set([Side.Bottom]),
+    });
+    const port = ports(container);
+    expect(port("in", Side.Top)).toBe("visible");
+    expect(port("out", Side.Bottom)).toBe("visible");
+    expect(port("in", Side.Left)).toBe("hidden");
   });
 });
 

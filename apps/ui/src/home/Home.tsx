@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { fetchHistory, fetchHistoryEntry, starHistory } from "../api";
 import { relativeDate } from "../history/HistoryDrawer";
 import { StarButton } from "../history/StarButton";
+import { plural, type Translate, useLocale, useT } from "../i18n";
 
 const RECENT = 5;
 
@@ -47,10 +48,13 @@ function CodeIcon() {
   );
 }
 
-function detail(item: HistoryItem): string {
-  const where = item.kind === "project" ? (item.root ?? "Pasta") : "Trecho";
-  const nodes = item.nodes === 1 ? "1 nó" : `${item.nodes} nós`;
-  return `${where} · ${nodes} · ${relativeDate(item.openedAt)}`;
+function detail(item: HistoryItem, t: Translate, locale: string): string {
+  const where =
+    item.kind === "project"
+      ? (item.root ?? t("home.whereFolder"))
+      : t("home.whereSnippet");
+  const nodes = plural(t, "node", item.nodes);
+  return `${where} · ${nodes} · ${relativeDate(item.openedAt, Date.now(), t, locale)}`;
 }
 
 /** The launcher: open a folder or paste a snippet on the left; favourites and recent maps on the right. */
@@ -78,6 +82,8 @@ export function Home({
   /** While the drawer is open the lists wait; closing it reloads them (stars may have changed). */
   historyOpen: boolean;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [choosing, setChoosing] = useState(false);
@@ -87,18 +93,18 @@ export function Home({
     let live = true;
     fetchHistory().then(
       (list) => live && setItems(list),
-      () => live && setError("Não foi possível ler o histórico."),
+      () => live && setError(t("history.errRead")),
     );
     return () => {
       live = false;
     };
-  }, [historyOpen]);
+  }, [historyOpen, t]);
 
   async function open(item: HistoryItem) {
     try {
       onOpenEntry(await fetchHistoryEntry(item.id));
     } catch {
-      setError("Não foi possível abrir o mapa.");
+      setError(t("home.errOpen"));
     }
   }
 
@@ -111,7 +117,7 @@ export function Home({
         ),
       );
     } catch {
-      setError("Não foi possível marcar o favorito.");
+      setError(t("history.errStar"));
     }
   }
 
@@ -132,7 +138,7 @@ export function Home({
               {item.kind === "project" ? <FolderIcon /> : <CodeIcon />}
               <span className="home-item">
                 <b>{item.title}</b>
-                <small>{detail(item)}</small>
+                <small>{detail(item, t, locale)}</small>
               </span>
             </button>
             <StarButton
@@ -149,10 +155,10 @@ export function Home({
   return (
     <div className="home-grid">
       <div className="home-start">
-        <p className="home-title">O mapa do seu código.</p>
+        <p className="home-title">{t("home.title")}</p>
         <form
           className="home-card home-folder"
-          aria-label="Abrir pasta"
+          aria-label={t("home.openFolder")}
           onSubmit={(e) => {
             e.preventDefault();
             // An empty field has nothing to map: offer the system chooser.
@@ -160,12 +166,12 @@ export function Home({
             else onOpenFolder();
           }}
         >
-          <h2 className="home-label">Abrir pasta</h2>
+          <h2 className="home-label">{t("home.openFolder")}</h2>
           <label className="home-field">
             <FolderIcon />
             <input
               type="text"
-              aria-label="Caminho da pasta"
+              aria-label={t("home.folderPath")}
               placeholder="C:\projetos\loja"
               value={folder}
               onChange={(e) => {
@@ -182,19 +188,19 @@ export function Home({
                 className="home-btn"
                 onClick={() => onPick("folder")}
               >
-                Escolher pasta
+                {t("home.chooseFolder")}
               </button>
               <button
                 type="button"
                 className="home-btn"
                 onClick={() => onPick("file")}
               >
-                Escolher arquivo
+                {t("home.chooseFile")}
               </button>
             </div>
           ) : (
             <button type="submit" className="home-btn">
-              Mapear pasta
+              {t("home.mapFolder")}
             </button>
           )}
           <small>{reads}</small>
@@ -206,21 +212,16 @@ export function Home({
         >
           <CodeIcon />
           <span className="home-item">
-            <b>Colar trecho</b>
-            <small>Mapeia um pedaço de código</small>
+            <b>{t("home.paste")}</b>
+            <small>{t("home.pasteHint")}</small>
           </span>
         </button>
       </div>
       <div className="home-lists">
         {error !== null && <p role="alert">{error}</p>}
-        {favorites.length > 0 && list("Favoritos", favorites)}
-        {recent.length > 0 && list("Recentes", recent)}
-        {items.length === 0 && (
-          <p className="home-empty">
-            Os mapas que você gerar aparecem aqui. Marque a estrela para guardar
-            um mapa nos favoritos.
-          </p>
-        )}
+        {favorites.length > 0 && list(t("home.favorites"), favorites)}
+        {recent.length > 0 && list(t("home.recent"), recent)}
+        {items.length === 0 && <p className="home-empty">{t("home.empty")}</p>}
         {items.length > 0 && (
           <button
             type="button"
@@ -229,7 +230,7 @@ export function Home({
             aria-expanded={historyOpen}
             onClick={onShowHistory}
           >
-            Ver todo o histórico
+            {t("home.showHistory")}
           </button>
         )}
       </div>

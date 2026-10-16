@@ -7,13 +7,17 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { saveSettings } from "../../api";
+import { saveSettings, setClaudePath } from "../../api";
 import { patchOf, SettingsDialog } from "../SettingsDialog";
 
-vi.mock("../../api", () => ({ saveSettings: vi.fn() }));
+vi.mock("../../api", () => ({ saveSettings: vi.fn(), setClaudePath: vi.fn() }));
 const saveMock = vi.mocked(saveSettings);
+const claudeMock = vi.mocked(setClaudePath);
 
-beforeEach(() => saveMock.mockReset());
+beforeEach(() => {
+  saveMock.mockReset();
+  claudeMock.mockReset();
+});
 afterEach(cleanup);
 
 const DEFAULT_MODEL = "~deepseek/deepseek-v4-flash-latest";
@@ -23,6 +27,7 @@ const view = (over: Partial<SettingsResponse> = {}): SettingsResponse => ({
   autoSummary: false,
   autoSuggestions: false,
   theme: "system",
+  locale: "pt-BR",
   hasKey: false,
   providers: [
     { id: "openrouter", defaultModel: DEFAULT_MODEL, usesKey: true },
@@ -30,6 +35,7 @@ const view = (over: Partial<SettingsResponse> = {}): SettingsResponse => ({
     { id: "openai", defaultModel: "gpt-5-nano", usesKey: true },
   ],
   env: {},
+  claude: { path: null, source: null, envInvalid: false },
   ...over,
 });
 
@@ -278,5 +284,101 @@ describe("SettingsDialog with claude-code (CC-01)", () => {
     save();
     await screen.findByText("Configurações salvas.");
     expect(saveMock).toHaveBeenCalledWith({ provider: "claude-code" });
+  });
+});
+
+describe("SettingsDialog: where Claude Code is (CC-17, CC-18)", () => {
+  const PATH = "C:/npm/claude.exe";
+  const claude = (c: Partial<SettingsResponse["claude"]>) =>
+    view({
+      provider: "claude-code",
+      model: "claude-sonnet-5-5",
+      providers: [
+        { id: "openrouter", defaultModel: DEFAULT_MODEL, usesKey: true },
+        {
+          id: "claude-code",
+          defaultModel: "claude-sonnet-5-5",
+          usesKey: false,
+        },
+      ],
+      claude: { path: null, source: null, envInvalid: false, ...c },
+    });
+  const button = (name: string) => screen.queryByRole("button", { name });
+
+  it("says Claude Code was found, in green with its path, and offers to choose another", () => {
+    open(claude({ path: PATH, source: "auto" }));
+    const found = screen.getByText("Claude Code encontrado.");
+    expect(found.className).toBe("claude-ok");
+    expect(screen.getByText(PATH)).toBeTruthy();
+    expect(button("Escolher…")).toBeTruthy();
+    expect(button("Usar o automático")).toBeNull();
+  });
+
+  it("shows no button when a variable that works sets the path", () => {
+    open(claude({ path: PATH, source: "env" }));
+    expect(screen.getByText("Claude Code encontrado.")).toBeTruthy();
+    expect(button("Escolher…")).toBeNull();
+  });
+
+  it("says a wrong variable has no Claude Code, and offers to choose", () => {
+    open(claude({ envInvalid: true }));
+    expect(
+      screen.getByText(
+        "O caminho em APP8N8_CLAUDE_PATH não tem o Claude Code. Escolha o executável.",
+      ).className,
+    ).toBe("claude-warn");
+    expect(screen.queryByText("Claude Code encontrado.")).toBeNull();
+    expect(button("Escolher…")).toBeTruthy();
+  });
+
+  it("says Claude Code was not found when nothing points to it", () => {
+    open(claude({}));
+    expect(
+      screen.getByText("Claude Code não encontrado. Escolha o executável."),
+    ).toBeTruthy();
+  });
+
+  it("shows nothing about Claude Code for another provider", () => {
+    open(claude({ path: PATH, source: "auto" }));
+    fireEvent.change(screen.getByLabelText("Provedor"), {
+      target: { value: "openrouter" },
+    });
+    expect(screen.queryByText("Claude Code encontrado.")).toBeNull();
+    expect(button("Escolher…")).toBeNull();
+  });
+
+  it("asks the server to open the chooser and shows the answer", async () => {
+    const picked = claude({ path: "D:/tools/claude.exe", source: "picked" });
+    claudeMock.mockResolvedValue(picked);
+    const { onSaved } = open(claude({}));
+    fireEvent.click(button("Escolher…") as HTMLElement);
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(picked));
+    expect(claudeMock).toHaveBeenCalledWith("pick");
+  });
+
+  it("goes back to the automatic lookup from a picked file", async () => {
+    claudeMock.mockResolvedValue(claude({ path: PATH, source: "auto" }));
+    const { onSaved } = open(
+      claude({ path: "D:/c/claude.exe", source: "picked" }),
+    );
+    fireEvent.click(button("Usar o automático") as HTMLElement);
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(claudeMock).toHaveBeenCalledWith("auto");
+  });
+
+  it("says when the chosen file is not Claude Code, or the chooser failed", async () => {
+    open(claude({}));
+    claudeMock.mockResolvedValueOnce("not-claude");
+    fireEvent.click(button("Escolher…") as HTMLElement);
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Esse arquivo não é o Claude Code.",
+    );
+    claudeMock.mockResolvedValueOnce(null);
+    fireEvent.click(button("Escolher…") as HTMLElement);
+    await waitFor(() =>
+      expect(screen.getByRole("alert").textContent).toBe(
+        "A janela de arquivo não abriu.",
+      ),
+    );
   });
 });

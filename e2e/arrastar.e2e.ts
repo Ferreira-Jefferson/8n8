@@ -95,6 +95,24 @@ test.describe("dragging cards", () => {
     }
   });
 
+  test("a wire changes to the sides that face each other when its card is dragged", async ({
+    page,
+  }) => {
+    await openFrete(page);
+    const visible = (sel: string) =>
+      page
+        .locator(sel)
+        .evaluateAll(
+          (els) =>
+            els.filter((el) => getComputedStyle(el).visibility !== "hidden")
+              .length,
+        );
+    const vertical = ".port-top, .port-bottom";
+    expect(await visible(vertical)).toBe(0);
+    await dragCard(page, SE, 0, 600);
+    expect(await visible(vertical)).toBeGreaterThan(0);
+  });
+
   test("a moved card keeps its place after Esc and a new opening", async ({
     page,
   }) => {

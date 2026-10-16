@@ -114,7 +114,7 @@ Para acrescentar outro editor, veja [docs/adicionar-editor.md](docs/adicionar-ed
 
 Os resumos e as sugestões pedem um provedor de LLM. O jeito mais simples é pela tela: clique no botão **Configurações** (no canto de cima, em todas as telas) e preencha:
 
-- **Provedor**: `openrouter` (o padrão), `openai`, `anthropic` (os três pedem uma chave de API), `openai-compatible` (Ollama, LM Studio ou um servidor seu, com a URL pela variável de ambiente) ou `claude-code` (a sua assinatura do Claude Code, sem chave).
+- **Provedor**: `claude-code` (a sua assinatura do Claude Code, sem chave; é o padrão quando o 8n8 acha o Claude Code), `openrouter` (o padrão sem ele), `openai`, `anthropic` (os três pedem uma chave de API) ou `openai-compatible` (Ollama, LM Studio ou um servidor seu, com a URL pela variável de ambiente). Com `claude-code`, a tela diz se achou o Claude Code e tem o botão **Escolher…**, que abre a janela de arquivo do sistema.
 - **Chave de API**: o campo só recebe a chave. Ela nunca volta para a tela: o diálogo diz só "Chave guardada".
 - **Modelo**: escreva o nome exato do modelo, como o provedor o conhece. Vazio usa o padrão do provedor, que aparece como dica no campo.
 - **Gerar o resumo ao selecionar um nó** e **Pedir as sugestões ao selecionar um nó**: desligados, o resumo e as sugestões só são pedidos quando você clica em "Gerar resumo" ou "Pedir sugestões". Assim nada é gasto enquanto você só navega. O que já está no cache aparece sem clique.
@@ -129,8 +129,8 @@ Uma variável de ambiente ganha da tela, e o campo dela aparece travado no diál
 cp .env.example .env
 ```
 
-- `APP8N8_LLM_PROVIDER`: `openrouter` (o padrão), `openai`, `anthropic`, `openai-compatible` (Ollama, LM Studio, servidor próprio) ou `claude-code`.
-- `APP8N8_CLAUDE_PATH`: o caminho do executável do Claude Code, quando ele não está no lugar de instalação padrão. O caminho só vem desta variável, nunca da tela.
+- `APP8N8_LLM_PROVIDER`: `claude-code` (o padrão quando o Claude Code está instalado), `openrouter` (o padrão sem ele), `openai`, `anthropic` ou `openai-compatible` (Ollama, LM Studio, servidor próprio).
+- `APP8N8_CLAUDE_PATH`: o caminho do executável do Claude Code. É opcional: o 8n8 procura sozinho, e a tela também escolhe. Um caminho errado aqui desliga a busca automática, e a tela avisa.
 - `OPENROUTER_API_KEY`, `OPENAI_API_KEY` e `ANTHROPIC_API_KEY`: a chave de cada provedor. Esses três usam o endereço oficial. Só o `openrouter` aceita trocar a URL, por `OPENROUTER_BASE_URL`.
 - `APP8N8_LLM_BASE_URL` e `APP8N8_LLM_API_KEY`: a URL e a chave do provedor `openai-compatible`. A URL só vem desta variável: a tela não tem campo de URL. Em servidor local, a chave é opcional.
 - `APP8N8_MODEL` e `APP8N8_REVIEW_MODEL`: o modelo do resumo e o do revisor. Vazio usa o padrão do provedor.
@@ -140,7 +140,11 @@ A CLI instalada nunca lê um `.env`.
 
 ### O provedor `claude-code`
 
-Com o `claude-code`, o 8n8 roda o seu Claude Code em modo não interativo, numa pasta vazia própria, sem ferramentas, sem MCP e só com as suas configurações de usuário. O código do nó vai pelo stdin. Ele nunca roda dentro da pasta analisada, então os hooks e o `CLAUDE.md` dela não são carregados.
+Com o `claude-code`, o 8n8 roda o seu Claude Code em modo não interativo, numa pasta vazia própria, sem ferramentas, sem MCP e sem arquivos de configuração. O código do nó vai pelo stdin. Ele nunca roda dentro da pasta analisada, então os hooks e o `CLAUDE.md` dela não são carregados. Os seus hooks e plugins de usuário também não rodam. O login continua valendo.
+
+O 8n8 procura o Claude Code nesta ordem: `APP8N8_CLAUDE_PATH`, o arquivo escolhido em Configurações e os lugares de instalação conhecidos. No Windows, esses lugares são o npm global, o instalador oficial (`~/.local/bin`) e as pastas do `PATH`, inclusive o npm do nvm e do volta. O arquivo escolhido na tela vem só da janela de arquivo do sistema e precisa se chamar `claude` ou `claude.exe`. A API local nunca recebe um caminho.
+
+O modelo padrão é o `claude-sonnet-5-5`, com esforço baixo. Para não esperar a abertura do Claude Code a cada pedido, o 8n8 deixa até 2 processos já abertos (cerca de 300 MB cada). Cada processo responde um pedido só. Um processo sem uso fecha depois de 10 minutos, e todos fecham junto com o 8n8.
 
 Para acrescentar um provedor, veja [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md).
 

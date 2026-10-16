@@ -1,4 +1,5 @@
 import {
+  DEFAULT_LOCALE,
   type ExplainPart,
   type ExplainRequest,
   type ExplainResponse,
@@ -44,7 +45,10 @@ export interface AppDeps {
   /** Saved searches; absent in tests that do not need them. */
   history?: History | undefined;
   /** The LLM settings; absent in tests that do not need them (CFG-12, CFG-13). */
-  settings?: Pick<SettingsService, "view" | "update"> | undefined;
+  settings?:
+    | (Pick<SettingsService, "view" | "update" | "setClaudePath"> &
+        Partial<Pick<SettingsService, "locale">>)
+    | undefined;
   /** The system's file or folder chooser; absent in tests that do not need it. */
   pick?: PickPath | undefined;
 }
@@ -68,6 +72,8 @@ const include = z
   .optional();
 const projectBody = z.object({ path: z.string().min(1), include });
 const pickBody = z.object({ kind: z.enum(["folder", "file"]) });
+// The Claude Code path never comes in the body: only the system chooser gives it (CC-12, CC-18).
+const claudePathBody = z.object({ action: z.enum(["pick", "auto"]) }).strict();
 const graphBody = z.object({ source: z.string() });
 const starBody = z.object({ starred: z.boolean() });
 // Extra fields from the client (code, calls...) are dropped: the server builds the request (CORE-17).
@@ -109,6 +115,8 @@ async function loadOrigin(
   body: { source: string } | { root: string; include?: string[] | undefined },
   deps: AppDeps,
 ): Promise<Origin | { notFound: string }> {
+  // The masked docstring line is part of the code the LLM reads: it speaks the language of the system.
+  const locale = (await deps.settings?.locale?.()) ?? DEFAULT_LOCALE;
   if ("source" in body) {
     const { source } = body;
     const { plugin } = detectLanguage(source, deps.plugins);
@@ -120,6 +128,7 @@ async function loadOrigin(
           node.docstring,
           source.split(/\r?\n/),
           plugin.commentPrefix,
+          locale,
         ),
       nameOf: (node) => node.label,
       pluginOf: () => plugin,
@@ -147,6 +156,7 @@ async function loadOrigin(
         node.docstring,
         (file?.source ?? "").split(/\r?\n/),
         pluginOf(node).commentPrefix,
+        locale,
       );
     },
     pluginOf,
@@ -303,7 +313,10 @@ export function createApp(deps: AppDeps): Hono {
     if (!deps.pick) return c.json({ error: "not-found" }, 404);
     try {
       const extensions = deps.plugins.flatMap((p) => p.extensions);
-      return c.json({ path: await deps.pick(body.data.kind, extensions) });
+      const locale = (await deps.settings?.locale?.()) ?? DEFAULT_LOCALE;
+      return c.json({
+        path: await deps.pick(body.data.kind, extensions, undefined, locale),
+      });
     } catch (err) {
       console.error("seletor: não abriu", (err as Error).message);
       return c.json({ error: "pick-failed" }, 500);
@@ -414,6 +427,39 @@ export function createApp(deps: AppDeps): Hono {
         (err as NodeJS.ErrnoException).code ?? "erro desconhecido",
       );
       return c.json({ error: "save failed" }, 500);
+    }
+  });
+
+  // "pick" opens the system's file chooser and stores the claude it gives; "auto" erases it.
+  app.post("/api/settings/claude-path", async (c) => {
+    const body = claudePathBody.safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json({ error: "invalid body" }, 400);
+    if (!deps.settings) return c.json({ error: "not-found" }, 404);
+    if (body.data.action === "auto") {
+      return c.json(await deps.settings.setClaudePath(null));
+    }
+    if (!deps.pick) return c.json({ error: "not-found" }, 404);
+    let path: string | null;
+    try {
+      path = await deps.pick(
+        "file",
+        [".exe"],
+        "Claude Code",
+        (await deps.settings.locale?.()) ?? DEFAULT_LOCALE,
+      );
+    } catch (err) {
+      console.error("seletor: não abriu", (err as Error).message);
+      return c.json({ error: "pick-failed" }, 500);
+    }
+    // Closed without a choice: nothing changes.
+    if (path === null) return c.json(await deps.settings.view());
+    try {
+      return c.json(await deps.settings.setClaudePath(path));
+    } catch (err) {
+      if (err instanceof InvalidSettings) {
+        return c.json({ error: "not-claude" }, 400);
+      }
+      throw err;
     }
   });
 

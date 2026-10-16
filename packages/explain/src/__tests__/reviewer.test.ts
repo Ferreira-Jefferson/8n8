@@ -226,3 +226,53 @@ describe("redraftMessage (FID-08)", () => {
     );
   });
 });
+
+describe("null in the reviewer answer means nothing there", () => {
+  const json = (value: unknown) => JSON.stringify(value);
+  const claims: DraftClaim[] = [
+    { id: "s1", kind: "sentence", text: "Soma." },
+    { id: "s2", kind: "sentence", text: "Divide." },
+  ] as DraftClaim[];
+
+  it("reads a null problem as no problem: a supported item is kept", () => {
+    const verdicts = parseVerdicts(
+      json({
+        verdicts: [
+          { id: "s1", supported: true, evidence: [1], problem: null },
+          { id: "s2", supported: false, evidence: [], problem: null },
+        ],
+      }),
+    );
+    const { kept, problems } = applyVerdicts(claims, verdicts, 3);
+    expect(kept.map((c) => c.id)).toEqual(["s1"]);
+    expect(problems).toEqual([
+      { id: "s2", text: "Divide.", problem: "o código não mostra isso" },
+    ]);
+  });
+
+  it("reads null evidence as no line, and null verdicts as none", () => {
+    const verdicts = parseVerdicts(
+      json({ verdicts: [{ id: "s1", supported: true, evidence: null }] }),
+    );
+    expect(applyVerdicts(claims.slice(0, 1), verdicts, 3).problems).toEqual([
+      { id: "s1", text: "Soma.", problem: "sem linha de evidência" },
+    ]);
+    expect(parseVerdicts(json({ verdicts: null }))).toEqual([]);
+  });
+
+  it("drops a verdict with a null id or supported: its item reads not judged", () => {
+    const verdicts = parseVerdicts(
+      json({
+        verdicts: [
+          null,
+          { id: null, supported: true, evidence: [1] },
+          { id: "s1", supported: null, evidence: [1] },
+        ],
+      }),
+    );
+    expect(verdicts).toEqual([]);
+    expect(applyVerdicts(claims.slice(0, 1), verdicts, 3).problems).toEqual([
+      { id: "s1", text: "Soma.", problem: "o revisor não julgou este item" },
+    ]);
+  });
+});

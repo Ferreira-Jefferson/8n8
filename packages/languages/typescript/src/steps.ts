@@ -2,6 +2,7 @@ import { lineRange } from "@8n8/lang-treesitter";
 import {
   childId,
   type EdgeKind,
+  type EdgeLabelKey,
   type FlowEdge,
   type FlowNode,
   type NodeId,
@@ -64,6 +65,7 @@ interface Pending {
   source: NodeId;
   kind: EdgeKind;
   label?: string;
+  labelKey?: EdgeLabelKey;
 }
 
 function wire(from: Pending, target: NodeId): FlowEdge {
@@ -74,6 +76,7 @@ function wire(from: Pending, target: NodeId): FlowEdge {
     target,
   };
   if (from.label !== undefined) edge.label = from.label;
+  if (from.labelKey !== undefined) edge.labelKey = from.labelKey;
   return edge;
 }
 
@@ -175,8 +178,8 @@ function sequence(
   /** Walks the branches of a condition; each one starts with a `branch` wire. */
   const branchesOf = (
     id: NodeId,
-    branches: { label: string; body: Node[] }[],
-    fallthrough: string | null,
+    branches: { label: string; labelKey?: EdgeLabelKey; body: Node[] }[],
+    fallthrough: { label: string; labelKey: EdgeLabelKey } | null,
   ) => {
     const out: Pending[] = [];
     branches.forEach((branch, j) => {
@@ -184,13 +187,14 @@ function sequence(
         source: id,
         kind: "branch",
         label: branch.label,
+        ...(branch.labelKey ? { labelKey: branch.labelKey } : {}),
       };
       out.push(
         ...sequence(branch.body, childId(id, `b${j}`), parentId, ctx, [first]),
       );
     });
     if (fallthrough !== null) {
-      out.push({ source: id, kind: "branch", label: fallthrough });
+      out.push({ source: id, kind: "branch", ...fallthrough });
     }
     pending = out;
   };
@@ -203,9 +207,14 @@ function sequence(
       range: lineRange(statement),
       openable: false,
     });
-    const branches = [
+    const branches: {
+      label: string;
+      labelKey?: EdgeLabelKey;
+      body: Node[];
+    }[] = [
       {
         label: "true",
+        labelKey: "true",
         body: blockOf(statement.childForFieldName("consequence")),
       },
     ];
@@ -221,11 +230,19 @@ function sequence(
         alt = inner.childForFieldName("alternative");
       } else {
         hasElse = true;
-        branches.push({ label: "false", body: blockOf(inner) });
+        branches.push({
+          label: "false",
+          labelKey: "false",
+          body: blockOf(inner),
+        });
         alt = null;
       }
     }
-    branchesOf(id, branches, hasElse ? null : "false");
+    branchesOf(
+      id,
+      branches,
+      hasElse ? null : { label: "false", labelKey: "false" },
+    );
   };
 
   /** `switch`: one condition, one branch per `case`, plus the `default`. */
@@ -244,10 +261,18 @@ function sequence(
         clause.type === "switch_default"
           ? "padrão"
           : oneLine(clause.childForFieldName("value")?.text ?? ""),
+      // The `default` is the system's word; a `case` is the code's.
+      ...(clause.type === "switch_default"
+        ? { labelKey: "default" as const }
+        : {}),
       body: expand(clause.childrenForFieldName("body")),
     }));
     const hasDefault = clauses.some((c) => c.type === "switch_default");
-    branchesOf(id, branches, hasDefault ? null : "nenhum");
+    branchesOf(
+      id,
+      branches,
+      hasDefault ? null : { label: "nenhum", labelKey: "none" },
+    );
   };
 
   /** Loops and `try` become a node that opens into its own steps. */

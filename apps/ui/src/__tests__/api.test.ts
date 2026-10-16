@@ -17,6 +17,7 @@ import {
   fetchSummary,
   fetchTitles,
   saveSettings,
+  setClaudePath,
   setSessionToken,
   starHistory,
 } from "../api";
@@ -225,9 +226,11 @@ describe("settings (CFG-12, CFG-13, CFG-21)", () => {
     autoSummary: false,
     autoSuggestions: true,
     theme: "system",
+    locale: "pt-BR",
     hasKey: true,
     providers: [{ id: "openrouter", defaultModel: "m/x", usesKey: true }],
     env: {},
+    claude: { path: null, source: null, envInvalid: false },
   };
 
   it("fetchSettings gets /api/settings and returns the view", async () => {
@@ -269,6 +272,22 @@ describe("settings (CFG-12, CFG-13, CFG-21)", () => {
   it("saveSettings gives null on 400", async () => {
     fakeFetch(400, { error: "invalid settings" });
     expect(await saveSettings({ model: "--x" })).toBeNull();
+  });
+
+  it("setClaudePath posts only the action, never a path, and returns the new view (CC-18)", async () => {
+    const fn = fakeFetch(200, view);
+    expect(await setClaudePath("pick")).toEqual(view);
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/settings/claude-path");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body as string)).toEqual({ action: "pick" });
+  });
+
+  it("setClaudePath maps 400 to not-claude and other failures to null", async () => {
+    fakeFetch(400, { error: "not-claude" });
+    expect(await setClaudePath("pick")).toBe("not-claude");
+    fakeFetch(500, { error: "pick-failed" });
+    expect(await setClaudePath("pick")).toBeNull();
   });
 });
 

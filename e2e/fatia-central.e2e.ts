@@ -547,7 +547,7 @@ test.describe("Explicação", () => {
       .toBe("peso, distancia → valor do frete");
     const suggestions = suggestionButtons(view);
     await expect(suggestions).toHaveText([
-      "Guardar a tabela de frete em cache (linha 5, media)",
+      "Guardar a tabela de frete em cache (linha 5, média)",
       "Dar nome ao limite de peso (linha 8, baixa)",
     ]);
     expect(calls).toEqual([FRETE]);
@@ -560,7 +560,7 @@ test.describe("Explicação", () => {
     await expect(view.locator('[aria-current="true"]')).toHaveCount(0);
     await view
       .getByRole("button", {
-        name: "Guardar a tabela de frete em cache (linha 5, media)",
+        name: "Guardar a tabela de frete em cache (linha 5, média)",
         exact: true,
       })
       .click();

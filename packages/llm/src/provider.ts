@@ -9,6 +9,8 @@ export interface LlmConfig {
   baseURL: string | undefined;
   model: string;
   reviewModel: string;
+  /** The Claude Code executable picked in the settings dialog; APP8N8_CLAUDE_PATH wins over it (CC-16). */
+  claudePath?: string | undefined;
 }
 
 /** What the host gives a provider besides the config: its environment, and a fetch for tests. */

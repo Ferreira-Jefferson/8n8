@@ -152,14 +152,16 @@ exports[`typescriptPlugin > gives the same graph for the same text, matching the
       "kind": "branch",
       "source": "fn:calcularFrete/s2",
       "target": "fn:calcularFrete/s2/b0/s0",
-      "label": "true"
+      "label": "true",
+      "labelKey": "true"
     },
     {
       "id": "branch:fn:calcularFrete/s2->fn:calcularFrete/s2/b1/s0",
       "kind": "branch",
       "source": "fn:calcularFrete/s2",
       "target": "fn:calcularFrete/s2/b1/s0",
-      "label": "false"
+      "label": "false",
+      "labelKey": "false"
     },
     {
       "id": "next:fn:processarPedido/s0->fn:processarPedido/s1",

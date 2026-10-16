@@ -1,4 +1,6 @@
 import {
+  LOCALES,
+  type Locale,
   type SettingsField,
   type SettingsPatch,
   type SettingsResponse,
@@ -6,7 +8,8 @@ import {
   type Theme,
 } from "@8n8/model";
 import { useEffect, useId, useState } from "react";
-import { saveSettings } from "../api";
+import { saveSettings, setClaudePath } from "../api";
+import { type MessageKey, useT } from "../i18n";
 
 export interface SettingsDialogProps {
   /** The effective settings; null when the server could not answer. */
@@ -24,10 +27,16 @@ interface Form {
   autoSuggestions: boolean;
 }
 
-const THEME_LABELS: Record<Theme, string> = {
-  system: "Seguir o sistema",
-  light: "Claro",
-  dark: "Escuro",
+const THEME_LABELS: Record<Theme, MessageKey> = {
+  system: "settings.theme.system",
+  light: "settings.theme.light",
+  dark: "settings.theme.dark",
+};
+
+/** Each language in its own name, so a person finds theirs in any language. */
+const LOCALE_LABELS: Record<Locale, string> = {
+  "pt-BR": "Português (Brasil)",
+  en: "English",
 };
 
 /** Each click moves to the next theme, back to the first after the last. */
@@ -81,6 +90,7 @@ export function SettingsDialog({
   onClose,
 }: SettingsDialogProps) {
   const titleId = useId();
+  const t = useT();
   const [form, setForm] = useState<Form | null>(
     settings ? formOf(settings) : null,
   );
@@ -123,6 +133,16 @@ export function SettingsDialog({
     setTheme(next.theme);
   }
 
+  // The language saves on the choice too; the screen changes at once.
+  async function switchLocale(locale: Locale) {
+    const next = await saveSettings({ locale });
+    if (!next) {
+      setStatus("failed");
+      return;
+    }
+    onSaved(next);
+  }
+
   const set = <K extends keyof Form>(key: K, value: Form[K]) => {
     setForm((f) => (f ? { ...f, [key]: value } : f));
     setStatus("idle");
@@ -136,7 +156,9 @@ export function SettingsDialog({
   const lockedBy = (field: SettingsField) => settings?.env[field];
   const lockNote = (field: SettingsField) =>
     lockedBy(field) ? (
-      <small className="locked">{`Definido pela variável ${lockedBy(field)}`}</small>
+      <small className="locked">
+        {t("settings.lockedBy", { name: lockedBy(field) ?? "" })}
+      </small>
     ) : null;
 
   return (
@@ -148,13 +170,15 @@ export function SettingsDialog({
         aria-labelledby={titleId}
       >
         <div className="settings-head">
-          <h2 id={titleId}>Configurações</h2>
+          <h2 id={titleId}>{t("settings.title")}</h2>
           {theme && (
             <button
               type="button"
               className="btn-ghost theme-btn"
-              aria-label={`Tema: ${THEME_LABELS[theme]}`}
-              title={`Tema: ${THEME_LABELS[theme]}`}
+              aria-label={t("settings.theme", {
+                name: t(THEME_LABELS[theme]),
+              })}
+              title={t("settings.theme", { name: t(THEME_LABELS[theme]) })}
               onClick={() => switchTheme(theme)}
             >
               <ThemeIcon theme={theme} />
@@ -162,7 +186,7 @@ export function SettingsDialog({
           )}
         </div>
         {!settings || !form ? (
-          <p>Não foi possível ler as configurações.</p>
+          <p>{t("settings.unreadable")}</p>
         ) : (
           <form
             onSubmit={(e) => {
@@ -171,7 +195,20 @@ export function SettingsDialog({
             }}
           >
             <label>
-              Provedor
+              {t("settings.locale")}
+              <select
+                value={settings.locale}
+                onChange={(e) => switchLocale(e.target.value as Locale)}
+              >
+                {LOCALES.map((l) => (
+                  <option key={l} value={l}>
+                    {LOCALE_LABELS[l]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {t("settings.provider")}
               <select
                 value={form.provider}
                 disabled={Boolean(lockedBy("provider"))}
@@ -185,21 +222,30 @@ export function SettingsDialog({
               </select>
             </label>
             {lockNote("provider")}
+            {form.provider === "claude-code" && (
+              <ClaudeState
+                settings={settings}
+                onChanged={(next) => {
+                  onSaved(next);
+                  setStatus("idle");
+                }}
+              />
+            )}
             {!usesKey(settings, form.provider) ? (
-              <p className="key-state">
-                O Claude Code usa a sua assinatura. Não precisa de chave.
-              </p>
+              <p className="key-state">{t("settings.apiKey.notNeeded")}</p>
             ) : (
               <>
                 <label>
-                  Chave de API
+                  {t("settings.apiKey")}
                   <input
                     type="password"
                     autoComplete="off"
                     value={form.apiKey}
                     disabled={Boolean(lockedBy("apiKey"))}
                     placeholder={
-                      settings.hasKey ? "Chave guardada" : "Cole a chave"
+                      settings.hasKey
+                        ? t("settings.apiKey.stored")
+                        : t("settings.apiKey.paste")
                     }
                     onChange={(e) => set("apiKey", e.target.value)}
                   />
@@ -207,20 +253,20 @@ export function SettingsDialog({
                 {lockNote("apiKey")}
                 {settings.hasKey && !lockedBy("apiKey") && (
                   <p className="key-state">
-                    Chave guardada{" "}
+                    {t("settings.apiKey.stored")}{" "}
                     <button
                       type="button"
                       className="btn-ghost"
                       onClick={() => save({ apiKey: null })}
                     >
-                      Apagar chave
+                      {t("settings.apiKey.delete")}
                     </button>
                   </p>
                 )}
               </>
             )}
             <label>
-              Modelo
+              {t("settings.model")}
               <input
                 type="text"
                 value={form.model}
@@ -237,7 +283,7 @@ export function SettingsDialog({
                 disabled={Boolean(lockedBy("autoSummary"))}
                 onChange={(e) => set("autoSummary", e.target.checked)}
               />
-              Gerar o resumo ao selecionar um nó
+              {t("settings.autoSummary")}
             </label>
             {lockNote("autoSummary")}
             <label className="check">
@@ -247,25 +293,21 @@ export function SettingsDialog({
                 disabled={Boolean(lockedBy("autoSuggestions"))}
                 onChange={(e) => set("autoSuggestions", e.target.checked)}
               />
-              Pedir as sugestões ao selecionar um nó
+              {t("settings.autoSuggestions")}
             </label>
             {lockNote("autoSuggestions")}
-            {status === "saved" && <p role="status">Configurações salvas.</p>}
-            {status === "failed" && (
-              <p role="alert">
-                Não foi possível salvar. Confira a chave e o modelo.
-              </p>
-            )}
+            {status === "saved" && <p role="status">{t("settings.saved")}</p>}
+            {status === "failed" && <p role="alert">{t("settings.failed")}</p>}
             <div className="dialog-actions">
               <button
                 type="submit"
                 className="btn"
                 disabled={status === "saving"}
               >
-                Salvar
+                {t("settings.save")}
               </button>
               <button type="button" className="btn-ghost" onClick={onClose}>
-                Fechar
+                {t("settings.close")}
               </button>
             </div>
           </form>
@@ -273,11 +315,91 @@ export function SettingsDialog({
         {(!settings || !form) && (
           <div className="dialog-actions">
             <button type="button" className="btn-ghost" onClick={onClose}>
-              Fechar
+              {t("settings.close")}
             </button>
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Where Claude Code is (CC-17): found in green, with its path; a wrong APP8N8_CLAUDE_PATH
+ * and a missing one as a warning. "Choose…" opens the system's file chooser; a variable
+ * that works needs no choice, so it shows no button.
+ */
+function ClaudeState({
+  settings,
+  onChanged,
+}: {
+  settings: SettingsResponse;
+  onChanged: (settings: SettingsResponse) => void;
+}) {
+  const t = useT();
+  const [error, setError] = useState<"not-claude" | "failed" | null>(null);
+  const [busy, setBusy] = useState(false);
+  const { path, source, envInvalid } = settings.claude;
+
+  async function choose(action: "pick" | "auto") {
+    setBusy(true);
+    const next = await setClaudePath(action);
+    setBusy(false);
+    if (next === "not-claude" || next === null) {
+      setError(next === null ? "failed" : "not-claude");
+      return;
+    }
+    setError(null);
+    onChanged(next);
+  }
+
+  return (
+    <div className="claude-state">
+      {envInvalid && (
+        <p className="claude-warn">
+          {t("settings.claude.envInvalid", { name: "APP8N8_CLAUDE_PATH" })}
+        </p>
+      )}
+      {path ? (
+        <p className="claude-ok">
+          {t("settings.claude.found")} <small>{path}</small>
+        </p>
+      ) : (
+        !envInvalid && (
+          <p className="claude-warn">{t("settings.claude.missing")}</p>
+        )
+      )}
+      {error && (
+        <p className="claude-warn" role="alert">
+          {t(
+            error === "not-claude"
+              ? "settings.claude.notClaude"
+              : "settings.claude.pickFailed",
+          )}
+        </p>
+      )}
+      {source !== "env" && (
+        <p className="key-state">
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={busy}
+            onClick={() => choose("pick")}
+          >
+            {t("settings.claude.pick")}
+          </button>
+          {source === "picked" && (
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={busy}
+              onClick={() => choose("auto")}
+            >
+              {t("settings.claude.auto")}
+            </button>
+          )}
+        </p>
+      )}
     </div>
   );
 }
@@ -315,11 +437,12 @@ function ThemeIcon({ theme }: { theme: Theme }) {
 
 /** The sliders that open the settings, on every screen (CFG-20). */
 export function SettingsButton({ onOpen }: { onOpen: () => void }) {
+  const t = useT();
   return (
     <button
       type="button"
       className="btn-ghost settings-btn"
-      aria-label="Configurações"
+      aria-label={t("settings.title")}
       onClick={onOpen}
     >
       <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">

@@ -1,4 +1,5 @@
 import type {
+  EdgeLabelKey,
   FlowEdge,
   FlowNode,
   LinkChannel,
@@ -26,6 +27,8 @@ export interface Linker {
   matches(request: LinkRequest, offer: Offer, ctx: LinkContext): boolean;
   /** Text of the wire, e.g. `HTTP POST /api/frete`. */
   label(request: LinkRequest, offer: Offer): string;
+  /** Set when the system, not the code, writes the text: the screen says the key in the language of the system. */
+  labelKey?: EdgeLabelKey;
 }
 
 export interface LinkInput {

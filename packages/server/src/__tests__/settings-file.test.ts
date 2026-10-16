@@ -44,6 +44,15 @@ describe("createFileSettingsStore (CFG-19)", () => {
     });
   });
 
+  it("keeps the picked Claude Code path between runs (CC-18)", async () => {
+    const path = join(dir, "config.json");
+    const store = createFileSettingsStore(path);
+    await store.write({ claudePath: "D:\\tools\\claude.exe" });
+    expect(await createFileSettingsStore(path).read()).toEqual({
+      claudePath: "D:\\tools\\claude.exe",
+    });
+  });
+
   it("writes and reads back, creating the folder, and leaves no temporary file", async () => {
     const path = join(dir, "nested", ".8n8", "config.json");
     const store = createFileSettingsStore(path);

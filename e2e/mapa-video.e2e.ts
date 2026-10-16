@@ -180,7 +180,10 @@ test.describe("O visual do vídeo", () => {
       cardOf(page, id).evaluate((el) => {
         const side = (cls: string) =>
           getComputedStyle(el.querySelector(cls) as Element).visibility;
-        return { in: side(".port-in"), out: side(".port-out") };
+        return {
+          in: side(".port-in.port-left"),
+          out: side(".port-out.port-right"),
+        };
       });
     expect(await ports(PEDIDO)).toEqual({ in: "hidden", out: "visible" });
     expect(await ports(`${PEDIDO}/s3`)).toEqual({
@@ -191,7 +194,7 @@ test.describe("O visual do vídeo", () => {
       in: "visible",
       out: "hidden",
     });
-    const port = cardOf(page, `${PEDIDO}/s3`).locator(".port-out");
+    const port = cardOf(page, `${PEDIDO}/s3`).locator(".port-out.port-right");
     expect(await css(port, "background-color")).toBe(MAIN);
     expect(await css(port, "border-radius")).toBe("50%");
     expect(await css(port, "width")).toBe(await css(port, "height"));
@@ -240,14 +243,14 @@ test.describe("O visual do vídeo", () => {
     // The top level holds the subfolders and the root files (PROJ-02).
     expect(folders).toEqual(["PASTA", "PASTA", "PASTA", "ARQUIVO", "ARQUIVO"]);
     for (const t of folders) seen.add(t);
-    await clickCard(page, "dir:pedidos");
-    await expect(nodes(page)).toHaveCount(3);
-    const files = await levelTags(page);
     // Folders do not open in the side panel: their tag is copper; files stay green.
     const tagOf = (word: string) =>
       nodes(page).filter({ hasText: word }).first().locator(".tag");
     expect(await css(tagOf("PASTA"), "color")).toBe(WARM);
     expect(await css(tagOf("ARQUIVO"), "color")).toBe(MAIN);
+    await clickCard(page, "dir:pedidos");
+    await expect(nodes(page)).toHaveCount(3);
+    const files = await levelTags(page);
     expect(files).toEqual(["ARQUIVO", "ARQUIVO", "ARQUIVO"]);
     for (const t of files) seen.add(t);
 

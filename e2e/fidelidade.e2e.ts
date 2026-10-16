@@ -206,7 +206,7 @@ test.describe("Fidelidade", () => {
     await expect(evidence(view, "o1")).toHaveText(["L9, L11"]);
     await expect(
       view.getByRole("button", {
-        name: "Guardar a tabela de frete em cache (linha 5, media)",
+        name: "Guardar a tabela de frete em cache (linha 5, média)",
         exact: true,
       }),
     ).toHaveCount(1);

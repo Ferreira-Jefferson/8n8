@@ -109,13 +109,14 @@ async function expectSelectedNearCentre(page: Page, id: string) {
     .toEqual([true, true, true, true]);
 }
 
-/** Most room between a branch label and the start of its wire, in screen px (VID-21). */
-const NEAR_START = 40;
+/** Most room between a branch label and the input port of a card, in screen px (VID-21). */
+const NEAR_END = 40;
 
 /**
  * Where each branch label of the condition `source` sits: whether it is within
- * NEAR_START of the source port, the cards it overlaps, how many points of any
- * wire fall inside it, and whether it lies inside the canvas (VID-21).
+ * NEAR_END of the input port of a card other than `source` (the card its
+ * branch leads to; ramos.e2e.ts checks which), the cards it overlaps, how many
+ * points of any wire fall inside it, and whether it lies inside the canvas (VID-21).
  */
 function labelSpots(page: Page, source: string) {
   return page.evaluate(
@@ -126,15 +127,23 @@ function labelSpots(page: Page, source: string) {
         b.left < a.right &&
         a.top < b.bottom &&
         b.top < a.bottom;
-      const port = document
-        .querySelector(
-          `[aria-roledescription="node"][data-id="${source}"] .port-out.port-right`,
+      const ports = [
+        ...document.querySelectorAll(
+          '[aria-roledescription="node"] .port-in.port-left',
+        ),
+      ]
+        .filter(
+          (el) =>
+            el
+              .closest("[aria-roledescription='node']")
+              ?.getAttribute("data-id") !== source,
         )
-        ?.getBoundingClientRect();
+        .map((el) => {
+          const r = el.getBoundingClientRect();
+          return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+        });
       const canvas = document.querySelector(".canvas")?.getBoundingClientRect();
-      if (!port || !canvas) return [];
-      const sx = port.left + port.width / 2;
-      const sy = port.top + port.height / 2;
+      if (ports.length === 0 || !canvas) return [];
       const points: { x: number; y: number }[] = [];
       for (const path of document.querySelectorAll<SVGPathElement>(
         "path.wire",
@@ -158,11 +167,14 @@ function labelSpots(page: Page, source: string) {
       }));
       return [...document.querySelectorAll("[data-branch-label]")].map((el) => {
         const b = el.getBoundingClientRect();
-        const dx = Math.max(b.left - sx, 0, sx - b.right);
-        const dy = Math.max(b.top - sy, 0, sy - b.bottom);
+        const away = (p: { x: number; y: number }) =>
+          Math.hypot(
+            Math.max(b.left - p.x, 0, p.x - b.right),
+            Math.max(b.top - p.y, 0, p.y - b.bottom),
+          );
         return {
           label: el.textContent,
-          nearStart: Math.hypot(dx, dy) <= near,
+          nearEnd: ports.some((p) => away(p) <= near),
           cards: cards.filter((c) => hit(b, c.box)).map((c) => c.id),
           wirePoints: points.filter(
             (p) =>
@@ -176,7 +188,7 @@ function labelSpots(page: Page, source: string) {
         };
       });
     },
-    { source, near: NEAR_START },
+    { source, near: NEAR_END },
   );
 }
 
@@ -388,11 +400,11 @@ test.describe("Navegação", () => {
     expect(await css(page.locator('[data-branch-label="true"]'), "color")).toBe(
       MAIN,
     );
-    // Each label sits next to the start of its wire, touches no card and no
-    // wire, and stays inside the canvas.
+    // Each label sits by the input port of the card its branch leads to,
+    // touches no card and no wire, and stays inside the canvas.
     const clear = (label: string) => ({
       label,
-      nearStart: true,
+      nearEnd: true,
       cards: [],
       wirePoints: 0,
       inside: true,

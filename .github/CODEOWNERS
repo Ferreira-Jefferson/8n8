@@ -11,6 +11,7 @@
 # Único ponto que inicia processos, e as guardas de build.
 /apps/cli/src/open-browser.ts @Ferreira-Jefferson
 /packages/llm/src/claude-code.ts @Ferreira-Jefferson
+/packages/llm/src/__tests__/processes.test.ts @Ferreira-Jefferson
 
 # A ponte da extensão e a página da webview (VSC-14).
 /apps/editors/vscode/src/bridge.ts @Ferreira-Jefferson

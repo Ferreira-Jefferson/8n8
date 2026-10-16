@@ -1,6 +1,8 @@
 import type { FlowNode } from "@8n8/model";
-import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { provisionalLabel, tagOf } from "./card";
+import { Handle, type Node, type NodeProps } from "@xyflow/react";
+import { plural, useT } from "../i18n";
+import { provisionalLabel, tagLabel, tagOf } from "./card";
+import { SIDES, type Side } from "./sides";
 
 export interface StepNodeData extends Record<string, unknown> {
   node: FlowNode;
@@ -10,9 +12,9 @@ export interface StepNodeData extends Record<string, unknown> {
   isTrigger: boolean;
   /** The mono line of the card (VID-03). */
   codeLine: string;
-  /** A wire arrives on the left / leaves on the right (VID-03). */
-  hasIn: boolean;
-  hasOut: boolean;
+  /** The sides where a wire arrives / leaves; the other ports stay hidden (VID-03). */
+  portsIn: ReadonlySet<Side>;
+  portsOut: ReadonlySet<Side>;
   /** A click opens an inner flow, so the card shows the `›` mark (VID-24). */
   openable: boolean;
   /** Milliseconds until the card enters (VID-06). */
@@ -34,9 +36,10 @@ export type StepFlowNode = Node<StepNodeData, "step">;
 
 /** One card: tag, title with › when it opens, and a code line (VID-03, 04, 15, 22, 26, 32; CORE-06, 23). The hub of an inner level carries the back button. */
 export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
+  const t = useT();
   const { node, suggestionCount } = data;
   const tag = tagOf(node, data.isTrigger);
-  const name = data.title ?? provisionalLabel(node);
+  const name = data.title ?? provisionalLabel(node, t);
   const classes = [
     "node",
     data.selected ? "on" : "",
@@ -52,18 +55,22 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
       data-enter-at={data.enterAt}
       style={{ animationDelay: `${data.enterAt}ms` }}
     >
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="port port-in"
-        style={{ visibility: data.hasIn ? "visible" : "hidden" }}
-      />
+      {SIDES.map((side) => (
+        <Handle
+          key={side}
+          id={side}
+          type="target"
+          position={side}
+          className={`port port-in port-${side}`}
+          style={{ visibility: data.portsIn.has(side) ? "visible" : "hidden" }}
+        />
+      ))}
       {onBack && (
         <button
           type="button"
           className="hub-back nodrag nopan"
-          aria-label="Nível anterior"
-          title="Voltar"
+          aria-label={t("step.back")}
+          title={t("step.backTitle")}
           onClick={(e) => {
             e.stopPropagation();
             onBack();
@@ -75,7 +82,7 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
           </svg>
         </button>
       )}
-      <span className="tag">{tag}</span>
+      <span className="tag">{tagLabel(tag, t)}</span>
       <b className="name" title={name}>
         {name}
         {data.openable && !data.isHub && (
@@ -86,29 +93,32 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
       </b>
       <code className="fn">{data.codeLine}</code>
       {data.childCount !== undefined && (
-        <span
-          className="hub-count"
-          title={data.childCount === 1 ? "1 nó" : `${data.childCount} nós`}
-        >
+        <span className="hub-count" title={plural(t, "node", data.childCount)}>
           {data.childCount}
         </span>
       )}
       {node.syntaxError && (
         <span className="step-error">
-          {`Erro de sintaxe na linha ${node.syntaxError.line}`}
+          {t("step.syntaxError", { line: node.syntaxError.line })}
         </span>
       )}
       {suggestionCount ? (
-        <span className="step-badge" title="Sugestões">
+        <span className="step-badge" title={t("step.suggestions")}>
           {suggestionCount}
         </span>
       ) : null}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="port port-out"
-        style={{ visibility: data.hasOut ? "visible" : "hidden" }}
-      />
+      {SIDES.map((side) => (
+        <Handle
+          key={side}
+          id={side}
+          type="source"
+          position={side}
+          className={`port port-out port-${side}`}
+          style={{
+            visibility: data.portsOut.has(side) ? "visible" : "hidden",
+          }}
+        />
+      ))}
     </div>
   );
 }

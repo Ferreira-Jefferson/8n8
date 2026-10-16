@@ -120,6 +120,10 @@ export async function buildExtension(
     join(repoRoot, "docs/portugues-tecnico-simplificado.md"),
     join(outDir, "pts.md"),
   );
+  cpSync(
+    join(repoRoot, "docs/ingles-tecnico-simplificado.md"),
+    join(outDir, "ste.md"),
+  );
 }
 
 if (

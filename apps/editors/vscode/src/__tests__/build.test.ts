@@ -52,6 +52,7 @@ describe("the extension build (VSC-07)", () => {
     const app = createCore({
       env: {},
       ptsRules: "regras",
+      steRules: "regras",
       cacheDir: join(out, "cache"),
       historyFile: undefined,
       port: 8148,

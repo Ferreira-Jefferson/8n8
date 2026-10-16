@@ -105,6 +105,7 @@ export function linkProject(input: LinkInput): LinkResult {
           source: request.nodeId,
           target: only.nodeId,
           label: linker.label(request, only),
+          ...(linker.labelKey ? { labelKey: linker.labelKey } : {}),
         });
         linkedHere.push(request.nodeId);
       }

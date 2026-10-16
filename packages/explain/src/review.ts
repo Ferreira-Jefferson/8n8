@@ -1,12 +1,15 @@
-import type {
-  ChatMessage,
-  ExplainPart,
-  LlmClient,
-  ReviewStatus,
-  Suggestion,
-  Summary,
+import {
+  type ChatMessage,
+  DEFAULT_LOCALE,
+  type ExplainPart,
+  type LlmClient,
+  type Locale,
+  type ReviewStatus,
+  type Suggestion,
+  type Summary,
 } from "@8n8/model";
 import { layerOne, type Problem } from "./checks";
+import { wordsOf } from "./messages";
 import {
   applyVerdicts,
   parseVerdicts,
@@ -42,6 +45,7 @@ function withDocstringSuggestion(
   draft: Draft,
   line: number | undefined,
   lineCount: number,
+  locale: Locale,
 ): Draft {
   if (
     draft.docstring?.reflects !== false ||
@@ -56,8 +60,8 @@ function withDocstringSuggestion(
     ...draft,
     suggestions: [
       {
-        command: `Atualize a docstring: ${reason}`,
-        reason: "A docstring não reflete o que o código faz.",
+        command: wordsOf(locale).docstringCommand(reason),
+        reason: wordsOf(locale).docstringReason,
         line,
         severity: "media" as const,
       },
@@ -74,6 +78,8 @@ export interface ReviewDeps {
   reviewModel: string;
   prompt: { text: string };
   reviewer: { text: string };
+  /** The language of the user turns and of the problems; Portuguese when absent. */
+  locale?: Locale;
   /** When set, the summary keeps only its first sentences, before review (VID-28). */
   maxSentences?: number;
 }
@@ -111,8 +117,9 @@ export async function reviewedDraft(
 ): Promise<ReviewOutcome> {
   const { llm, part, model, reviewModel, prompt, reviewer, maxSentences } =
     deps;
+  const locale = deps.locale ?? DEFAULT_LOCALE;
   const lineCount = input.code.split("\n").length;
-  const ctx = { code: input.code, neighbours: input.neighbours };
+  const ctx = { code: input.code, neighbours: input.neighbours, locale };
   const base: ChatMessage[] = [
     { role: "system", content: prompt.text },
     { role: "user", content: input.user },
@@ -137,6 +144,7 @@ export async function reviewedDraft(
       capped,
       input.docstringLine,
       lineCount,
+      locale,
     );
     const claims = toClaims(draft);
 
@@ -151,12 +159,22 @@ export async function reviewedDraft(
           { role: "system", content: reviewer.text },
           {
             role: "user",
-            content: reviewerMessage(input.code, input.neighbours, passed),
+            content: reviewerMessage(
+              input.code,
+              input.neighbours,
+              passed,
+              locale,
+            ),
           },
         ],
         json: "native",
       });
-      const applied = applyVerdicts(passed, parseVerdicts(answer), lineCount);
+      const applied = applyVerdicts(
+        passed,
+        parseVerdicts(answer),
+        lineCount,
+        locale,
+      );
       kept = applied.kept;
       const order = (p: Problem) => claims.findIndex((c) => c.id === p.id);
       problems = [...rejected, ...applied.problems].sort(
@@ -168,7 +186,7 @@ export async function reviewedDraft(
       messages = [
         ...base,
         { role: "assistant", content: raw },
-        { role: "user", content: redraftMessage(problems) },
+        { role: "user", content: redraftMessage(problems, locale) },
       ];
       continue;
     }

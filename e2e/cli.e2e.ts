@@ -82,6 +82,8 @@ function cliEnv(): NodeJS.ProcessEnv {
     OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
     APP8N8_MODEL: "e2e/drafter",
     APP8N8_REVIEW_MODEL: "e2e/reviewer",
+    // The claude of this machine stays out: openrouter is the provider (CC-15).
+    APP8N8_CLAUDE_PATH: join(home, "no-claude", "claude.exe"),
   };
   for (const key of [
     "APP8N8_CACHE_DIR",

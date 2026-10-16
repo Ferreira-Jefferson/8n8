@@ -5,14 +5,18 @@ import { listenOnLoopback } from "./listen";
 import { openUrl } from "./open-browser";
 import { run } from "./run";
 
-// In the package, this file is dist/cli.mjs: the screen and the PTS rules sit next to it.
+// In the package, this file is dist/cli.mjs: the screen and the PTS and STE rules sit next to it.
 const here = dirname(fileURLToPath(import.meta.url));
 
 process.exitCode = await run(process.argv.slice(2), {
   env: process.env,
   cwd: process.cwd(),
   home: homedir(),
-  paths: { web: join(here, "web"), ptsRules: join(here, "pts.md") },
+  paths: {
+    web: join(here, "web"),
+    ptsRules: join(here, "pts.md"),
+    steRules: join(here, "ste.md"),
+  },
   out: (line) => console.log(line),
   err: (line) => console.error(line),
   serve: listenOnLoopback,

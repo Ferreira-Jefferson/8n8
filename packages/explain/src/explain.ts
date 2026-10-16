@@ -1,10 +1,12 @@
 import {
-  type ExplainKind,
+  DEFAULT_LOCALE,
   type ExplainPart,
   type ExplainRequest,
   type ExplainResponse,
   explainStyle,
   type LlmClient,
+  type Locale,
+  messageOf,
   STEP_SENTENCE_LIMIT,
   type Suggestion,
   type SuggestionsResponse,
@@ -13,6 +15,7 @@ import {
 } from "@8n8/model";
 import type { PartCache } from "./cache";
 import { diffReasons, fingerprintOf, normalizeCode } from "./fingerprint";
+import { wordsOf } from "./messages";
 import { type Reviewed, type ReviewOutcome, reviewedDraft } from "./review";
 
 export interface ExplainDeps {
@@ -32,6 +35,8 @@ export interface ExplainDeps {
     suggestions: { text: string; version: string };
   };
   reviewer: { text: string; version: string };
+  /** The language of the system: the labels of the user turn and of the problems. Portuguese when absent. */
+  locale?: Locale;
 }
 
 export interface ExplainOptions {
@@ -39,37 +44,20 @@ export interface ExplainOptions {
   cachedOnly?: boolean;
 }
 
-export const KIND_LABEL: Record<ExplainKind, string> = {
-  function: "função",
-  class: "classe",
-  module: "código solto",
-  code: "passo de código",
-  call: "chamada de função",
-  external: "chamada externa",
-  condition: "condição",
-  loop: "laço",
-  block: "bloco",
-  return: "retorno",
-};
-
-function userMessage(req: ExplainRequest): string {
+function userMessage(req: ExplainRequest, locale: Locale): string {
+  const words = wordsOf(locale);
   const numbered = req.code
     .split("\n")
     .map((line, i) => `${i + 1} | ${line}`)
     .join("\n");
-  const list = (names: string[]) => names.join(", ") || "nenhum";
+  const list = (names: string[]) => names.join(", ") || words.none;
   return [
-    `Nó: ${req.nodeName}`,
-    `Tipo: ${KIND_LABEL[req.nodeKind]}`,
-    `Chama: ${list(req.calls)}`,
-    `Chamado por: ${list(req.calledBy)}`,
-    ...(req.docstring
-      ? [
-          "Docstring (pode estar desatualizada; não use para resumir; compare com o código):",
-          req.docstring.text,
-        ]
-      : []),
-    "Código:",
+    `${words.node}: ${req.nodeName}`,
+    `${words.type}: ${words.kinds[req.nodeKind]}`,
+    `${words.calls}: ${list(req.calls)}`,
+    `${words.calledBy}: ${list(req.calledBy)}`,
+    ...(req.docstring ? [words.docstring, req.docstring.text] : []),
+    words.code,
     numbered,
   ].join("\n");
 }
@@ -149,6 +137,7 @@ async function explainPart<T>(
 ): Promise<ExplainResponse<T>> {
   const { llm } = deps;
   const { cache, prompt } = spec;
+  const locale = deps.locale ?? DEFAULT_LOCALE;
   // The prompt gets exactly what the fingerprint covers (L-004).
   const code = normalizeCode(req.code);
   const calls = sorted(req.calls);
@@ -176,12 +165,15 @@ async function explainPart<T>(
   try {
     outcome = await reviewedDraft(
       {
-        user: userMessage({
-          ...(docstring ? { ...req, docstring } : withoutDocstring),
-          code,
-          calls,
-          calledBy,
-        }),
+        user: userMessage(
+          {
+            ...(docstring ? { ...req, docstring } : withoutDocstring),
+            code,
+            calls,
+            calledBy,
+          },
+          locale,
+        ),
         code,
         neighbours: [...calls, ...calledBy],
         ...(docstring ? { docstringLine: docstring.line } : {}),
@@ -199,7 +191,7 @@ async function explainPart<T>(
   } catch (err) {
     return {
       status: "error",
-      message: err instanceof Error ? err.message : String(err),
+      message: messageOf(err, locale),
     };
   }
   if (outcome.kind === "unfaithful") return { status: "unfaithful" };

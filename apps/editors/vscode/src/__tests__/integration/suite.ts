@@ -153,6 +153,44 @@ export async function run(): Promise<void> {
   ) {
     throw new Error(`Resumo pela ponte: ${summary.status} ${summary.body}`);
   }
+  // CC-15, only when asked (it spends the subscription): with nothing set, the
+  // extension finds the user's Claude Code and answers a real summary with it.
+  if (process.env.APP8N8_CLAUDE_SMOKE === "1") {
+    const found = JSON.parse(
+      (
+        await api.ask({
+          type: "api",
+          id: 10,
+          method: "GET",
+          path: "/api/settings",
+        })
+      ).body,
+    ) as { provider?: string; claude?: { path: string | null } };
+    if (found.provider !== "claude-code" || !found.claude?.path) {
+      throw new Error(
+        `O Claude Code não virou o padrão: ${JSON.stringify(found)}`,
+      );
+    }
+    const real = await api.ask({
+      type: "api",
+      id: 11,
+      method: "POST",
+      path: "/api/summary",
+      body: JSON.stringify({
+        root: workspace.fsPath,
+        nodeId: "file:frete/calculo.py/fn:calcular_frete",
+      }),
+    });
+    if (real.status !== 200 || JSON.parse(real.body).status !== "ok") {
+      throw new Error(
+        `Resumo real pelo Claude Code: ${real.status} ${real.body}`,
+      );
+    }
+    console.log(
+      "8n8: resumo real pelo Claude Code no VS Code:",
+      real.body.slice(0, 160),
+    );
+  }
   // VSC-05: the data folder is VS Code's global storage of this extension, found
   // from the user-data folder the runner chose, not from what the extension says.
   const storage = join(

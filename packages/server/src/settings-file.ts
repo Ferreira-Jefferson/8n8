@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
 import { dirname } from "node:path";
-import { type StoredSettings, THEMES } from "@8n8/model";
+import { LOCALES, type StoredSettings, THEMES } from "@8n8/model";
 import { z } from "zod";
 import type { SettingsStore } from "./settings";
 
@@ -12,6 +12,8 @@ const fileSchema = z.object({
   autoSummary: z.boolean().optional(),
   autoSuggestions: z.boolean().optional(),
   theme: z.enum(THEMES).optional(),
+  locale: z.enum(LOCALES).optional(),
+  claudePath: z.string().optional(),
 });
 
 /** The file operations the store uses; tests inject failing ones. */

@@ -117,3 +117,52 @@ describe("parseSuggestions (CORE-22, CFG-03)", () => {
     ).toThrow();
   });
 });
+
+describe("null in the answer means nothing there", () => {
+  const json = (value: unknown) => JSON.stringify(value);
+
+  it("reads a null summary as no summary, and null lists as empty", () => {
+    expect(
+      parseSummary(json({ summary: null, inputs: null, outputs: null })),
+    ).toEqual({ ...NO_SUMMARY, suggestions: [] });
+  });
+
+  it("drops null items of inputs and outputs", () => {
+    expect(
+      parseSummary(
+        json({ ...summary, inputs: [null, "peso"], outputs: [null] }),
+      ),
+    ).toMatchObject({ inputs: ["peso"], outputs: [] });
+  });
+
+  it("still throws when a field is missing, not null", () => {
+    expect(() => parseSummary(json({ inputs: [], outputs: [] }))).toThrow();
+  });
+
+  it("reads null suggestions as none, and drops a suggestion with a null field", () => {
+    expect(
+      parseSuggestions(json({ suggestions: null }), 4).suggestions,
+    ).toEqual([]);
+    const ok = suggestion(2);
+    for (const key of ["command", "reason", "line", "severity"]) {
+      expect(
+        parseSuggestions(
+          json({ suggestions: [null, { ...ok, [key]: null }, ok] }),
+          4,
+        ).suggestions,
+      ).toEqual([ok]);
+    }
+  });
+
+  it("reads a null docstring verdict, or one with a null field, as absent", () => {
+    for (const docstring of [
+      null,
+      { reflects: null, reason: "x" },
+      { reflects: false, reason: null },
+    ]) {
+      expect(
+        parseSuggestions(json({ suggestions: [], docstring }), 4),
+      ).not.toHaveProperty("docstring");
+    }
+  });
+});

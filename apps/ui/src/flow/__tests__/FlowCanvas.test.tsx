@@ -20,6 +20,7 @@ import { codeLineOf } from "../card";
 import { FlowCanvas, type FlowCanvasProps, toFlowEdges } from "../FlowCanvas";
 import type { Schedule } from "../motion";
 import { ROOT_HUB } from "../project-level";
+import { Side } from "../sides";
 import { lojaGraph } from "./loja-graph";
 import { videoGraph } from "./video-graph";
 
@@ -65,6 +66,8 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
         id: "i",
         source: "dir:pedidos",
         target: "dir:frete",
+        sourceHandle: "right",
+        targetHandle: "left",
         type: "wire",
         data: data(400, 2750),
         className: "edge-imports",
@@ -73,6 +76,8 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
         id: "c",
         source: "fn:a",
         target: "fn:b",
+        sourceHandle: "right",
+        targetHandle: "left",
         type: "wire",
         data: data(750, 3500),
       },
@@ -80,6 +85,8 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
         id: "n",
         source: "fn:a/s0",
         target: "fn:a/s1",
+        sourceHandle: "right",
+        targetHandle: "left",
         type: "wire",
         data: data(1100, 4250),
       },
@@ -87,6 +94,8 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
         id: "b",
         source: "fn:a/s1",
         target: "fn:a/s2",
+        sourceHandle: "right",
+        targetHandle: "left",
         type: "wire",
         data: data(1450, 5000),
         label: "true",
@@ -106,6 +115,30 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
     };
     const out = toFlowEdges(edges, times, false, new Map([["bc", 180]]));
     expect(out.map((e) => e.data?.turnY)).toEqual([undefined, 180]);
+  });
+
+  it("sends a wire out of the sides it was given, and right to left by default", () => {
+    const edges: FlowEdge[] = [
+      { id: "ab", kind: "next", source: "a", target: "b" },
+      { id: "bc", kind: "next", source: "b", target: "c" },
+    ];
+    const times: Schedule = {
+      enterAt: new Map(),
+      drawAt: new Map(),
+      pulseAt: new Map(),
+    };
+    const out = toFlowEdges(
+      edges,
+      times,
+      false,
+      new Map(),
+      new Map(),
+      new Map([["bc", [Side.Bottom, Side.Top] as const]]),
+    );
+    expect(out.map((e) => [e.sourceHandle, e.targetHandle])).toEqual([
+      ["right", "left"],
+      ["bottom", "top"],
+    ]);
   });
 
   it("passes reduced to every wire (VID-07)", () => {
@@ -377,13 +410,14 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
 
   it("hides the input port of the entry and the output port of the last step (VID-03)", () => {
     const { container } = render(<FlowCanvas {...props()} />);
-    const port = (id: NodeId, side: string) =>
-      card(container, id).querySelector<HTMLElement>(`.port-${side}`)?.style
-        .visibility;
-    expect(port(P, "in")).toBe("hidden");
-    expect(port(P, "out")).toBe("visible");
-    expect(port(`${P}/s6`, "in")).toBe("visible");
-    expect(port(`${P}/s6`, "out")).toBe("hidden");
+    const port = (id: NodeId, kind: string, side: string) =>
+      card(container, id).querySelector<HTMLElement>(
+        `.port-${kind}.port-${side}`,
+      )?.style.visibility;
+    expect(port(P, "in", "left")).toBe("hidden");
+    expect(port(P, "out", "right")).toBe("visible");
+    expect(port(`${P}/s6`, "in", "left")).toBe("visible");
+    expect(port(`${P}/s6`, "out", "right")).toBe("hidden");
   });
 
   it("borders the selected node with on (VID-22)", () => {

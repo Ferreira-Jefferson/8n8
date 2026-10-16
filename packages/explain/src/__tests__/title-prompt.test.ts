@@ -118,3 +118,21 @@ describe("buildTitlePrompt docstring", () => {
     expect(buildTitlePrompt("regra A", PY).text).toContain("sem a docstring");
   });
 });
+
+describe("null in the titles answer means nothing there", () => {
+  it("reads null titles as none, and drops a null title or one with a null field", () => {
+    expect(parseTitles(JSON.stringify({ titles: null }))).toEqual([]);
+    expect(
+      parseTitles(
+        JSON.stringify({
+          titles: [
+            null,
+            { id: "n1", title: null },
+            { id: null, title: "Somar" },
+            { id: "n2", title: "Calcular frete" },
+          ],
+        }),
+      ),
+    ).toEqual([{ id: "n2", title: "Calcular frete" }]);
+  });
+});

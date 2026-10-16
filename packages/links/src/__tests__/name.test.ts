@@ -67,6 +67,7 @@ describe("name channel through linkProject", () => {
         source: nodeId("a.py", "c"),
         target: nodeId("b.ts", "f"),
         label: "nome",
+        labelKey: "name",
       },
     ]);
   });

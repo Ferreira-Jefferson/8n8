@@ -32,6 +32,7 @@ export {
 } from "./explanation";
 export type {
   EdgeKind,
+  EdgeLabelKey,
   ExternalCategory,
   Extractor,
   FlowEdge,
@@ -61,10 +62,17 @@ export type {
 } from "./project";
 export { fileNodeOf } from "./project";
 export type {
+  Locale,
   SettingsField,
   SettingsPatch,
   SettingsResponse,
   StoredSettings,
   Theme,
 } from "./settings";
-export { THEMES } from "./settings";
+export { DEFAULT_LOCALE, LOCALES, THEMES } from "./settings";
+export type { SystemKey } from "./system-messages";
+export {
+  LocalizedError,
+  messageOf,
+  translateSystem,
+} from "./system-messages";

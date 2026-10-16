@@ -1,4 +1,5 @@
 import type { ExternalCategory, FlowNode, Graph } from "@8n8/model";
+import { defaultT, type MessageKey, type Translate } from "../i18n";
 
 const CODE_LINE_MAX = 32;
 
@@ -13,6 +14,11 @@ const CATEGORY_TAG: Record<ExternalCategory, string> = {
 /** The label shown for an external category, on the card and in the panel (VID-04). */
 export function categoryTag(category: ExternalCategory): string {
   return CATEGORY_TAG[category];
+}
+
+/** The text of a tag in the chosen language; the tag itself (`tagOf`) stays the stable id that styles and tests read. */
+export function tagLabel(tag: string, t: Translate = defaultT): string {
+  return t(`tag.${tag}` as MessageKey);
 }
 
 /** The tag line of a card (VID-04). */
@@ -45,7 +51,10 @@ export function tagOf(node: FlowNode, isTrigger: boolean): string {
 }
 
 /** The deterministic name shown while there is no reviewed title (VID-15). */
-export function provisionalLabel(node: FlowNode): string {
+export function provisionalLabel(
+  node: FlowNode,
+  t: Translate = defaultT,
+): string {
   switch (node.kind) {
     case "function":
     case "class":
@@ -55,11 +64,11 @@ export function provisionalLabel(node: FlowNode): string {
       return words.charAt(0).toUpperCase() + words.slice(1);
     }
     case "code":
-      return "Código";
+      return t("label.code");
     case "return":
-      return "Retorno";
+      return t("label.return");
     case "module":
-      return "Código solto";
+      return t("label.module");
     default:
       return node.label;
   }

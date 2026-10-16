@@ -1,6 +1,7 @@
 import type { Graph, NodeId } from "@8n8/model";
 import { Fragment } from "react";
 import { provisionalLabel } from "../flow/card";
+import { useT } from "../i18n";
 import type { Opened } from "./navigation";
 
 export interface BreadcrumbProps {
@@ -20,16 +21,17 @@ export interface BreadcrumbProps {
  * last one stays whole, and `title` keeps each full name.
  */
 export function Breadcrumb({ graph, path, titles, onGoTo }: BreadcrumbProps) {
+  const t = useT();
   const titleOf = (id: NodeId) => {
     const node = graph.nodes.find((n) => n.id === id);
-    return titles.get(id) ?? (node ? provisionalLabel(node) : id);
+    return titles.get(id) ?? (node ? provisionalLabel(node, t) : id);
   };
   const items = [
-    graph.project?.name ?? "Fluxo principal",
+    graph.project?.name ?? t("breadcrumb.main"),
     ...path.map((o) => titleOf(o.via)),
   ];
   return (
-    <nav aria-label="Caminho de navegação" className="breadcrumb">
+    <nav aria-label={t("breadcrumb.aria")} className="breadcrumb">
       {items.map((label, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: the position is the level
         <Fragment key={i}>

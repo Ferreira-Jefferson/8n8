@@ -9,6 +9,12 @@ export const ROW_GAP = 80;
 export const ZIGZAG = 90;
 /** Space between the vertical runs of two wires that share a gap. */
 export const LANE_GAP = 20;
+/** The width of a gap before a card a branch label stands by: "FALSE" is about 70 px wide, 8 px from the port (VID-21). */
+export const LABEL_ROOM = 110;
+/** A branch label fills this far above or below the line of its port: 4 px of space and a 22 px line of text. */
+export const LABEL_BAND = 30;
+/** A straight wire keeps this much room above and below it free of cards, so it never runs behind one. */
+export const WIRE_CLEAR = 40;
 
 export interface Position {
   x: number;
@@ -33,13 +39,18 @@ export function layoutLR(
     const p = g.node(n.id);
     out.set(n.id, { x: p.x - NODE_WIDTH / 2, y: p.y - NODE_HEIGHT / 2 });
   }
-  return widenGaps(orderBranches(out, nodes, containerId), edges);
+  return widenGaps(
+    clearStraightWires(orderBranches(out, nodes, containerId), edges),
+    edges,
+  );
 }
 
 /**
  * Widens each gap between two columns so every wire that changes height in
- * it gets a lane `LANE_GAP` apart. A gap keeps `NODE_GAP` when that is
- * enough.
+ * it gets a lane `LANE_GAP` apart, and a gap before a card a branch label
+ * stands by gets `LABEL_ROOM` when a card of the column before sits at the
+ * label's height, so a label never runs into a card (VID-21). A gap keeps
+ * `NODE_GAP` when that is enough.
  */
 export function widenGaps(
   positions: Map<NodeId, Position>,
@@ -50,26 +61,103 @@ export function widenGaps(
   );
   const column = new Map(xs.map((x, i) => [x, i]));
   const crossing = xs.map(() => 0);
+  // The spans of the branch labels, by the column of the card each stands by:
+  // above the port of a wire that comes up or straight, below one that comes down.
+  const labels = xs.map(() => [] as { top: number; bottom: number }[]);
   for (const e of edges) {
     const s = positions.get(e.source);
     const t = positions.get(e.target);
-    if (!s || !t || s.y === t.y) continue;
+    if (!s || !t) continue;
     const from = column.get(s.x) ?? 0;
+    if (e.label) {
+      const port = t.y + NODE_HEIGHT / 2;
+      labels[column.get(t.x) ?? 0]?.push(
+        s.y >= t.y
+          ? { top: port - LABEL_BAND, bottom: port }
+          : { top: port, bottom: port + LABEL_BAND },
+      );
+    }
+    if (s.y === t.y) continue;
     const to = column.get(t.x) ?? 0;
     for (let g = from; g < to; g++) crossing[g] = (crossing[g] ?? 0) + 1;
   }
+  // A label reaches past NODE_GAP only into a card of the column before at its height.
+  const crowded = (i: number) =>
+    (labels[i + 1] ?? []).some((l) =>
+      [...positions.values()].some(
+        (p) => p.x === xs[i] && p.y < l.bottom && p.y + NODE_HEIGHT > l.top,
+      ),
+    );
   const shift = new Map<number, number>();
   let total = 0;
   xs.forEach((x, i) => {
     shift.set(x, total);
     const wires = crossing[i] ?? 0;
-    total += Math.max(0, (wires + 1) * LANE_GAP - NODE_GAP);
+    total += Math.max(
+      0,
+      (wires + 1) * LANE_GAP - NODE_GAP,
+      crowded(i) ? LABEL_ROOM - NODE_GAP : 0,
+    );
   });
   const out = new Map<NodeId, Position>();
   for (const [id, p] of positions) {
     out.set(id, { x: p.x + (shift.get(p.x) ?? 0), y: p.y });
   }
   return out;
+}
+
+/**
+ * A straight wire that skips columns, like the "false" branch of an `if`
+ * with no `else`, never runs behind a card: a card of a skipped column that
+ * comes within `WIRE_CLEAR` of the wire moves away from it, down when its
+ * middle is below the wire, up otherwise, and pushes the cards beyond it in
+ * its column so they keep `NODE_GAP` (VID-21).
+ */
+export function clearStraightWires(
+  positions: Map<NodeId, Position>,
+  edges: FlowEdge[],
+): Map<NodeId, Position> {
+  const out = new Map(positions);
+  for (const e of edges) {
+    const s = out.get(e.source);
+    const t = out.get(e.target);
+    if (!s || !t || s.y !== t.y || t.x <= s.x) continue;
+    const line = s.y + NODE_HEIGHT / 2;
+    for (const [id, p] of [...out]) {
+      if (p.x <= s.x || p.x >= t.x) continue;
+      const near =
+        p.y < line + WIRE_CLEAR && p.y + NODE_HEIGHT > line - WIRE_CLEAR;
+      if (!near) continue;
+      const down = p.y + NODE_HEIGHT / 2 >= line;
+      out.set(id, {
+        x: p.x,
+        y: down ? line + WIRE_CLEAR : line - WIRE_CLEAR - NODE_HEIGHT,
+      });
+      keepColumnGaps(out, id, p.y, down);
+    }
+  }
+  return out;
+}
+
+/** After `moved` left `from`, pushes the cards beyond it in its column, in the same direction, so each keeps `NODE_GAP`. */
+function keepColumnGaps(
+  positions: Map<NodeId, Position>,
+  moved: NodeId,
+  from: number,
+  down: boolean,
+): void {
+  const m = positions.get(moved);
+  if (!m) return;
+  const beyond = [...positions]
+    .filter(([id, p]) => id !== moved && p.x === m.x)
+    .filter(([, p]) => (down ? p.y > from : p.y < from))
+    .sort(([, a], [, b]) => (down ? a.y - b.y : b.y - a.y));
+  let edge = down ? m.y + NODE_HEIGHT + NODE_GAP : m.y - NODE_GAP;
+  for (const [id, p] of beyond) {
+    const y = down ? Math.max(p.y, edge) : Math.min(p.y, edge - NODE_HEIGHT);
+    positions.set(id, { x: p.x, y });
+    edge = down ? y + NODE_HEIGHT + NODE_GAP : y - NODE_GAP;
+  }
 }
 
 /**

@@ -213,6 +213,7 @@ describe("buildSteps: condition and branches (CORE-09)", () => {
         source: "fn:calcular_frete/s2",
         target: "fn:calcular_frete/s2/b0/s0",
         label: "true",
+        labelKey: "true",
       },
       {
         id: "branch:fn:calcular_frete/s2->fn:calcular_frete/s2/b1/s0",
@@ -220,6 +221,7 @@ describe("buildSteps: condition and branches (CORE-09)", () => {
         source: "fn:calcular_frete/s2",
         target: "fn:calcular_frete/s2/b1/s0",
         label: "false",
+        labelKey: "false",
       },
     ]);
   });

@@ -1,7 +1,14 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { NodeId, ReviewStatus, Suggestion, Summary } from "@8n8/model";
+import {
+  DEFAULT_LOCALE,
+  type Locale,
+  type NodeId,
+  type ReviewStatus,
+  type Suggestion,
+  type Summary,
+} from "@8n8/model";
 import { z } from "zod";
 import type { Fingerprint } from "./fingerprint";
 
@@ -90,12 +97,27 @@ function createPartCache<T>(
   };
 }
 
-/** The summaries, in `<dir>/nodes` (CFG-04). */
-export function createSummaryCache(dir: string): PartCache<Summary> {
-  return createPartCache(dir, "nodes", summarySchema);
+/** A language other than the default keeps its own folder, so changing the language never erases what the other one wrote. */
+export function folderOf(base: string, locale: Locale): string {
+  return locale === DEFAULT_LOCALE ? base : `${base}-${locale}`;
 }
 
-/** The suggestions, in `<dir>/suggestions` (CFG-04). */
-export function createSuggestionsCache(dir: string): PartCache<Suggestion[]> {
-  return createPartCache(dir, "suggestions", z.array(suggestionSchema));
+/** The summaries, in `<dir>/nodes` (CFG-04); `<dir>/nodes-en` in English. */
+export function createSummaryCache(
+  dir: string,
+  locale: Locale = DEFAULT_LOCALE,
+): PartCache<Summary> {
+  return createPartCache(dir, folderOf("nodes", locale), summarySchema);
+}
+
+/** The suggestions, in `<dir>/suggestions` (CFG-04); `<dir>/suggestions-en` in English. */
+export function createSuggestionsCache(
+  dir: string,
+  locale: Locale = DEFAULT_LOCALE,
+): PartCache<Suggestion[]> {
+  return createPartCache(
+    dir,
+    folderOf("suggestions", locale),
+    z.array(suggestionSchema),
+  );
 }

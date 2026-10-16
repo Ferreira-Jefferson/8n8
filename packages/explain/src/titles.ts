@@ -1,9 +1,12 @@
-import type {
-  LlmClient,
-  NodeTitle,
-  TitleItem,
-  TitleRequest,
-  TitlesResponse,
+import {
+  DEFAULT_LOCALE,
+  type LlmClient,
+  type Locale,
+  messageOf,
+  type NodeTitle,
+  type TitleItem,
+  type TitleRequest,
+  type TitlesResponse,
 } from "@8n8/model";
 import {
   diffReasons,
@@ -31,6 +34,8 @@ export interface TitleDeps {
   reviewModel: string;
   prompt: { text: string; version: string };
   reviewer: { text: string; version: string };
+  /** The language of the system; Portuguese when absent. */
+  locale?: Locale;
 }
 
 const sorted = (names: string[]) =>
@@ -42,6 +47,7 @@ export async function titleNodes(
   deps: TitleDeps,
 ): Promise<TitlesResponse> {
   const { llm, cache } = deps;
+  const locale = deps.locale ?? DEFAULT_LOCALE;
   // The prompt gets exactly what the fingerprint covers (L-004).
   const items: TitleItem[] = req.items.map((item) => ({
     ...item,
@@ -89,7 +95,10 @@ export async function titleNodes(
         { role: "system", content: deps.prompt.text },
         {
           role: "user",
-          content: titleMessage(missing.map((i) => items[i] as TitleItem)),
+          content: titleMessage(
+            missing.map((i) => items[i] as TitleItem),
+            locale,
+          ),
         },
       ],
       json: "native",
@@ -104,7 +113,7 @@ export async function titleNodes(
       }
       const item = items[index] as TitleItem;
       const neighbours = [...item.calls, ...item.calledBy];
-      if (titleLayerOne(draft.title, { code: item.code, neighbours })) {
+      if (titleLayerOne(draft.title, { code: item.code, neighbours, locale })) {
         continue;
       }
       blocks.push({
@@ -120,11 +129,15 @@ export async function titleNodes(
         model: deps.reviewModel,
         messages: [
           { role: "system", content: deps.reviewer.text },
-          { role: "user", content: titleReviewerMessage(blocks) },
+          { role: "user", content: titleReviewerMessage(blocks, locale) },
         ],
         json: "native",
       });
-      for (const kept of applyTitleVerdicts(blocks, parseVerdicts(answer))) {
+      for (const kept of applyTitleVerdicts(
+        blocks,
+        parseVerdicts(answer),
+        locale,
+      )) {
         const block = blocks.find(
           (b) => b.id === kept.id,
         ) as (typeof blocks)[0];
@@ -138,7 +151,7 @@ export async function titleNodes(
   } catch (err) {
     return {
       status: "error",
-      message: err instanceof Error ? err.message : String(err),
+      message: messageOf(err, locale),
       titles: inOrder(),
     };
   }

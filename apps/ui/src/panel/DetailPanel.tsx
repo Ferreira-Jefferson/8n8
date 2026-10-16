@@ -19,7 +19,8 @@ import {
   type SuggestionsResult,
   type SummaryResult,
 } from "../api";
-import { categoryTag, provisionalLabel } from "../flow/card";
+import { categoryTag, provisionalLabel, tagLabel } from "../flow/card";
+import { type MessageKey, type Translate, useT } from "../i18n";
 import { CodeView } from "./CodeView";
 import { formatLines } from "./format-lines";
 
@@ -45,6 +46,8 @@ export interface DetailPanelProps {
   onSuggestions: (id: NodeId, suggestions: Suggestion[]) => void;
   /** Opens the settings dialog from the no-provider notice (CFG-09). */
   onOpenSettings?: (() => void) | undefined;
+  /** The provider is claude-code and Claude Code is not on this machine: the notice says so (CC-17). */
+  claudeMissing?: boolean | undefined;
   /** What this map already got, by node; the panel reads it and adds to it. */
   cache?: PanelCache | undefined;
 }
@@ -66,13 +69,11 @@ type Mark = (lines: ReadonlySet<number>) => void;
 
 const MANUAL: Auto = { summary: false, suggestions: false };
 
-const UPDATE_LABELS: Record<UpdateReason, string> = {
-  code: "o código mudou",
-  neighbours: "os vizinhos mudaram",
-  "model-or-prompt": "o modelo ou o prompt mudou",
+const UPDATE_LABELS: Record<UpdateReason, MessageKey> = {
+  code: "update.code",
+  neighbours: "update.neighbours",
+  "model-or-prompt": "update.modelOrPrompt",
 };
-
-const SNIPPET_FILE = "trecho";
 
 function nodeCode(source: string, node: FlowNode): string {
   return source
@@ -86,10 +87,11 @@ function explainKind(node: FlowNode): ExplainKind | null {
 }
 
 /** "CÓDIGO · trecho.py, linha 18" or "CÓDIGO · trecho.py, linhas 6 a 14" (VID-29). */
-function codeHeading(file: string, node: FlowNode): string {
+function codeHeading(file: string, node: FlowNode, t: Translate): string {
   const { start, end } = node.range;
-  const lines = start === end ? `linha ${start}` : `linhas ${start} a ${end}`;
-  return `CÓDIGO · ${file}, ${lines}`;
+  return start === end
+    ? t("panel.codeLine", { file, n: start })
+    : t("panel.codeLines", { file, a: start, b: end });
 }
 
 /** The node's title, summary, code, input and output, effects and suggestions, in the video's order (VID-28, 29, 30, 33; CORE-14, 16, 19, 20, 24; FID-09..14; CACHE-04; CFG-06..11). */
@@ -97,7 +99,7 @@ export function DetailPanel({
   source,
   origin,
   filePath,
-  snippetFile = SNIPPET_FILE,
+  snippetFile,
   node,
   title,
   effects,
@@ -105,8 +107,10 @@ export function DetailPanel({
   auto = MANUAL,
   onSuggestions,
   onOpenSettings,
+  claudeMissing,
   cache,
 }: DetailPanelProps) {
+  const t = useT();
   const kind = explainKind(node);
   const [highlighted, setHighlighted] = useState<ReadonlySet<number>>();
   const target = { source, origin, node, explains: kind !== null };
@@ -135,36 +139,37 @@ export function DetailPanel({
     if (mark) setHighlighted(new Set([mark.line]));
   }, [mark]);
 
-  const name = title ?? provisionalLabel(node);
+  const name = title ?? provisionalLabel(node, t);
 
   if (node.kind === "folder") {
     return (
-      <aside className="panel detail-panel" aria-label="Detalhe do nó">
+      <aside className="panel detail-panel" aria-label={t("panel.aria")}>
         <h2>{name}</h2>
-        <p>{`Pasta: ${node.path ?? ""}`}</p>
+        <p>{t("panel.folder", { path: node.path ?? "" })}</p>
       </aside>
     );
   }
 
   const io = summary.result.status === "ok" ? summary.result.result : null;
   return (
-    <aside className="panel detail-panel" aria-label="Detalhe do nó">
+    <aside className="panel detail-panel" aria-label={t("panel.aria")}>
       <h2>{name}</h2>
-      {kind !== null && (
-        <p className="eyebrow">O QUE FAZ · PORTUGUÊS TÉCNICO SIMPLIFICADO</p>
-      )}
+      {kind !== null && <p className="eyebrow">{t("panel.eyebrow")}</p>}
       {kind !== null && (
         <SummaryView
           result={summary.result}
           onAsk={summary.ask}
           onOpenSettings={onOpenSettings}
+          claudeMissing={claudeMissing}
           onMark={setHighlighted}
         />
       )}
       {kind !== null && explainStyle(kind) === "step" && (
-        <p className="rules">2 frases · voz ativa · um termo por conceito</p>
+        <p className="rules">{t("panel.rules")}</p>
       )}
-      <h3 className="eyebrow">{codeHeading(filePath ?? snippetFile, node)}</h3>
+      <h3 className="eyebrow">
+        {codeHeading(filePath ?? snippetFile ?? t("snippet.file"), node, t)}
+      </h3>
       <CodeView
         code={nodeCode(source, node)}
         start={node.range.start}
@@ -172,9 +177,9 @@ export function DetailPanel({
       />
       {io && (io.inputs.length > 0 || io.outputs.length > 0) && (
         <>
-          <h3 className="eyebrow">ENTRADA E SAÍDA</h3>
+          <h3 className="eyebrow">{t("panel.io")}</h3>
           {/* SPEC_DEVIATION: a section, not a p (C13). Reason: Biome refuses aria-label on a p. */}
-          <section className="io" aria-label="Entrada e saída">
+          <section className="io" aria-label={t("panel.ioAria")}>
             <IoClaims claims={io.inputs} onMark={setHighlighted} />{" "}
             <span className="arrow">→</span>{" "}
             <IoClaims claims={io.outputs} onMark={setHighlighted} />
@@ -189,6 +194,7 @@ export function DetailPanel({
           result={suggestions.result}
           onAsk={suggestions.ask}
           onOpenSettings={onOpenSettings}
+          claudeMissing={claudeMissing}
           onMark={setHighlighted}
         />
       )}
@@ -314,13 +320,16 @@ function PartState({
   loading,
   onAsk,
   onOpenSettings,
+  claudeMissing,
 }: {
   result: Loaded<unknown>;
   ask: string;
   loading: string;
   onAsk: () => void;
   onOpenSettings: (() => void) | undefined;
+  claudeMissing?: boolean | undefined;
 }) {
+  const t = useT();
   switch (result.status) {
     case "idle":
     case "not-cached":
@@ -334,16 +343,16 @@ function PartState({
     case "no-key":
       return (
         <div className="explanation-state">
-          <p>Configure um provedor de LLM em Configurações.</p>
+          <p>{t(claudeMissing ? "panel.claudeMissing" : "panel.noKey")}</p>
           {onOpenSettings && (
             <button type="button" onClick={onOpenSettings}>
-              Abrir configurações
+              {t("panel.openSettings")}
             </button>
           )}
         </div>
       );
     case "stale":
-      return <p>O trecho mudou. Clique em "Gerar mapa" de novo.</p>;
+      return <p>{t("panel.stale")}</p>;
     default:
       return null;
   }
@@ -351,11 +360,12 @@ function PartState({
 
 /** A failed or unfaithful answer, with a retry. */
 function Failed({ text, onAsk }: { text: string; onAsk: () => void }) {
+  const t = useT();
   return (
     <div className="explanation-state">
       <p>{text}</p>
       <button type="button" onClick={onAsk}>
-        Tentar de novo
+        {t("panel.retry")}
       </button>
     </div>
   );
@@ -365,32 +375,39 @@ function SummaryView({
   result,
   onAsk,
   onOpenSettings,
+  claudeMissing,
   onMark,
 }: {
   result: Loaded<Summary>;
   onAsk: () => void;
   onOpenSettings: (() => void) | undefined;
+  claudeMissing?: boolean | undefined;
   onMark: Mark;
 }) {
+  const t = useT();
   switch (result.status) {
     case "error":
-      return <Failed text="Resumo indisponível" onAsk={onAsk} />;
+      return <Failed text={t("panel.summaryFail")} onAsk={onAsk} />;
     case "unfaithful":
-      return (
-        <Failed text="Não foi possível gerar um resumo fiel." onAsk={onAsk} />
-      );
+      return <Failed text={t("panel.unfaithful")} onAsk={onAsk} />;
     case "ok":
       return (
         <>
           <span className="review-badge">
-            {result.review === "cut" ? "Revisado com cortes" : "Revisado"}
+            {result.review === "cut"
+              ? t("panel.reviewedCut")
+              : t("panel.reviewed")}
           </span>
           {result.update && result.update.length > 0 && (
             <p role="status">
-              {`Resumo atualizado: ${result.update.map((u) => UPDATE_LABELS[u]).join(", ")}`}
+              {t("panel.updated", {
+                reasons: result.update
+                  .map((u) => t(UPDATE_LABELS[u]))
+                  .join(", "),
+              })}
             </p>
           )}
-          <ol aria-label="Resumo">
+          <ol className="summary-list" aria-label={t("panel.summaryAria")}>
             {result.result.sentences.map((c) => (
               <ClaimItem key={c.id} claim={c} onMark={onMark} />
             ))}
@@ -401,10 +418,11 @@ function SummaryView({
       return (
         <PartState
           result={result}
-          ask="Gerar resumo"
-          loading="Gerando resumo…"
+          ask={t("panel.askSummary")}
+          loading={t("panel.loadingSummary")}
           onAsk={onAsk}
           onOpenSettings={onOpenSettings}
+          claudeMissing={claudeMissing}
         />
       );
   }
@@ -414,27 +432,31 @@ function SuggestionsView({
   result,
   onAsk,
   onOpenSettings,
+  claudeMissing,
   onMark,
 }: {
   result: Loaded<Suggestion[]>;
   onAsk: () => void;
   onOpenSettings: (() => void) | undefined;
+  claudeMissing?: boolean | undefined;
   onMark: Mark;
 }) {
+  const t = useT();
   return (
     <section className="suggestions">
-      <h3>Sugestões</h3>
+      <h3>{t("panel.suggestions")}</h3>
       {result.status === "ok" ? (
         <SuggestionList suggestions={result.result} onMark={onMark} />
       ) : result.status === "error" || result.status === "unfaithful" ? (
-        <Failed text="Sugestões indisponíveis" onAsk={onAsk} />
+        <Failed text={t("panel.suggestionsFail")} onAsk={onAsk} />
       ) : (
         <PartState
           result={result}
-          ask="Pedir sugestões"
-          loading="Pedindo sugestões…"
+          ask={t("panel.askSuggestions")}
+          loading={t("panel.loadingSuggestions")}
           onAsk={onAsk}
           onOpenSettings={onOpenSettings}
+          claudeMissing={claudeMissing}
         />
       )}
     </section>
@@ -448,15 +470,20 @@ function SuggestionList({
   suggestions: Suggestion[];
   onMark: Mark;
 }) {
+  const t = useT();
   if (suggestions.length === 0) {
-    return <p>Nenhuma sugestão para este nó.</p>;
+    return <p>{t("panel.noSuggestions")}</p>;
   }
   return (
     <ul>
       {suggestions.map((s) => (
         <li key={s.id} data-claim-id={s.id}>
           <button type="button" onClick={() => onMark(new Set([s.line]))}>
-            {`${s.command} (linha ${s.line}, ${s.severity})`}
+            {t("panel.suggestionItem", {
+              command: s.command,
+              line: s.line,
+              severity: t(`severity.${s.severity}` as MessageKey),
+            })}
           </button>
           <span>{s.reason}</span>
           <Evidence lines={s.lines} onMark={onMark} />
@@ -467,16 +494,21 @@ function SuggestionList({
 }
 
 function EffectsView({ effects }: { effects: ExternalEffect[] }) {
+  const t = useT();
   return (
     <section className="effects">
-      <h3 id="efeitos">Efeitos externos</h3>
+      <h3 id="efeitos">{t("panel.effects")}</h3>
       {effects.length === 0 ? (
-        <p>Nenhum efeito externo.</p>
+        <p>{t("panel.noEffects")}</p>
       ) : (
         <ul aria-labelledby="efeitos">
           {effects.map((e) => (
             <li key={`${e.line}:${e.callee}`}>
-              {`${e.callee} (${categoryTag(e.category)}, linha ${e.line})`}
+              {t("panel.effectItem", {
+                callee: e.callee,
+                tag: tagLabel(categoryTag(e.category), t),
+                line: e.line,
+              })}
             </li>
           ))}
         </ul>

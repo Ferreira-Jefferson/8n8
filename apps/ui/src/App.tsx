@@ -1,4 +1,5 @@
 import {
+  DEFAULT_LOCALE,
   type FlowNode,
   fileNodeOf,
   type Graph,
@@ -11,6 +12,7 @@ import {
   type Suggestion,
 } from "@8n8/model";
 import {
+  type ReactNode,
   useCallback,
   useEffect,
   useMemo,
@@ -33,6 +35,7 @@ import { useTitles } from "./flow/use-titles";
 import { HistoryButton } from "./history/HistoryButton";
 import { HistoryDrawer } from "./history/HistoryDrawer";
 import { Home } from "./home/Home";
+import { I18nProvider, plural, type Translate, translate, useT } from "./i18n";
 import { noFilesText, readsText, snippetFileName } from "./languages";
 import { Breadcrumb } from "./nav/Breadcrumb";
 import {
@@ -202,11 +205,12 @@ function Logo() {
 
 /** The logo as a button, fixed at the top-left of the map and the editor: it leads back to the launcher (HOME-03). */
 function HomeLink({ onClick }: { onClick: () => void }) {
+  const t = useT();
   return (
     <button
       type="button"
       className="logo-link"
-      aria-label="Início"
+      aria-label={t("app.home")}
       onClick={onClick}
     >
       <Logo />
@@ -274,6 +278,16 @@ export function App({ initialFolder = null }: AppProps) {
       document.documentElement.dataset.theme = theme;
     }
   }, [theme]);
+  // The chosen language reaches every component through the provider and the page's `lang`.
+  const locale = settings?.locale ?? DEFAULT_LOCALE;
+  // App sits above its own provider, so it translates with the locale directly.
+  const t: Translate = (key, vars) => translate(locale, key, vars);
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+  const withLocale = (node: ReactNode) => (
+    <I18nProvider locale={locale}>{node}</I18nProvider>
+  );
   const openSettings = useCallback(() => setSettingsOpen(true), []);
   const settingsDialog = settingsOpen && (
     <SettingsDialog
@@ -295,6 +309,15 @@ export function App({ initialFolder = null }: AppProps) {
   }, []);
   // Answers already fetched in this map: re-opening a node asks no more.
   const explainCache = useRef<PanelCache>(emptyPanelCache());
+  // What the LLM wrote is in the old language: a change of language drops it and asks again (the server keeps one cache per language).
+  const lastLocale = useRef(locale);
+  useEffect(() => {
+    if (lastLocale.current === locale) return;
+    lastLocale.current = locale;
+    explainCache.current = emptyPanelCache();
+    setSuggestions(new Map());
+    setMapVersion((v) => v + 1);
+  }, [locale]);
 
   function clearMap() {
     setMapped(null);
@@ -483,15 +506,15 @@ export function App({ initialFolder = null }: AppProps) {
   if (view !== "map" || !mapped || !graph) {
     const messages = (
       <>
-        {failed && <p role="alert">Não foi possível gerar o mapa.</p>}
+        {failed && <p role="alert">{t("app.mapFailed")}</p>}
         {notFound !== null && (
-          <p role="alert">{`Pasta não encontrada: ${notFound}`}</p>
+          <p role="alert">{t("app.folderNotFound", { path: notFound })}</p>
         )}
         {graph?.empty && (
           <p>
             {mapped?.kind === "project"
-              ? noFilesText(languages)
-              : "Nenhuma função ou instrução encontrada."}
+              ? noFilesText(languages, t)
+              : t("app.noNodes")}
           </p>
         )}
       </>
@@ -504,7 +527,7 @@ export function App({ initialFolder = null }: AppProps) {
     );
 
     if (view === "home") {
-      return (
+      return withLocale(
         <main className="home">
           <header className="home-bar">
             <Logo />
@@ -523,25 +546,25 @@ export function App({ initialFolder = null }: AppProps) {
             onOpenEntry={openEntry}
             onShowHistory={() => setHistoryOpen((o) => !o)}
             historyOpen={historyOpen}
-            reads={readsText(languages)}
+            reads={readsText(languages, t)}
           />
           <div className="home-messages">{messages}</div>
           {drawer}
           {settingsDialog}
-        </main>
+        </main>,
       );
     }
 
-    return (
+    return withLocale(
       <main className="editor">
         <HomeLink onClick={goHome} />
         <div className="panel editor-panel">
-          <section aria-label="Editor">
+          <section aria-label={t("app.editor")}>
             <header className="editor-head">
-              <span className="eyebrow">trecho</span>
+              <span className="eyebrow">{t("app.snippetEyebrow")}</span>
             </header>
             <textarea
-              aria-label="Trecho de código"
+              aria-label={t("app.snippetAria")}
               value={text}
               onChange={(e) => setText(e.target.value)}
               spellCheck={false}
@@ -556,17 +579,17 @@ export function App({ initialFolder = null }: AppProps) {
         <SettingsButton onOpen={openSettings} />
         <div className="editor-actions">
           <button type="button" className="btn" onClick={() => generate()}>
-            Gerar mapa
+            {t("app.generate")}
           </button>
         </div>
         {drawer}
         {settingsDialog}
         {messages}
-      </main>
+      </main>,
     );
   }
 
-  return (
+  return withLocale(
     <main
       className={panelNode && !panelCollapsed ? "map with-panel" : "map"}
       style={
@@ -598,7 +621,7 @@ export function App({ initialFolder = null }: AppProps) {
             className="btn-ghost new-code"
             onClick={newCode}
           >
-            Novo código
+            {t("app.newCode")}
           </button>
         )}
         <HistoryButton
@@ -616,13 +639,13 @@ export function App({ initialFolder = null }: AppProps) {
         {mapped.kind === "snippet" && mapped.language && (
           <p className="snippet-language">
             {mapped.language.uncertain
-              ? `Linguagem incerta. Mostrando como ${mapped.language.label}.`
+              ? t("app.languageUncertain", { label: mapped.language.label })
               : mapped.language.label}
           </p>
         )}
         {!level?.hub && (
           <span className="node-count">
-            {levelNodes.length === 1 ? "1 nó" : `${levelNodes.length} nós`}
+            {plural(t, "node", levelNodes.length)}
           </span>
         )}
         <FlowCanvas
@@ -662,7 +685,7 @@ export function App({ initialFolder = null }: AppProps) {
         <button
           type="button"
           className="btn-ghost panel-toggle"
-          aria-label="Expandir painel"
+          aria-label={t("app.expandPanel")}
           aria-expanded={false}
           onClick={() => setPanelCollapsed(false)}
         >
@@ -682,7 +705,7 @@ export function App({ initialFolder = null }: AppProps) {
         <button
           type="button"
           className="btn-ghost panel-toggle"
-          aria-label="Minimizar painel"
+          aria-label={t("app.minimizePanel")}
           aria-expanded={true}
           onClick={() => setPanelCollapsed(true)}
         >
@@ -715,6 +738,7 @@ export function App({ initialFolder = null }: AppProps) {
           snippetFile={snippetFileName(
             mapped.kind === "snippet" ? mapped.language : undefined,
             languages,
+            t,
           )}
           node={panelNode}
           title={titles.get(panelNode.id)}
@@ -730,10 +754,14 @@ export function App({ initialFolder = null }: AppProps) {
           }
           onSuggestions={onSuggestions}
           onOpenSettings={openSettings}
+          claudeMissing={
+            settings?.provider === "claude-code" &&
+            settings.claude.path === null
+          }
           cache={explainCache.current}
         />
       )}
       {settingsDialog}
-    </main>
+    </main>,
   );
 }

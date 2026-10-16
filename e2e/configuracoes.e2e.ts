@@ -265,10 +265,40 @@ test.describe("Configurações e LLM sob demanda", () => {
         "O Claude Code usa a sua assinatura. Não precisa de chave.",
       ),
     ).toBeVisible();
+    // The server's APP8N8_CLAUDE_PATH names no file (NO_CLAUDE): the dialog says so (CC-17).
+    await expect(
+      dialog.getByText(
+        "O caminho em APP8N8_CLAUDE_PATH não tem o Claude Code. Escolha o executável.",
+      ),
+    ).toBeVisible();
+    await expect(
+      dialog.getByRole("button", { name: "Escolher…" }),
+    ).toBeVisible();
     await dialog.getByRole("button", { name: "Salvar" }).click();
     await expect(dialog.getByText("Configurações salvas.")).toBeVisible();
     expect(JSON.parse(readFileSync(CONFIG, "utf8"))).toMatchObject({
       provider: "claude-code",
     });
+  });
+
+  test("CC-12, CC-18: the server never takes the Claude Code path from a request", async ({
+    page,
+  }) => {
+    for (const data of [
+      { action: "pick", path: "C:\\Windows\\System32\\calc.exe" },
+      { path: "C:\\Windows\\System32\\calc.exe" },
+    ]) {
+      const res = await page.request.post(
+        `${SETTINGS}/api/settings/claude-path`,
+        { headers: HEADERS, data },
+      );
+      expect(res.status()).toBe(400);
+    }
+    const put = await page.request.put(`${SETTINGS}/api/settings`, {
+      headers: HEADERS,
+      data: { claudePath: "C:\\Windows\\System32\\calc.exe" },
+    });
+    expect(put.status()).toBe(400);
+    expect(readFileSync(CONFIG, "utf8")).not.toContain("calc.exe");
   });
 });

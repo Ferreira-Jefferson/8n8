@@ -1,4 +1,5 @@
-import type { ClaimId } from "@8n8/model";
+import { type ClaimId, DEFAULT_LOCALE, type Locale } from "@8n8/model";
+import { wordsOf } from "./messages";
 import type { DraftClaim } from "./sentences";
 
 /** Units checked by layer one (spec, "Unidades checadas na camada 1"). Changing it changes the reviewer version. */
@@ -31,10 +32,33 @@ export const UNITS = [
   "GB",
 ] as const;
 
+/** What English adds to `UNITS`; Portuguese keeps its list as it was, so its reviewer version and caches stay. */
+export const UNITS_EN = [
+  "sec",
+  "secs",
+  "second",
+  "seconds",
+  "minute",
+  "minutes",
+  "hr",
+  "hrs",
+  "hour",
+  "hours",
+  "day",
+  "days",
+] as const;
+
+/** The units layer one checks in a language of the system. */
+export function unitsOf(locale: Locale): readonly string[] {
+  return locale === "en" ? [...UNITS, ...UNITS_EN] : UNITS;
+}
+
 /** `code` is the normalized node code; `neighbours` are the names it calls and is called by. */
 export interface CheckContext {
   code: string;
   neighbours: string[];
+  /** The language of the problems it reports; Portuguese when absent. */
+  locale?: Locale;
 }
 
 export interface Problem {
@@ -59,7 +83,9 @@ export function checkNumbers(text: string, ctx: CheckContext): string | null {
     const inCode = variants.some((v) =>
       new RegExp(`(?<![\\w.])${escapeRegex(v)}(?!\\w)`).test(ctx.code),
     );
-    if (!inCode) return `o número ${n} não aparece no código`;
+    if (!inCode) {
+      return wordsOf(ctx.locale ?? DEFAULT_LOCALE).numberAbsent(n);
+    }
   }
   return null;
 }
@@ -78,7 +104,7 @@ function codeTokens(code: string): Set<string> {
 export function checkUnits(text: string, ctx: CheckContext): string | null {
   const tokens = codeTokens(ctx.code);
   const lowerCode = ctx.code.toLowerCase();
-  for (const unit of UNITS) {
+  for (const unit of unitsOf(ctx.locale ?? DEFAULT_LOCALE)) {
     const isSymbol = /[^\p{L}]/u.test(unit);
     const pattern = isSymbol
       ? new RegExp(escapeRegex(unit), "iu")
@@ -89,7 +115,9 @@ export function checkUnits(text: string, ctx: CheckContext): string | null {
     const present = isSymbol
       ? lowerCode.includes(unit.toLowerCase())
       : tokens.has(unit.toLowerCase());
-    if (!present) return `a unidade ${unit} não aparece no código`;
+    if (!present) {
+      return wordsOf(ctx.locale ?? DEFAULT_LOCALE).unitAbsent(unit);
+    }
   }
   return null;
 }
@@ -110,7 +138,7 @@ export function checkIdentifiers(
       "u",
     );
     if (!bounded.test(ctx.code)) {
-      return `o identificador ${name} não aparece no código nem nos vizinhos`;
+      return wordsOf(ctx.locale ?? DEFAULT_LOCALE).identifierAbsent(name);
     }
   }
   return null;

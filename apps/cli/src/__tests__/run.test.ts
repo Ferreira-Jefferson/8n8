@@ -31,6 +31,8 @@ function harness(env: Record<string, string> = {}) {
   writeFileSync(join(project, "a.py"), "def f():\n    pass\n");
   const pts = join(home, "pts.md");
   writeFileSync(pts, "regras");
+  const ste = join(home, "ste.md");
+  writeFileSync(ste, "rules");
   const events: string[] = [];
   const apps: boolean[] = [];
   const out: string[] = [];
@@ -41,7 +43,7 @@ function harness(env: Record<string, string> = {}) {
     env,
     cwd: home,
     home,
-    paths: { web: undefined, ptsRules: pts },
+    paths: { web: undefined, ptsRules: pts, steRules: ste },
     out: (line) => {
       out.push(line);
       events.push(`out:${line}`);

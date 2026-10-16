@@ -177,6 +177,27 @@ export async function saveSettings(
   }
 }
 
+/**
+ * "pick" opens the system's file chooser on the server's machine and stores the claude chosen;
+ * "auto" goes back to the automatic lookup. The path never travels from here (CC-18).
+ */
+export async function setClaudePath(
+  action: "pick" | "auto",
+): Promise<SettingsResponse | "not-claude" | null> {
+  try {
+    const res = await apiFetch("/api/settings/claude-path", {
+      method: "POST",
+      headers: JSON_HEADERS,
+      body: JSON.stringify({ action }),
+    });
+    if (res.status === 400) return "not-claude";
+    if (!res.ok) return null;
+    return (await res.json()) as SettingsResponse;
+  } catch {
+    return null;
+  }
+}
+
 /** The reviewed titles of a level, in one request; any failure gives `[]`, and the cards keep their provisional names (VID-14, 15). */
 export async function fetchTitles(
   origin: ExplainOrigin,

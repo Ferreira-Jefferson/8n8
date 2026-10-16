@@ -1,11 +1,12 @@
 import type { IgnoredFile, IgnoreReason } from "@8n8/model";
 import { useState } from "react";
+import { type MessageKey, plural, useT } from "../i18n";
 
-const REASONS: Record<IgnoreReason, string> = {
-  "too-large": "maior que 1 MB",
-  "not-utf8": "não está em UTF-8",
-  unreadable: "não foi possível ler",
-  symlink: "link simbólico não seguido",
+const REASONS: Record<IgnoreReason, MessageKey> = {
+  "too-large": "ignored.too-large",
+  "not-utf8": "ignored.not-utf8",
+  unreadable: "ignored.unreadable",
+  symlink: "ignored.symlink",
 };
 
 /**
@@ -20,12 +21,10 @@ export function IgnoredFiles({
   ignored: IgnoredFile[];
   onAdd: (path: string) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   if (ignored.length === 0) return null;
-  const count =
-    ignored.length === 1
-      ? "1 arquivo ignorado"
-      : `${ignored.length} arquivos ignorados`;
+  const count = plural(t, "ignored", ignored.length);
   return (
     <div className="ignored">
       <button
@@ -56,20 +55,20 @@ export function IgnoredFiles({
         </span>
       </button>
       {open && (
-        <section aria-label="Arquivos ignorados" className="ignored-list">
+        <section aria-label={t("ignored.aria")} className="ignored-list">
           <h3>{count}</h3>
           <ul>
             {ignored.map((f) => (
               <li key={f.path}>
                 <span className="ignored-path">{f.path}</span>
-                <span className="ignored-reason">{REASONS[f.reason]}</span>
+                <span className="ignored-reason">{t(REASONS[f.reason])}</span>
                 {f.addable && (
                   <button
                     type="button"
                     className="btn-ghost ignored-add"
                     onClick={() => onAdd(f.path)}
                   >
-                    Adicionar ao mapa
+                    {t("ignored.add")}
                   </button>
                 )}
               </li>

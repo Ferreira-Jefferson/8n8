@@ -1,5 +1,6 @@
 import type { FlowNode, Graph, NodeId } from "@8n8/model";
-import { codeLineOf, provisionalLabel, tagOf } from "../flow/card";
+import { codeLineOf, provisionalLabel, tagLabel, tagOf } from "../flow/card";
+import { defaultT, type Translate } from "../i18n";
 
 /** What the search knows about a node: its title, its technical name and where it lives. */
 export interface SearchEntry {
@@ -96,6 +97,7 @@ const lines = (n: FlowNode) =>
 export function searchEntries(
   graph: Graph,
   titles: ReadonlyMap<NodeId, string>,
+  t: Translate = defaultT,
 ): SearchEntry[] {
   const byId = new Map(graph.nodes.map((n) => [n.id, n]));
   const fileOf = (n: FlowNode): FlowNode | undefined => {
@@ -112,10 +114,10 @@ export function searchEntries(
       const file = container ? undefined : fileOf(n)?.path;
       return {
         id: n.id,
-        title: titles.get(n.id) ?? provisionalLabel(n),
+        title: titles.get(n.id) ?? provisionalLabel(n, t),
         tech: codeLineOf(n, ""),
         where: container
-          ? tagOf(n, false)
+          ? tagLabel(tagOf(n, false), t)
           : [file?.split("/").at(-1), lines(n)].filter(Boolean).join(" · "),
       };
     });

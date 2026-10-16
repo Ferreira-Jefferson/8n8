@@ -120,6 +120,7 @@ describe("process channel through linkProject", () => {
         source: nodeId("a.py", "c"),
         target: nodeId("b.ts", "file"),
         label: "processo",
+        labelKey: "process",
       },
     ]);
   });

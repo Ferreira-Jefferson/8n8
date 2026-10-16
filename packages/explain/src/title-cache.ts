@@ -1,7 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { DEFAULT_LOCALE, type Locale } from "@8n8/model";
 import { z } from "zod";
+import { folderOf } from "./cache";
 import type { Fingerprint } from "./fingerprint";
 
 export interface TitleCacheEntry {
@@ -40,8 +42,11 @@ const entrySchema = z.object({
 });
 
 /** One JSON file per cache key in `<dir>/titles/<sha256(cacheKey)>.json`; atomic write (temp file + rename) (VID-17). */
-export function createTitleCache(dir: string): TitleCache {
-  const titles = join(dir, "titles");
+export function createTitleCache(
+  dir: string,
+  locale: Locale = DEFAULT_LOCALE,
+): TitleCache {
+  const titles = join(dir, folderOf("titles", locale));
   const fileOf = (cacheKey: string) =>
     join(titles, `${createHash("sha256").update(cacheKey).digest("hex")}.json`);
   return {

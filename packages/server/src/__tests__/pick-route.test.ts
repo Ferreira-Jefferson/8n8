@@ -89,6 +89,20 @@ describe("createPicker", () => {
     expect(script).not.toContain("evil");
   });
 
+  it("names the filter by its label, with code by default, and keeps only letters, digits and spaces in it", async () => {
+    let script = "";
+    const pick = createPicker("win32", async (_c, args) => {
+      script = args.at(-1) ?? "";
+      return { kind: "ok", stdout: "claude.exe" };
+    });
+    await pick("file", [".py"]);
+    expect(script).toContain("'Código|*.py|");
+    await pick("file", [".exe"], "Claude Code");
+    expect(script).toContain("'Claude Code|*.exe|");
+    await pick("file", [".exe"], "x'; evil |y");
+    expect(script).toContain("'x evil y|*.exe|");
+  });
+
   it("maps a cancel or an empty answer to null", async () => {
     const cancelled = createPicker("linux", async () => ({
       kind: "cancelled",

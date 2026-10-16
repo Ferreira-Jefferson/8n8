@@ -54,12 +54,24 @@ export interface FlowNode {
 /** `contains` is never in a `Graph`: the UI draws it from the hub of a level. */
 export type EdgeKind = "calls" | "next" | "branch" | "imports" | "contains";
 
+/** A label the system writes (not the user's code): the screen says it in the language of the system. */
+export type EdgeLabelKey =
+  | "true"
+  | "false"
+  | "default"
+  | "none"
+  | "name"
+  | "process";
+
 export interface FlowEdge {
   id: string;
   kind: EdgeKind;
   source: NodeId;
   target: NodeId;
+  /** What the code says (a condition, a case, `HTTP GET /rota`) or, with `labelKey`, a Portuguese fallback. */
   label?: string;
+  /** Set when the system wrote the label: the screen shows its own words for the key, never `label`. */
+  labelKey?: EdgeLabelKey;
 }
 
 export interface Graph {

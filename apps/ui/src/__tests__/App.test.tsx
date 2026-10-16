@@ -1218,9 +1218,11 @@ describe("App settings (CFG-08, CFG-20)", () => {
     autoSummary: true,
     autoSuggestions: false,
     theme: "light" as const,
+    locale: "pt-BR" as const,
     hasKey: true,
     providers: [{ id: "openrouter", defaultModel: "m/x", usesKey: true }],
     env: {},
+    claude: { path: null, source: null as null, envInvalid: false },
   };
 
   it("puts the chosen theme on <html>, and takes it off for the system's", async () => {

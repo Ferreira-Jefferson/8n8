@@ -20,14 +20,17 @@ import { pythonPlugin } from "@8n8/lang-python";
 import { typescriptPlugin } from "@8n8/lang-typescript";
 import { linkProject } from "@8n8/links";
 import { resolveLlmConfig } from "@8n8/llm";
-import type {
-  ExplainPart,
-  ExplainRequest,
-  ExplainResponse,
-  LanguagePlugin,
-  TitleItem,
-  TitleRequest,
-  TitlesResponse,
+import {
+  DEFAULT_LOCALE,
+  type ExplainPart,
+  type ExplainRequest,
+  type ExplainResponse,
+  type LanguagePlugin,
+  type Locale,
+  type TitleItem,
+  type TitleRequest,
+  type TitlesResponse,
+  translateSystem,
 } from "@8n8/model";
 import { analyzeProject } from "@8n8/project";
 import type { Hono } from "hono";
@@ -47,8 +50,25 @@ export interface ComposeDeps {
   llm: () => Promise<LlmSetup>;
   /** The languages the server reads: each one gets its own prompts. */
   plugins: LanguagePlugin[];
+  /** The rules of the text the LLM writes, one file per language of the system: the PTS and the STE. */
   ptsRules: string;
+  steRules: string;
   cacheDir: string;
+  /** The language of the system, asked on every request; Portuguese when absent. */
+  locale?: () => Promise<Locale>;
+}
+
+/** The rules the prompts carry in a language of the system. */
+const rulesOf = (deps: ComposeDeps, locale: Locale): string =>
+  locale === "en" ? deps.steRules : deps.ptsRules;
+
+/** Builds a value once for each key; prompts and caches belong to a language, so a change of language reuses them. */
+function memo<T>(build: (key: string) => T): (key: string) => T {
+  const made = new Map<string, T>();
+  return (key) => {
+    if (!made.has(key)) made.set(key, build(key));
+    return made.get(key) as T;
+  };
 }
 
 /** Wires summarizeNode and suggestNode with the current client, provider and models (CORE-19, CORE-21, FID-15, CFG-17). */
@@ -61,34 +81,36 @@ export function composeExplain(
   options: { cachedOnly: boolean },
 ) => Promise<ExplainResponse<unknown>> {
   const dir = env.APP8N8_CACHE_DIR || deps.cacheDir;
-  const caches = {
-    summaryCache: createSummaryCache(dir),
-    suggestionsCache: createSuggestionsCache(dir),
-  };
-  // One set of prompts per language: a request picks its set by `language` (6.1-6.3).
-  const byLanguage = new Map(
-    deps.plugins.map((plugin) => {
-      const lang = promptLanguageOf(plugin);
-      return [
-        plugin.id,
-        {
-          prompts: {
-            summary: buildSummaryPrompt(deps.ptsRules, lang),
-            stepSummary: buildStepSummaryPrompt(deps.ptsRules, lang),
-            suggestions: buildSuggestionsPrompt(deps.ptsRules, lang),
-          },
-          reviewer: buildReviewerPrompt(lang),
-        },
-      ];
-    }),
-  );
+  // One cache folder per language of the system: changing it never erases what the other wrote.
+  const cachesOf = memo((locale) => ({
+    summaryCache: createSummaryCache(dir, locale as Locale),
+    suggestionsCache: createSuggestionsCache(dir, locale as Locale),
+  }));
+  // One set of prompts per code language and system language: a request picks its set by `language` (6.1-6.3).
+  const promptsOf = memo((key) => {
+    const [locale, id] = key.split("|") as [Locale, string];
+    const plugin = deps.plugins.find((p) => p.id === id);
+    if (!plugin) return undefined;
+    const lang = promptLanguageOf(plugin);
+    const rules = rulesOf(deps, locale);
+    return {
+      prompts: {
+        summary: buildSummaryPrompt(rules, lang, locale),
+        stepSummary: buildStepSummaryPrompt(rules, lang, locale),
+        suggestions: buildSuggestionsPrompt(rules, lang, locale),
+      },
+      reviewer: buildReviewerPrompt(lang, locale),
+    };
+  });
   return async (part, req, options) => {
-    const prompts = byLanguage.get(req.language);
-    if (!prompts) return noPrompt(req.language);
+    const locale = (await deps.locale?.()) ?? DEFAULT_LOCALE;
+    const prompts = promptsOf(`${locale}|${req.language}`);
+    if (!prompts) return noPrompt(req.language, locale);
     const { client, config } = await deps.llm();
     const explainDeps: ExplainDeps = {
-      ...caches,
+      ...cachesOf(locale),
       ...prompts,
+      locale,
       llm: client,
       provider: config.provider,
       model: config.model,
@@ -105,20 +127,21 @@ export function composeTitles(
   env: Record<string, string | undefined>,
   deps: ComposeDeps,
 ): (req: TitleRequest) => Promise<TitlesResponse> {
-  const cache = createTitleCache(env.APP8N8_CACHE_DIR || deps.cacheDir);
-  const byLanguage = new Map(
-    deps.plugins.map((plugin) => {
-      const lang = promptLanguageOf(plugin);
-      return [
-        plugin.id,
-        {
-          prompt: buildTitlePrompt(deps.ptsRules, lang),
-          reviewer: buildTitleReviewerPrompt(lang),
-        },
-      ];
-    }),
-  );
+  const dir = env.APP8N8_CACHE_DIR || deps.cacheDir;
+  const cacheOf = memo((locale) => createTitleCache(dir, locale as Locale));
+  const promptsOf = memo((key) => {
+    const [locale, id] = key.split("|") as [Locale, string];
+    const plugin = deps.plugins.find((p) => p.id === id);
+    if (!plugin) return undefined;
+    const lang = promptLanguageOf(plugin);
+    return {
+      prompt: buildTitlePrompt(rulesOf(deps, locale), lang, locale),
+      reviewer: buildTitleReviewerPrompt(lang, locale),
+    };
+  });
   return async (req) => {
+    const locale = (await deps.locale?.()) ?? DEFAULT_LOCALE;
+    const cache = cacheOf(locale);
     const { client, config } = await deps.llm();
     // A project may mix languages: each group goes with the prompts of its own language.
     const groups = new Map<string, TitleItem[]>();
@@ -127,9 +150,10 @@ export function composeTitles(
     }
     const answers = new Map<string, TitlesResponse>();
     for (const [language, items] of groups) {
-      const prompts = byLanguage.get(language);
+      const prompts = promptsOf(`${locale}|${language}`);
       const titleDeps: TitleDeps | undefined = prompts && {
         ...prompts,
+        locale,
         llm: client,
         cache,
         provider: config.provider,
@@ -140,7 +164,7 @@ export function composeTitles(
         language,
         titleDeps
           ? await titleNodes({ items }, titleDeps)
-          : { ...noPrompt(language), titles: [] },
+          : { ...noPrompt(language, locale), titles: [] },
       );
     }
     return mergeTitles(req.items, answers);
@@ -153,10 +177,13 @@ function promptLanguageOf(plugin: LanguagePlugin): PromptLanguage {
 }
 
 /** A request for a language no plugin serves: an error, never a guess (the server only builds requests for its plugins). */
-function noPrompt(language: string): { status: "error"; message: string } {
+function noPrompt(
+  language: string,
+  locale: Locale,
+): { status: "error"; message: string } {
   return {
     status: "error",
-    message: `Não há prompt para a linguagem ${language}.`,
+    message: translateSystem(locale, "error.noPrompt", { language }),
   };
 }
 
@@ -245,8 +272,10 @@ function openHistoryOrWarn(path: string): History | undefined {
 export interface CoreOptions {
   /** LLM variables (resolveLlmConfig) and APP8N8_CACHE_DIR; the host passes its environment. */
   env: Record<string, string | undefined>;
-  /** The Português Técnico Simplificado rules the prompts carry. */
+  /** The Português Técnico Simplificado rules the prompts carry in Portuguese. */
   ptsRules: string;
+  /** The Simplified Technical English rules the prompts carry in English. */
+  steRules: string;
   /** The explain cache folder when APP8N8_CACHE_DIR is unset. */
   cacheDir: string;
   /** The history database file; undefined runs without history. */
@@ -268,7 +297,9 @@ export function createCore(options: CoreOptions): Hono {
     llm: () => settings.llm(),
     plugins: languagePlugins,
     ptsRules: options.ptsRules,
+    steRules: options.steRules,
     cacheDir: options.cacheDir,
+    locale: () => settings.locale(),
   };
   return createApp({
     plugins: languagePlugins,

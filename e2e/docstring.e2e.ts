@@ -88,7 +88,7 @@ test.describe("Docstring", () => {
 
     await expect(alerts(page)).toHaveText([COMMAND]);
     await expect(suggestionButtons(view)).toHaveText([
-      `${COMMAND} (linha 2, media)`,
+      `${COMMAND} (linha 2, média)`,
     ]);
 
     await alerts(page).click();

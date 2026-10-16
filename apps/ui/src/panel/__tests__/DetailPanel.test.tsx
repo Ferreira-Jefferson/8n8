@@ -199,6 +199,31 @@ describe("DetailPanel", () => {
     ).toBeTruthy();
   });
 
+  it("says Claude Code was not found when the provider is claude-code and it is missing (CC-17)", async () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
+    render(
+      <DetailPanel
+        source={source}
+        origin={{ source }}
+        snippetFile="trecho.py"
+        node={httpNode}
+        effects={[]}
+        auto={AUTO}
+        onSuggestions={() => {}}
+        onOpenSettings={() => {}}
+        claudeMissing
+      />,
+    );
+    expect(
+      await screen.findByText(
+        "O Claude Code não foi encontrado. Escolha o executável em Configurações.",
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.queryByText("Configure um provedor de LLM em Configurações."),
+    ).toBeNull();
+  });
+
   it("shows the code heading and exact code of an external node and asks for its summary (CORE-14, VID-28)", async () => {
     fetchMock.mockResolvedValue({ status: "no-key" });
     const { container } = render(

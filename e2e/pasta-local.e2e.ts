@@ -271,16 +271,23 @@ test.describe("Pasta local", () => {
     expect(await levelIds(page)).toContain("dir:pedidos");
   });
 
-  test("PROJ-05: a missing path and a file path both say Pasta não encontrada", async ({
+  test("PROJ-05: a missing path says Pasta não encontrada", async ({
     page,
   }) => {
-    for (const path of [join(tmp, "nao-existe"), join(LOJA, "main.py")]) {
-      await openFolder(page, path);
-      await expect(page.getByRole("alert")).toHaveText(
-        `Pasta não encontrada: ${path}`,
-      );
-      await expect(nodes(page)).toHaveCount(0);
-    }
+    const path = join(tmp, "nao-existe");
+    await openFolder(page, path);
+    await expect(page.getByRole("alert")).toHaveText(
+      `Pasta não encontrada: ${path}`,
+    );
+    await expect(nodes(page)).toHaveCount(0);
+  });
+
+  test("PROJ-05: a file path maps as a one-file project, with no alert", async ({
+    page,
+  }) => {
+    await openFolder(page, join(LOJA, "main.py"));
+    await expect(nodes(page).first()).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveCount(0);
   });
 
   test("PROJ-06, CLEAN-04/05: an icon whose hover counts the ignored files; a click lists grande.py and latin1.py, beside the panel", async ({

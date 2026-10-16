@@ -132,13 +132,14 @@ module.exports = {
       name: "no-child-process",
       severity: "error",
       comment:
-        "Só apps/cli/src/open-browser.ts, packages/llm/src/claude-code.ts e packages/server/src/pick-path.ts (o seletor de arquivo e pasta do sistema) iniciam processos (DIST-23, CC-09). O teste das guardas também, para rodar o check de verdade. Uma exceção nova entra nesta regra, com revisão do CODEOWNERS.",
+        "Só apps/cli/src/open-browser.ts, packages/llm/src/claude-code.ts e packages/server/src/pick-path.ts (o seletor de arquivo e pasta do sistema) iniciam processos (DIST-23, CC-09). O teste das guardas também, para rodar o check de verdade, e o teste de processos do provedor, para matar um 8n8 de verdade e ver o que sobra (CC-19). Uma exceção nova entra nesta regra, com revisão do CODEOWNERS.",
       from: {
         pathNot: [
           "^apps/cli/src/open-browser\\.ts$",
           "^packages/llm/src/claude-code\\.ts$",
           "^packages/server/src/pick-path\\.ts$",
           "^apps/cli/src/__tests__/guards\\.test\\.ts$",
+          "^packages/llm/src/__tests__/processes\\.test\\.ts$",
         ],
       },
       // cluster starts another Node process too (SEC-08).

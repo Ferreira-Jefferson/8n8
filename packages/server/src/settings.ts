@@ -1,13 +1,20 @@
 import {
+  type ClaudeLocation,
   createLlmClient,
   DEFAULT_PROVIDER,
+  isClaudeName,
   type LlmConfig,
   PROVIDERS,
   providerOf,
   resolveLlmConfig,
+  whereIsClaude,
 } from "@8n8/llm";
 import {
+  DEFAULT_LOCALE,
   type LlmClient,
+  LOCALES,
+  type Locale,
+  LocalizedError,
   type SettingsField,
   type SettingsPatch,
   type SettingsResponse,
@@ -37,6 +44,10 @@ export interface SettingsService {
   llm(): Promise<LlmSetup>;
   /** The automatic modes in effect (CFG-08). */
   auto(): Promise<{ summary: boolean; suggestions: boolean }>;
+  /** The language of the system: what the LLM writes and which cache it reads. */
+  locale(): Promise<Locale>;
+  /** Stores the Claude Code executable the person picked, or erases it with null; throws InvalidSettings unless it is a file named claude (CC-18). */
+  setClaudePath(path: string | null): Promise<SettingsResponse>;
 }
 
 export class InvalidSettings extends Error {}
@@ -76,6 +87,7 @@ const patchSchema = z
     autoSummary: z.boolean().optional(),
     autoSuggestions: z.boolean().optional(),
     theme: z.enum(THEMES).optional(),
+    locale: z.enum(LOCALES).optional(),
   })
   .strict();
 
@@ -102,6 +114,7 @@ export function applyPatch(
     next.autoSuggestions = patch.autoSuggestions;
   }
   if (patch.theme !== undefined) next.theme = patch.theme;
+  if (patch.locale !== undefined) next.locale = patch.locale;
   return next;
 }
 
@@ -116,6 +129,8 @@ export function createSettingsService(
   // The host's environment reaches the providers: Claude Code finds its executable there (CC-02).
   createClient: (config: LlmConfig) => LlmClient | undefined = (config) =>
     createLlmClient(config, { env }),
+  // Where Claude Code is; tests pass a fake file system (CC-15, CC-17).
+  locate: (env: Env, picked?: string) => ClaudeLocation = whereIsClaude,
 ): SettingsService {
   let stored: Promise<StoredSettings> | undefined;
   const load = () => {
@@ -131,9 +146,26 @@ export function createSettingsService(
       flag(env[AUTO_ENV.autoSuggestions]) ?? s.autoSuggestions ?? false,
   });
 
+  /** claude-code is the default when Claude Code is found, openrouter otherwise (CC-15). */
+  const configOf = (s: StoredSettings) => {
+    const claude = locate(env, s.claudePath);
+    const fallback = claude.path ? "claude-code" : DEFAULT_PROVIDER;
+    return { config: resolveLlmConfig(env, s, fallback), claude };
+  };
+
+  const write = async (change: (s: StoredSettings) => StoredSettings) => {
+    const run = writes.then(async () => {
+      const next = change(await load());
+      await store.write(next);
+      stored = Promise.resolve(next);
+    });
+    writes = run.catch(() => {});
+    await run;
+  };
+
   const view = async (): Promise<SettingsResponse> => {
     const s = await load();
-    const config = resolveLlmConfig(env, s);
+    const { config, claude } = configOf(s);
     const provider = providerOf(config.provider);
     // A provider without a key has no variable for it.
     const names: Record<SettingsField, string | undefined> = {
@@ -156,6 +188,7 @@ export function createSettingsService(
       autoSummary: modes.summary,
       autoSuggestions: modes.suggestions,
       theme: s.theme ?? "system",
+      locale: s.locale ?? DEFAULT_LOCALE,
       hasKey: config.apiKey !== undefined,
       providers: PROVIDERS.map(({ id, defaultModel, usesKey }) => ({
         id,
@@ -167,6 +200,11 @@ export function createSettingsService(
           .filter(setBy)
           .map((field) => [field, names[field]]),
       ),
+      claude: {
+        path: claude.path ?? null,
+        source: claude.source ?? null,
+        envInvalid: claude.envInvalid,
+      },
     };
   };
 
@@ -175,17 +213,38 @@ export function createSettingsService(
     async update(raw) {
       const parsed = patchSchema.safeParse(raw);
       if (!parsed.success) throw new InvalidSettings("invalid settings");
-      const run = writes.then(async () => {
-        const next = applyPatch(await load(), parsed.data as SettingsPatch);
-        await store.write(next);
-        stored = Promise.resolve(next);
+      await write((s) => {
+        const patch = { ...(parsed.data as SettingsPatch) };
+        // A key or model saved under the automatic default is pinned to that provider:
+        // with no provider stored, it would read as openrouter's (CC-15).
+        const pin =
+          patch.provider === undefined &&
+          s.provider === undefined &&
+          !env.APP8N8_LLM_PROVIDER &&
+          (patch.apiKey != null || patch.model != null);
+        const current = configOf(s).config.provider;
+        if (pin && current !== DEFAULT_PROVIDER) patch.provider = current;
+        return applyPatch(s, patch);
       });
-      writes = run.catch(() => {});
-      await run;
+      return view();
+    },
+    async setClaudePath(path) {
+      if (
+        path !== null &&
+        (!isClaudeName(path) || locate({}, path).source !== "picked")
+      ) {
+        throw new InvalidSettings("not claude");
+      }
+      await write((s) => {
+        const next = { ...s };
+        if (path === null) delete next.claudePath;
+        else next.claudePath = path;
+        return next;
+      });
       return view();
     },
     async llm() {
-      const config = resolveLlmConfig(env, await load());
+      const { config } = configOf(await load());
       const key = JSON.stringify(config);
       if (built?.key !== key) {
         built = {
@@ -201,10 +260,13 @@ export function createSettingsService(
     async auto() {
       return auto(await load());
     },
+    async locale() {
+      return (await load()).locale ?? DEFAULT_LOCALE;
+    },
   };
 }
 
-const KEY_MASK = "[chave omitida]";
+const KEY_MASK = "[***]";
 
 /**
  * A provider's error message can echo the key: OpenAI shows it masked, a hostile URL
@@ -225,6 +287,8 @@ function withoutKey(
       try {
         return await client.complete(req);
       } catch (err) {
+        // A keyed error carries no provider text: it passes as it is, to be said in the language of the system.
+        if (err instanceof LocalizedError) throw err;
         throw new Error(
           scrub(err instanceof Error ? err.message : String(err)),
         );

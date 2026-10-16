@@ -61,6 +61,7 @@ const BASE: Record<string, string> = {
   "apps/cli/src/open-browser.ts": SPAWN,
   "packages/llm/src/claude-code.ts": SPAWN,
   "apps/cli/src/__tests__/guards.test.ts": SPAWN,
+  "packages/llm/src/__tests__/processes.test.ts": SPAWN,
   // The extension may import vscode (VSC-13).
   "apps/editors/vscode/src/editor.ts": VSCODE,
 };

@@ -79,6 +79,7 @@ const compose = (llm: ReturnType<typeof fakeLlm>, dir = freshDir()) => ({
   llm: llmOf(env, () => llm.client),
   plugins,
   ptsRules: "REGRAS",
+  steRules: "REGRAS",
   cacheDir: dir,
 });
 

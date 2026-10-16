@@ -45,6 +45,7 @@ Guias: [docs/adicionar-linguagem.md](docs/adicionar-linguagem.md), [docs/adicion
 - Faça a solução mais simples que resolve. Sem features, camadas, abstrações ou configurações que não foram pedidas.
 - Mexa só no que a tarefa pede. Não refatore, renomeie nem reformate código vizinho. Código morto ou suspeito deve ser apontado, não apagado.
 - Siga o estilo do código ao redor: nomes, padrões e densidade de comentários.
+- Texto com barra invertida (caminho do Windows, `\n`, regex) entra no arquivo pelo Edit ou Write, nunca por heredoc ou script no shell: o shell come as barras.
 
 ## Verificação
 

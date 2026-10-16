@@ -1,3 +1,4 @@
+export { DEFAULT_LOCALE, type Locale, translateSystem } from "@8n8/model";
 export { type AppDeps, createApp, type ProjectRead } from "./app";
 export {
   type CoreOptions,

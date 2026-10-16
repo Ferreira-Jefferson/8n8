@@ -18,7 +18,8 @@ const knownProvider = (id: string | undefined) =>
 /**
  * Field by field, the environment wins over the stored settings, and the stored
  * settings win over the defaults (CFG-16):
- * - provider: APP8N8_LLM_PROVIDER, then the stored one, then openrouter;
+ * - provider: APP8N8_LLM_PROVIDER, then the stored one, then `defaultProvider`
+ *   (claude-code when the host finds Claude Code, CC-15; else openrouter);
  * - key: that provider's variable, then the stored one; base URL: that provider's variable only;
  * - model: APP8N8_MODEL, then the stored one, then the provider's default;
  * - reviewer model: APP8N8_REVIEW_MODEL, then the summary model (FID-15).
@@ -28,11 +29,17 @@ const knownProvider = (id: string | undefined) =>
 export function resolveLlmConfig(
   env: Env,
   stored: StoredSettings = {},
+  defaultProvider: string = DEFAULT_PROVIDER,
 ): LlmConfig {
+  // A key or model stored with no provider dates from when openrouter was the only default.
+  const fallback =
+    stored.apiKey !== undefined || stored.model !== undefined
+      ? DEFAULT_PROVIDER
+      : defaultProvider;
   const provider = providerOf(
     present(env.APP8N8_LLM_PROVIDER) ??
       knownProvider(stored.provider) ??
-      DEFAULT_PROVIDER,
+      fallback,
   );
   // The fields belong to the provider they were stored with, unknown ones included.
   const owner = stored.provider ?? DEFAULT_PROVIDER;
@@ -45,5 +52,6 @@ export function resolveLlmConfig(
     baseURL: fromEnv(env, provider.env.baseURL),
     model,
     reviewModel: present(env.APP8N8_REVIEW_MODEL) ?? model,
+    claudePath: present(stored.claudePath),
   };
 }

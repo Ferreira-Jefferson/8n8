@@ -1,4 +1,7 @@
+import type { EdgeLabelKey } from "@8n8/model";
 import { type Edge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react";
+import { type MessageKey, useT } from "../i18n";
+import { Side } from "./sides";
 
 export interface WireData extends Record<string, unknown> {
   /** Milliseconds until the wire draws (VID-06). */
@@ -11,33 +14,49 @@ export interface WireData extends Record<string, unknown> {
   turnY?: number | undefined;
   /** The wire shares its gap with others and runs down or up at this x. */
   lane?: number | undefined;
+  /** The system wrote the label: the wire says the key's words in the language of the system. */
+  labelKey?: EdgeLabelKey | undefined;
 }
 
 export type WireFlowEdge = Edge<WireData, "wire">;
 
 const BEND = 60;
 const PULSE_MS = 1500;
-/** A branch label starts this far right of the source port, past the wire's first bend. */
-const LABEL_X = 30;
-/** Space between a branch label and the line of the source port. */
+/** A branch label ends this far before the target port. */
+const LABEL_INSET = 8;
+/** Space between a branch label and the line of the target port. */
 const LABEL_GAP = 4;
 
 /**
- * Where a branch label sits: next to the start of its wire, in the gap
- * between the target cards, so it touches no wire and no card (VID-21). A
- * wire that goes up gets its label above the port line; a wire that goes
- * down or straight, below.
+ * Where a branch label sits: next to the end of its wire, by the port of the
+ * card the branch leads to, so each label reads with its own card (VID-21).
+ * The label goes on the side of the wire's end that the wire does not come
+ * from: below the end of a wire that comes down into the port, above the end
+ * of one that comes up or straight. So it never crosses its own wire. Into the
+ * top or the bottom of a card, the label sits to the right of the port.
  */
 export function branchLabelAt(
-  sourceX: number,
-  sourceY: number,
+  targetX: number,
   targetY: number,
-): { x: number; y: number; above: boolean } {
-  const above = targetY < sourceY;
+  sourceY: number,
+  side: Side,
+): { x: number; y: number; above: boolean; leftward: boolean } {
+  if (side === Side.Top || side === Side.Bottom) {
+    const above = side === Side.Top;
+    return {
+      x: targetX + LABEL_GAP,
+      y: above ? targetY - LABEL_GAP : targetY + LABEL_GAP,
+      above,
+      leftward: false,
+    };
+  }
+  const above = sourceY >= targetY;
+  const leftward = side === Side.Left;
   return {
-    x: sourceX + LABEL_X,
-    y: above ? sourceY - LABEL_GAP : sourceY + LABEL_GAP,
+    x: leftward ? targetX - LABEL_INSET : targetX + LABEL_INSET,
+    y: above ? targetY - LABEL_GAP : targetY + LABEL_GAP,
     above,
+    leftward,
   };
 }
 
@@ -101,37 +120,69 @@ export function lanePath(
   ].join(" ");
 }
 
+const OUT: Record<Side, readonly [number, number]> = {
+  [Side.Left]: [-1, 0],
+  [Side.Right]: [1, 0],
+  [Side.Top]: [0, -1],
+  [Side.Bottom]: [0, 1],
+};
+
+/** The curve from a port to another; each end leaves its side straight out before it bends. */
+export function curvePath(
+  x1: number,
+  y1: number,
+  from: Side,
+  x2: number,
+  y2: number,
+  to: Side,
+) {
+  const [ax, ay] = OUT[from];
+  const [bx, by] = OUT[to];
+  return `M ${x1} ${y1} C ${x1 + ax * BEND} ${y1 + ay * BEND}, ${x2 + bx * BEND} ${y2 + by * BEND}, ${x2} ${y2}`;
+}
+
 /** A Petróleo curve that draws itself, carries one pulse and a "true"/"false" label (VID-05, 06, 07, 21). */
 export function WireEdge({
   sourceX,
   sourceY,
   targetX,
   targetY,
+  sourcePosition,
+  targetPosition,
   data,
   label,
 }: Pick<
   EdgeProps<WireFlowEdge>,
-  "sourceX" | "sourceY" | "targetX" | "targetY" | "data" | "label"
+  | "sourceX"
+  | "sourceY"
+  | "targetX"
+  | "targetY"
+  | "sourcePosition"
+  | "targetPosition"
+  | "data"
+  | "label"
 >) {
-  const w = [
-    sourceX,
-    sourceY,
-    sourceX + BEND,
-    sourceY,
-    targetX - BEND,
-    targetY,
-    targetX,
-    targetY,
-  ];
+  const t = useT();
+  // `data-branch-label` keeps the raw label: styles and tests read it, whatever the language.
+  const shown = data?.labelKey
+    ? t(`edge.${data.labelKey}` as MessageKey)
+    : label;
   const d =
     data?.turnY !== undefined
       ? turnPath(sourceX, sourceY, targetX, targetY, data.turnY)
       : data?.lane !== undefined && sourceY !== targetY
         ? lanePath(sourceX, sourceY, targetX, targetY, data.lane)
-        : `M ${w[0]} ${w[1]} C ${w[2]} ${w[3]}, ${w[4]} ${w[5]}, ${w[6]} ${w[7]}`;
+        : curvePath(
+            sourceX,
+            sourceY,
+            sourcePosition,
+            targetX,
+            targetY,
+            targetPosition,
+          );
   const drawAt = data?.drawAt ?? 0;
   const pulseAt = data?.pulseAt ?? 0;
-  const spot = branchLabelAt(sourceX, sourceY, targetY);
+  const spot = branchLabelAt(targetX, targetY, sourceY, targetPosition);
   return (
     <>
       <path
@@ -168,10 +219,10 @@ export function WireEdge({
             className="branch-label"
             data-branch-label={label}
             style={{
-              transform: `translate(${spot.x}px, ${spot.y}px)${spot.above ? " translateY(-100%)" : ""}`,
+              transform: `translate(${spot.x}px, ${spot.y}px)${spot.leftward ? " translateX(-100%)" : ""}${spot.above ? " translateY(-100%)" : ""}`,
             }}
           >
-            {label}
+            {shown}
           </span>
         </EdgeLabelRenderer>
       )}

@@ -1,4 +1,5 @@
 import type { KeyboardEvent, PointerEvent } from "react";
+import { useT } from "../i18n";
 
 export const PANEL_MIN = 320;
 const STEP = 24;
@@ -29,6 +30,7 @@ export function PanelResizer({
   width: number | undefined;
   onResize: (width: number) => void;
 }) {
+  const t = useT();
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     const bar = e.currentTarget;
@@ -61,7 +63,7 @@ export function PanelResizer({
       className="panel-resizer"
       role="separator"
       aria-orientation="vertical"
-      aria-label="Redimensionar painel"
+      aria-label={t("resizer.aria")}
       aria-valuemin={PANEL_MIN}
       aria-valuemax={panelMax()}
       aria-valuenow={width === undefined ? undefined : Math.round(width)}

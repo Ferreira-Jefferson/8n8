@@ -2,6 +2,7 @@ import { lineRange } from "@8n8/lang-treesitter";
 import {
   childId,
   type EdgeKind,
+  type EdgeLabelKey,
   type FlowEdge,
   type FlowNode,
   type NodeId,
@@ -35,6 +36,7 @@ interface Pending {
   source: NodeId;
   kind: EdgeKind;
   label?: string;
+  labelKey?: EdgeLabelKey;
 }
 
 function wire(from: Pending, target: NodeId): FlowEdge {
@@ -45,6 +47,7 @@ function wire(from: Pending, target: NodeId): FlowEdge {
     target,
   };
   if (from.label !== undefined) edge.label = from.label;
+  if (from.labelKey !== undefined) edge.labelKey = from.labelKey;
   return edge;
 }
 
@@ -125,8 +128,16 @@ function sequence(
       range: lineRange(statement),
       openable: false,
     });
-    const branches: { label: string; body: Node[] }[] = [
-      { label: "true", body: blockOf(statement, "consequence") },
+    const branches: {
+      label: string;
+      labelKey?: EdgeLabelKey;
+      body: Node[];
+    }[] = [
+      {
+        label: "true",
+        labelKey: "true",
+        body: blockOf(statement, "consequence"),
+      },
     ];
     let hasElse = false;
     for (const alt of statement.childrenForFieldName("alternative")) {
@@ -137,7 +148,11 @@ function sequence(
         });
       } else {
         hasElse = true;
-        branches.push({ label: "false", body: blockOf(alt, "body") });
+        branches.push({
+          label: "false",
+          labelKey: "false",
+          body: blockOf(alt, "body"),
+        });
       }
     }
     const out: Pending[] = [];
@@ -146,6 +161,7 @@ function sequence(
         source: id,
         kind: "branch",
         label: branch.label,
+        ...(branch.labelKey ? { labelKey: branch.labelKey } : {}),
       };
       out.push(
         ...sequence(branch.body, childId(id, `b${j}`), parentId, ctx, [
@@ -153,7 +169,14 @@ function sequence(
         ]),
       );
     });
-    if (!hasElse) out.push({ source: id, kind: "branch", label: "false" });
+    if (!hasElse) {
+      out.push({
+        source: id,
+        kind: "branch",
+        label: "false",
+        labelKey: "false",
+      });
+    }
     pending = out;
   };
 

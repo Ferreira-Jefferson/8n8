@@ -22,6 +22,38 @@ describe("resolveLlmConfig: provider", () => {
       /desconhecido/,
     );
   });
+
+  it("uses the default the host gives when nothing chooses a provider (CC-15)", () => {
+    expect(resolveLlmConfig({}, {}, "claude-code")).toMatchObject({
+      provider: "claude-code",
+      model: "claude-sonnet-5-5",
+    });
+    expect(
+      resolveLlmConfig({ APP8N8_LLM_PROVIDER: "openai" }, {}, "claude-code")
+        .provider,
+    ).toBe("openai");
+    expect(
+      resolveLlmConfig({}, { provider: "anthropic" }, "claude-code").provider,
+    ).toBe("anthropic");
+  });
+
+  it("reads a key or model stored with no provider as openrouter's, whatever the default (CC-15)", () => {
+    expect(resolveLlmConfig({}, { apiKey: "k" }, "claude-code")).toMatchObject({
+      provider: "openrouter",
+      apiKey: "k",
+    });
+    expect(resolveLlmConfig({}, { model: "m" }, "claude-code")).toMatchObject({
+      provider: "openrouter",
+      model: "m",
+    });
+  });
+
+  it("carries the picked Claude Code path, whatever the provider (CC-16)", () => {
+    expect(
+      resolveLlmConfig({}, { claudePath: "D:\\c\\claude.exe" }).claudePath,
+    ).toBe("D:\\c\\claude.exe");
+    expect(resolveLlmConfig({}, { claudePath: "" }).claudePath).toBeUndefined();
+  });
 });
 
 describe("resolveLlmConfig: key and base URL", () => {

@@ -3,6 +3,7 @@ import type { StoredSettings } from "@8n8/model";
 import { describe, expect, it, vi } from "vitest";
 import { createApp } from "../app";
 import { createSettingsService, type SettingsStore } from "../settings";
+import { NO_CLAUDE } from "./llm-of";
 import { TEST_TOKEN } from "./test-token";
 
 const KEY = "sk-route-sentinel-000000000000000000000";
@@ -23,7 +24,7 @@ function setup(store?: SettingsStore) {
     readProject: async () => ({ kind: "not-found" }),
     port: 8148,
     token: TEST_TOKEN,
-    settings: createSettingsService({}, memory),
+    settings: createSettingsService({}, memory, undefined, NO_CLAUDE),
   });
   const headers = {
     host: "127.0.0.1:8148",
