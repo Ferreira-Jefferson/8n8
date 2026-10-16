@@ -84,11 +84,11 @@ test.describe("Busca de nó", () => {
     const settings = page.getByRole("button", { name: "Configurações" });
     const history = page.getByRole("button", { name: "Histórico" });
     const closed = await box(page.locator(".search-field"));
-    expect([closed.width, closed.height]).toEqual([60, 60]);
+    expect([closed.width, closed.height]).toEqual([50, 50]);
     expect(closed.x + closed.width).toBeLessThanOrEqual(
       (await box(settings)).x,
     );
-    expect((await box(settings)).x + 60).toBeLessThanOrEqual(
+    expect((await box(settings)).x + 50).toBeLessThanOrEqual(
       (await box(history)).x,
     );
     expect(closed.y).toBe((await box(settings)).y);

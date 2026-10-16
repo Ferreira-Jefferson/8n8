@@ -175,7 +175,7 @@ describe("styles: history button", () => {
 
   it("sits at the far right, with Novo código just left of it and the breadcrumb clear of both", () => {
     expect(right(".history-btn")).toBe(24);
-    expect(rule(".history-btn")).toContain("top: 24px;");
+    expect(rule(".history-btn")).toContain("top: 29px;");
     expect(right(".map-area > .new-code")).toBeGreaterThan(
       right(".history-btn"),
     );
