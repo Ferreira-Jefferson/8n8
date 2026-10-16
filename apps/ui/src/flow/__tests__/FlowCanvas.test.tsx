@@ -27,8 +27,76 @@ import { videoGraph } from "./video-graph";
 const P = "fn:processar_pedido";
 const C = "fn:calcular_frete";
 
+describe("toFlowEdges, the hover tag", () => {
+  const times: Schedule = {
+    enterAt: new Map(),
+    drawAt: new Map(),
+    pulseAt: new Map(),
+  };
+  const names = new Map([
+    ["file:a.py", "a.py"],
+    ["file:b.ts", "b.ts"],
+  ]);
+  const infoOf = (e: FlowEdge, reach: "inside" | "across") =>
+    toFlowEdges(
+      [e],
+      times,
+      false,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      reach,
+      names,
+    )[0]?.data?.info;
+
+  it("names both ends by the label of their nodes, and falls back to the id", () => {
+    const wire: FlowEdge = {
+      id: "x",
+      kind: "extends",
+      source: "file:a.py",
+      target: "file:zz",
+    };
+    expect(infoOf(wire, "across")).toEqual({
+      kind: "extends",
+      reach: "across",
+      from: "a.py",
+      to: "file:zz",
+    });
+  });
+
+  it("says across languages for a labeled wire between files, and across files for one with no label", () => {
+    const base: FlowEdge = {
+      id: "x",
+      kind: "calls",
+      source: "file:a.py",
+      target: "file:b.ts",
+    };
+    expect(infoOf({ ...base, label: "HTTP GET /a" }, "across")?.reach).toBe(
+      "language",
+    );
+    expect(infoOf(base, "across")?.reach).toBe("across");
+  });
+
+  it("keeps a label inside one file as inside", () => {
+    const wire: FlowEdge = {
+      id: "x",
+      kind: "calls",
+      source: "file:a.py",
+      target: "file:b.ts",
+      label: "nome",
+    };
+    expect(infoOf(wire, "inside")?.reach).toBe("inside");
+  });
+
+  it("gives no info to a wire that is no dependency", () => {
+    const wire: FlowEdge = { id: "x", kind: "next", source: "a", target: "b" };
+    expect(infoOf(wire, "inside")).toBeUndefined();
+  });
+});
+
 describe("toFlowEdges (VID-05, PROJ-03)", () => {
-  it("draws every wire as a wire edge with its times and marks only imports with edge-imports", () => {
+  it("draws every wire as a wire edge with its times and marks the dependency wires with their edge- and reach- classes", () => {
     const edges: FlowEdge[] = [
       { id: "i", kind: "imports", source: "dir:pedidos", target: "dir:frete" },
       { id: "c", kind: "calls", source: "fn:a", target: "fn:b" },
@@ -69,8 +137,17 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
         sourceHandle: "right",
         targetHandle: "left",
         type: "wire",
-        data: data(400, 2750),
-        className: "edge-imports",
+        data: {
+          ...data(400, 2750),
+          dep: true,
+          info: {
+            kind: "imports",
+            reach: "inside",
+            from: "dir:pedidos",
+            to: "dir:frete",
+          },
+        },
+        className: "edge-imports reach-inside",
       },
       {
         id: "c",
@@ -79,7 +156,12 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
         sourceHandle: "right",
         targetHandle: "left",
         type: "wire",
-        data: data(750, 3500),
+        data: {
+          ...data(750, 3500),
+          dep: true,
+          info: { kind: "calls", reach: "inside", from: "fn:a", to: "fn:b" },
+        },
+        className: "edge-calls reach-inside",
       },
       {
         id: "n",
@@ -115,6 +197,34 @@ describe("toFlowEdges (VID-05, PROJ-03)", () => {
     };
     const out = toFlowEdges(edges, times, false, new Map([["bc", 180]]));
     expect(out.map((e) => e.data?.turnY)).toEqual([undefined, 180]);
+  });
+
+  it("marks a self call as a loop and an extends wire with its own class, and takes the reach of the level", () => {
+    const edges: FlowEdge[] = [
+      { id: "self", kind: "calls", source: "f", target: "f" },
+      { id: "ext", kind: "extends", source: "B", target: "A" },
+    ];
+    const times: Schedule = {
+      enterAt: new Map(),
+      drawAt: new Map(),
+      pulseAt: new Map(),
+    };
+    const out = toFlowEdges(
+      edges,
+      times,
+      false,
+      new Map(),
+      new Map(),
+      new Map(),
+      undefined,
+      "across",
+    );
+    expect(out.map((e) => e.className)).toEqual([
+      "edge-calls reach-across",
+      "edge-extends reach-across",
+    ]);
+    expect(out[0]?.data).toMatchObject({ dep: true, loop: true });
+    expect(out[1]?.data?.loop).toBeUndefined();
   });
 
   it("sends a wire out of the sides it was given, and right to left by default", () => {
@@ -365,16 +475,16 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
     const ids = [P, ...[0, 1, 2, 3, 4, 5, 6].map((i) => `${P}/s${i}`)];
     expect(
       ids.map((id) => card(container, id).getAttribute("data-enter-at")),
-    ).toEqual(["0", "150", "300", "450", "600", "750", "900", "1050"]);
+    ).toEqual(["0", "300", "450", "600", "750", "900", "1050", "1200"]);
   });
 
-  it("tags the entry GATILHO and shows the titles it gets (VID-04, VID-14)", () => {
+  it("tags the entry FUNÇÃO and shows the titles it gets (VID-04, VID-14)", () => {
     const { container } = render(
       <FlowCanvas
         {...props({ titles: new Map([[`${P}/s5`, "Grava o pedido"]]) })}
       />,
     );
-    expect(card(container, P).getAttribute("data-tag")).toBe("GATILHO");
+    expect(card(container, P).getAttribute("data-tag")).toBe("FUNÇÃO");
     expect(card(container, `${P}/s5`).querySelector(".name")?.textContent).toBe(
       "Grava o pedido",
     );

@@ -22,7 +22,7 @@
     "test": "pnpm -r --if-present test",
     "e2e": "pnpm --filter @8n8/cli build && playwright test",
     "prepare": "git config core.hooksPath .githooks",
-    "prints":"pnpm --filter @8n8/cli build && node scripts/prints-readme.mjs"
+    "prints": "pnpm --filter @8n8/cli build && node scripts/prints-readme.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

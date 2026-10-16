@@ -57,6 +57,7 @@ const VIDEO_TITLES = [
   "Somar os itens",
   "Salvar no banco",
   "Enviar e-mail",
+  "Calcular frete",
 ];
 
 async function mapWithTitles(page: Page, source: string): Promise<void> {
@@ -68,13 +69,13 @@ async function mapWithTitles(page: Page, source: string): Promise<void> {
 test.describe("Títulos", () => {
   test.beforeEach(freshReal);
 
-  test("VID-14: one title request for the level's 8 nodes, one review, and the cards show the titles", async ({
+  test("VID-14: one title request for the level's 9 nodes, one review, and the cards show the titles", async ({
     page,
   }) => {
     await mapWithTitles(page, VIDEO);
     let log = await fakeLog();
     expect(titleCalls(log)).toHaveLength(1);
-    expect(blocks(titleCalls(log)[0] as FakeCall)).toHaveLength(8);
+    expect(blocks(titleCalls(log)[0] as FakeCall)).toHaveLength(9);
     expect(titleReviews(log)).toHaveLength(1);
     for (const name of [
       "Pedido recebido",
@@ -99,8 +100,8 @@ test.describe("Títulos", () => {
       ]);
     log = await fakeLog();
     expect(titleCalls(log)).toHaveLength(1);
-    // The 5 steps and the hub, calcular_frete itself.
-    expect(blocks(titleCalls(log)[0] as FakeCall)).toHaveLength(6);
+    // The 5 steps; the hub, calcular_frete itself, was titled as a card of the main flow.
+    expect(blocks(titleCalls(log)[0] as FakeCall)).toHaveLength(5);
     await expect(
       page.locator('.hub-node[data-id="fn:calcular_frete"] .name'),
     ).toHaveText("Calcular frete");
@@ -154,7 +155,7 @@ test.describe("Títulos", () => {
   }) => {
     await mapWithTitles(page, VIDEO);
     const entries = titleEntries();
-    expect(entries).toHaveLength(8);
+    expect(entries).toHaveLength(9);
     for (const e of entries) {
       expect(Object.keys(e.fingerprint).sort()).toEqual([
         "code",
@@ -185,7 +186,7 @@ test.describe("Títulos", () => {
     const asked = blocks(calls[0] as FakeCall);
     // The e-mail node and the entry: the entry's code (lines 6-14) holds the
     // changed line 13, and by VID-17 a title's fingerprint holds the node's
-    // own code, as a summary's does. The other 6 nodes come from the cache.
+    // own code, as a summary's does. The other 7 nodes come from the cache.
     expect(asked.map((b) => /Nome: (\S+)/.exec(b)?.[1])).toEqual([
       "processar_pedido",
       "enviar_email",
@@ -212,6 +213,7 @@ test.describe("Nomes provisórios", () => {
       "Soma itens",
       "Salvar",
       "Enviar email",
+      "Calcular frete",
     ]);
     // The full name stays in the title attribute, without the open mark.
     await expect(

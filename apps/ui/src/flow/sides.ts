@@ -24,3 +24,16 @@ export function pickSides(source: Position, target: Position): [Side, Side] {
   }
   return dy >= 0 ? [Side.Bottom, Side.Top] : [Side.Top, Side.Bottom];
 }
+
+/**
+ * The sides of the wire that runs back between two cards a wire already joins:
+ * below both cards when they stand side by side, on their left when they stand
+ * one above the other. It never crosses a card.
+ */
+export function backSides(source: Position, target: Position): [Side, Side] {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  return Math.abs(dx) >= Math.abs(dy)
+    ? [Side.Bottom, Side.Bottom]
+    : [Side.Left, Side.Left];
+}

@@ -12,7 +12,6 @@ import {
   css,
   expectLevel,
   FRETE,
-  FRETE_LEVEL,
   freshReal,
   generate,
   MAIN,
@@ -290,16 +289,17 @@ test.describe("Busca de nó, com títulos revisados", () => {
     ]);
   });
 
-  test("BUSCA-05: a function the main flow does not show opens its own level", async ({
+  test("BUSCA-05: a function the main flow shows is marked there, with no change of level", async ({
     page,
   }) => {
     await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
+    // calcular_frete is a card of the main flow (VID-11): the level stays.
     await lupa(page).click();
     await field(page).fill("calcular_frete");
     await page.keyboard.press("Enter");
-    await expectLevel(page, FRETE_LEVEL);
-    await expect(breadcrumb(page).getByRole("button")).toHaveCount(2);
+    await expectLevel(page, MAIN_FLOW);
+    await expect(breadcrumb(page).getByRole("button")).toHaveCount(1);
     await expect(
       page.locator(`[data-id="${FRETE}"]`).locator(".node"),
     ).toHaveClass(/\bon\b/);

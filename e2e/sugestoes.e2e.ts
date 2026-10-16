@@ -34,13 +34,13 @@ const balloon = (page: Page) => page.locator(".suggestion-pop");
 const item = (page: Page, text: string) =>
   balloon(page).locator(".pop-item", { hasText: text });
 
-/** The video map with titles, then the GATILHO opened with its summary. */
+/** The video map with titles, then the entry opened with its summary. */
 async function openTrigger(page: Page): Promise<void> {
   await generate(page, REAL, VIDEO);
   await expectLevel(page, MAIN_FLOW);
   await expect.poll(() => cardNames(page)).toContain("Pedido recebido");
   await clickCard(page, PEDIDO);
-  await expectLevel(page, [...MAIN_FLOW.slice(1), `${PEDIDO}/s7`]);
+  await expectLevel(page, [...MAIN_FLOW.slice(1, -1), `${PEDIDO}/s7`]);
   await expect(badge(page, EMAIL)).toBeVisible();
 }
 
@@ -59,7 +59,7 @@ async function badgeCounts(page: Page): Promise<Record<string, string>> {
 
 test.beforeEach(freshReal);
 
-test("VID-31: the GATILHO's suggestions show as badges on BANCO and E-MAIL, inside and back on the main flow, with no card over the canvas", async ({
+test("VID-31: the entry's suggestions show as badges on BANCO and E-MAIL, inside and back on the main flow, with no card over the canvas", async ({
   page,
 }) => {
   await openTrigger(page);
@@ -145,7 +145,7 @@ test("Esc closes only the balloon and keeps the level; a click on the canvas clo
   await page.keyboard.press("Escape");
   await expect(balloon(page)).toHaveCount(0);
   await expect(badge(page, EMAIL)).toBeFocused();
-  await expectLevel(page, [...MAIN_FLOW.slice(1), `${PEDIDO}/s7`]);
+  await expectLevel(page, [...MAIN_FLOW.slice(1, -1), `${PEDIDO}/s7`]);
 
   await badge(page, EMAIL).click();
   await expect(balloon(page)).toBeVisible();

@@ -236,15 +236,17 @@ test.describe("Mapa", () => {
         .map((e) => `${e.source}->${e.target}`),
     ).toEqual([`${PEDIDO}->${FRETE}`]);
 
-    // The main flow draws the entry and its call command, joined by one wire (VID-10).
-    await expect(nodes(page)).toHaveCount(2);
-    expect(await nodeIds(page)).toEqual([PEDIDO, LOOP]);
+    // The main flow draws the entry, its call command and the function it calls,
+    // joined by one next wire and one calls wire (VID-10).
+    await expect(nodes(page)).toHaveCount(3);
+    expect(await nodeIds(page)).toEqual([FRETE, PEDIDO, LOOP]);
     await expect
       .poll(() => cardNames(page))
-      .toEqual(["Processar pedido", "for item in itens"]);
-    expect(await cardTags(page)).toEqual(["GATILHO", "LAÇO"]);
-    await expect(edges(page)).toHaveCount(1);
+      .toEqual(["Calcular frete", "Processar pedido", "for item in itens"]);
+    expect(await cardTags(page)).toEqual(["FUNÇÃO", "FUNÇÃO", "LAÇO"]);
+    await expect(edges(page)).toHaveCount(2);
     await expect(edge(page, PEDIDO, LOOP)).toHaveCount(1);
+    await expect(edge(page, PEDIDO, FRETE)).toHaveCount(1);
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "Fluxo principal",
     ]);
@@ -275,7 +277,7 @@ test.describe("Mapa", () => {
     await expect
       .poll(() => cardNames(page))
       .toEqual(["Código solto", "Print", "F"]);
-    expect(await cardTags(page)).toEqual(["GATILHO", "EXTERNO", "GATILHO"]);
+    expect(await cardTags(page)).toEqual(["CÓDIGO SOLTO", "EXTERNO", "FUNÇÃO"]);
     await expect(canvas(page).getByText("Módulo")).toHaveCount(0);
   });
 
@@ -283,14 +285,14 @@ test.describe("Mapa", () => {
     page,
   }) => {
     await generate(page, VIDEO);
-    await expect(nodes(page)).toHaveCount(2);
+    await expect(nodes(page)).toHaveCount(3);
     const first = await nodeIds(page);
 
     await page.getByRole("button", { name: "Novo código" }).click();
     await page.getByRole("button", { name: "Gerar mapa" }).click();
-    await expect(nodes(page)).toHaveCount(2);
+    await expect(nodes(page)).toHaveCount(3);
 
-    expect(first).toEqual([PEDIDO, LOOP]);
+    expect(first).toEqual([FRETE, PEDIDO, LOOP]);
     expect(await nodeIds(page)).toEqual(first);
   });
 
@@ -305,7 +307,7 @@ test.describe("Mapa", () => {
     });
 
     await generate(page, VIDEO);
-    await expect(nodes(page)).toHaveCount(2);
+    await expect(nodes(page)).toHaveCount(3);
 
     expect(explainCalls).toEqual([]);
   });
@@ -458,7 +460,7 @@ test.describe("Drill-down", () => {
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "Fluxo principal",
     ]);
-    await expect(nodes(page)).toHaveCount(2);
+    await expect(nodes(page)).toHaveCount(3);
     await expect(edge(page, PEDIDO, LOOP)).toHaveCount(1);
   });
 

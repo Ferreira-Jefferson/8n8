@@ -117,7 +117,7 @@ export function searchEntries(
         title: titles.get(n.id) ?? provisionalLabel(n, t),
         tech: codeLineOf(n, ""),
         where: container
-          ? tagLabel(tagOf(n, false), t)
+          ? tagLabel(tagOf(n), t)
           : [file?.split("/").at(-1), lines(n)].filter(Boolean).join(" · "),
       };
     });

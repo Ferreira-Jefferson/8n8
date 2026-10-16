@@ -10,6 +10,8 @@ import {
   orderBranches,
   ROW_GAP,
   rowBands,
+  rowTops,
+  widenGaps,
   wrapColumns,
   wrapRows,
   ZIGZAG,
@@ -103,6 +105,38 @@ describe("VID-10, 11: layoutRows", () => {
 
   it("returns an empty result for no rows", () => {
     expect(layoutRows([]).size).toBe(0);
+  });
+
+  it("puts a row of one card closer to the row above, with no room for raised cards", () => {
+    const pos = layoutRows([["a", "b"], ["c"], ["d", "e"]]);
+    expect(pos.get("c")).toEqual({ x: 0, y: NODE_HEIGHT + ROW_GAP });
+    // The row after it is a zigzag row again: its raised card still clears the row above by ROW_GAP.
+    const raised = pos.get("e")?.y ?? 0;
+    const lowestAbove = pos.get("c")?.y ?? 0;
+    expect(raised - (lowestAbove + NODE_HEIGHT)).toBe(ROW_GAP);
+  });
+
+  it("keeps a row of one card ROW_GAP below the lowest card of the row above", () => {
+    const pos = layoutRows([["a", "b", "c"], ["d"]]);
+    const lowest = Math.max(
+      pos.get("a")?.y ?? 0,
+      pos.get("b")?.y ?? 0,
+      pos.get("c")?.y ?? 0,
+    );
+    expect((pos.get("d")?.y ?? 0) - (lowest + NODE_HEIGHT)).toBe(ROW_GAP);
+  });
+
+  it("rowTops stacks 3 rows of 2, 1 and 2 cards at 0, 220 and 530", () => {
+    expect(rowTops([["a", "b"], ["c"], ["d", "e"]])).toEqual([0, 220, 530]);
+  });
+
+  it("puts the turn gap of a row of one card half a ROW_GAP above it, and of a zigzag row above its raised cards", () => {
+    const bands = rowBands([["a", "b"], ["c"], ["d", "e"]]);
+    expect(bands.gapAbove).toEqual([
+      -90 - ROW_GAP / 2,
+      220 - ROW_GAP / 2,
+      530 - 90 - ROW_GAP / 2,
+    ]);
   });
 });
 
@@ -281,5 +315,37 @@ describe("VID-21: the yes branch on top", () => {
     ]);
     const out = orderBranches(pos, ids.map(stepNode), "f");
     expect(Object.fromEntries(out)).toEqual(Object.fromEntries(pos));
+  });
+});
+
+describe("widenGaps for a dependency label", () => {
+  const edge = (label?: string): FlowEdge => ({
+    id: "calls:a->b",
+    kind: "calls",
+    source: "a",
+    target: "b",
+    ...(label === undefined ? {} : { label }),
+  });
+  const two = new Map([
+    ["a", { x: 0, y: 0 }],
+    ["b", { x: NODE_WIDTH + NODE_GAP, y: 0 }],
+  ]);
+
+  it("keeps the gap as it is, for a label that shows only on hover", () => {
+    const wide = widenGaps(two, [edge("HTTP GET /api/pedidos")]);
+    expect(wide.get("b")?.x).toBe(NODE_WIDTH + NODE_GAP);
+  });
+
+  it("keeps every gap of a wire that skips columns", () => {
+    const three = new Map([
+      ["a", { x: 0, y: 0 }],
+      ["m", { x: NODE_WIDTH + NODE_GAP, y: 300 }],
+      ["b", { x: 2 * (NODE_WIDTH + NODE_GAP), y: 0 }],
+    ]);
+    const wide = widenGaps(three, [
+      { ...edge("HTTP GET /api/pedidos"), id: "calls:a->b", target: "b" },
+    ]);
+    expect(wide.get("m")?.x).toBe(NODE_WIDTH + NODE_GAP);
+    expect(wide.get("b")?.x).toBe(2 * (NODE_WIDTH + NODE_GAP));
   });
 });

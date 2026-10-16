@@ -6,11 +6,14 @@ export interface Level {
   edges: FlowEdge[];
   /** Only on the main flow: the node IDs of each row, in order (VID-10, 11). */
   rows?: NodeId[][];
-  /** The entries drawn as GATILHO; empty outside the main flow (VID-12). */
-  triggers: ReadonlySet<NodeId>;
   /** The node drawn left of the level, wired to it; null on the main flow. */
   hub: Hub | null;
+  /** How far the dependency wires of this level reach: inside one file, or across files. */
+  reach: Reach;
 }
+
+/** Whether a dependency wire stays in one file (gray) or crosses to another (green). */
+export type Reach = "inside" | "across";
 
 /** The open node, drawn as the parent of its level. */
 export interface Hub {
@@ -21,8 +24,6 @@ export interface Hub {
 
 /** The ID of the hub on the top of a project. */
 export const ROOT_HUB = "hub:root";
-
-const NO_TRIGGERS: ReadonlySet<NodeId> = new Set();
 
 /**
  * The nodes and wires visible at one level: the top level (`null`) or the
@@ -55,8 +56,13 @@ function innerLevel(
       const visible = new Set(children.map((n) => n.id));
       return {
         nodes: children,
-        edges: lifted(graph, visible, "imports"),
-        triggers: NO_TRIGGERS,
+        edges: dependencies(
+          graph,
+          visible,
+          ["calls", "extends", "imports"],
+          false,
+        ),
+        reach: "across",
       };
     }
     if (kind === "file") {
@@ -64,16 +70,20 @@ function innerLevel(
       const visible = new Set(nodes.map((n) => n.id));
       return {
         nodes,
-        edges: lifted(graph, visible, "calls"),
-        triggers: NO_TRIGGERS,
+        edges: dependencies(graph, visible, ["calls", "extends"], true),
+        reach: "inside",
       };
     }
   }
   const visible = new Set(children.map((n) => n.id));
   const edges = graph.edges.filter(
-    (e) => e.kind !== "calls" && visible.has(e.source) && visible.has(e.target),
+    (e) =>
+      e.kind !== "calls" &&
+      e.kind !== "extends" &&
+      visible.has(e.source) &&
+      visible.has(e.target),
   );
-  return { nodes: children, edges, triggers: NO_TRIGGERS };
+  return { nodes: children, edges, reach: "inside" };
 }
 
 /** Loose code with no call only sets names: it shows in the file's panel, not on its level. */
@@ -170,20 +180,22 @@ function hubWires(
 function mainFlow(graph: Graph): Level {
   const byId = new Map(graph.nodes.map((n) => [n.id, n]));
   const main = mainFlowRows(graph);
-  const rows = main.map((r) => [r.trigger, ...r.steps]);
+  const rows = main.map((r) => [r.entry, ...r.steps]);
   const nodes = rows.flat().flatMap((id) => byId.get(id) ?? []);
-  const edges: FlowEdge[] = rows.flatMap((row) =>
+  const next: FlowEdge[] = rows.flatMap((row) =>
     row.slice(1).map((target, i) => {
       const source = row[i] as NodeId;
       return { id: `main:${source}->${target}`, kind: "next", source, target };
     }),
   );
+  // The functions and classes link to each other by what they call and extend.
+  const tops = new Set(main.map((r) => r.entry));
   return {
     nodes,
-    edges,
+    edges: [...next, ...dependencies(graph, tops, ["calls", "extends"], true)],
     rows,
-    triggers: new Set(main.map((r) => r.trigger)),
     hub: null,
+    reach: "inside",
   };
 }
 
@@ -191,14 +203,37 @@ function kindOf(graph: Graph, id: NodeId) {
   return graph.nodes.find((n) => n.id === id)?.kind;
 }
 
+/** The dependency kinds, strongest first: a pair gets one wire, so a call hides the inheritance and the import that come with it. */
+const DEPENDENCY_ORDER: readonly EdgeKind[] = ["calls", "extends", "imports"];
+
+/** One wire per pair of visible nodes, from the strongest of `kinds` that links them. */
+function dependencies(
+  graph: Graph,
+  visible: Set<NodeId>,
+  kinds: readonly EdgeKind[],
+  self: boolean,
+): FlowEdge[] {
+  const byPair = new Map<string, FlowEdge>();
+  for (const kind of DEPENDENCY_ORDER) {
+    if (!kinds.includes(kind)) continue;
+    for (const e of lifted(graph, visible, kind, self)) {
+      const pair = `${e.source}->${e.target}`;
+      if (!byPair.has(pair)) byPair.set(pair, e);
+    }
+  }
+  return [...byPair.values()];
+}
+
 /**
  * Lifts both ends of each `kind` wire to its visible ancestor (CORE-02). A wire
- * with an end that has no visible ancestor, or that lifts onto one node, drops.
+ * with an end that has no visible ancestor drops, and so does one that lifts
+ * onto one node, unless `self` keeps it: a visible function that calls itself.
  */
 function lifted(
   graph: Graph,
   visible: Set<NodeId>,
   kind: EdgeKind,
+  self = false,
 ): FlowEdge[] {
   const parent = new Map(graph.nodes.map((n) => [n.id, n.parentId]));
   const lift = (id: NodeId): NodeId | null => {
@@ -213,9 +248,23 @@ function lifted(
     if (e.kind !== kind) continue;
     const source = lift(e.source);
     const target = lift(e.target);
-    if (source === null || target === null || source === target) continue;
+    if (source === null || target === null) continue;
+    if (
+      source === target &&
+      !(self && source === e.source && source === e.target)
+    )
+      continue;
     const id = `${kind}:${source}->${target}`;
-    if (!out.has(id)) out.set(id, { id, kind, source, target });
+    if (!out.has(id)) {
+      out.set(id, {
+        id,
+        kind,
+        source,
+        target,
+        ...(e.label === undefined ? {} : { label: e.label }),
+        ...(e.labelKey === undefined ? {} : { labelKey: e.labelKey }),
+      });
+    }
   }
   return [...out.values()];
 }

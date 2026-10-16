@@ -10,7 +10,7 @@ import {
 } from "@8n8/model";
 import type { Node, Tree } from "web-tree-sitter";
 import { boundNames } from "./bound";
-import type { CallContext } from "./calls";
+import { type CallContext, dottedName } from "./calls";
 import { importAliases } from "./imports";
 import { buildSteps, IGNORED } from "./steps";
 
@@ -205,6 +205,51 @@ function callsEdges(nodes: FlowNode[]): FlowEdge[] {
   return [...edges.values()];
 }
 
+/** Whether the id names a class: its last segment is `cls:X`. */
+function isClassId(id: NodeId): boolean {
+  return (id.split("/").pop() ?? "").startsWith("cls:");
+}
+
+/** The class a base name refers to: this snippet's, or a project class by import. */
+function baseTarget(name: string, ctx: CallContext): NodeId | null {
+  const local = ctx.topLevel.get(name);
+  if (local !== undefined) return local;
+  const [head = name, ...rest] = name.split(".");
+  const imported = ctx.aliases.get(head);
+  if (imported === undefined) return null;
+  return ctx.resolveImport?.([imported, ...rest].join(".")) ?? null;
+}
+
+/**
+ * One `extends` wire per (child, base) pair, for the top-level classes. A base
+ * that is not a class of the snippet or the project makes no wire.
+ */
+function extendsEdges(
+  statements: Node[],
+  ids: NodeId[],
+  ctx: CallContext,
+): FlowEdge[] {
+  const edges = new Map<string, FlowEdge>();
+  let index = 0;
+  for (const statement of statements) {
+    if (IGNORED.has(statement.type)) continue;
+    const def = definitionOf(statement);
+    if (def === null) continue;
+    const source = ids[index++] ?? "";
+    if (def.type !== "class_definition") continue;
+    const bases = def.childForFieldName("superclasses")?.namedChildren ?? [];
+    for (const base of bases) {
+      const name = dottedName(base);
+      const target = name === null ? null : baseTarget(name, ctx);
+      if (target === null || target === source || !isClassId(target)) continue;
+      const id = `extends:${source}->${target}`;
+      if (!edges.has(id))
+        edges.set(id, { id, kind: "extends", source, target });
+    }
+  }
+  return [...edges.values()];
+}
+
 export interface TopLevel {
   /** Ids of the top-level definitions, in code order. */
   ids: NodeId[];
@@ -290,6 +335,9 @@ export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
       },
     ),
   );
-  edges.push(...callsEdges(nodes));
+  edges.push(
+    ...callsEdges(nodes),
+    ...extendsEdges(statements, ids, scope.call),
+  );
   return { language: "python", empty: nodes.length === 0, nodes, edges };
 }

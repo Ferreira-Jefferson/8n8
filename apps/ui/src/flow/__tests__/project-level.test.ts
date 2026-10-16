@@ -108,9 +108,8 @@ describe("projectLevel lifts calls wires on a file level (CORE-02)", () => {
     expect(ids).toContain("calls:mod->a");
   });
 
-  it("has no rows and no triggers", () => {
+  it("has no rows", () => {
     expect(level.rows).toBeUndefined();
-    expect(level.triggers.size).toBe(0);
   });
 });
 
@@ -119,14 +118,15 @@ describe("VID-10, 11, 12: the top level of a snippet is the main flow", () => {
   const steps = [0, 1, 2, 3, 4, 5, 6].map((i) => `${P}/s${i}`);
   const level = projectLevel(videoGraph, null);
 
-  it("shows processar_pedido and its 7 steps with a call, in order", () => {
-    expect(level.nodes.map((n) => n.id)).toEqual([P, ...steps]);
-    expect(level.rows).toEqual([[P, ...steps]]);
+  it("shows processar_pedido with its 7 steps with a call, in order, then the function it calls", () => {
+    const F = "fn:calcular_frete";
+    expect(level.nodes.map((n) => n.id)).toEqual([P, ...steps, F]);
+    expect(level.rows).toEqual([[P, ...steps], [F]]);
   });
 
   it("links neighbours with 7 synthetic next wires main:<a>-><b>", () => {
     const chain = [P, ...steps];
-    expect(level.edges).toEqual(
+    expect(level.edges.filter((e) => e.kind === "next")).toEqual(
       chain.slice(1).map((target, i) => ({
         id: `main:${chain[i]}->${target}`,
         kind: "next",
@@ -136,11 +136,15 @@ describe("VID-10, 11, 12: the top level of a snippet is the main flow", () => {
     );
   });
 
-  it("marks only processar_pedido as trigger", () => {
-    expect([...level.triggers]).toEqual([P]);
+  it("links the entry to the function it calls with one calls wire, and keeps the level inside one file", () => {
+    const dep = level.edges.filter((e) => e.kind === "calls");
+    expect(dep.map((e) => e.id)).toEqual([
+      "calls:fn:processar_pedido->fn:calcular_frete",
+    ]);
+    expect(level.reach).toBe("inside");
   });
 
-  it("shows loose code only as a trigger, never as a plain Módulo node (VID-12)", () => {
+  it("shows loose code only as an entry, never as a plain Módulo node (VID-12)", () => {
     const g = graph(
       [
         node("mod", "module", null, { range: { start: 1, end: 1 } }),
@@ -158,24 +162,23 @@ describe("VID-10, 11, 12: the top level of a snippet is the main flow", () => {
       [edge("calls", "mod", "a")],
     );
     const top = projectLevel(g, null);
-    expect(top.rows).toEqual([
-      ["mod", "mod/s0"],
-      ["b", "b/s0"],
+    expect(top.rows).toEqual([["mod", "mod/s0"], ["a"], ["b", "b/s0"]]);
+    expect(top.nodes.map((n) => n.id)).toEqual([
+      "mod",
+      "mod/s0",
+      "a",
+      "b",
+      "b/s0",
     ]);
-    expect(top.nodes.map((n) => n.id)).toEqual(["mod", "mod/s0", "b", "b/s0"]);
-    expect([...top.triggers]).toEqual(["mod", "b"]);
-    for (const n of top.nodes) {
-      if (n.kind === "module") expect(top.triggers.has(n.id)).toBe(true);
-    }
     expect(top.edges.map((e) => e.id)).toEqual([
       "main:mod->mod/s0",
       "main:b->b/s0",
+      "calls:mod->a",
     ]);
   });
 
-  it("an inner level keeps its wires and has no triggers", () => {
+  it("an inner level keeps its wires and has no rows", () => {
     const inner = projectLevel(videoGraph, "fn:calcular_frete");
-    expect(inner.triggers.size).toBe(0);
     expect(inner.rows).toBeUndefined();
     expect(wires(inner).map((e) => e.kind)).toEqual([
       "next",
@@ -185,9 +188,8 @@ describe("VID-10, 11, 12: the top level of a snippet is the main flow", () => {
     ]);
   });
 
-  it("a project top level has no triggers", () => {
+  it("a project top level has no rows", () => {
     const top = projectLevel(lojaGraph, null);
-    expect(top.triggers.size).toBe(0);
     expect(top.rows).toBeUndefined();
   });
 });
@@ -250,7 +252,7 @@ describe("projectLevel inside a container", () => {
 });
 
 describe("projectLevel on a project graph (PROJ-02, 03, 04)", () => {
-  it("top level shows the folders, the files of the root and the lifted imports wires only", () => {
+  it("top level shows the folders, the files of the root and the dependency wires lifted to them, across files", () => {
     const level = projectLevel(lojaGraph, null);
     expect(level.nodes.map((n) => n.id)).toEqual([
       "dir:frete",
@@ -264,10 +266,17 @@ describe("projectLevel on a project graph (PROJ-02, 03, 04)", () => {
         .map((e) => e.id)
         .sort(),
     ).toEqual([
-      "imports:dir:pedidos->dir:frete",
-      "imports:file:main.py->dir:pedidos",
+      "calls:dir:pedidos->dir:frete",
+      "calls:file:main.py->dir:pedidos",
     ]);
-    expect(level.edges.some((e) => e.kind === "calls")).toBe(false);
+    expect(level.reach).toBe("across");
+  });
+
+  it("a pair gets one wire: a call hides the import that comes with it", () => {
+    const kinds = projectLevel(lojaGraph, null)
+      .edges.filter((e) => e.kind !== "contains")
+      .map((e) => e.kind);
+    expect(kinds).toEqual(["calls", "calls"]);
   });
 
   it("a folder level shows its files and drops a wire leaving the folder", () => {
@@ -278,16 +287,17 @@ describe("projectLevel on a project graph (PROJ-02, 03, 04)", () => {
       "file:pedidos/pedidos.py",
     ]);
     expect(wires(level).map((e) => [e.kind, e.source, e.target])).toEqual([
-      ["imports", "file:pedidos/pedidos.py", "file:pedidos/itens.py"],
+      ["calls", "file:pedidos/pedidos.py", "file:pedidos/itens.py"],
     ]);
   });
 
-  it("a file level shows its functions and drops calls to other files", () => {
+  it("a file level shows its functions, drops calls to other files and reaches inside the file", () => {
     const level = projectLevel(lojaGraph, "file:pedidos/pedidos.py");
     expect(level.nodes.map((n) => n.id)).toEqual([
       "file:pedidos/pedidos.py/fn:processar_pedido",
     ]);
     expect(wires(level)).toEqual([]);
+    expect(level.reach).toBe("inside");
   });
 
   it("a file level keeps a lifted calls wire inside the file", () => {
@@ -309,6 +319,49 @@ describe("projectLevel on a project graph (PROJ-02, 03, 04)", () => {
     expect(wires(projectLevel(p, "file:a.py")).map((e) => e.id)).toEqual([
       "calls:file:a.py/fn:f->file:a.py/fn:g",
     ]);
+  });
+
+  it("a file level keeps a function that calls itself, and an inheritance wire between two classes", () => {
+    const p: Graph = {
+      ...graph(
+        [
+          node("dir:.", "folder", null, { path: "" }),
+          node("file:a.py", "file", "dir:.", { path: "a.py" }),
+          node("file:a.py/fn:f", "function", "file:a.py"),
+          node("file:a.py/cls:A", "class", "file:a.py"),
+          node("file:a.py/cls:B", "class", "file:a.py"),
+        ],
+        [
+          edge("calls", "file:a.py/fn:f", "file:a.py/fn:f"),
+          edge("extends", "file:a.py/cls:B", "file:a.py/cls:A"),
+        ],
+      ),
+      project: { name: "p" },
+    };
+    expect(wires(projectLevel(p, "file:a.py")).map((e) => e.id)).toEqual([
+      "calls:file:a.py/fn:f->file:a.py/fn:f",
+      "extends:file:a.py/cls:B->file:a.py/cls:A",
+    ]);
+  });
+
+  it("a method that calls itself or its sibling draws no wire on its class", () => {
+    const p: Graph = {
+      ...graph(
+        [
+          node("dir:.", "folder", null, { path: "" }),
+          node("file:a.py", "file", "dir:.", { path: "a.py" }),
+          node("file:a.py/cls:K", "class", "file:a.py"),
+          node("file:a.py/cls:K/fn:m", "function", "file:a.py/cls:K"),
+          node("file:a.py/cls:K/fn:n", "function", "file:a.py/cls:K"),
+        ],
+        [
+          edge("calls", "file:a.py/cls:K/fn:m", "file:a.py/cls:K/fn:m"),
+          edge("calls", "file:a.py/cls:K/fn:m", "file:a.py/cls:K/fn:n"),
+        ],
+      ),
+      project: { name: "p" },
+    };
+    expect(wires(projectLevel(p, "file:a.py"))).toEqual([]);
   });
 });
 

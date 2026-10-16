@@ -51,8 +51,18 @@ export interface FlowNode {
   docstring?: LineRange;
 }
 
-/** `contains` is never in a `Graph`: the UI draws it from the hub of a level. */
-export type EdgeKind = "calls" | "next" | "branch" | "imports" | "contains";
+/**
+ * `contains` is never in a `Graph`: the UI draws it from the hub of a level.
+ * `extends`: from the child class to its base class, both defined in the
+ * snippet or the project (a base from outside makes no edge).
+ */
+export type EdgeKind =
+  | "calls"
+  | "next"
+  | "branch"
+  | "imports"
+  | "extends"
+  | "contains";
 
 /** A label the system writes (not the user's code): the screen says it in the language of the system. */
 export type EdgeLabelKey =

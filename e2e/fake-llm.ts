@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 // Answers are scripted by request content; any other content gets 500 so an
 // unexpected call fails loudly.
 
-const PORT = 4318;
+const PORT = 8288;
 const FAKE_URL = `http://127.0.0.1:${PORT}`;
 /** The only key the fake accepts: a real key reaching it is a test setup bug. */
 const FAKE_KEY = "e2e-fake-key";

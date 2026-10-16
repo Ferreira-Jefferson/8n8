@@ -646,11 +646,6 @@ async function mapVideo() {
 }
 
 describe("App, editor and map (VID-08, VID-09)", () => {
-  it("shows how many nodes the level has", async () => {
-    await mapVideo();
-    expect(screen.getByText("8 nós")).toBeTruthy();
-  });
-
   it("opens on the launcher: the folder field, Mapear pasta, Colar trecho and no editor", () => {
     render(<App />);
     expect(screen.getByLabelText("Caminho da pasta")).toBeTruthy();
@@ -721,7 +716,7 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     ).toBe(lojaRoot);
   });
 
-  it("a map with a hub keeps no node count in the corner: the hub carries it", async () => {
+  it("a map keeps no node count in the corner: the cards that open carry it", async () => {
     projectMock.mockResolvedValue(loja);
     const { container } = render(<App />);
     openFolder();
@@ -1149,23 +1144,15 @@ describe("App, languages from the server (7.1, 7.2)", () => {
     ).toBeTruthy();
   });
 
-  it("shows the detected language after Gerar mapa, with no warning when it is certain", async () => {
-    graphMock.mockResolvedValue(withLanguage(graph, detected(python)));
-    await generate();
-    await screen.findByTestId("canvas");
-    expect(screen.getByText("Python")).toBeTruthy();
-    expect(screen.queryByText(/Linguagem incerta/)).toBeNull();
-  });
-
-  it("warns when the language is uncertain", async () => {
+  it("shows no language label in the corner of a snippet map, certain or not", async () => {
     graphMock.mockResolvedValue(
       withLanguage(graph, detected(typescript, true)),
     );
     await generate();
     await screen.findByTestId("canvas");
-    expect(
-      screen.getByText("Linguagem incerta. Mostrando como TypeScript."),
-    ).toBeTruthy();
+    expect(document.querySelector(".snippet-language")).toBeNull();
+    expect(screen.queryByText("TypeScript")).toBeNull();
+    expect(screen.queryByText(/Linguagem incerta/)).toBeNull();
   });
 
   it("shows no language label on a project map", async () => {

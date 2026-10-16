@@ -34,7 +34,7 @@ import {
 // levels open, and the trail shows the titles.
 
 /** The inner level of processar_pedido: its 8 steps, RETORNO included (VID-20). */
-const PEDIDO_LEVEL = [...MAIN_FLOW.slice(1), `${PEDIDO}/s7`];
+const PEDIDO_LEVEL = [...MAIN_FLOW.slice(1, -1), `${PEDIDO}/s7`];
 /** A function that calls itself (VID-24 edge case). */
 const RECURSIVE = "def contar(n):\n    if n > 0:\n        contar(n - 1)\n";
 /** A loop and a with block, each with a call inside (VID-24). */
@@ -82,10 +82,11 @@ async function expectAllInside(page: Page): Promise<void> {
  * only on a side where the level already touches the free area's edge, so no
  * card leaves the view (VID-27; design C11, "o mais perto possível do centro").
  */
-async function expectSelectedNearCentre(page: Page, id: string) {
+async function expectSelectedNearCentre(page: Page, id: string, whole = true) {
   await expect(cardOf(page, id)).toHaveClass(/\bon\b/);
   expect(await css(cardOf(page, id), "border-top-color")).toBe(MAIN);
-  await expectAllInside(page);
+  // A level too tall for a legible zoom beside the panel is a pan away (chooseWrap): `whole` is false there.
+  if (whole) await expectAllInside(page);
   await expect
     .poll(async () => {
       const c = await box(canvas(page));
@@ -485,19 +486,20 @@ test.describe("Navegação", () => {
     await page.keyboard.press("Escape");
     await expectLevel(page, MAIN_FLOW);
     expect(await crumbs(page)).toEqual(["Fluxo principal"]);
-    await expectSelectedNearCentre(page, PEDIDO);
+    // The main flow holds 9 cards in 2 rows, so beside the panel it needs a pan.
+    await expectSelectedNearCentre(page, PEDIDO, false);
   });
 });
 
 test.describe("Descida até as folhas", () => {
   test.beforeEach(freshReal);
 
-  test("VID-24/26: cards of PASTA, ARQUIVO, GATILHO, FUNÇÃO, LAÇO and BLOCO show › and the others do not", async ({
+  test("VID-24/26: cards of PASTA, ARQUIVO, FUNÇÃO, LAÇO and BLOCO show › and the others do not", async ({
     page,
   }) => {
     await generate(page, REAL, VIDEO);
     await expectLevel(page, MAIN_FLOW);
-    const opens = new Set(["GATILHO", "FUNÇÃO", "LAÇO", "BLOCO"]);
+    const opens = new Set(["FUNÇÃO", "LAÇO", "BLOCO"]);
     for (const level of [MAIN_FLOW, PEDIDO_LEVEL]) {
       if (level === PEDIDO_LEVEL) {
         await clickCard(page, PEDIDO);
@@ -515,7 +517,7 @@ test.describe("Descida até as folhas", () => {
     // LAÇO and BLOCO open; the call inside the loop is a leaf.
     await generate(page, REAL, LOOP_AND_BLOCK);
     await expectLevel(page, ["fn:g", "fn:g/s0", "fn:g/s1"]);
-    expect(await cardTags(page)).toEqual(["GATILHO", "LAÇO", "BLOCO"]);
+    expect(await cardTags(page)).toEqual(["FUNÇÃO", "LAÇO", "BLOCO"]);
     expect(await openMarks(page)).toEqual([true, true, true]);
     await clickCard(page, "fn:g/s0");
     await expectLevel(page, ["fn:g/s0/s0"]);
@@ -571,6 +573,9 @@ test.describe("Descida até as folhas", () => {
       page,
     }) => {
       test.setTimeout(120_000);
+      // The main flow (9 cards, 2 rows) fits whole beside the panel only on a wide canvas;
+      // on a narrower one it keeps a legible zoom and a pan reaches the rest.
+      const mainFits = size.width >= 1600;
       await page.setViewportSize(size);
       await generate(page, REAL, VIDEO);
       await expectLevel(page, MAIN_FLOW);
@@ -585,6 +590,7 @@ test.describe("Descida até as folhas", () => {
       async function walk(depth: number): Promise<void> {
         expect(depth).toBeLessThan(5);
         const level = (await ids(page)) as string[];
+        const whole = depth > 0 || mainFits;
         for (const id of level) await expect(nodeById(page, id)).toBeVisible();
         await expectAllInside(page);
         const marks = await openMarks(page);
@@ -603,7 +609,7 @@ test.describe("Descida até as folhas", () => {
             await page.keyboard.press("Escape");
             await expectLevel(page, level);
             expect(await crumbs(page)).toEqual(trailBefore);
-            await expectSelectedNearCentre(page, id);
+            await expectSelectedNearCentre(page, id, whole);
           } else {
             leaves++;
             // A leaf only selects and shows its panel (VID-25). Its title
@@ -620,15 +626,16 @@ test.describe("Descida até as folhas", () => {
             expect(await ids(page)).toEqual(level);
             expect(await crumbs(page)).toEqual(trailBefore);
             // The panel took room: the level refits, every card still in view.
-            await expectAllInside(page);
+            if (whole) await expectAllInside(page);
           }
         }
       }
 
       await walk(0);
-      expect(opened).toEqual([PEDIDO, `${PEDIDO}/s3`, `${PEDIDO}/s3`]);
-      expect(leafLevels).toEqual([FRETE_LEVEL, FRETE_LEVEL]);
-      expect(leaves).toBe(6 + 7 + 5 + 5);
+      // The main flow now also holds the calcular_frete card, which opens its own level.
+      expect(opened).toEqual([PEDIDO, `${PEDIDO}/s3`, `${PEDIDO}/s3`, FRETE]);
+      expect(leafLevels).toEqual([FRETE_LEVEL, FRETE_LEVEL, FRETE_LEVEL]);
+      expect(leaves).toBe(6 + 7 + 5 + 5 + 5);
       expect(await crumbs(page)).toEqual(["Fluxo principal"]);
       expect(await ids(page)).toEqual(MAIN_FLOW);
     });

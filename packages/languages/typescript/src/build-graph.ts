@@ -10,7 +10,11 @@ import {
 } from "@8n8/model";
 import type { Node, Tree } from "web-tree-sitter";
 import { boundNames } from "./bound";
-import type { CallContext } from "./calls";
+import {
+  type CallContext,
+  dottedName,
+  memberOf as importedMember,
+} from "./calls";
 import { importBindings } from "./imports";
 import { blockOf, buildSteps, isIgnored } from "./steps";
 
@@ -330,6 +334,61 @@ function callsEdges(nodes: FlowNode[]): FlowEdge[] {
   return [...edges.values()];
 }
 
+/** Whether the id names a class: its last segment is `cls:X`. */
+function isClassId(id: NodeId): boolean {
+  return (id.split("/").pop() ?? "").startsWith("cls:");
+}
+
+/** The expression after `extends` in a class, or null. `implements` does not count. */
+function baseOf(classNode: Node): Node | null {
+  const heritage = classNode.namedChildren.find(
+    (c) => c.type === "class_heritage",
+  );
+  const clause = heritage?.namedChildren.find(
+    (c) => c.type === "extends_clause",
+  );
+  return clause?.childForFieldName("value") ?? null;
+}
+
+/** The class a base name refers to: this snippet's, or a project class by import. */
+function baseTarget(name: string, ctx: CallContext): NodeId | null {
+  const local = ctx.topLevel.get(name);
+  if (local !== undefined) return local;
+  const [head = name, ...rest] = name.split(".");
+  const binding = ctx.aliases.get(head);
+  if (binding === undefined) return null;
+  const member = importedMember(binding, rest);
+  return member === null
+    ? null
+    : (ctx.resolveImport?.(binding, member) ?? null);
+}
+
+/**
+ * One `extends` wire per (child, base) pair, for the top-level classes. A base
+ * that is not a class of the snippet or the project makes no wire.
+ */
+function extendsEdges(
+  statements: Node[],
+  ids: NodeId[],
+  ctx: CallContext,
+): FlowEdge[] {
+  const edges = new Map<string, FlowEdge>();
+  let index = 0;
+  for (const statement of statements) {
+    if (isIgnored(statement)) continue;
+    const def = definitionOf(statement);
+    if (def === null) continue;
+    const source = ids[index++] ?? "";
+    const base = def.kind === "class" ? baseOf(def.node) : null;
+    const name = base === null ? null : dottedName(base);
+    const target = name === null ? null : baseTarget(name, ctx);
+    if (target === null || target === source || !isClassId(target)) continue;
+    const id = `extends:${source}->${target}`;
+    if (!edges.has(id)) edges.set(id, { id, kind: "extends", source, target });
+  }
+  return [...edges.values()];
+}
+
 export interface TopLevel {
   /** Ids of the top-level definitions, in code order. */
   ids: NodeId[];
@@ -417,6 +476,9 @@ export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
       },
     ),
   );
-  edges.push(...callsEdges(nodes));
+  edges.push(
+    ...callsEdges(nodes),
+    ...extendsEdges(statements, ids, scope.call),
+  );
   return { language: "typescript", empty: nodes.length === 0, nodes, edges };
 }

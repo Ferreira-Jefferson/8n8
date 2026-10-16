@@ -2,19 +2,15 @@ import type { FlowNode, Graph, NodeId } from "@8n8/model";
 
 /** One row of the main flow: an entry and its commands with a call (VID-10). */
 export interface MainRow {
-  trigger: NodeId;
+  entry: NodeId;
   steps: NodeId[];
 }
 
 const byStart = (a: FlowNode, b: FlowNode) => a.range.start - b.range.start;
 
-/** A call, an external call or a return whose expression calls something. */
+/** A call or an external call. A return belongs to the inside of the function, even when it calls something. */
 function isCall(node: FlowNode): boolean {
-  if (node.kind === "call" || node.kind === "external") return true;
-  return (
-    node.kind === "return" &&
-    (node.target !== undefined || node.callee !== undefined)
-  );
+  return node.kind === "call" || node.kind === "external";
 }
 
 /** Rule 1: the direct steps `<owner>/s<i>` of `owner`, without branch steps, in code order. */
@@ -52,9 +48,9 @@ export function hasCommands(graph: Graph, owner: NodeId): boolean {
 }
 
 /**
- * The rows of the main flow of a snippet (VID-10, 11, 12): one per entry
- * (rule 3), plus one per top node with a syntax error that is no entry
- * (rule 4, CORE-06), in code order (rule 5).
+ * The rows of the main flow of a snippet (VID-10, 11, 12): one per top
+ * function or class, plus one per top node with a syntax error (rule 4,
+ * CORE-06), in code order (rule 5). Only an entry (rule 3) shows its steps.
  */
 export function mainFlowRows(graph: Graph): MainRow[] {
   const top = graph.nodes.filter((n) => n.parentId === null);
@@ -74,10 +70,16 @@ export function mainFlowRows(graph: Graph): MainRow[] {
     }
   }
   return top
-    .filter((n) => entries.has(n.id) || n.syntaxError !== undefined)
+    .filter(
+      (n) =>
+        entries.has(n.id) ||
+        n.kind === "function" ||
+        n.kind === "class" ||
+        n.syntaxError !== undefined,
+    )
     .sort(byStart)
     .map((n) => ({
-      trigger: n.id,
+      entry: n.id,
       steps: entries.has(n.id)
         ? commandsWithCall(graph, n.id).map((s) => s.id)
         : [],

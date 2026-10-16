@@ -40,21 +40,15 @@ describe("styles: card tag", () => {
     return m[1];
   }
 
-  it("paints files and the flow entry in the main green", () => {
-    for (const tag of ["GATILHO", "ARQUIVO", "CÓDIGO SOLTO"]) {
+  it("paints the structure (folders, files and loose code) in the main green", () => {
+    for (const tag of ["PASTA", "ARQUIVO", "CÓDIGO SOLTO"]) {
       expect(ruleWith(`.node[data-tag="${tag}"] .tag`)).toContain(
         "color: var(--main);",
       );
     }
   });
 
-  it("paints folders in copper, since they do not open in the side panel", () => {
-    expect(ruleWith('.node[data-tag="PASTA"] .tag')).toContain(
-      "color: var(--warm);",
-    );
-  });
-
-  it("paints the logic steps in the bright second colour", () => {
+  it("paints the code that runs in the bright second colour", () => {
     for (const tag of ["FUNÇÃO", "SE", "LAÇO", "BLOCO", "CÓDIGO", "RETORNO"]) {
       expect(ruleWith(`.node[data-tag="${tag}"] .tag`)).toContain(
         "color: var(--second);",
@@ -62,8 +56,49 @@ describe("styles: card tag", () => {
     }
   });
 
-  it("leaves the external bridges on the default grey tag", () => {
+  it("paints what leaves the code, the external bridges, in copper", () => {
+    for (const tag of ["HTTP", "BANCO", "DISCO", "E-MAIL", "EXTERNO"]) {
+      expect(ruleWith(`.node[data-tag="${tag}"] .tag`)).toContain(
+        "color: var(--warm);",
+      );
+    }
+  });
+
+  it("has no GATILHO tag rule", () => {
+    expect(css).not.toContain('data-tag="GATILHO"');
+  });
+
+  it("keeps the default grey for a tag no rule names", () => {
     expect(rule(".node .tag")).toContain("color: var(--accent);");
+  });
+});
+
+describe("styles: dependency wires", () => {
+  it("draws calls with dashes that shorten and move, and gives inheritance and imports their own still patterns", () => {
+    expect(rule(".edge-calls .wire")).toContain(
+      "stroke-dasharray: 29 8 18 8 10 8 3 8;",
+    );
+    expect(rule(".edge-calls .wire")).toContain("animation: wire-march");
+    expect(css).toMatch(
+      /\.edge-imports \.wire \{[^}]*stroke-dasharray: 19 8 3 8;/,
+    );
+    expect(css).toMatch(
+      /\.edge-extends \.wire \{[^}]*stroke-dasharray: 19 8 3 8 3 8;/,
+    );
+  });
+
+  it("paints a wire gray inside a file and green across files", () => {
+    expect(rule(".reach-inside .wire")).toContain("stroke: var(--dim);");
+    expect(rule(".reach-across .wire")).toContain("stroke: var(--main);");
+  });
+
+  it("makes the end of a dependency wire a hollow ring and the start a dot", () => {
+    expect(rule(".react-flow__handle.port.port-dep.port-in")).toContain(
+      "background: var(--ground);",
+    );
+    expect(rule(".react-flow__handle.port.port-dep.port-inside")).toContain(
+      "background: var(--dim);",
+    );
   });
 });
 

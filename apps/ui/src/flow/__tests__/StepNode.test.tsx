@@ -32,7 +32,6 @@ const httpStep = node({
 function renderStep(n: FlowNode, extra: Partial<StepNodeData> = {}) {
   const data: StepNodeData = {
     node: n,
-    isTrigger: false,
     codeLine: "",
     openable: n.openable,
     portsIn: new Set([Side.Left]),
@@ -90,10 +89,10 @@ describe("StepNode, the three-line card (VID-03, VID-26)", () => {
     expect(container.querySelector(".open-mark")).toBeNull();
   });
 
-  it("tags the entry of the main flow as GATILHO (VID-04)", () => {
-    const { container } = renderStep(node(), { isTrigger: true });
-    expect(part(container, ".tag")).toBe("GATILHO");
-    expect(card(container).getAttribute("data-tag")).toBe("GATILHO");
+  it("tags the entry of the main flow by what it is: a function is FUNÇÃO (VID-04)", () => {
+    const { container } = renderStep(node());
+    expect(part(container, ".tag")).toBe("FUNÇÃO");
+    expect(card(container).getAttribute("data-tag")).toBe("FUNÇÃO");
   });
 
   it("shows the external category as the tag (CORE-12)", () => {
@@ -333,5 +332,30 @@ describe("the hub card", () => {
     const { container } = renderStep(file);
     expect(container.querySelector(".hub-count")).toBeNull();
     expect(container.querySelector(".has-count")).toBeNull();
+  });
+});
+
+describe("StepNode, the ports of a dependency wire", () => {
+  const handle = (container: HTMLElement, side: string, type: string) =>
+    container.querySelector(`.port-${type}.port-${side}`);
+
+  it("marks the port where a dependency wire starts and the one where it ends, with the reach", () => {
+    const { container } = renderStep(node(), {
+      depIn: new Map([[Side.Left, "across"]]),
+      depOut: new Map([[Side.Right, "inside"]]),
+    });
+    expect(handle(container, "left", "in")?.className).toContain(
+      "port-dep port-across",
+    );
+    expect(handle(container, "right", "out")?.className).toContain(
+      "port-dep port-inside",
+    );
+  });
+
+  it("leaves a flow port plain", () => {
+    const { container } = renderStep(node());
+    expect(handle(container, "left", "in")?.className).not.toContain(
+      "port-dep",
+    );
   });
 });

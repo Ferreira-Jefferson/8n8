@@ -35,7 +35,7 @@ import { useTitles } from "./flow/use-titles";
 import { HistoryButton } from "./history/HistoryButton";
 import { HistoryDrawer } from "./history/HistoryDrawer";
 import { Home } from "./home/Home";
-import { I18nProvider, plural, type Translate, translate, useT } from "./i18n";
+import { I18nProvider, type Translate, translate, useT } from "./i18n";
 import { noFilesText, readsText, snippetFileName } from "./languages";
 import { Breadcrumb } from "./nav/Breadcrumb";
 import {
@@ -448,7 +448,6 @@ export function App({ initialFolder = null }: AppProps) {
     () => (graph && !graph.empty ? projectLevel(graph, levelId) : null),
     [graph, levelId],
   );
-  const levelNodes = level?.nodes ?? [];
   // The hub of an inner level is a node of the graph: it gets a title too.
   const titled = useMemo(
     () =>
@@ -634,18 +633,6 @@ export function App({ initialFolder = null }: AppProps) {
             ignored={mapped.response.ignored}
             onAdd={(path) => openFolder(mapped.root, [...mapped.include, path])}
           />
-        )}
-        {mapped.kind === "snippet" && mapped.language && (
-          <p className="snippet-language">
-            {mapped.language.uncertain
-              ? t("app.languageUncertain", { label: mapped.language.label })
-              : mapped.language.label}
-          </p>
-        )}
-        {!level?.hub && (
-          <span className="node-count">
-            {plural(t, "node", levelNodes.length)}
-          </span>
         )}
         <FlowCanvas
           graph={graph}

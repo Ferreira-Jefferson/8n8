@@ -198,6 +198,19 @@
 - **Consequence:** CORE-09 e VID-21 passam a falar em `true` e `false`. Tornar o idioma da interface configurável fica como tarefa separada.
 - **Status:** ativa.
 
+### AD-030 — Linguagem visual do mapa
+- **Date:** 2026-10-16
+- **Context:** O mapa mostrava um só tipo de aresta além do fluxo, o tracejado dos imports. As chamadas entre funções do mesmo trecho nem apareciam no primeiro nível. O GATILHO misturava papel com tipo, e a cor da tag separava só quatro grupos para quinze tags.
+- **Decision:**
+  1. A tag GATILHO deixa de existir. A entrada é uma FUNÇÃO ou um CÓDIGO SOLTO, e se reconhece por não receber linha de chamada.
+  2. A cor da tag diz a família: Petróleo para a estrutura (PASTA, ARQUIVO, CÓDIGO SOLTO), Névoa para o que roda (FUNÇÃO, SE, LAÇO, BLOCO, CÓDIGO, RETORNO) e Cobre para o que sai do código (HTTP, BANCO, DISCO, E-MAIL, EXTERNO). O cartão tem uma forma só.
+  3. O primeiro nível de um trecho mostra toda função e classe de topo, cada uma na sua linha. Só a entrada mostra passos. O `return` só aparece dentro da função.
+  4. As arestas de dependência (`calls`, `extends`, `imports`) não usam seta. O traço diz o tipo, a cor diz o alcance (cinza dentro de um arquivo, verde entre arquivos), a porta cheia marca a origem e o anel oco marca o destino, e os traços da chamada encurtam e andam da origem ao destino. Uma função que chama a si mesma tem uma alça. Um par de nós tem uma aresta só: chama vence herda, que vence importa. A aresta de dependência não leva pulso.
+  5. O modelo ganha a aresta `extends`. Python e TypeScript a extraem de classes de topo cuja base o trecho ou o projeto define.
+  6. O rodapé do mapa (contagem de nós e linguagem) sai. A contagem fica nos cartões que abrem.
+- **Consequence:** Atualiza VID-04, VID-05, VID-10, VID-11 e VID-12, e as linhas de base dos e2e. O primeiro nível cresce na vertical, porque cada função ganha uma linha. A herança e as chamadas entre arquivos aparecem pela primeira vez nos níveis de arquivo e de pasta. O guia está em `docs/guia-visual.html` e o manual da marca vai à versão 0.4.
+- **Status:** ativa.
+
 ## Handoff
 
 *Atualizado em 2026-10-15. O roteiro pedido pelo usuário (08 a 13) está concluído e verificado. Nada foi enviado ao remoto.*

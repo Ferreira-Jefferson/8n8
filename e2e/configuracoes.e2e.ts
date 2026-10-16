@@ -246,7 +246,7 @@ test.describe("Configurações e LLM sob demanda", () => {
     // The URL comes only from the environment of the server.
     const res = await page.request.put(`${SETTINGS}/api/settings`, {
       headers: HEADERS,
-      data: { baseURL: "http://127.0.0.1:4318/v1" },
+      data: { baseURL: "http://127.0.0.1:8288/v1" },
     });
     expect(res.status()).toBe(400);
   });

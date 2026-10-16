@@ -22,8 +22,7 @@ export function tagLabel(tag: string, t: Translate = defaultT): string {
 }
 
 /** The tag line of a card (VID-04). */
-export function tagOf(node: FlowNode, isTrigger: boolean): string {
-  if (isTrigger) return "GATILHO";
+export function tagOf(node: FlowNode): string {
   switch (node.kind) {
     case "function":
     case "class":

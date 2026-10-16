@@ -2,19 +2,21 @@ import type { FlowNode } from "@8n8/model";
 import { Handle, type Node, type NodeProps } from "@xyflow/react";
 import { plural, useT } from "../i18n";
 import { provisionalLabel, tagLabel, tagOf } from "./card";
+import type { Reach } from "./project-level";
 import { SIDES, type Side } from "./sides";
 
 export interface StepNodeData extends Record<string, unknown> {
   node: FlowNode;
   /** The reviewed title; without it the card shows the provisional name (VID-14, 15). */
   title?: string | undefined;
-  /** Entry of the main flow, tagged GATILHO (VID-04). */
-  isTrigger: boolean;
   /** The mono line of the card (VID-03). */
   codeLine: string;
   /** The sides where a wire arrives / leaves; the other ports stay hidden (VID-03). */
   portsIn: ReadonlySet<Side>;
   portsOut: ReadonlySet<Side>;
+  /** The ports where a dependency wire ends (a hollow ring) or starts (a filled dot), with how far it reaches: gray inside a file, green across files. */
+  depIn?: ReadonlyMap<Side, Reach> | undefined;
+  depOut?: ReadonlyMap<Side, Reach> | undefined;
   /** A click opens an inner flow, so the card shows the `›` mark (VID-24). */
   openable: boolean;
   /** Milliseconds until the card enters (VID-06). */
@@ -39,11 +41,20 @@ export interface StepNodeData extends Record<string, unknown> {
 
 export type StepFlowNode = Node<StepNodeData, "step">;
 
+/** The classes of a port where a dependency wire touches: it is a ring at the end and a dot at the start, gray or green by reach. */
+function depClass(
+  deps: ReadonlyMap<Side, Reach> | undefined,
+  side: Side,
+): string {
+  const reach = deps?.get(side);
+  return reach ? ` port-dep port-${reach}` : "";
+}
+
 /** One card: tag, title with › when it opens, and a code line (VID-03, 04, 15, 22, 26; CORE-06, 23). The hub of an inner level carries the back button; a node with suggestions, the badge that opens their balloon. */
 export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
   const t = useT();
   const { node, suggestionCount } = data;
-  const tag = tagOf(node, data.isTrigger);
+  const tag = tagOf(node);
   const name = data.title ?? provisionalLabel(node, t);
   const classes = [
     "node",
@@ -65,7 +76,7 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
           id={side}
           type="target"
           position={side}
-          className={`port port-in port-${side}`}
+          className={`port port-in port-${side}${depClass(data.depIn, side)}`}
           style={{ visibility: data.portsIn.has(side) ? "visible" : "hidden" }}
         />
       ))}
@@ -146,7 +157,7 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
           id={side}
           type="source"
           position={side}
-          className={`port port-out port-${side}`}
+          className={`port port-out port-${side}${depClass(data.depOut, side)}`}
           style={{
             visibility: data.portsOut.has(side) ? "visible" : "hidden",
           }}

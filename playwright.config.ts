@@ -103,7 +103,7 @@ export default defineConfig({
     {
       // OpenAI-compatible fake LLM (e2e/fake-llm.ts); the keyed server talks only to it.
       command: "tsx e2e/fake-llm.ts",
-      url: "http://127.0.0.1:4318/__log",
+      url: "http://127.0.0.1:8288/__log",
       reuseExistingServer: false,
       timeout: 60_000,
     },
@@ -140,7 +140,7 @@ export default defineConfig({
         APP8N8_PORT: "4319",
         // A fake key and a local base URL: no request ever reaches openrouter.ai.
         OPENROUTER_API_KEY: "e2e-fake-key",
-        OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
+        OPENROUTER_BASE_URL: "http://127.0.0.1:8288/v1",
         APP8N8_MODEL: "e2e/drafter",
         APP8N8_REVIEW_MODEL: "e2e/reviewer",
         // Isolated cache, wiped by the specs before each test.
@@ -161,7 +161,7 @@ export default defineConfig({
         ...NO_CLAUDE,
         APP8N8_PORT: "4320",
         OPENROUTER_API_KEY: "e2e-fake-key",
-        OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
+        OPENROUTER_BASE_URL: "http://127.0.0.1:8288/v1",
         // Set and empty: an empty value counts as absent, so the default model is used.
         APP8N8_MODEL: "",
         APP8N8_REVIEW_MODEL: "",
@@ -203,7 +203,7 @@ export default defineConfig({
         APP8N8_PORT: "4322",
         OPENROUTER_API_KEY: "",
         // The URL only comes from here; the key and the rest go in through the dialog.
-        OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
+        OPENROUTER_BASE_URL: "http://127.0.0.1:8288/v1",
         APP8N8_MODEL: "e2e/drafter",
         APP8N8_REVIEW_MODEL: "e2e/reviewer",
         APP8N8_CACHE_DIR: cacheDir("e2e-settings"),

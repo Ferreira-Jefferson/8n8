@@ -142,7 +142,7 @@ test.describe("Docstring", () => {
   });
 });
 
-test("a module docstring: the GATILHO card shows the first real code line, not the quotes", async ({
+test("a module docstring: the CÓDIGO SOLTO card shows the first real code line, not the quotes", async ({
   page,
 }) => {
   // The module runs a call (print): loose code with no call is no entry (VID-12).
@@ -152,7 +152,7 @@ test("a module docstring: the GATILHO card shows the first real code line, not t
   const module = graph.nodes.find((n) => n.kind === "module");
   expect(module?.docstring).toEqual({ start: 1, end: 4 });
   const id = module?.id as string;
-  await expect(cardOf(page, id).locator(".tag")).toHaveText("GATILHO");
+  await expect(cardOf(page, id).locator(".tag")).toHaveText("CÓDIGO SOLTO");
   await expect(cardOf(page, id).locator(".fn")).toHaveText("LIMITE = 30");
   await expect(cardOf(page, id)).not.toContainText('"""');
 });

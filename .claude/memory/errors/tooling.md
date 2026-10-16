@@ -8,7 +8,7 @@
 
 | Campo | Valor |
 |-------|-------|
-| **Keywords** | playwright, webServer, taskkill, hang, teardown, PATH, System32, "is already used", 4318, pnpm e2e lento |
+| **Keywords** | playwright, webServer, taskkill, hang, teardown, PATH, System32, "is already used", 8288, pnpm e2e lento |
 | **Status** | ATIVA (verificada em 2026-10-14) |
 | **Categoria** | tooling |
 | **Ambiente** | Windows 11, Git Bash e PowerShell do Claude Code, Node 22, @playwright/test 1.64.0 |
@@ -21,7 +21,7 @@
 ### Sintoma
 Os testes passam em segundos, mas o `pnpm e2e` não termina (`4 passed (18.2m)`). A execução seguinte falha com:
 ```
-Error: http://127.0.0.1:4318/__log is already used, make sure that nothing is running on the port/url
+Error: http://127.0.0.1:8288/__log is already used, make sure that nothing is running on the port/url
 ```
 
 ### Causa raiz

@@ -73,7 +73,12 @@ O tipo `Graph` fica em `packages/model/src/graph.ts`. A suíte de conformidade c
   - `openable: true` em `folder`, `file`, `module`, `function`, `class`, `loop` e `block`.
   - `openable: true` em `call` só quando o nó tem `target`. Sem `target`, é `false`.
   - `openable: false` em `code`, `condition`, `external` e `return`.
-- **Arestas.** As arestas do grafo usam os tipos `calls`, `next`, `branch` e `imports`. O tipo `contains` nunca entra num `Graph`: a tela desenha essa aresta.
+- **Arestas.** As arestas do grafo usam os tipos `calls`, `next`, `branch`, `imports` e `extends`. O tipo `contains` nunca entra num `Graph`: a tela desenha essa aresta.
+- **Herança (`extends`).** A aresta vai da classe filha (`source`) para a classe base (`target`). O id é `extends:<origem>-><destino>`. Valem estas regras:
+  - Só classes de topo (as de id `cls:Nome`). Classe aninhada fica de fora.
+  - A base precisa resolver para uma classe do trecho ou do projeto. Resolva o nome como as chamadas `calls`: primeiro os nomes de topo do arquivo, depois os imports (`resolveImport`). Base externa ou desconhecida não gera aresta.
+  - Uma aresta por par (filha, base). Ignore a autoherança.
+  - Entre arquivos, a aresta fica no grafo do arquivo da filha, com os ids já prefixados por `file:<caminho>`. O destino precisa ser um nó `class`: a suíte de conformidade confere isso.
 - **Toda aresta aponta para nós que existem** no conjunto de grafos do `analyze`.
 - **Determinismo.** O mesmo texto gera o mesmo grafo, sempre. Chamar duas vezes devolve valores iguais.
 - **Sem LLM.** A estrutura vem do parser. Nunca peça nada a um modelo de linguagem dentro de um plugin (AD-001).

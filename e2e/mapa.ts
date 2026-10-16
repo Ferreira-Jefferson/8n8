@@ -27,7 +27,7 @@ export const VIDEO = readFileSync(
 
 export const PEDIDO = "fn:processar_pedido";
 export const FRETE = "fn:calcular_frete";
-/** The main flow of the video code: the entry and its seven call commands (VID-10). */
+/** The main flow of the video code: the entry and its seven call commands, then the function it calls (VID-10). */
 export const MAIN_FLOW = [
   PEDIDO,
   `${PEDIDO}/s0`,
@@ -37,6 +37,7 @@ export const MAIN_FLOW = [
   `${PEDIDO}/s4`,
   `${PEDIDO}/s5`,
   `${PEDIDO}/s6`,
+  FRETE,
 ];
 /** The level inside calcular_frete: HTTP, EXTERNO, SE and two RETORNO (VID-23). */
 export const FRETE_LEVEL = [

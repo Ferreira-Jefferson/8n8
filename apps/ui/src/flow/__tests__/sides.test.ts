@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickSides, Side } from "../sides";
+import { backSides, pickSides, Side } from "../sides";
 
 const at = (x: number, y: number) => ({ x, y });
 
@@ -27,5 +27,18 @@ describe("pickSides", () => {
   it("changes from the sides to top and bottom when the gap gets taller than 1/1.4 of its width", () => {
     expect(pickSides(at(0, 0), at(450, 300))).toEqual([Side.Right, Side.Left]);
     expect(pickSides(at(0, 0), at(400, 300))).toEqual([Side.Bottom, Side.Top]);
+  });
+});
+
+describe("backSides", () => {
+  it("runs below both cards when they stand side by side", () => {
+    expect(backSides(at(500, 0), at(0, 40))).toEqual([
+      Side.Bottom,
+      Side.Bottom,
+    ]);
+  });
+
+  it("runs on the left of both cards when they stand one above the other", () => {
+    expect(backSides(at(0, 400), at(0, 0))).toEqual([Side.Left, Side.Left]);
   });
 });

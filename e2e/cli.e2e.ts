@@ -24,7 +24,7 @@ import { breadcrumb, clickCard, expectLevel } from "./mapa";
 
 // Feature 07-cli, end to end: the package `pnpm pack` makes (pnpm e2e builds the CLI
 // first), installed with `npm install -g --offline` into a temp prefix and run as the
-// `8n8` command, with its home in a temp folder and the fake LLM of 4318.
+// `8n8` command, with its home in a temp folder and the fake LLM of 8288.
 
 const REPO = fileURLToPath(new URL("..", import.meta.url));
 const FIXTURE = join(
@@ -79,7 +79,7 @@ function cliEnv(): NodeJS.ProcessEnv {
     USERPROFILE: home,
     APP8N8_PORT: PORT,
     OPENROUTER_API_KEY: "e2e-fake-key",
-    OPENROUTER_BASE_URL: "http://127.0.0.1:4318/v1",
+    OPENROUTER_BASE_URL: "http://127.0.0.1:8288/v1",
     APP8N8_MODEL: "e2e/drafter",
     APP8N8_REVIEW_MODEL: "e2e/reviewer",
     // The claude of this machine stays out: openrouter is the provider (CC-15).

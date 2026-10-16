@@ -147,11 +147,13 @@ test.describe("Pasta local", () => {
     await expect(edges(page)).toHaveCount(2);
     await expect(edge(page, "dir:pedidos", "dir:frete")).toHaveCount(1);
     await expect(edge(page, "file:main.py", "dir:pedidos")).toHaveCount(1);
+    // A call hides the import of the same pair (PROJ-03): pedidos calls frete and
+    // main calls pedidos. Both cross files, so both are green (reach-across).
     await expect(edge(page, "dir:pedidos", "dir:frete")).toHaveClass(
-      /\bedge-imports\b/,
+      /\bedge-calls\b.*\breach-across\b/,
     );
     await expect(edge(page, "file:main.py", "dir:pedidos")).toHaveClass(
-      /\bedge-imports\b/,
+      /\bedge-calls\b.*\breach-across\b/,
     );
 
     await clickCard(page, "dir:pedidos");

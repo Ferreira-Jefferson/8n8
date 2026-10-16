@@ -107,9 +107,17 @@ export function analysisProblems(
   for (const f of files) {
     if (!returned.has(f.path)) problems.push(`${f.path}: no graph returned`);
   }
+  const classIds = new Set(
+    analysis.files.flatMap((f) =>
+      f.graph.nodes.filter((n) => n.kind === "class").map((n) => n.id),
+    ),
+  );
   for (const edge of analysis.files.flatMap((f) => f.graph.edges)) {
     for (const end of [edge.source, edge.target]) {
       if (!allIds.has(end)) problems.push(`edge ${edge.id}: ${end} not found`);
+      else if (edge.kind === "extends" && !classIds.has(end)) {
+        problems.push(`edge ${edge.id}: ${end} is not a class`);
+      }
     }
   }
   for (const edge of analysis.imports) {

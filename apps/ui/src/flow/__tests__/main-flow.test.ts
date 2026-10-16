@@ -30,13 +30,14 @@ function graph(nodes: FlowNode[], edges: FlowEdge[] = []): Graph {
 }
 
 describe("VID-10: mainFlowRows on the video code", () => {
-  it("gives one row: processar_pedido and s0..s6, without the call-free return s7", () => {
+  it("gives the entry processar_pedido with s0..s6, without the call-free return s7, and the function it calls with no steps", () => {
     const P = "fn:processar_pedido";
     expect(mainFlowRows(videoGraph)).toEqual([
       {
-        trigger: P,
+        entry: P,
         steps: [0, 1, 2, 3, 4, 5, 6].map((i) => `${P}/s${i}`),
       },
+      { entry: "fn:calcular_frete", steps: [] },
     ]);
   });
 });
@@ -53,8 +54,9 @@ describe("VID-11: entries", () => {
       [calls("mod", "fn:a")],
     );
     expect(mainFlowRows(g)).toEqual([
-      { trigger: "mod", steps: ["mod/s0"] },
-      { trigger: "fn:b", steps: [] },
+      { entry: "mod", steps: ["mod/s0"] },
+      { entry: "fn:a", steps: [] },
+      { entry: "fn:b", steps: [] },
     ]);
   });
 
@@ -65,7 +67,7 @@ describe("VID-11: entries", () => {
       node("fn:a", "function", null, 2),
       node("fn:b", "function", null, 4),
     ]);
-    expect(mainFlowRows(g).map((r) => r.trigger)).toEqual(["fn:a", "fn:b"]);
+    expect(mainFlowRows(g).map((r) => r.entry)).toEqual(["fn:a", "fn:b"]);
   });
 
   it("two uncalled functions give two rows in code order", () => {
@@ -73,7 +75,7 @@ describe("VID-11: entries", () => {
       node("fn:b", "function", null, 4),
       node("fn:a", "function", null, 1),
     ]);
-    expect(mainFlowRows(g).map((r) => r.trigger)).toEqual(["fn:a", "fn:b"]);
+    expect(mainFlowRows(g).map((r) => r.entry)).toEqual(["fn:a", "fn:b"]);
   });
 
   it("a recursive function with no other caller is an entry", () => {
@@ -84,7 +86,7 @@ describe("VID-11: entries", () => {
       ],
       [calls("fn:f", "fn:f")],
     );
-    expect(mainFlowRows(g)).toEqual([{ trigger: "fn:f", steps: ["fn:f/s0"] }]);
+    expect(mainFlowRows(g)).toEqual([{ entry: "fn:f", steps: ["fn:f/s0"] }]);
   });
 
   it("with only classes, each class is an entry (rule c)", () => {
@@ -93,7 +95,7 @@ describe("VID-11: entries", () => {
       node("cls:A/fn:m", "function", "cls:A", 2),
       node("cls:B", "class", null, 5),
     ]);
-    expect(mainFlowRows(g).map((r) => r.trigger)).toEqual(["cls:A", "cls:B"]);
+    expect(mainFlowRows(g).map((r) => r.entry)).toEqual(["cls:A", "cls:B"]);
   });
 
   it("with two functions that call each other, each top definition is an entry (rule c)", () => {
@@ -108,13 +110,13 @@ describe("VID-11: entries", () => {
       [calls("fn:a", "fn:b"), calls("fn:b", "fn:a")],
     );
     expect(mainFlowRows(g)).toEqual([
-      { trigger: "fn:a", steps: ["fn:a/s0"] },
-      { trigger: "fn:b", steps: ["fn:b/s0"] },
-      { trigger: "cls:K", steps: [] },
+      { entry: "fn:a", steps: ["fn:a/s0"] },
+      { entry: "fn:b", steps: ["fn:b/s0"] },
+      { entry: "cls:K", steps: [] },
     ]);
   });
 
-  it("a function called by a method is no entry", () => {
+  it("a function called by a method is no entry: it shows, with no steps", () => {
     const g = graph(
       [
         node("fn:a", "function", null, 1),
@@ -124,7 +126,11 @@ describe("VID-11: entries", () => {
       ],
       [calls("cls:K/fn:m", "fn:a")],
     );
-    expect(mainFlowRows(g).map((r) => r.trigger)).toEqual(["fn:b"]);
+    expect(mainFlowRows(g).map((r) => r.entry)).toEqual([
+      "fn:a",
+      "cls:K",
+      "fn:b",
+    ]);
   });
 });
 
@@ -135,10 +141,10 @@ describe("VID-10: steps of a row", () => {
       node("fn:f/s0", "code", "fn:f", 2),
       node("fn:f/s1", "return", "fn:f", 3),
     ]);
-    expect(mainFlowRows(g)).toEqual([{ trigger: "fn:f", steps: [] }]);
+    expect(mainFlowRows(g)).toEqual([{ entry: "fn:f", steps: [] }]);
   });
 
-  it("keeps call, external and return-with-call steps; a loop only with a call inside; never a branch step", () => {
+  it("keeps call and external steps; a loop, block or condition only with a call inside; never a return or branch step", () => {
     const g = graph(
       [
         node("fn:f", "function", null, 1),
@@ -162,9 +168,10 @@ describe("VID-10: steps of a row", () => {
     );
     expect(mainFlowRows(g)).toEqual([
       {
-        trigger: "fn:f",
-        steps: ["fn:f/s1", "fn:f/s2", "fn:f/s4", "fn:f/s6", "fn:f/s7"],
+        entry: "fn:f",
+        steps: ["fn:f/s1", "fn:f/s2", "fn:f/s4"],
       },
+      { entry: "fn:g", steps: [] },
     ]);
   });
 
@@ -186,8 +193,8 @@ describe("CORE-06: a syntax error outside the entries", () => {
       node("fn:a", "function", null, 3),
     ]);
     expect(mainFlowRows(g)).toEqual([
-      { trigger: "mod", steps: [] },
-      { trigger: "fn:a", steps: [] },
+      { entry: "mod", steps: [] },
+      { entry: "fn:a", steps: [] },
     ]);
   });
 });

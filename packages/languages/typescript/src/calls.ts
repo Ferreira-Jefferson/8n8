@@ -55,7 +55,7 @@ function chainedMethod(fn: Node | null): CallResolution | null {
 }
 
 /** The member a call reads from the module behind `binding`, or null. */
-function memberOf(binding: Binding, rest: string[]): string | null {
+export function memberOf(binding: Binding, rest: string[]): string | null {
   if (binding.kind === "named")
     return rest.length === 0 ? binding.imported : null;
   if (binding.kind === "default") return rest.length === 0 ? "default" : null;

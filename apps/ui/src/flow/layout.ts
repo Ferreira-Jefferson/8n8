@@ -1,5 +1,6 @@
 import type { FlowEdge, FlowNode, NodeId } from "@8n8/model";
 import { Graph, layout } from "@dagrejs/dagre";
+import { isDependency } from "./edge-kind";
 
 export const NODE_WIDTH = 320;
 export const NODE_HEIGHT = 140;
@@ -15,7 +16,6 @@ export const LABEL_ROOM = 110;
 export const LABEL_BAND = 30;
 /** A straight wire keeps this much room above and below it free of cards, so it never runs behind one. */
 export const WIRE_CLEAR = 40;
-
 export interface Position {
   x: number;
   y: number;
@@ -69,7 +69,8 @@ export function widenGaps(
     const t = positions.get(e.target);
     if (!s || !t) continue;
     const from = column.get(s.x) ?? 0;
-    if (e.label) {
+    // A dependency label shows only on hover, so it asks for no room.
+    if (e.label && !isDependency(e.kind)) {
       const port = t.y + NODE_HEIGHT / 2;
       labels[column.get(t.x) ?? 0]?.push(
         s.y >= t.y
@@ -161,16 +162,32 @@ function keepColumnGaps(
 }
 
 /**
- * The main flow: node i of row r at x = i * 380 and y = r * 310, and an odd
- * node 90 px higher, so the row zigzags like the video (VID-10, 11).
+ * The top y of each row of the main flow. A row of more than one card keeps
+ * `ZIGZAG` of room above it for its raised cards; a row of one card has none
+ * to raise, so it sits closer to the row before it (VID-10, 11).
+ */
+export function rowTops(rows: NodeId[][]): number[] {
+  const tops: number[] = [];
+  let y = 0;
+  rows.forEach((row, r) => {
+    if (r > 0) y += NODE_HEIGHT + ROW_GAP + (row.length > 1 ? ZIGZAG : 0);
+    tops.push(y);
+  });
+  return tops;
+}
+
+/**
+ * The main flow: node i of a row at x = i * 380, and an odd node 90 px higher,
+ * so the row zigzags like the video; the rows stack from `rowTops` (VID-10, 11).
  */
 export function layoutRows(rows: NodeId[][]): Map<NodeId, Position> {
   const out = new Map<NodeId, Position>();
+  const tops = rowTops(rows);
   rows.forEach((row, r) => {
     row.forEach((id, i) => {
       out.set(id, {
         x: i * (NODE_WIDTH + NODE_GAP),
-        y: r * (NODE_HEIGHT + ZIGZAG + ROW_GAP) - (i % 2) * ZIGZAG,
+        y: (tops[r] ?? 0) - (i % 2) * ZIGZAG,
       });
     });
   });
@@ -208,11 +225,13 @@ export function rowBands(rows: NodeId[][]): Bands {
   rows.forEach((row, r) => {
     for (const id of row) band.set(id, r);
   });
-  const pitch = NODE_HEIGHT + ZIGZAG + ROW_GAP;
+  const tops = rowTops(rows);
   return {
     positions: layoutRows(rows),
     band,
-    gapAbove: rows.map((_, r) => r * pitch - ZIGZAG - ROW_GAP / 2),
+    gapAbove: rows.map(
+      (row, r) => (tops[r] ?? 0) - (row.length > 1 ? ZIGZAG : 0) - ROW_GAP / 2,
+    ),
   };
 }
 

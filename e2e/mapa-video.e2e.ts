@@ -25,7 +25,6 @@ import {
   panel,
   SECOND,
   VIDEO,
-  WARM,
 } from "./mapa";
 
 // Feature 05, the look of the video and the editor (VID-01..05, 08, 09), on
@@ -40,8 +39,7 @@ const FIXTURE = fileURLToPath(
 
 /**
  * One snippet whose main flow and entry level show every snippet tag (VID-04):
- * the main flow has GATILHO, HTTP, BANCO, E-MAIL, DISCO, FUNÇÃO, LAÇO, BLOCO
- * and SE; inside the entry come CÓDIGO, EXTERNO and RETORNO.
+ * the main flow has FUNÇÃO, HTTP, BANCO, E-MAIL, DISCO, LAÇO, BLOCO and SE; inside the entry come CÓDIGO, EXTERNO and RETORNO.
  */
 const ALL_TAGS = `import requests
 
@@ -68,7 +66,7 @@ def principal(caminho, itens):
 
 /** The 14 tags of VID-04. */
 const TAGS = [
-  "GATILHO",
+  "CÓDIGO SOLTO",
   "FUNÇÃO",
   "HTTP",
   "BANCO",
@@ -169,7 +167,7 @@ test.describe("O visual do vídeo", () => {
     expect(order).toEqual(MAIN_FLOW.map(() => ["tag", "name", "fn"]));
     // Three lines: the tag in capitals, the title in bold, the code in mono.
     const first = cardOf(page, PEDIDO);
-    await expect(first.locator(".tag")).toHaveText("GATILHO");
+    await expect(first.locator(".tag")).toHaveText("FUNÇÃO");
     expect(Number(await css(first.locator(".name"), "font-weight"))).toBe(700);
     await expect(first.locator(".fn")).toHaveText("processar_pedido()");
     await expect(cardOf(page, `${PEDIDO}/s5`).locator(".fn")).toHaveText(
@@ -206,8 +204,10 @@ test.describe("O visual do vídeo", () => {
     const seen = new Set<string>();
     await generate(page, OFFLINE, ALL_TAGS);
     const top = await levelTags(page);
+    // ajudar is called by principal and still shows, as a card with no steps.
     expect(top).toEqual([
-      "GATILHO",
+      "FUNÇÃO",
+      "FUNÇÃO",
       "HTTP",
       "BANCO",
       "E-MAIL",
@@ -235,6 +235,11 @@ test.describe("O visual do vídeo", () => {
       "RETORNO",
     ]);
     for (const t of inner) seen.add(t);
+    // Loose code is its own tag, Petróleo like PASTA and ARQUIVO.
+    await generate(page, OFFLINE, LOOSE);
+    await levelIds(page);
+    expect(await cardTags(page)).toContain("CÓDIGO SOLTO");
+    seen.add("CÓDIGO SOLTO");
 
     await page.goto(`${OFFLINE}/`);
     await page.getByLabel("Caminho da pasta").fill(FIXTURE);
@@ -243,10 +248,10 @@ test.describe("O visual do vídeo", () => {
     // The top level holds the subfolders and the root files (PROJ-02).
     expect(folders).toEqual(["PASTA", "PASTA", "PASTA", "ARQUIVO", "ARQUIVO"]);
     for (const t of folders) seen.add(t);
-    // Folders do not open in the side panel: their tag is copper; files stay green.
+    // Folders do not open in the side panel: PASTA, ARQUIVO and CÓDIGO SOLTO are Petróleo.
     const tagOf = (word: string) =>
       nodes(page).filter({ hasText: word }).first().locator(".tag");
-    expect(await css(tagOf("PASTA"), "color")).toBe(WARM);
+    expect(await css(tagOf("PASTA"), "color")).toBe(MAIN);
     expect(await css(tagOf("ARQUIVO"), "color")).toBe(MAIN);
     await clickCard(page, "dir:pedidos");
     await expect(nodes(page)).toHaveCount(3);
@@ -262,19 +267,22 @@ test.describe("O visual do vídeo", () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await generate(page, OFFLINE, VIDEO);
     await expectLevel(page, MAIN_FLOW);
-    await expect(edges(page)).toHaveCount(7);
+    // Seven next wires and one calls wire (processar_pedido -> calcular_frete).
+    await expect(edges(page)).toHaveCount(8);
 
-    const wires = await page.locator("path.wire").evaluateAll((els) =>
-      els.map((el) => {
-        const s = getComputedStyle(el);
-        return {
-          stroke: s.stroke,
-          width: s.strokeWidth,
-          fill: s.fill,
-          d: el.getAttribute("d") ?? "",
-        };
-      }),
-    );
+    const wires = await page
+      .locator(".react-flow__edge:not(.edge-calls) path.wire")
+      .evaluateAll((els) =>
+        els.map((el) => {
+          const s = getComputedStyle(el);
+          return {
+            stroke: s.stroke,
+            width: s.strokeWidth,
+            fill: s.fill,
+            d: el.getAttribute("d") ?? "",
+          };
+        }),
+      );
     expect(wires).toHaveLength(7);
     for (const w of wires) {
       expect(w.stroke).toBe(MAIN);
@@ -282,6 +290,12 @@ test.describe("O visual do vídeo", () => {
       expect(w.fill).toBe("none");
       expect(w.d).toMatch(/^M [-\d.]+ [-\d.]+ C [-\d.]+ [-\d.]+, /);
     }
+    // The calls wire is a dashed 3.5 px dependency wire, gray inside one file.
+    const dep = page.locator(".edge-calls.reach-inside path.wire");
+    await expect(dep).toHaveCount(1);
+    expect(await css(dep, "stroke")).toBe("rgb(107, 112, 111)");
+    expect(await css(dep, "stroke-width")).toBe("3.5px");
+    expect(await css(dep, "stroke-dasharray")).not.toBe("none");
   });
 });
 
@@ -363,13 +377,13 @@ a()
 const CONSTANTS = "LIMITE = 10\nTAXA = 0.5\n\n\ndef a():\n    print(LIMITE)\n";
 
 test.describe("O fluxo principal", () => {
-  test("VID-10, IT P1: the video code shows its 8 cards in code order, joined by 7 wires", async ({
+  test("VID-10, IT P1: the video code shows its 9 cards in code order, joined by 7 next wires and 1 calls wire", async ({
     page,
   }) => {
     await generate(page, OFFLINE, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     expect(await cardTags(page)).toEqual([
-      "GATILHO",
+      "FUNÇÃO",
       "EXTERNO",
       "EXTERNO",
       "BANCO",
@@ -377,6 +391,7 @@ test.describe("O fluxo principal", () => {
       "EXTERNO",
       "BANCO",
       "E-MAIL",
+      "FUNÇÃO",
     ]);
     await expect
       .poll(() => cardNames(page))
@@ -389,22 +404,26 @@ test.describe("O fluxo principal", () => {
         "Soma itens",
         "Salvar",
         "Enviar email",
+        "Calcular frete",
       ]);
-    await expect(edges(page)).toHaveCount(7);
-    expect(await wirePairs(page)).toEqual(
-      MAIN_FLOW.slice(1).map((id, i) => `${MAIN_FLOW[i]}->${id}`),
-    );
+    await expect(edges(page)).toHaveCount(8);
+    // The next wires join the entry and its seven commands; the calls wire
+    // joins the entry to the function it calls, which has no steps here.
+    expect(await wirePairs(page)).toEqual([
+      ...MAIN_FLOW.slice(1, -1).map((id, i) => `${MAIN_FLOW[i]}->${id}`),
+      `${PEDIDO}->${FRETE}`,
+    ]);
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "Fluxo principal",
     ]);
   });
 
-  test("VID-10 edge: an entry with no call shows only its GATILHO", async ({
+  test("VID-10 edge: an entry with no call shows only its FUNÇÃO", async ({
     page,
   }) => {
     await generate(page, OFFLINE, "def vazio():\n    x = 1\n");
     await expectLevel(page, ["fn:vazio"]);
-    expect(await cardTags(page)).toEqual(["GATILHO"]);
+    expect(await cardTags(page)).toEqual(["FUNÇÃO"]);
     await expect(edges(page)).toHaveCount(0);
   });
 
@@ -414,9 +433,9 @@ test.describe("O fluxo principal", () => {
     await generate(page, OFFLINE, TWO_ENTRIES);
     await expectLevel(page, ["fn:a", "fn:a/s0", "fn:b", "fn:b/s0"]);
     expect(await cardTags(page)).toEqual([
-      "GATILHO",
+      "FUNÇÃO",
       "EXTERNO",
-      "GATILHO",
+      "FUNÇÃO",
       "EXTERNO",
     ]);
     expect(await wirePairs(page)).toEqual(["fn:a->fn:a/s0", "fn:b->fn:b/s0"]);
@@ -430,16 +449,18 @@ test.describe("O fluxo principal", () => {
     const call = graph.nodes.find(
       (n) => n.parentId === mod && n.kind === "call",
     )?.id as string;
-    await expectLevel(page, [mod, call, "fn:b", "fn:b/s0"]);
+    // a is called, so it shows as a card with no steps; b is an entry (VID-11).
+    await expectLevel(page, [mod, call, "fn:a", "fn:b", "fn:b/s0"]);
     expect(await cardTags(page)).toEqual([
-      "GATILHO",
+      "CÓDIGO SOLTO",
       "FUNÇÃO",
-      "GATILHO",
+      "FUNÇÃO",
+      "FUNÇÃO",
       "EXTERNO",
     ]);
     await expect
       .poll(() => cardNames(page))
-      .toEqual(["Código solto", "A", "B", "Print"]);
+      .toEqual(["Código solto", "A", "A", "B", "Print"]);
     const loose = await box(cardOf(page, mod));
     const second = await box(cardOf(page, "fn:b"));
     expect(loose.y + loose.height).toBeLessThan(second.y);
@@ -449,16 +470,16 @@ test.describe("O fluxo principal", () => {
     expect(await cardNames(page)).toEqual(["A", "Print"]);
   });
 
-  test("VID-12: no card on the first level says Módulo; loose code is the GATILHO Código solto", async ({
+  test("VID-12: no card on the first level says Módulo; loose code is the CÓDIGO SOLTO card", async ({
     page,
   }) => {
     const graph = await generate(page, OFFLINE, LOOSE);
     const mod = graph.nodes.find((n) => n.kind === "module")?.id as string;
-    await expect(nodes(page)).toHaveCount(4);
+    await expect(nodes(page)).toHaveCount(5);
     await levelIds(page);
     const texts = await nodes(page).allTextContents();
     expect(texts.filter((t) => t.includes("Módulo"))).toEqual([]);
-    await expect(cardOf(page, mod).locator(".tag")).toHaveText("GATILHO");
+    await expect(cardOf(page, mod).locator(".tag")).toHaveText("CÓDIGO SOLTO");
     await expect(cardOf(page, mod).locator(".name")).toHaveAttribute(
       "title",
       "Código solto",
@@ -527,14 +548,21 @@ test.describe("O movimento", () => {
         return {
           id: el.getAttribute("data-id") ?? "",
           x: el.getBoundingClientRect().x,
+          y: el.getBoundingClientRect().y,
           enterAt: Number(card.getAttribute("data-enter-at")),
           delay: s.animationDelay,
           name: s.animationName,
         };
       }),
     );
-    const byX = [...cards].sort((a, b) => a.x - b.x);
-    expect(byX.map((c) => c.id)).toEqual(MAIN_FLOW);
+    // The card the entry calls sits in its own row under the entry, so it enters
+    // right after the entry (same x, lower y).
+    const byX = [...cards].sort((a, b) => a.x - b.x || a.y - b.y);
+    expect(byX.map((c) => c.id)).toEqual([
+      PEDIDO,
+      FRETE,
+      ...MAIN_FLOW.slice(1, -1),
+    ]);
     for (let i = 1; i < byX.length; i++) {
       expect(byX[i]?.enterAt).toBeGreaterThan(byX[i - 1]?.enterAt as number);
     }
@@ -544,17 +572,27 @@ test.describe("O movimento", () => {
     }
 
     const enterAt = new Map(cards.map((c) => [c.id, c.enterAt]));
-    const wires = await edges(page).evaluateAll((els) =>
-      els.map((el) => ({
-        pair: (el.getAttribute("aria-label") ?? "")
-          .replace(/^Aresta de /, "")
-          .split(" para "),
-        drawAt: Number(el.querySelector(".wire")?.getAttribute("data-draw-at")),
-        pulses: [...el.querySelectorAll("circle.pulse")].map((p) =>
-          Number(p.getAttribute("data-pulse-at")),
-        ),
-      })),
-    );
+    // The calls wire has no draw-in and no pulse; the seven next wires have both.
+    const callsWire = page.locator(".edge-calls");
+    await expect(callsWire).toHaveCount(1);
+    await expect(callsWire.locator("circle.pulse")).toHaveCount(0);
+    const wires = await page
+      .locator(
+        '[aria-roledescription="edge"]:not(.edge-contains):not(.edge-calls)',
+      )
+      .evaluateAll((els) =>
+        els.map((el) => ({
+          pair: (el.getAttribute("aria-label") ?? "")
+            .replace(/^Aresta de /, "")
+            .split(" para "),
+          drawAt: Number(
+            el.querySelector(".wire")?.getAttribute("data-draw-at"),
+          ),
+          pulses: [...el.querySelectorAll("circle.pulse")].map((p) =>
+            Number(p.getAttribute("data-pulse-at")),
+          ),
+        })),
+      );
     expect(wires).toHaveLength(7);
     for (const w of wires) {
       const [source] = w.pair as [string, string];
@@ -583,7 +621,7 @@ test.describe("O movimento", () => {
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await generate(page, OFFLINE, VIDEO);
-    await expect(nodes(page)).toHaveCount(8);
+    await expect(nodes(page)).toHaveCount(9);
     await expect(nodes(page).first()).toBeVisible();
     const right = await page.evaluate(() => ({
       animations: document.getAnimations().length,

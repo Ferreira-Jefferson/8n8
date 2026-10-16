@@ -292,6 +292,36 @@ describe("analysisProblems", () => {
     ]);
   });
 
+  it("accepts an extends wire between classes and finds one that touches a non-class", () => {
+    const withWire = (target: string) => {
+      const [first, second] = analysis().files;
+      const wire = {
+        id: `extends:file:a.x/cls:B->${target}`,
+        kind: "extends" as const,
+        source: "file:a.x/cls:B",
+        target,
+      };
+      const nodes = [
+        ...(first?.graph.nodes ?? []),
+        node("file:a.x/cls:A", { kind: "class", parentId: "file:a.x" }),
+        node("file:a.x/cls:B", { kind: "class", parentId: "file:a.x" }),
+      ];
+      return analysis({
+        files: [
+          { path: "a.x", graph: { ...graph(nodes), edges: [wire] } },
+          ...(second ? [second] : []),
+        ],
+      });
+    };
+
+    expect(analysisProblems(FILES, withWire("file:a.x/cls:A"), "x")).toEqual(
+      [],
+    );
+    expect(analysisProblems(FILES, withWire("file:a.x/fn:f"), "x")).toEqual([
+      "edge extends:file:a.x/cls:B->file:a.x/fn:f: file:a.x/fn:f is not a class",
+    ]);
+  });
+
   it("finds a line that is not a whole number", () => {
     const bad = analysis({
       requests: [{ channel: "name", key: "g", nodeId: "file:a.x", line: 1.5 }],

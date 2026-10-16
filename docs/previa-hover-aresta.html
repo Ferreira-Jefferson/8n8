@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prévia: etiqueta ao passar o mouse na aresta</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap">
+<style>
+/* Layout: uma coluna. Primeiro o mapa de teste (passe o mouse), depois o antes e depois do vão entre colunas, depois as regras. */
+:root {
+  --bg: #f2f3f0; --fg: #12292a; --muted: #5b6d6a; --ink: #0f7a6b; --ink-soft: #d9eee9;
+  --surface: #e8ebe8; --card: #ffffff; --line: #d3d8d5; --cobre: #a34f26; --cobre-soft: #f3e1d6;
+  --font-sans: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #161818; --fg: #e9ebea; --muted: #979d9b; --ink: #3dbfa8; --ink-soft: #1c3a34;
+    --surface: #1d2020; --card: #202323; --line: #313635; --cobre: #dc8a5c; --cobre-soft: #3a2a1f;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font: 400 17px/1.6 var(--font-sans);
+  padding-block: 48px 96px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 980px; margin: 0 auto; display: grid; gap: 48px; }
+h1 { font-size: 34px; line-height: 1.15; margin: 0; text-wrap: balance; }
+h2 { font-size: 24px; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; }
+section { display: grid; gap: 16px; }
+code { font-family: var(--font-mono); font-size: 0.9em; color: var(--ink); }
+.eyebrow { font: 500 12px var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); }
+.muted { color: var(--muted); }
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+.stage svg { display: block; width: 100%; min-width: 760px; height: auto; }
+.card { fill: var(--card); stroke: var(--ink); stroke-width: 1.5; }
+.card-ext { stroke: var(--cobre); }
+.card-t { font: 500 14px var(--font-mono); fill: var(--fg); }
+.card-s { font: 400 12px var(--font-sans); fill: var(--muted); }
+.wire { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.wire.calls { stroke: var(--ink); stroke-dasharray: 10 7; }
+.wire.imports { stroke: var(--muted); stroke-dasharray: 2 7; }
+.wire.extends { stroke: var(--ink); stroke-dasharray: 18 6 2 6; }
+.wire.ext { stroke: var(--cobre); }
+.wire.on { stroke-width: 5; }
+.hit { fill: none; stroke: transparent; stroke-width: 22; pointer-events: stroke; cursor: default; }
+.port-o { fill: var(--ink); } .port-d { fill: var(--card); stroke: var(--ink); stroke-width: 2; }
+.legend-t { font: 400 12px var(--font-mono); fill: var(--muted); }
+.tag {
+  position: absolute; pointer-events: none; z-index: 5; min-width: 230px; max-width: 300px;
+  background: var(--card); color: var(--fg); border: 1px solid var(--line); border-left: 4px solid var(--ink);
+  border-radius: 6px; padding: 10px 12px; font-size: 14px; line-height: 1.45;
+  box-shadow: 0 6px 18px rgba(0,0,0,.18); opacity: 0; transform: translateY(4px);
+  transition: opacity .12s, transform .12s;
+}
+.tag.show { opacity: 1; transform: none; }
+.tag.ext { border-left-color: var(--cobre); }
+.tag .k { font: 500 11px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+.tag.ext .k { color: var(--cobre); }
+.tag .route { font: 500 14px var(--font-mono); margin: 2px 0 6px; }
+.tag dl { margin: 0; display: grid; grid-template-columns: 62px 1fr; gap: 2px 8px; }
+.tag dt { color: var(--muted); font-size: 12px; font-family: var(--font-mono); }
+.tag dd { margin: 0; font-family: var(--font-mono); font-size: 13px; }
+.rel { position: relative; }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 10px; }
+.box h3 { margin: 0; font-size: 16px; }
+.row { display: flex; align-items: center; }
+.mini { background: var(--card); border: 1.5px solid var(--ink); border-radius: 5px; font: 500 12px var(--font-mono); padding: 8px 10px; white-space: nowrap; }
+.gap { position: relative; height: 0; border-top: 2.5px dashed var(--ink); }
+.gap span { position: absolute; left: 50%; top: -13px; transform: translateX(-50%); background: var(--surface); font: 500 12px var(--font-mono); padding: 0 6px; white-space: nowrap; }
+.gap span.hide { display: none; }
+ul.rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+ul.rules li { padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; font-size: 15px; }
+ul.rules b { font-weight: 700; }
+.todo { border-left: 4px solid var(--cobre); background: var(--cobre-soft); padding: 12px 14px; border-radius: 6px; font-size: 15px; }
+</style>
+
+<main>
+  <header style="display:grid;gap:12px">
+    <div class="eyebrow">Prévia, nada no código mudou</div>
+    <h1>Etiqueta ao passar o mouse na aresta</h1>
+    <p class="muted">Esta página é um modelo para você aprovar antes de eu mexer no app. Passe o mouse em cada linha do mapa abaixo.</p>
+  </header>
+
+  <section>
+    <h2>1. Teste no mapa de exemplo</h2>
+    <p>As linhas ficam limpas, sem texto. A etiqueta aparece só quando o mouse para na linha. Passe o mouse depressa pela tela e nada pisca.</p>
+    <div class="stage rel" id="stage">
+      <svg viewBox="0 0 960 360" role="img" aria-label="Mapa de exemplo com quatro arquivos e quatro ligações">
+        <!-- cartões -->
+        <rect class="card" x="30" y="40" width="190" height="64" rx="6"/>
+        <text class="card-t" x="46" y="68">cliente.py</text><text class="card-s" x="46" y="88">Python · 3 funções</text>
+        <rect class="card card-ext" x="740" y="40" width="190" height="64" rx="6"/>
+        <text class="card-t" x="756" y="68">servidor.ts</text><text class="card-s" x="756" y="88">TypeScript · rota</text>
+        <rect class="card" x="30" y="236" width="190" height="64" rx="6"/>
+        <text class="card-t" x="46" y="264">pedido.py</text><text class="card-s" x="46" y="284">Python · classe</text>
+        <rect class="card" x="385" y="236" width="190" height="64" rx="6"/>
+        <text class="card-t" x="401" y="264">base.py</text><text class="card-s" x="401" y="284">Python · classe</text>
+        <rect class="card" x="740" y="236" width="190" height="64" rx="6"/>
+        <text class="card-t" x="756" y="264">lib.ts</text><text class="card-s" x="756" y="284">TypeScript · função</text>
+
+        <!-- linhas: cada uma tem a aparência e a faixa de acerto -->
+        <g data-tag="http">
+          <path class="wire calls ext" d="M220 72 C 300 72, 660 72, 740 72"/>
+          <path class="hit" d="M220 72 C 300 72, 660 72, 740 72"/>
+        </g>
+        <g data-tag="name">
+          <path class="wire calls ext" d="M125 104 C 125 170, 700 150, 835 236"/>
+          <path class="hit" d="M125 104 C 125 170, 700 150, 835 236"/>
+        </g>
+        <g data-tag="extends">
+          <path class="wire extends" d="M220 268 C 300 268, 305 268, 385 268"/>
+          <path class="hit" d="M220 268 C 300 268, 305 268, 385 268"/>
+        </g>
+        <g data-tag="imports">
+          <path class="wire imports" d="M575 268 C 650 268, 665 268, 740 268"/>
+          <path class="hit" d="M575 268 C 650 268, 665 268, 740 268"/>
+        </g>
+        <circle class="port-o" cx="220" cy="72" r="5"/><circle class="port-d" cx="740" cy="72" r="5"/>
+        <circle class="port-o" cx="220" cy="268" r="5"/><circle class="port-d" cx="385" cy="268" r="5"/>
+        <circle class="port-o" cx="575" cy="268" r="5"/><circle class="port-d" cx="740" cy="268" r="5"/>
+      </svg>
+      <div class="tag" id="tag" role="tooltip"></div>
+    </div>
+    <p class="muted" style="font-size:15px">Cobre marca o que sai do projeto de uma linguagem para outra. O texto da etiqueta é o conteúdo proposto, com dados de exemplo.</p>
+  </section>
+
+  <section>
+    <h2>2. O que a etiqueta mostra</h2>
+    <ul class="rules">
+      <li><b>Tipo:</b> chama, herda ou importa. Vem do tipo da aresta, que o app já tem.</li>
+      <li><b>Alcance:</b> no mesmo arquivo, entre arquivos ou entre linguagens. Vem do que o app já usa para escolher a cor.</li>
+      <li><b>Origem → destino:</b> os dois nomes, com o arquivo. O app já tem os dois nós da aresta.</li>
+      <li><b>Rótulo do canal:</b> <code>HTTP POST /api/frete</code>, quando existe. Já existe hoje.</li>
+    </ul>
+    <div class="todo"><b>Ponto a decidir.</b> Você pediu "como ele faz a correlação". Hoje a aresta só guarda o rótulo (<code>HTTP POST /api/frete</code>, <code>processo</code>, <code>nome</code>). Ela não guarda a prova, como "cliente.py:5 chama requests.post" e "servidor.ts:5 declara app.post". Mostrar a prova exige que o ligador (<code>packages/links</code>) grave a linha dos dois lados. É um passo a mais. Na prévia acima, a linha "Prova" mostra como ficaria. Diga se entra agora ou depois.</div>
+  </section>
+
+  <section>
+    <h2>3. Quando a etiqueta aparece</h2>
+    <ul class="rules">
+      <li><b>Só sobre a linha.</b> A faixa de acerto tem 22 px de largura. Fora dela, nada aparece.</li>
+      <li><b>Com uma pausa curta.</b> A etiqueta espera 180 ms com o mouse parado na linha. Passar o mouse de passagem não mostra nada.</li>
+      <li><b>Uma por vez.</b> Sai uma etiqueta antes de entrar a outra.</li>
+      <li><b>Segue o ponteiro.</b> A etiqueta abre ao lado do mouse, e não no meio da linha. Você não precisa procurá-la.</li>
+      <li><b>Sem ação.</b> A etiqueta não captura o mouse e não tem botão. Ela não atrapalha o arrastar e o zoom do mapa.</li>
+      <li><b>Teclado e leitor de tela.</b> A linha já tem o nome "Aresta de A para B". A etiqueta repete o mesmo texto na descrição acessível.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>4. Vão entre colunas: antes e depois</h2>
+    <p>Hoje o layout abre o vão na largura do rótulo, mesmo escondido. Sem rótulo visível, o vão volta ao mínimo.</p>
+    <div class="pair">
+      <div class="box">
+        <h3>Hoje: vão largo</h3>
+        <div class="row"><div class="mini">cliente.py</div><div class="gap" style="flex:1;min-width:150px"><span class="hide"></span></div><div class="mini">servidor.ts</div></div>
+        <p class="muted" style="font-size:14px">Vão de cerca de 260 px, com espaço para "HTTP POST /api/frete" que ninguém vê.</p>
+      </div>
+      <div class="box">
+        <h3>Proposto: vão mínimo</h3>
+        <div class="row"><div class="mini">cliente.py</div><div class="gap" style="flex:0 0 70px"><span class="hide"></span></div><div class="mini">servidor.ts</div></div>
+        <p class="muted" style="font-size:14px">Vão de cerca de 96 px. O mapa fica mais compacto, e a etiqueta cobre o que estiver sob ela só enquanto o mouse está ali.</p>
+      </div>
+    </div>
+    <div class="todo"><b>Risco.</b> Esta mudança mexe em <code>layout.ts</code> (<code>depLabelRoom</code> e <code>widenGaps</code>) e nos testes de posição. A diferença real depende do mapa. Eu meço antes e depois em três mapas e conto a largura que sobra. Se o ganho for pequeno, eu não mexo e aviso.</div>
+  </section>
+
+  <section>
+    <h2>5. O que vai mudar, se você aprovar</h2>
+    <ul class="rules">
+      <li><code>WireEdge.tsx</code>: etiqueta com pausa de 180 ms, posição no ponteiro e conteúdo em quatro linhas.</li>
+      <li><code>FlowCanvas.tsx</code>: passa tipo, alcance, origem e destino para a aresta.</li>
+      <li><code>pt-BR.ts</code> e <code>en.ts</code>: textos novos da etiqueta.</li>
+      <li><code>layout.ts</code>: vão mínimo (se a medida valer a pena).</li>
+      <li><code>guia-visual.html</code>: a seção da etiqueta passa a dizer "ao passar o mouse".</li>
+      <li>Testes: unitários da etiqueta e e2e de passar, esperar e sair. Depois, a verificação completa uma única vez.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(() => {
+  const stage = document.getElementById("stage");
+  const tag = document.getElementById("tag");
+  const DELAY = 180;
+  const TAGS = {
+    http: { ext: true, kind: "Chama · entre linguagens", route: "HTTP POST /api/frete",
+      rows: [["De", "cliente.py"], ["Para", "servidor.ts"]] },
+    name: { ext: true, kind: "Chama · entre linguagens", route: "nome",
+      rows: [["De", "cliente.py"], ["Para", "lib.ts"]] },
+    extends: { ext: false, kind: "Herda · entre arquivos", route: "",
+      rows: [["De", "pedido.py"], ["Para", "base.py"]] },
+    imports: { ext: false, kind: "Importa · entre arquivos", route: "",
+      rows: [["De", "base.py"], ["Para", "lib.ts"]] }
+  };
+  let timer = 0;
+  const hide = () => { clearTimeout(timer); tag.classList.remove("show"); stage.querySelectorAll(".wire.on").forEach((w) => { w.classList.remove("on"); }); };
+  const fill = (t) => {
+    tag.className = "tag" + (t.ext ? " ext" : "");
+    tag.replaceChildren();
+    const k = document.createElement("div"); k.className = "k"; k.textContent = t.kind; tag.append(k);
+    if (t.route) { const r = document.createElement("div"); r.className = "route"; r.textContent = t.route; tag.append(r); }
+    const dl = document.createElement("dl");
+    for (const [a, b] of t.rows) { const dt = document.createElement("dt"); dt.textContent = a; const dd = document.createElement("dd"); dd.textContent = b; dl.append(dt, dd); }
+    tag.append(dl);
+  };
+  const place = (e) => {
+    const box = stage.getBoundingClientRect();
+    const x = e.clientX - box.left + stage.scrollLeft + 16;
+    const y = e.clientY - box.top + 16;
+    tag.style.left = Math.min(x, stage.scrollWidth - tag.offsetWidth - 8) + "px";
+    tag.style.top = Math.min(y, box.height - tag.offsetHeight - 8) + "px";
+  };
+  stage.querySelectorAll("g[data-tag]").forEach((g) => {
+    g.addEventListener("mouseenter", (e) => {
+      hide();
+      timer = setTimeout(() => { fill(TAGS[g.dataset.tag]); place(e); g.querySelector(".wire").classList.add("on"); tag.classList.add("show"); }, DELAY);
+    });
+    g.addEventListener("mousemove", (e) => { if (tag.classList.contains("show")) place(e); });
+    g.addEventListener("mouseleave", hide);
+  });
+})();
+</script>
+</html>

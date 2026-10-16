@@ -1,5 +1,11 @@
 import type { EdgeLabelKey } from "@8n8/model";
-import { type Edge, EdgeLabelRenderer, type EdgeProps } from "@xyflow/react";
+import {
+  type Edge,
+  EdgeLabelRenderer,
+  type EdgeProps,
+  useReactFlow,
+} from "@xyflow/react";
+import { useEffect, useRef, useState } from "react";
 import { type MessageKey, useT } from "../i18n";
 import { Side } from "./sides";
 
@@ -16,7 +22,25 @@ export interface WireData extends Record<string, unknown> {
   lane?: number | undefined;
   /** The system wrote the label: the wire says the key's words in the language of the system. */
   labelKey?: EdgeLabelKey | undefined;
+  /** A dependency wire (calls, extends, imports): dashes that move, no pulse. */
+  dep?: boolean | undefined;
+  /** The wire leaves a card and comes back to it: it arches over the card. */
+  loop?: boolean | undefined;
+  /** What the hover tag says about a dependency wire. */
+  info?: WireInfo | undefined;
 }
+
+/** The facts a dependency wire tells while the pointer rests on it. */
+export interface WireInfo {
+  kind: "calls" | "extends" | "imports";
+  /** Inside one file, across files, or across languages. */
+  reach: "inside" | "across" | "language";
+  from: string;
+  to: string;
+}
+
+/** The pointer rests this long on a dependency wire before its tag shows. */
+export const TAG_DELAY_MS = 180;
 
 export type WireFlowEdge = Edge<WireData, "wire">;
 
@@ -120,6 +144,14 @@ export function lanePath(
   ].join(" ");
 }
 
+/** How high a wire that returns to its own card arches above the ports. */
+const LOOP_RISE = 150;
+
+/** The arch of a wire that calls its own card: out of the right port, over the top and into the left port. */
+export function loopPath(x1: number, y1: number, x2: number, y2: number) {
+  return `M ${x1} ${y1} C ${x1 + BEND} ${y1 - LOOP_RISE}, ${x2 - BEND} ${y2 - LOOP_RISE}, ${x2} ${y2}`;
+}
+
 const OUT: Record<Side, readonly [number, number]> = {
   [Side.Left]: [-1, 0],
   [Side.Right]: [1, 0],
@@ -163,12 +195,33 @@ export function WireEdge({
   | "label"
 >) {
   const t = useT();
+  /** A dependency wire shows its label only while the pointer is on the wire. */
+  const [hovered, setHovered] = useState(false);
+  /** Where the tag sits, in flow coordinates, once the pointer has rested on the wire. */
+  const [tip, setTip] = useState<{ x: number; y: number } | null>(null);
+  const timer = useRef(0);
+  const { screenToFlowPosition } = useReactFlow();
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const at = (e: { clientX: number; clientY: number }) =>
+    screenToFlowPosition({ x: e.clientX, y: e.clientY });
+  const enter = (e: { clientX: number; clientY: number }) => {
+    setHovered(true);
+    window.clearTimeout(timer.current);
+    const spot = at(e);
+    timer.current = window.setTimeout(() => setTip(spot), TAG_DELAY_MS);
+  };
+  const leave = () => {
+    window.clearTimeout(timer.current);
+    setHovered(false);
+    setTip(null);
+  };
   // `data-branch-label` keeps the raw label: styles and tests read it, whatever the language.
   const shown = data?.labelKey
     ? t(`edge.${data.labelKey}` as MessageKey)
     : label;
-  const d =
-    data?.turnY !== undefined
+  const d = data?.loop
+    ? loopPath(sourceX, sourceY, targetX, targetY)
+    : data?.turnY !== undefined
       ? turnPath(sourceX, sourceY, targetX, targetY, data.turnY)
       : data?.lane !== undefined && sourceY !== targetY
         ? lanePath(sourceX, sourceY, targetX, targetY, data.lane)
@@ -183,16 +236,29 @@ export function WireEdge({
   const drawAt = data?.drawAt ?? 0;
   const pulseAt = data?.pulseAt ?? 0;
   const spot = branchLabelAt(targetX, targetY, sourceY, targetPosition);
+  const hasLabel = typeof label === "string" && label !== "";
+  const showLabel = hasLabel && !data?.dep;
+  const info = data?.info;
   return (
     <>
       <path
-        className="wire"
+        className={hovered ? "wire wire-hover" : "wire"}
         d={d}
-        pathLength={1}
+        {...(data?.dep ? {} : { pathLength: 1 })}
         data-draw-at={drawAt}
         style={{ animationDelay: `${drawAt}ms` }}
       />
-      {!data?.reduced && (
+      {data?.dep && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: a hover strip only shows a label; the wire has an aria-label and the label is no action.
+        <path
+          className="wire-hit"
+          d={d}
+          onMouseEnter={enter}
+          onMouseMove={(e) => tip && setTip(at(e))}
+          onMouseLeave={leave}
+        />
+      )}
+      {!data?.reduced && !data?.dep && (
         <circle
           className="pulse"
           r={9}
@@ -213,10 +279,10 @@ export function WireEdge({
           />
         </circle>
       )}
-      {typeof label === "string" && label !== "" && (
+      {showLabel && (
         <EdgeLabelRenderer>
           <span
-            className="branch-label"
+            className={data?.dep ? "branch-label dep-label" : "branch-label"}
             data-branch-label={label}
             style={{
               transform: `translate(${spot.x}px, ${spot.y}px)${spot.leftward ? " translateX(-100%)" : ""}${spot.above ? " translateY(-100%)" : ""}`,
@@ -224,6 +290,33 @@ export function WireEdge({
           >
             {shown}
           </span>
+        </EdgeLabelRenderer>
+      )}
+      {data?.dep && tip && info && (
+        <EdgeLabelRenderer>
+          <div
+            className={
+              info.reach === "language" ? "wire-tag wire-tag-ext" : "wire-tag"
+            }
+            role="tooltip"
+            style={{ transform: `translate(${tip.x + 16}px, ${tip.y + 16}px)` }}
+          >
+            <div className="wire-tag-kind">
+              {t(`edge.tag.${info.kind}` as MessageKey)} ·{" "}
+              {t(`edge.reach.${info.reach}` as MessageKey)}
+            </div>
+            {hasLabel && (
+              <div className="branch-label dep-label" data-branch-label={label}>
+                {shown}
+              </div>
+            )}
+            <dl>
+              <dt>{t("edge.tag.from")}</dt>
+              <dd>{info.from}</dd>
+              <dt>{t("edge.tag.to")}</dt>
+              <dd>{info.to}</dd>
+            </dl>
+          </div>
         </EdgeLabelRenderer>
       )}
     </>

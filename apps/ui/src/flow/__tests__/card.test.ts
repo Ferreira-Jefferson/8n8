@@ -35,22 +35,22 @@ const source = [
 
 describe("VID-04: tagOf", () => {
   it("names each kind with the label of the table", () => {
-    expect(tagOf(node("function", "f"), false)).toBe("FUNÇÃO");
-    expect(tagOf(node("class", "K"), false)).toBe("FUNÇÃO");
-    expect(tagOf(node("call", "f", { target: "fn:f" }), false)).toBe("FUNÇÃO");
-    expect(tagOf(node("condition", "a > 1"), false)).toBe("SE");
-    expect(tagOf(node("loop", "for x in y"), false)).toBe("LAÇO");
-    expect(tagOf(node("block", "with x"), false)).toBe("BLOCO");
-    expect(tagOf(node("code", "Código"), false)).toBe("CÓDIGO");
-    expect(tagOf(node("return", "a"), false)).toBe("RETORNO");
-    expect(tagOf(node("folder", "frete"), false)).toBe("PASTA");
-    expect(tagOf(node("file", "a.py"), false)).toBe("ARQUIVO");
-    expect(tagOf(node("module", "Módulo"), false)).toBe("CÓDIGO SOLTO");
+    expect(tagOf(node("function", "f"))).toBe("FUNÇÃO");
+    expect(tagOf(node("class", "K"))).toBe("FUNÇÃO");
+    expect(tagOf(node("call", "f", { target: "fn:f" }))).toBe("FUNÇÃO");
+    expect(tagOf(node("condition", "a > 1"))).toBe("SE");
+    expect(tagOf(node("loop", "for x in y"))).toBe("LAÇO");
+    expect(tagOf(node("block", "with x"))).toBe("BLOCO");
+    expect(tagOf(node("code", "Código"))).toBe("CÓDIGO");
+    expect(tagOf(node("return", "a"))).toBe("RETORNO");
+    expect(tagOf(node("folder", "frete"))).toBe("PASTA");
+    expect(tagOf(node("file", "a.py"))).toBe("ARQUIVO");
+    expect(tagOf(node("module", "Módulo"))).toBe("CÓDIGO SOLTO");
   });
 
   it("names an external node by its category, with DISCO and E-MAIL", () => {
     const ext = (category: ExternalCategory) =>
-      tagOf(node("external", "x", { category }), false);
+      tagOf(node("external", "x", { category }));
     expect(ext("HTTP")).toBe("HTTP");
     expect(ext("BANCO")).toBe("BANCO");
     expect(ext("ARQUIVO")).toBe("DISCO");
@@ -58,9 +58,9 @@ describe("VID-04: tagOf", () => {
     expect(ext("EXTERNO")).toBe("EXTERNO");
   });
 
-  it("names any entry GATILHO", () => {
-    expect(tagOf(node("function", "f"), true)).toBe("GATILHO");
-    expect(tagOf(node("module", "Módulo"), true)).toBe("GATILHO");
+  it("has no tag for an entry: a function stays FUNÇÃO and loose code stays CÓDIGO SOLTO", () => {
+    expect(tagOf(node("function", "f"))).toBe("FUNÇÃO");
+    expect(tagOf(node("module", "Módulo"))).toBe("CÓDIGO SOLTO");
   });
 });
 

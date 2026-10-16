@@ -139,18 +139,25 @@ test.describe("Multilinguagem", () => {
     expect(res.language.uncertain).toBe(true);
   });
 
-  test("the screen names the language of the snippet it mapped", async ({
+  test("the panel names the snippet after the language it mapped, and the corner says nothing", async ({
     page,
   }) => {
     await page.goto("/");
     await page.getByRole("button", { name: /Colar trecho/ }).click();
     await page.getByLabel("Trecho de código").fill(TS_SNIPPET);
     await page.getByRole("button", { name: "Gerar mapa" }).click();
+    await page
+      .locator('[aria-roledescription="node"]')
+      .first()
+      .dispatchEvent("click");
 
-    await expect(page.locator(".snippet-language")).toHaveText("TypeScript");
+    await expect(
+      page.getByRole("heading", { name: /trecho\.ts/ }),
+    ).toBeVisible();
+    await expect(page.locator(".snippet-language")).toHaveCount(0);
   });
 
-  test("the screen warns when it is not sure of the language", async ({
+  test("an uncertain language shows no warning in the corner", async ({
     page,
   }) => {
     await page.goto("/");
@@ -158,9 +165,8 @@ test.describe("Multilinguagem", () => {
     await page.getByLabel("Trecho de código").fill("x = 1\n");
     await page.getByRole("button", { name: "Gerar mapa" }).click();
 
-    await expect(page.locator(".snippet-language")).toContainText(
-      "Linguagem incerta. Mostrando como",
-    );
+    await expect(page.getByRole("application")).toHaveCount(1);
+    await expect(page.getByText(/Linguagem incerta/)).toHaveCount(0);
   });
 
   test("a folder of two languages is one graph, named mixed, with files of both", async ({
@@ -248,6 +254,45 @@ test.describe("Multilinguagem", () => {
         page.locator(`[aria-roledescription="node"][data-id="file:${file}"]`),
       ).toBeVisible();
     }
+  });
+
+  test("the HTTP label of a wire between two files shows, with the kind and both files, only after the pointer rests on the wire", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByLabel("Caminho da pasta").fill(MISTA);
+    await page.getByRole("button", { name: "Mapear pasta" }).click();
+    const labels = page.locator(".dep-label");
+    await expect(
+      page.locator('[aria-roledescription="node"][data-id="file:cliente.py"]'),
+    ).toBeVisible();
+    await expect(labels).toHaveCount(0);
+
+    const hit = page
+      .getByRole("group", {
+        name: "Aresta de file:cliente.py para file:servidor.ts",
+      })
+      .locator("path.wire-hit");
+    const point = await hit.evaluate((el) => {
+      const path = el as SVGPathElement;
+      const p = path.getPointAtLength(path.getTotalLength() / 2);
+      const m = path.getScreenCTM();
+      return m ? { x: m.a * p.x + m.e, y: m.d * p.y + m.f } : null;
+    });
+    if (!point) throw new Error("no screen position for the wire");
+
+    await page.mouse.move(point.x, point.y);
+    await expect(labels).toHaveText("HTTP POST /api/frete");
+    const tag = page.locator(".wire-tag");
+    await expect(tag.locator(".wire-tag-kind")).toHaveText(
+      "Chama · entre linguagens",
+    );
+    await expect(tag).toContainText("cliente.py");
+    await expect(tag).toContainText("servidor.ts");
+
+    await page.mouse.move(5, 5);
+    await expect(labels).toHaveCount(0);
+    await expect(tag).toHaveCount(0);
   });
 
   test("a folder with no file of any known language says so", async ({

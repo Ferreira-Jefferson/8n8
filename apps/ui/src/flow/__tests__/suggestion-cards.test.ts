@@ -76,7 +76,7 @@ describe("VID-31: anchors of the suggestion cards", () => {
     ]);
   });
 
-  it("a suggestion on a line with no visible node sticks to the visible owner of the explanation", () => {
+  it("a suggestion on a line with no visible node sticks to the owner of the explanation, which is a card of the level", () => {
     const level = projectLevel(videoGraph, null);
     const cards = suggestionCards(
       level,
@@ -88,7 +88,7 @@ describe("VID-31: anchors of the suggestion cards", () => {
       {
         key: `${C}:h1`,
         explainedId: C,
-        anchorId: `${P}/s3`,
+        anchorId: C,
         text: "Trate o erro HTTP",
         reason: "motivo",
         severity: "media",
