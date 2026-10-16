@@ -73,6 +73,23 @@
           }
         }
       }
+    },
+    {
+      "includes": ["e2e/**/*.e2e.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@playwright/test": "Num spec, importe test, expect e os tipos de \"./test\": ele leva o spec à pista de servidores dele e ao mapa de cobertura do pnpm verify."
+                }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

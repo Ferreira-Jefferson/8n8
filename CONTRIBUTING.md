@@ -70,6 +70,8 @@ Os e2e afetados vêm de um mapa de cobertura versionado (`e2e/coverage-map.json`
 
 O mapa chega com o `git pull`. Quando o `pnpm verify` avisar que ele está velho, ou depois de criar um spec, rode `pnpm e2e:map` (uns 8 minutos) e commite o arquivo. Um spec que o mapa ainda não conhece roda sempre. Um mapa velho nunca deixa de rodar um spec por linha errada: o `verify` compara o código com o commit em que o mapa foi feito.
 
+Num spec (`e2e/*.e2e.ts`), importe `test`, `expect` e os tipos de `./test`, nunca de `@playwright/test`. O `./test` leva o spec à pista de servidores do worker dele e grava a cobertura que monta o mapa. O `pnpm check` recusa o import direto.
+
 Num pull request e em push na `main`, a CI (`.github/workflows/ci.yml`) roda a suíte inteira e o gitleaks sobre todo o histórico. Veja também o [SECURITY.md](SECURITY.md).
 
 Durante o trabalho, rode só o teste ligado à mudança. Por exemplo, `pnpm e2e e2e/<spec>.e2e.ts`.
