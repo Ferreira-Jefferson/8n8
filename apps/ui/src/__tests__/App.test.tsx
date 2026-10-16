@@ -4,7 +4,6 @@ import type {
   Graph,
   GraphResponse,
   LanguageInfo,
-  ProjectResponse,
   SnippetLanguage,
   Suggestion,
   Summary,
@@ -38,7 +37,7 @@ import { videoGraph } from "../flow/__tests__/video-graph";
 import type { FlowCanvasProps } from "../flow/FlowCanvas";
 import { projectLevel } from "../flow/project-level";
 import { pedidoFreteGraph } from "../panel/__tests__/pedido-frete-graph";
-import { type FullProject, lazySkeleton, searchHits } from "./lazy-project";
+import { type FullProject, searchHits, skeletonFor } from "./project-fixtures";
 
 vi.mock("../api", () => ({
   fetchGraph: vi.fn(),
@@ -105,7 +104,7 @@ beforeEach(() => {
     const data = await projectData(...args);
     if ("error" in data) return data;
     openedProject = data;
-    return lazySkeleton(data, (path) => projectFiles[path] ?? "", served);
+    return skeletonFor(data, (path) => projectFiles[path] ?? "", served);
   });
   searchMock.mockReset();
   searchMock.mockImplementation(async (_root, _include, query) => ({
@@ -319,7 +318,7 @@ const calculoSource = [
   "        return 50",
   "    return 20",
 ].join("\n");
-const loja: ProjectResponse = {
+const loja: FullProject = {
   name: "loja",
   graph: lojaGraph,
   ignored: [],
@@ -1254,7 +1253,7 @@ describe("App: history", () => {
   });
 });
 
-const emptyFolder: ProjectResponse = {
+const emptyFolder: FullProject = {
   name: "vazia",
   graph: {
     language: "python",

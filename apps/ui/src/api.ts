@@ -84,7 +84,6 @@ export async function fetchProject(
 ): Promise<ProjectResult> {
   const res = await post("/api/project", {
     path,
-    lazy: true,
     ...(include.length > 0 ? { include } : {}),
   });
   if (res.status === 404) {

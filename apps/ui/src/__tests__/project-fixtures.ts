@@ -55,7 +55,7 @@ export function detailFor(
 }
 
 /** The skeleton the server would answer for `project`, and the files it would then serve by `served`. */
-export function lazySkeleton(
+export function skeletonFor(
   project: FullProject,
   sourceOf: (path: string) => string,
   served: Map<string, FileDetail>,

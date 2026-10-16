@@ -106,12 +106,7 @@ const filePath = z
   );
 /** Files over 1 MB put on the map (CLEAN-06). */
 const include = z.array(filePath).max(100).optional();
-const projectBody = z.object({
-  path: z.string().min(1),
-  include,
-  /** The top of the map only: folders, files and wires between files; the inside of a file comes by `/api/project/file`. */
-  lazy: z.boolean().optional(),
-});
+const projectBody = z.object({ path: z.string().min(1), include });
 const projectFileBody = z.object({
   root: z.string().min(1),
   include,
@@ -437,10 +432,8 @@ export function createApp(deps: AppDeps): Hono {
         response: read.response,
       });
     }
-    if (body.data.lazy) return c.json(skeletonOf(read));
-    // The code goes by file, on demand (POST /api/project/file): the map needs none of it.
-    const { files: _files, ...response } = read.response;
-    return c.json(response);
+    // Only the top of the map: the inside of a file comes by POST /api/project/file.
+    return c.json(skeletonOf(read));
   });
 
   app.use(

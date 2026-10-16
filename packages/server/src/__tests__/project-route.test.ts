@@ -43,12 +43,17 @@ function setup(read: ProjectRead) {
 }
 
 describe("POST /api/project", () => {
-  it("returns { name, graph, ignored } from readProject without the source, called with the typed path (PROJ-06)", async () => {
+  it("returns the skeleton of what readProject read, with no source, called with the typed path (PROJ-06)", async () => {
     const { paths, post } = setup({ kind: "ok", root: "/tmp/loja", response });
     const res = await post({ path: "./minha pasta/loja" });
     expect(res.status).toBe(200);
-    const { files: _files, ...sent } = response;
-    expect(await res.json()).toEqual(sent);
+    expect(await res.json()).toEqual({
+      name: "loja",
+      ignored: [{ path: "grande.py", reason: "too-large" }],
+      stats: { files: 0, nodes: 0, edges: 0 },
+      version: "",
+      graph: { language: "python", empty: false, nodes: [], edges: [] },
+    });
     expect(paths).toEqual(["./minha pasta/loja"]);
   });
 

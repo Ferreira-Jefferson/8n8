@@ -179,7 +179,7 @@ describe("fetchProject (PROJ-05)", () => {
     version: "v1",
   };
 
-  it("posts { path, lazy } as JSON to /api/project and returns the skeleton on 200", async () => {
+  it("posts { path } as JSON to /api/project and returns the skeleton on 200", async () => {
     const fn = fakeFetch(200, project);
     const result = await fetchProject("C:/loja");
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
@@ -188,10 +188,7 @@ describe("fetchProject (PROJ-05)", () => {
     expect(new Headers(init.headers).get("content-type")).toBe(
       "application/json",
     );
-    expect(JSON.parse(init.body as string)).toEqual({
-      path: "C:/loja",
-      lazy: true,
-    });
+    expect(JSON.parse(init.body as string)).toEqual({ path: "C:/loja" });
     expect(result).toEqual(project);
   });
 
@@ -201,7 +198,6 @@ describe("fetchProject (PROJ-05)", () => {
     const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
     expect(JSON.parse(init.body as string)).toEqual({
       path: "C:/loja",
-      lazy: true,
       include: ["dados/grande.py"],
     });
   });

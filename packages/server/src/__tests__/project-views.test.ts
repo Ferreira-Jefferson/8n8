@@ -149,7 +149,7 @@ describe("searchOf", () => {
   });
 });
 
-describe("POST /api/project with lazy, /file and /search", () => {
+describe("POST /api/project, /file and /search", () => {
   const read = built();
   const app = createApp({
     plugins: [fakeLang(() => read.response.graph)],
@@ -170,22 +170,18 @@ describe("POST /api/project with lazy, /file and /search", () => {
       body: JSON.stringify(body),
     });
 
-  it("lazy answers the skeleton; without it the full graph, with no files, as before", async () => {
-    const lazy = (await (
-      await post("/api/project", { path: "/p", lazy: true })
-    ).json()) as ProjectSkeleton;
-    expect(lazy.graph.nodes).toHaveLength(3);
-    expect(lazy.stats.files).toBe(2);
-    const full = (await (
-      await post("/api/project", { path: "/p" })
-    ).json()) as {
-      graph: { nodes: unknown[] };
-      files?: unknown;
-      stats?: unknown;
-    };
-    expect(full.graph.nodes).toHaveLength(8);
-    expect(full.files).toBeUndefined();
-    expect(full.stats).toBeUndefined();
+  it("/api/project answers the skeleton: folders and files only, the counts of the whole graph and no source", async () => {
+    const res = await post("/api/project", { path: "/p" });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as ProjectSkeleton & { files?: unknown };
+    expect(body.graph.nodes.map((n) => n.id)).toEqual([
+      "dir:app",
+      "file:app/a.py",
+      "file:b.py",
+    ]);
+    expect(body.stats).toEqual({ files: 2, nodes: 8, edges: 3 });
+    expect(body.version).toBe("v1");
+    expect(body.files).toBeUndefined();
   });
 
   it("/file answers the detail of the file", async () => {

@@ -79,7 +79,6 @@ export type {
   IgnoreReason,
   ProjectData,
   ProjectExtractor,
-  ProjectResponse,
   ProjectSkeleton,
   SearchHit,
   SourceFile,

@@ -391,7 +391,6 @@ test.describe("Pasta local", () => {
     await add.click();
     expect((await sent).postDataJSON()).toEqual({
       path: LOJA,
-      lazy: true,
       include: ["grande.py"],
     });
     await expect(nodeById(page, "file:grande.py")).toBeVisible();
