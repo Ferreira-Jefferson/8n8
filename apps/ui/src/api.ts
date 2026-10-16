@@ -11,6 +11,7 @@ import type {
   LanguagesResponse,
   NodeNotes,
   NodeTitle,
+  ProjectFileResponse,
   ProjectResponse,
   SettingsPatch,
   SettingsResponse,
@@ -96,6 +97,25 @@ export async function fetchProject(
   }
   if (!res.ok) throw new Error(`Falha ao abrir a pasta (HTTP ${res.status})`);
   return (await res.json()) as ProjectResponse;
+}
+
+/** The source of one file of an open folder; `stale` when the folder changed since the build the screen holds (409). */
+export async function fetchProjectFile(
+  root: string,
+  include: string[],
+  path: string,
+  version: string | undefined,
+): Promise<{ status: "ok"; source: string } | { status: "stale" }> {
+  const res = await post("/api/project/file", {
+    root,
+    path,
+    ...(include.length > 0 ? { include } : {}),
+    ...(version === undefined ? {} : { version }),
+  });
+  if (res.status === 409) return { status: "stale" };
+  if (!res.ok) throw new Error(`Falha ao ler o arquivo (HTTP ${res.status})`);
+  const body = (await res.json()) as ProjectFileResponse;
+  return { status: "ok", source: body.source };
 }
 
 /** Opens the system's chooser on this machine; `null` when the person cancels. */

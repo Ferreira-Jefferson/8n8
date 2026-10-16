@@ -23,6 +23,13 @@ export function fingerprintOf(
 export function createProjectCache<T>(size = 2) {
   const entries = new Map<string, { fingerprint: string; value: Promise<T> }>();
   return {
+    /** The result made for a fingerprint, if it is still kept. */
+    find(fingerprint: string): Promise<T> | undefined {
+      for (const entry of entries.values()) {
+        if (entry.fingerprint === fingerprint) return entry.value;
+      }
+      return undefined;
+    },
     get(
       key: string,
       fingerprint: string,

@@ -3,17 +3,12 @@ import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { gunzipSync } from "node:zlib";
-import type {
-  Graph,
-  HistoryEntry,
-  HistoryItem,
-  ProjectResponse,
-} from "@8n8/model";
+import type { Graph, HistoryEntry, HistoryItem, ProjectData } from "@8n8/model";
 
 /** A map as it was made: the history keeps only its path or its text, and the sizes. */
 export type MadeMap =
   | { kind: "snippet"; source: string; graph: Graph }
-  | { kind: "project"; root: string; response: ProjectResponse };
+  | { kind: "project"; root: string; response: ProjectData };
 
 export interface History {
   /** Inserts the map, or, when the same folder or snippet is already saved, bumps its opened_at and open_count. */

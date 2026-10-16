@@ -38,8 +38,8 @@ import { formatLines } from "./format-lines";
 import { RichInline } from "./Rich";
 
 export interface DetailPanelProps {
-  /** Text the node's lines come from: the snippet, or the node's whole file in a project. */
-  source: string;
+  /** Text the node's lines come from: the snippet, or the node's whole file in a project; absent while the file is on its way. */
+  source?: string | undefined;
   /** Where the server reads the code to explain (AD-015). */
   origin: ExplainOrigin;
   /** The node's file in a project. */
@@ -143,7 +143,7 @@ export function DetailPanel({
     setHighlighted(lines);
     setTab("code");
   };
-  const target = { source, origin, node, explains: kind !== null };
+  const target = { origin, node, explains: kind !== null };
   const summary = usePart<Summary>(
     "summary",
     target,
@@ -266,12 +266,16 @@ export function DetailPanel({
         <h3 className="eyebrow">
           {codeHeading(filePath ?? snippetFile ?? t("snippet.file"), node, t)}
         </h3>
-        <CodeView
-          code={nodeCode(source, node)}
-          start={node.range.start}
-          highlightedLines={highlighted}
-          file={filePath ?? snippetFile}
-        />
+        {source === undefined ? (
+          <p role="status">{t("panel.codeLoading")}</p>
+        ) : (
+          <CodeView
+            code={nodeCode(source, node)}
+            start={node.range.start}
+            highlightedLines={highlighted}
+            file={filePath ?? snippetFile}
+          />
+        )}
       </section>
       <section
         role="tabpanel"
@@ -447,7 +451,6 @@ function Tabs({
 }
 
 interface PartTarget {
-  source: string;
   origin: ExplainOrigin;
   node: FlowNode;
   /** False for folders and files: nothing to ask. */
@@ -477,7 +480,7 @@ const FETCH: Record<
  */
 function usePart<T>(
   part: ExplainPart,
-  { source, origin, node, explains }: PartTarget,
+  { origin, node, explains }: PartTarget,
   auto: boolean,
   cache: Map<NodeId, ExplainResult<T>> | undefined,
   onOk?: (id: NodeId, result: T) => void,
@@ -518,7 +521,7 @@ function usePart<T>(
     return () => {
       live = false;
     };
-  }, [source, target, explains, real, clicked, cache, part]);
+  }, [target, explains, real, clicked, cache, part]);
 
   return {
     result,

@@ -25,6 +25,7 @@ import {
   fetchHistoryEntry,
   fetchLanguages,
   fetchProject,
+  fetchProjectFile,
   fetchSettings,
   fetchSuggestions,
   fetchSummary,
@@ -45,6 +46,7 @@ vi.mock("../api", () => ({
   fetchSettings: vi.fn(async () => null),
   saveSettings: vi.fn(),
   fetchProject: vi.fn(),
+  fetchProjectFile: vi.fn(),
   fetchTitles: vi.fn(),
   fetchHistory: vi.fn(),
   fetchHistoryEntry: vi.fn(),
@@ -64,6 +66,7 @@ const graphMock = vi.mocked(fetchGraph);
 const explainMock = vi.mocked(fetchSummary);
 const suggestMock = vi.mocked(fetchSuggestions);
 const projectMock = vi.mocked(fetchProject);
+const fileMock = vi.mocked(fetchProjectFile);
 const titlesMock = vi.mocked(fetchTitles);
 const historyMock = vi.mocked(fetchHistory);
 const historyEntryMock = vi.mocked(fetchHistoryEntry);
@@ -79,6 +82,11 @@ beforeEach(() => {
   suggestMock.mockReset();
   suggestMock.mockResolvedValue({ status: "not-cached" });
   projectMock.mockReset();
+  fileMock.mockReset();
+  fileMock.mockImplementation(async (_root, _include, path) => ({
+    status: "ok",
+    source: projectFiles[path] ?? "",
+  }));
   titlesMock.mockReset();
   historyMock.mockReset();
   historyEntryMock.mockReset();
@@ -283,8 +291,12 @@ const calculoSource = [
 const loja: ProjectResponse = {
   name: "loja",
   graph: lojaGraph,
-  files: [{ path: "frete/calculo.py", source: calculoSource }],
   ignored: [],
+  version: "v1",
+};
+/** The source of each file of the folders these tests open. */
+const projectFiles: Record<string, string> = {
+  "frete/calculo.py": calculoSource,
 };
 
 function openFolder(path = lojaRoot) {
@@ -365,7 +377,6 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
         edges: [],
         project: { name: "vazia" },
       },
-      files: [],
       ignored: [],
     });
     render(<App />);
@@ -435,13 +446,13 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
   });
 
   it("puts a large file on the map: reads the folder again with it, and every request of the map carries it (CLEAN-06, CLEAN-07)", async () => {
-    const grande = { path: "grande.py", source: "x = 1\n" };
+    projectFiles["grande.py"] = "x = 1\n";
     projectMock
       .mockResolvedValueOnce({
         ...loja,
         ignored: [{ path: "grande.py", reason: "too-large", addable: true }],
       })
-      .mockResolvedValueOnce({ ...loja, files: [...loja.files, grande] });
+      .mockResolvedValueOnce({ ...loja });
     explainMock.mockResolvedValue({ status: "no-key" });
     render(<App />);
     openFolder();
@@ -532,6 +543,55 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
   });
 });
 
+describe("App fetches the code of a project by file", () => {
+  const fnId = "file:frete/calculo.py/fn:calcular_frete";
+
+  it("asks for the file of the selected node once, with the build version, and says the code is loading until it arrives", async () => {
+    let arrive: (r: { status: "ok"; source: string }) => void = () => {};
+    fileMock.mockImplementation(
+      () => new Promise((resolve) => (arrive = resolve)),
+    );
+    explainMock.mockResolvedValue({ status: "no-key" });
+    projectMock.mockResolvedValue(loja);
+    render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    act(() => currentCanvas().onSelect(fnId));
+    expect((await screen.findAllByText("Carregando o código…")).length).toBe(1);
+    expect(fileMock).toHaveBeenCalledWith(
+      lojaRoot,
+      [],
+      "frete/calculo.py",
+      "v1",
+    );
+    await act(async () => arrive({ status: "ok", source: calculoSource }));
+    expect(screen.queryByText("Carregando o código…")).toBeNull();
+    expect(
+      screen.getByText(
+        (_, el) =>
+          el?.tagName === "CODE" &&
+          el.textContent === "def calcular_frete(peso):",
+      ),
+    ).toBeTruthy();
+    expect(
+      fileMock.mock.calls.filter((c) => c[2] === "frete/calculo.py"),
+    ).toHaveLength(1);
+  });
+
+  it("opens the folder again, with no error, when the server says the build is stale", async () => {
+    fileMock.mockResolvedValueOnce({ status: "stale" });
+    explainMock.mockResolvedValue({ status: "no-key" });
+    projectMock.mockResolvedValue({ ...loja, version: "v1" });
+    render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    act(() => currentCanvas().onSelect(fnId));
+    await waitFor(() => expect(projectMock).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole("alert")).toBeNull();
+    await screen.findByTestId("canvas");
+  });
+});
+
 function lojaNode(id: string): FlowNode {
   const n = lojaGraph.nodes.find((x) => x.id === id);
   if (!n) throw new Error(`no node ${id}`);
@@ -617,7 +677,6 @@ describe("App calls in a project (PROJ-04)", () => {
     projectMock.mockResolvedValue({
       name: "p",
       graph: sameFile,
-      files: [],
       ignored: [],
     });
     render(<App />);
@@ -1113,7 +1172,6 @@ const emptyFolder: ProjectResponse = {
     edges: [],
     project: { name: "vazia" },
   },
-  files: [],
   ignored: [],
 };
 

@@ -12,6 +12,7 @@ import {
   fetchHistoryEntry,
   fetchLanguages,
   fetchProject,
+  fetchProjectFile,
   fetchSettings,
   fetchSuggestions,
   fetchSummary,
@@ -99,11 +100,48 @@ describe("fetchLanguages", () => {
   });
 });
 
+describe("fetchProjectFile", () => {
+  it("posts the folder, the path and the build version, and returns the source", async () => {
+    const fn = fakeFetch(200, { path: "a.py", source: "x = 1\n" });
+    const result = await fetchProjectFile("C:/loja", ["g.py"], "a.py", "v1");
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/project/file");
+    expect(JSON.parse(init.body as string)).toEqual({
+      root: "C:/loja",
+      include: ["g.py"],
+      path: "a.py",
+      version: "v1",
+    });
+    expect(result).toEqual({ status: "ok", source: "x = 1\n" });
+  });
+
+  it("leaves out include and version when there are none", async () => {
+    const fn = fakeFetch(200, { path: "a.py", source: "" });
+    await fetchProjectFile("C:/loja", [], "a.py", undefined);
+    const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({
+      root: "C:/loja",
+      path: "a.py",
+    });
+  });
+
+  it("answers stale on 409 and throws on any other failure", async () => {
+    fakeFetch(409, { error: "stale", version: "v2" });
+    expect(await fetchProjectFile("C:/loja", [], "a.py", "v1")).toEqual({
+      status: "stale",
+    });
+    fakeFetch(404, { error: "not-found" });
+    await expect(
+      fetchProjectFile("C:/loja", [], "a.py", "v1"),
+    ).rejects.toThrow();
+  });
+});
+
 describe("fetchProject (PROJ-05)", () => {
   const project: ProjectResponse = {
     name: "loja",
     graph: { ...graph, project: { name: "loja" } },
-    files: [{ path: "main.py", source: "x = 1\n" }],
+
     ignored: [{ path: "grande.py", reason: "too-large" }],
   };
 

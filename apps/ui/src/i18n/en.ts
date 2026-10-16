@@ -143,6 +143,7 @@ export const en: Record<MessageKey, string> = {
   "panel.rules": "2 sentences · active voice · one term per concept",
   "panel.codeLine": "CODE · {file}, line {n}",
   "panel.codeLines": "CODE · {file}, lines {a} to {b}",
+  "panel.codeLoading": "Loading the code…",
   "panel.io": "INPUT AND OUTPUT",
   "panel.ioAria": "Input and output",
   "panel.noKey": "Set up an LLM provider in Settings.",

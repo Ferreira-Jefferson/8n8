@@ -15,11 +15,24 @@ export interface IgnoredFile {
   addable?: boolean;
 }
 
+/** What the screen receives when it opens a folder: no source code, which it asks for by file. */
 export interface ProjectResponse {
   name: string;
   graph: Graph;
-  files: SourceFile[];
   ignored: IgnoredFile[];
+  /** Names this build: the file requests carry it, and a folder that changed answers 409. */
+  version?: string;
+}
+
+/** What the server keeps of a folder it read: the response and the source of every file. */
+export interface ProjectData extends ProjectResponse {
+  files: SourceFile[];
+}
+
+/** The source of one file of a project. */
+export interface ProjectFileResponse {
+  path: string;
+  source: string;
 }
 
 export interface ProjectExtractor {

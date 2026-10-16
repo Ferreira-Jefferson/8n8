@@ -25,7 +25,7 @@ import {
   type LanguagesResponse,
   type Locale,
   type NodeNotes,
-  type ProjectResponse,
+  type ProjectFileResponse,
   type StructureRequest,
   type StructureResponse,
   suggestionKey,
@@ -36,6 +36,7 @@ import {
 } from "@8n8/model";
 import { detectLanguage, pluginForPath } from "@8n8/project";
 import { type Context, Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
 import { maskDocstring } from "./docstring";
 import type { History, MadeMap } from "./history";
@@ -70,7 +71,12 @@ export interface AppDeps {
   /** What the person kept from the chat and removed, by language of the system; absent in tests that do not need it. */
   notes?: ((locale: Locale) => NotesStore) | undefined;
   /** `include`: files over 1 MB the person put on the map (CLEAN-06). */
-  readProject: (path: string, include?: string[]) => Promise<ProjectRead>;
+  readProject: (
+    path: string,
+    include?: string[],
+    /** The build the screen holds: the files of that build are served as they were, not read again. */
+    version?: string,
+  ) => Promise<ProjectRead>;
   port: number;
   /** The session token every /api call must carry in x-8n8-token (DIST-20). */
   token: string;
@@ -85,24 +91,28 @@ export interface AppDeps {
   pick?: PickPath | undefined;
 }
 
-/** Files over 1 MB put on the map: relative POSIX paths, never outside the folder (CLEAN-07). */
-const include = z
-  .array(
-    z
-      .string()
-      .min(1)
-      .max(1024)
-      .refine(
-        (p) =>
-          !p.startsWith("/") &&
-          !p.includes("\\") &&
-          !p.includes(":") &&
-          !p.split("/").includes(".."),
-      ),
-  )
-  .max(100)
-  .optional();
+/** A path inside the folder, as the map names it: relative, POSIX, never outside the folder (CLEAN-07). */
+const filePath = z
+  .string()
+  .min(1)
+  .max(1024)
+  .refine(
+    (p) =>
+      !p.startsWith("/") &&
+      !p.includes("\\") &&
+      !p.includes(":") &&
+      !p.split("/").includes(".."),
+  );
+/** Files over 1 MB put on the map (CLEAN-06). */
+const include = z.array(filePath).max(100).optional();
 const projectBody = z.object({ path: z.string().min(1), include });
+const projectFileBody = z.object({
+  root: z.string().min(1),
+  include,
+  version: z.string().max(100).optional(),
+  path: filePath,
+});
+const PROJECT_BODY_LIMIT = 1024 * 1024;
 const pickBody = z.object({ kind: z.enum(["folder", "file", "any"]) });
 // The Claude Code path never comes in the body: only the system chooser gives it (CC-12, CC-18).
 const claudePathBody = z.object({ action: z.enum(["pick", "auto"]) }).strict();
@@ -414,7 +424,37 @@ export function createApp(deps: AppDeps): Hono {
         response: read.response,
       });
     }
-    return c.json(read.response);
+    // The code goes by file, on demand (POST /api/project/file): the map needs none of it.
+    const { files: _files, ...response } = read.response;
+    return c.json(response);
+  });
+
+  app.use(
+    "/api/project/*",
+    bodyLimit({
+      maxSize: PROJECT_BODY_LIMIT,
+      onError: (c) => c.json({ error: "too-large" }, 413),
+    }),
+  );
+
+  /** The source of one file of the folder the screen has open. */
+  app.post("/api/project/file", async (c) => {
+    const body = projectFileBody.safeParse(
+      await c.req.json().catch(() => null),
+    );
+    if (!body.success) return c.json({ error: "invalid body" }, 400);
+    const { root, include, version, path } = body.data;
+    const read = await deps.readProject(root, include, version);
+    if (read.kind === "not-found") {
+      return c.json({ error: "not-found", path: root }, 404);
+    }
+    const built = read.response.version;
+    if (version !== undefined && built !== undefined && version !== built) {
+      return c.json({ error: "stale", version: built }, 409);
+    }
+    const source = indexOf(read).sources.get(path);
+    if (source === undefined) return c.json({ error: "not-found", path }, 404);
+    return c.json({ path, source } satisfies ProjectFileResponse);
   });
 
   // The server runs on the person's machine, so the chooser opens on their screen.

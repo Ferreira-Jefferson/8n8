@@ -75,7 +75,9 @@ export type {
 export type {
   IgnoredFile,
   IgnoreReason,
+  ProjectData,
   ProjectExtractor,
+  ProjectFileResponse,
   ProjectResponse,
   SourceFile,
 } from "./project";

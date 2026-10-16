@@ -290,7 +290,11 @@ export function composeReadProject(
   read: (path: string, filter: ReadFilter) => Promise<FolderRead>,
   plugins: LanguagePlugin[],
   ignoreDependencies: () => Promise<boolean> = async () => true,
-): (path: string, include?: string[]) => Promise<ProjectRead> {
+): (
+  path: string,
+  include?: string[],
+  version?: string,
+) => Promise<ProjectRead> {
   const filter: ReadFilter = {
     extensions: plugins.flatMap((p) => p.extensions),
     ignoredDirs: plugins.flatMap((p) => p.ignoredDirs),
@@ -298,7 +302,10 @@ export function composeReadProject(
   // Reading is cheap and analyzing is not: a folder whose files did not change is not analyzed again.
   // The summary, suggestion and chat requests read the folder on every call, so they hit this too.
   const cache = createProjectCache<ProjectRead>();
-  return async (path, include = []) => {
+  return async (path, include = [], version) => {
+    // A screen that holds a build asks for its pieces by `version`: the last build is served without reading the folder again.
+    const held = version === undefined ? undefined : cache.find(version);
+    if (held) return held;
     const ignoring = await ignoreDependencies();
     const folder = await read(path, {
       ...filter,
@@ -308,7 +315,8 @@ export function composeReadProject(
     if (folder.kind === "not-found") return folder;
     const { name, root, files, ignored } = folder;
     const key = [root, [...include].sort().join(","), ignoring].join("|");
-    return cache.get(key, fingerprintOf(files, ignored), () => {
+    const fingerprint = fingerprintOf(files, ignored);
+    return cache.get(key, fingerprint, () => {
       const { graph: built, offers, requests } = analyzeProject(files, plugins);
       // Wires between languages (D3, D4); the nodes stay as the plugins made them.
       const { edges: links } = linkProject({
@@ -322,7 +330,11 @@ export function composeReadProject(
         edges: [...built.edges, ...links.filter((e) => !known.has(e.id))],
         project: { name },
       };
-      return { kind: "ok", root, response: { name, graph, files, ignored } };
+      return {
+        kind: "ok",
+        root,
+        response: { name, graph, files, ignored, version: fingerprint },
+      };
     });
   };
 }

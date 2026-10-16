@@ -143,6 +143,7 @@ export const ptBR = {
   "panel.rules": "2 frases · voz ativa · um termo por conceito",
   "panel.codeLine": "CÓDIGO · {file}, linha {n}",
   "panel.codeLines": "CÓDIGO · {file}, linhas {a} a {b}",
+  "panel.codeLoading": "Carregando o código…",
   "panel.io": "ENTRADA E SAÍDA",
   "panel.ioAria": "Entrada e saída",
   "panel.noKey": "Configure um provedor de LLM em Configurações.",

@@ -3,11 +3,11 @@ import type {
   FlowNode,
   LineRange,
   NodeId,
-  ProjectResponse,
+  ProjectData,
 } from "@8n8/model";
 
 export type ProjectRead =
-  | { kind: "ok"; root: string; response: ProjectResponse }
+  | { kind: "ok"; root: string; response: ProjectData }
   | { kind: "not-found"; dependency?: true };
 
 /** What a request asks again and again about a project, built in one pass over its graph. */

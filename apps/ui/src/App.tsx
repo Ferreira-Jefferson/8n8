@@ -54,6 +54,7 @@ import { clampPanel, PanelResizer } from "./panel/PanelResizer";
 import { searchEntries } from "./search/match";
 import { NodeSearch } from "./search/NodeSearch";
 import { SettingsButton, SettingsDialog } from "./settings/SettingsDialog";
+import { useFileSources } from "./use-file-sources";
 
 type Mapped =
   | {
@@ -72,7 +73,8 @@ type Mapped =
     };
 
 interface PanelInput {
-  source: string;
+  /** Absent while the node's file is on its way. */
+  source?: string | undefined;
   origin: ExplainOrigin;
   filePath?: string | undefined;
 }
@@ -104,13 +106,13 @@ function panelInput(
   )?.path;
   const source =
     filePath === undefined ? undefined : lookup.sources.get(filePath);
-  return { source: source ?? "", origin: originOf(mapped), filePath };
+  return { source, origin: originOf(mapped), filePath };
 }
 
 /** What every card asks again on each render: the nodes by id and the source of each file, made once per map. */
 interface Lookup {
-  byId: Map<NodeId, FlowNode>;
-  sources: Map<string, string>;
+  byId: ReadonlyMap<NodeId, FlowNode>;
+  sources: ReadonlyMap<string, string>;
 }
 
 /** A call into another file of a project jumps to the target's ancestry; anything else stacks (PROJ-04). */
@@ -480,20 +482,43 @@ export function App({ initialFolder = null }: AppProps) {
     mapVersion,
     titled,
   );
+  const nodesById = useMemo(
+    () => new Map(graph?.nodes.map((n) => [n.id, n])),
+    [graph],
+  );
+  // The code of a project comes by file: the open level's, the selected node's and the panel's.
+  const wantedFiles = useMemo(() => {
+    if (!graph?.project) return [];
+    const selectedNode = nodesById.get(nav.selected ?? "");
+    const shownNode = selectedNode && nodesById.get(panelNodeOf(selectedNode));
+    const paths = [levelId, nav.selected, shownNode?.id].flatMap((id) => {
+      const path = id ? fileNodeOf(graph, id, nodesById)?.path : undefined;
+      return path === undefined ? [] : [path];
+    });
+    return [...new Set(paths)];
+  }, [graph, nodesById, levelId, nav.selected]);
+  const sources = useFileSources(
+    mapped?.kind === "project"
+      ? {
+          root: mapped.root,
+          include: mapped.include,
+          version: mapped.response.version,
+        }
+      : null,
+    wantedFiles,
+    mapped,
+    () => {
+      // The folder changed since this map was built: open it again, with no error shown.
+      if (mapped?.kind === "project") openFolder(mapped.root, mapped.include);
+    },
+  );
   const lookup = useMemo<Lookup>(
-    () => ({
-      byId: new Map(graph?.nodes.map((n) => [n.id, n])),
-      sources: new Map(
-        mapped?.kind === "project"
-          ? mapped.response.files.map((f) => [f.path, f.source])
-          : [],
-      ),
-    }),
-    [graph, mapped],
+    () => ({ byId: nodesById, sources }),
+    [nodesById, sources],
   );
   const cardCode = useCallback(
     (n: FlowNode) =>
-      codeLineOf(n, mapped ? panelInput(mapped, n, lookup).source : ""),
+      codeLineOf(n, (mapped && panelInput(mapped, n, lookup).source) ?? ""),
     [mapped, lookup],
   );
 

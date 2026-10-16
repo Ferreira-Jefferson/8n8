@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { gzipSync } from "node:zlib";
-import type { Graph, ProjectResponse } from "@8n8/model";
+import type { Graph, ProjectData } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { type MadeMap, openHistory } from "../history";
 
@@ -28,7 +28,7 @@ const project = (root: string, files: [string, string][]): MadeMap => ({
     graph: graph(3, 2),
     files: files.map(([path, source]) => ({ path, source })),
     ignored: [{ path: "grande.py", reason: "too-large" }],
-  } as ProjectResponse,
+  } as ProjectData,
 });
 
 describe("history", () => {
