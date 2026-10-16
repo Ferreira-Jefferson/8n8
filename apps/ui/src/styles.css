@@ -15,6 +15,7 @@
   --panel-border: #2f3433;
   --code: color-mix(in srgb, var(--second) 82%, var(--ground));
   --dim: #6b706f;
+  --warm: #dc8a5c;
   --shadow: rgba(0, 0, 0, 0.25);
   --shadow-strong: rgba(0, 0, 0, 0.3);
   --font-display: "Archivo Black", sans-serif;
@@ -37,6 +38,7 @@
     --panel-bg: #f8f9f7;
     --panel-border: #d3d8d5;
     --dim: #8f9a98;
+    --warm: #a34f26;
     --shadow: rgba(18, 41, 42, 0.1);
     --shadow-strong: rgba(18, 41, 42, 0.14);
     color-scheme: light;
@@ -53,6 +55,7 @@
   --panel-bg: #f8f9f7;
   --panel-border: #d3d8d5;
   --dim: #8f9a98;
+  --warm: #a34f26;
   --shadow: rgba(18, 41, 42, 0.1);
   --shadow-strong: rgba(18, 41, 42, 0.14);
   color-scheme: light;
@@ -568,11 +571,15 @@ body {
   color: var(--accent);
 }
 
-/* The tag color groups the node by its role: structure and the flow entry
-   are green, the logic steps are bright, and the external bridges keep the
-   default grey of `.node .tag`. */
+/* The tag color groups the node by its role: files and the flow entry are
+   green, folders are copper (they do not open in the side panel), the logic
+   steps are bright, and the external bridges keep the default grey of
+   `.node .tag`. */
+.node[data-tag="PASTA"] .tag {
+  color: var(--warm);
+}
+
 .node[data-tag="GATILHO"] .tag,
-.node[data-tag="PASTA"] .tag,
 .node[data-tag="ARQUIVO"] .tag,
 .node[data-tag="CÓDIGO SOLTO"] .tag {
   color: var(--main);
@@ -1094,7 +1101,7 @@ body {
 }
 
 .star-btn[aria-pressed="true"] {
-  color: var(--main);
+  color: var(--warm);
 }
 
 .star-btn:hover,

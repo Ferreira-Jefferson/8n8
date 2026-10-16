@@ -15,13 +15,14 @@
   --c-nevoa: #e9ebea;
   --c-pedra: #979d9b;
   --c-petroleo: #3dbfa8;
+  --c-cobre: #dc8a5c;
   /* Marca, tema claro */
   --c-papel: #f2f3f0;
   --c-tinta: #12292a;
   --c-pedra-escura: #5b6d6a;
   --c-petroleo-escuro: #0f7a6b;
+  --c-cobre-escuro: #a34f26;
   --c-coral: #ea4b71;
-  --c-limao: #d4ff3f;
 
   --bg: #161818;
   --fg: #e9ebea;
@@ -99,7 +100,7 @@ a { color: var(--ink); }
 }
 
 main { min-width: 0; display: grid; gap: 112px; }
-section { display: grid; gap: 28px; scroll-margin-top: 72px; }
+section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; scroll-margin-top: 72px; }
 
 .eyebrow {
   font: 500 12px/1.3 var(--font-sans);
@@ -127,13 +128,34 @@ p { margin: 0; max-width: 64ch; }
   --s-panel: #1c1e1e;
   --s-panel-border: #2f3433;
   --s-dim: #6b706f;
+  --s-warm: var(--c-cobre);
+  --s-code: var(--c-grafite);
+  --s-dot: color-mix(in srgb, var(--c-nevoa) 16%, transparent);
+  --s-shadow: rgba(0, 0, 0, 0.25);
+  --s-shadow-strong: rgba(0, 0, 0, 0.3);
   position: relative;
   background-color: var(--s-bg);
-  background-image: radial-gradient(color-mix(in srgb, var(--c-nevoa) 14%, transparent) 1.4px, transparent 1.9px);
-  background-size: 24px 24px;
+  background-image: radial-gradient(var(--s-dot) 1.25px, transparent 1.625px);
+  background-size: 25px 25px;
   color: var(--s-fg);
   border-radius: 6px;
   border: 1px solid var(--line);
+}
+.stage.light {
+  --s-bg: var(--c-papel);
+  --s-fg: var(--c-tinta);
+  --s-muted: var(--c-pedra-escura);
+  --s-accent: var(--c-petroleo-escuro);
+  --s-card: #ffffff;
+  --s-card-border: #d3d8d5;
+  --s-panel: #f8f9f7;
+  --s-panel-border: #d3d8d5;
+  --s-dim: #8f9a98;
+  --s-warm: var(--c-cobre-escuro);
+  --s-code: #ffffff;
+  --s-dot: color-mix(in srgb, var(--c-tinta) 16%, transparent);
+  --s-shadow: rgba(18, 41, 42, 0.1);
+  --s-shadow-strong: rgba(18, 41, 42, 0.14);
 }
 .scroll-x { overflow-x: auto; border-radius: 6px; }
 
@@ -217,7 +239,7 @@ figcaption b { color: var(--fg); font-weight: 500; }
 
 /* ---- Cores ---- */
 .theme-row { display: grid; gap: 14px; }
-.swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
 .swatch { display: grid; gap: 10px; }
 .chip { border-radius: 6px; aspect-ratio: 3 / 2; max-width: 100%; border: 1px solid var(--line); padding: 14px; display: flex; align-items: end; font: 500 12px/1.2 var(--font-mono); }
 .swatch h4 { margin: 0; font: 700 16px/1.3 var(--font-sans); }
@@ -235,6 +257,91 @@ figcaption b { color: var(--fg); font-weight: 500; }
 .derived span { display: grid; line-height: 1.3; }
 .derived small { font: 400 12px var(--font-mono); color: var(--muted); }
 
+/* ---- Temas: as telas reais do sistema (1440 x 900), em SVG ---- */
+.tabs > input { position: absolute; opacity: 0; pointer-events: none; }
+.tabs .tab-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.tabs label { font: 500 14px/1.2 var(--font-mono); padding: 9px 14px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); cursor: pointer; }
+.tabs label:hover { color: var(--fg); }
+.tab-panel { display: none; gap: 28px; }
+#t-ini:checked ~ .tab-bar label[for="t-ini"],
+#t-pasta:checked ~ .tab-bar label[for="t-pasta"],
+#t-fluxo:checked ~ .tab-bar label[for="t-fluxo"] { color: var(--fg); border-color: var(--ink); }
+#t-ini:focus-visible ~ .tab-bar label[for="t-ini"],
+#t-pasta:focus-visible ~ .tab-bar label[for="t-pasta"],
+#t-fluxo:focus-visible ~ .tab-bar label[for="t-fluxo"] { outline: 2px solid var(--ink); outline-offset: 3px; }
+#t-ini:checked ~ #p-ini, #t-pasta:checked ~ #p-pasta, #t-fluxo:checked ~ #p-fluxo { display: grid; }
+
+.screen { display: block; overflow: hidden; background-image: none; }
+.screen svg.canvas { --u: 1; display: block; width: 100%; height: auto; min-width: 640px; }
+.screen .dots { fill: var(--s-dot); }
+.screen .s-mark { color: var(--s-fg); --logo-n: var(--s-accent); }
+.screen .crumb-t { font: 400 22px var(--font-mono); fill: var(--s-muted); white-space: pre; }
+.screen .crumb-t .last { fill: var(--s-fg); }
+.screen .frame { fill: none; stroke: var(--s-accent); stroke-width: 2; }
+.screen .ghost { fill: none; stroke: var(--s-panel-border); stroke-width: 2; }
+.screen .ghost.h { stroke: var(--s-card-border); }
+.screen .ico { color: var(--s-fg); }
+.screen .n-card { fill: var(--s-card); stroke: var(--s-card-border); stroke-width: calc(2px * var(--u)); filter: drop-shadow(0 calc(14px * var(--u)) calc(15px * var(--u)) var(--s-shadow)); }
+.screen .n.on .n-card { stroke: var(--s-accent); }
+.screen .hub .n-card { stroke-dasharray: calc(6px * var(--u)) calc(4px * var(--u)); }
+.screen .n-tag { font: 500 calc(16px * var(--u)) var(--font-sans); letter-spacing: 0.18em; fill: var(--s-muted); }
+.screen .n-tag.fn { fill: var(--s-fg); }
+.screen .n-tag.arquivo { fill: var(--s-accent); }
+.screen .n-tag.pasta { fill: var(--s-warm); }
+.screen .n-name { font: 700 calc(27px * var(--u)) var(--font-sans); fill: var(--s-fg); }
+.screen .n-open { fill: var(--s-accent); }
+.screen .n-fn { font: 400 calc(20px * var(--u)) var(--font-mono); fill: var(--s-muted); }
+.screen .wire { fill: none; stroke: var(--s-accent); stroke-width: calc(4px * var(--u)); stroke-linecap: round; stroke-linejoin: round; }
+.screen .wire.imports { stroke-dasharray: 0.02 0.015; }
+.screen .wire.contains { stroke: var(--s-dim); stroke-width: calc(2px * var(--u)); stroke-dasharray: 0.004 0.012; }
+.screen .port { fill: var(--s-accent); }
+.screen .count { fill: none; stroke: var(--s-accent); stroke-width: calc(2px * var(--u)); }
+.screen .count-t { font: 700 calc(16px * var(--u)) var(--font-sans); fill: var(--s-accent); text-anchor: middle; }
+.screen .back { fill: var(--s-bg); stroke: var(--s-accent); stroke-width: 2; }
+.screen .toggle { fill: var(--s-panel); stroke: var(--s-panel-border); stroke-width: 2; }
+.screen .toggle-i { fill: none; stroke: var(--s-fg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.screen .h-title { font: 400 44px var(--font-display); fill: var(--s-fg); }
+.screen .h-card { fill: var(--s-card); stroke: var(--s-card-border); stroke-width: 2; }
+.screen .h-card.on { stroke: var(--s-accent); }
+.screen .h-label { font: 500 13px var(--font-sans); letter-spacing: 0.18em; fill: var(--s-muted); }
+.screen .h-field { fill: var(--s-panel); stroke: var(--s-card-border); stroke-width: 2; }
+.screen .h-ico { color: var(--s-muted); }
+.screen .h-input { font: 400 18px var(--font-mono); fill: var(--s-dim); }
+.screen .h-btn { fill: var(--s-accent); }
+.screen .h-btn-t { font: 700 18px var(--font-sans); fill: var(--s-bg); text-anchor: middle; }
+.screen .h-small { font: 400 15px var(--font-sans); fill: var(--s-muted); }
+.screen .h-item { font: 500 17px var(--font-sans); fill: var(--s-fg); }
+.screen .h-item-s { font: 400 14px var(--font-sans); fill: var(--s-muted); }
+.screen .h-empty { font: 400 16px var(--font-sans); fill: var(--s-muted); }
+
+.theme-table td:first-child, .spec-table td:first-child { font-weight: 500; white-space: nowrap; vertical-align: top; }
+.spec-table td:first-child { padding-right: 24px; }
+.spec-table { min-width: 560px; }
+.theme-table i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); margin-right: 8px; vertical-align: -1px; }
+
+/* ---- Busca de nó ---- */
+.sbox { position: relative; display: inline-block; }
+.sfield { display: flex; align-items: center; box-sizing: border-box; width: calc(60px * var(--k)); height: calc(60px * var(--k)); overflow: hidden; border: calc(2px * var(--k)) solid var(--s-panel-border); border-radius: calc(6px * var(--k)); background: transparent; color: var(--s-fg); transition: width 200ms ease-out, border-color 200ms ease-out; }
+.sfield .lupa { flex: 0 0 calc(56px * var(--k)); height: calc(56px * var(--k)); display: grid; place-items: center; color: var(--s-fg); background: none; border: 0; padding: 0; cursor: pointer; }
+.sfield input { flex: 1; min-width: 0; height: calc(56px * var(--k)); background: none; border: 0; outline: 0; color: var(--s-fg); font: 400 calc(20px * var(--k)) var(--font-sans); opacity: 0; transition: opacity 200ms ease-out; }
+.sfield input::placeholder { color: var(--s-muted); }
+.sbox.open .sfield { width: calc(480px * var(--k)); border-color: var(--s-accent); }
+.sbox.open .sfield input { opacity: 1; }
+.sbox .results { position: absolute; top: 38px; left: 0; width: 360px; max-width: 80vw; background: var(--s-panel); border: 2px solid var(--s-panel-border); border-radius: 6px; box-shadow: 0 10px 22px var(--s-shadow); z-index: 2; overflow: hidden; }
+.sbox .results[hidden] { display: none; }
+.sbox .res { display: grid; gap: 2px; width: 100%; text-align: left; padding: 9px 12px; background: none; border: 0; border-left: 3px solid transparent; color: var(--s-fg); font: inherit; cursor: pointer; }
+.sbox .res + .res { border-top: 1px solid var(--s-panel-border); }
+.sbox .res:hover, .sbox .res.on { background: color-mix(in srgb, var(--s-accent) 12%, transparent); border-left-color: var(--s-accent); }
+.sbox .res b { font: 700 14px/1.3 var(--font-sans); }
+.sbox .res span { display: flex; justify-content: space-between; gap: 12px; font: 400 12px/1.4 var(--font-mono); color: var(--s-muted); }
+.sbox .res span em { font-style: normal; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sfield input::-webkit-search-cancel-button { appearance: none; display: none; }
+.sbox .res span i { font-style: normal; color: var(--s-dim); white-space: nowrap; }
+.sbox .res mark { background: color-mix(in srgb, var(--s-accent) 28%, transparent); color: inherit; border-radius: 2px; }
+.sbox .none { padding: 12px; font-size: 13px; color: var(--s-muted); }
+.search-demo { padding: 24px; min-height: 330px; display: grid; align-content: start; gap: 16px; }
+.search-demo .hint { font: 400 13px var(--font-sans); color: var(--s-muted); margin: 0; max-width: 60ch; }
+
 /* ---- Tipografia ---- */
 .faces { display: grid; gap: 0; }
 .face { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 24px; border-top: 1px solid var(--line); }
@@ -247,66 +354,122 @@ figcaption b { color: var(--fg); font-weight: 500; }
 .s-sans .w5 { font-weight: 500; } .s-sans .w7 { font-weight: 700; }
 .s-mono { font: 400 clamp(17px, 2.4vw, 22px)/1.5 var(--font-mono); }
 
-/* ---- Componentes (escala 0,625 do palco de 1920 px) ---- */
+/* ---- Componentes: as medidas do app são do palco de 1920 px; as demos usam a escala k = 0,625 ---- */
+.k { --k: 0.625; }
 .flow { width: 760px; height: 350px; }
-.flow svg.wires { position: absolute; inset: 0; width: 760px; height: 350px; overflow: visible; }
-.wire { fill: none; stroke: var(--s-accent); stroke-width: 3; stroke-linecap: round; }
-.wire.imports { stroke-dasharray: 2 9; }
+.flow svg { position: absolute; inset: 0; width: 760px; height: 350px; overflow: visible; }
+.flow svg.ports { z-index: 2; }
+.wire { fill: none; stroke: var(--s-accent); stroke-width: calc(4px * var(--k)); stroke-linecap: round; }
+.wire.contains { stroke: var(--s-dim); stroke-width: calc(2px * var(--k)); stroke-dasharray: 0.004 0.012; }
 .port { fill: var(--s-accent); }
 .node {
   position: absolute;
-  width: 200px; height: 104px;
-  padding: 14px 16px;
-  display: flex; flex-direction: column; gap: 4px;
+  box-sizing: border-box;
+  width: calc(320px * var(--k)); height: calc(140px * var(--k));
+  padding: calc(20px * var(--k)) calc(24px * var(--k));
+  display: flex; flex-direction: column; gap: calc(8px * var(--k));
   background: var(--s-card);
-  border: 2px solid var(--s-card-border);
-  border-radius: 6px;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25);
+  border: calc(2px * var(--k)) solid var(--s-card-border);
+  border-radius: calc(6px * var(--k));
+  box-shadow: 0 calc(14px * var(--k)) calc(30px * var(--k)) var(--s-shadow);
 }
 .node.on { border-color: var(--s-accent); }
-.node .ntag { font: 500 11px/1.2 var(--font-sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--s-muted); }
-.node .ntag.folder { color: var(--s-accent); }
-.node .nname { font: 700 18px/1.2 var(--font-sans); color: var(--s-fg); }
-.node .nfn { font: 400 13px/1.3 var(--font-mono); color: var(--s-muted); }
-.node .badge { position: absolute; right: 10px; top: 10px; min-width: 20px; height: 20px; border-radius: 10px; background: var(--s-accent); color: var(--c-grafite); font: 700 12px/20px var(--font-sans); text-align: center; }
-.branch { position: absolute; font: 500 13px var(--font-sans); color: var(--s-muted); }
-.branch.yes { color: var(--s-accent); }
+.node.hub { border-style: dashed; }
+.node .ntag { font: 500 calc(16px * var(--k))/1.2 var(--font-sans); letter-spacing: 0.18em; color: var(--s-muted); }
+.node[data-tag="ARQUIVO"] .ntag { color: var(--s-accent); }
+.node[data-tag="PASTA"] .ntag { color: var(--s-warm); }
+.node[data-tag="FUNÇÃO"] .ntag { color: var(--s-fg); }
+.node .nname { font: 700 calc(27px * var(--k))/1.1 var(--font-sans); color: var(--s-fg); white-space: nowrap; }
+.node .nname i { font-style: normal; margin-left: 0.25em; color: var(--s-accent); }
+.node .nfn { font: 400 calc(20px * var(--k))/1.3 var(--font-mono); color: var(--s-muted); white-space: nowrap; }
+.node .badge, .node .hubcount { position: absolute; right: calc(16px * var(--k)); top: calc(16px * var(--k)); min-width: calc(26px * var(--k)); height: calc(26px * var(--k)); border-radius: calc(13px * var(--k)); font: 700 calc(16px * var(--k)) var(--font-sans); text-align: center; box-sizing: border-box; }
+.node .badge { background: var(--s-accent); color: var(--s-bg); line-height: calc(26px * var(--k)); }
+.node .hubcount { padding: 0 calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-accent); color: var(--s-accent); line-height: calc(22px * var(--k)); }
+.node.hub .badge { right: calc(56px * var(--k)); }
+.node .back { position: absolute; left: calc(-24px * var(--k)); top: 50%; width: calc(44px * var(--k)); height: calc(44px * var(--k)); margin-top: calc(-22px * var(--k)); border-radius: 50%; border: calc(2px * var(--k)) solid var(--s-accent); background: var(--s-bg); color: var(--s-accent); display: grid; place-items: center; }
+.node .back svg { position: static; width: calc(22px * var(--k)); height: calc(22px * var(--k)); fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .alert {
   position: absolute;
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 9px 14px;
-  border-radius: 6px;
-  background: var(--c-nevoa); color: var(--c-grafite);
-  font: 700 15px var(--font-sans);
+  display: flex; align-items: center; gap: calc(14px * var(--k));
+  padding: calc(14px * var(--k)) calc(22px * var(--k));
+  border-radius: calc(6px * var(--k));
+  background: var(--s-fg); color: var(--s-bg);
+  font: 700 calc(24px * var(--k)) var(--font-sans);
   white-space: nowrap;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 calc(12px * var(--k)) calc(26px * var(--k)) var(--s-shadow-strong);
 }
-.alert i { width: 9px; height: 9px; border-radius: 50%; background: var(--c-grafite); display: block; }
+.alert i { width: calc(14px * var(--k)); height: calc(14px * var(--k)); border-radius: 50%; background: var(--s-bg); display: block; }
+.gbtn { position: absolute; top: calc(24px * var(--k)); box-sizing: border-box; width: calc(60px * var(--k)); height: calc(60px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); border-radius: calc(6px * var(--k)); display: grid; place-items: center; color: var(--s-fg); }
+.gbtn svg { width: calc(30px * var(--k)); height: calc(30px * var(--k)); }
+.btn, .btn-ghost { font-family: var(--font-sans); border-radius: calc(6px * var(--k)); }
+.btn { display: inline-block; padding: calc(16px * var(--k)) calc(30px * var(--k)); background: var(--s-accent); color: var(--s-bg); font-size: calc(26px * var(--k)); font-weight: 700; }
+.btn-ghost { display: inline-block; padding: calc(12px * var(--k)) calc(22px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); color: var(--s-fg); font-size: calc(22px * var(--k)); font-weight: 500; }
+.btn-ask { display: inline-block; padding: calc(10px * var(--k)) calc(18px * var(--k)); border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-accent); color: var(--s-accent); font: 600 calc(18px * var(--k)) var(--font-sans); }
+.btn-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 24px; }
 
-.legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px 32px; font-size: 15px; }
-.legend li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: start; }
-.legend svg { width: 44px; height: 22px; display: block; margin-top: 2px; }
+.legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px 32px; font-size: 15px; }
+.legend li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; align-items: start; }
+.legend .stage { width: 56px; height: 32px; border-radius: 4px; border: 0; background-image: none; display: block; }
+.legend .stage svg { width: 56px; height: 32px; display: block; }
+.legend .c-card { fill: var(--s-card); stroke: var(--s-card-border); stroke-width: 2; }
+.legend .c-main { stroke: var(--s-accent); }
+.legend .c-warm { fill: var(--s-warm); }
+.legend .c-fill { fill: var(--s-accent); }
+.legend .c-line { fill: none; stroke: var(--s-accent); stroke-width: 4; stroke-linecap: round; }
+.legend .c-dim { fill: none; stroke: var(--s-dim); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1 5; }
+.legend .c-t { font: 700 12px var(--font-sans); text-anchor: middle; }
 .legend b { font-weight: 500; }
-.legend span { color: var(--muted); display: block; font-size: 14px; }
+.legend span.d { color: var(--muted); display: block; font-size: 14px; }
 
-.panel-demo { display: grid; gap: 16px; padding: 20px; }
-.crumb { display: flex; flex-wrap: wrap; gap: 0 8px; font: 400 14px/1.6 var(--font-mono); color: var(--c-pedra); }
-.crumb b { color: var(--c-nevoa); font-weight: 400; }
-.crumb i { font-style: normal; color: var(--s-dim); }
-.dpanel { background: var(--s-panel); border: 2px solid var(--s-panel-border); border-radius: 6px; padding: 20px; display: grid; gap: 14px; max-width: 560px; }
-.dpanel h4 { margin: 0; font: 400 18px var(--font-display); }
-.dpanel .ey { font: 500 10px/1.3 var(--font-sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-pedra); }
-.dpanel .sum { font-size: 15px; line-height: 1.5; margin: 0; }
-.dpanel .io { font: 400 13px var(--font-mono); }
-.dpanel .io i { font-style: normal; color: var(--s-accent); padding-inline: 6px; }
-.dpanel .rev { justify-self: start; font: 500 11px var(--font-sans); padding: 3px 8px; border-radius: 4px; background: color-mix(in srgb, var(--s-accent) 16%, transparent); color: var(--s-accent); }
-.codeview { background: var(--c-grafite); border: 1px solid var(--s-panel-border); border-radius: 6px; padding: 10px 0; font: 400 13px/1.7 var(--font-mono); color: color-mix(in srgb, var(--c-nevoa) 82%, var(--c-grafite)); overflow-x: auto; }
-.codeview div { display: flex; gap: 14px; padding-inline: 12px; white-space: pre; }
-.codeview div.cur { background: color-mix(in srgb, var(--s-accent) 18%, transparent); }
-.codeview s { text-decoration: none; color: var(--s-dim); min-width: 2ch; text-align: right; flex-shrink: 0; }
-.dpanel .sug { background: var(--c-nevoa); color: var(--c-grafite); border-radius: 6px; padding: 12px 14px; font-size: 14px; line-height: 1.5; }
-.dpanel .sug b { display: block; font-size: 15px; }
-.dpanel .sug code { color: var(--c-grafite); background: rgba(22, 24, 24, 0.08); padding: 0 4px; border-radius: 3px; }
+.panel-demo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 20px; }
+.crumb { display: flex; flex-wrap: wrap; font: 400 calc(22px * var(--k))/1.6 var(--font-mono); color: var(--s-muted); white-space: pre; overflow-x: auto; }
+.crumb b { color: var(--s-fg); font-weight: 400; }
+.dpanel { position: relative; background: var(--s-panel); border: 2px solid var(--s-panel-border); border-radius: 6px; box-shadow: 0 18px 40px var(--s-shadow); padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; max-width: 520px; }
+.dpanel > * { min-width: 0; }
+.dpanel h4 { margin: 0; padding-right: 40px; font: 400 22px var(--font-display); }
+.dpanel .ey { font: 500 11px/1.5 var(--font-sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--s-muted); margin: 0; }
+.dpanel .rev { align-self: flex-start; padding: 4px 10px; border-radius: 4px; background: color-mix(in srgb, var(--s-accent) 16%, transparent); color: var(--s-accent); font: 500 12px var(--font-sans); letter-spacing: 0.06em; }
+.dpanel ol, .dpanel ul { margin: 0; padding: 0; list-style: none; font-size: 16px; line-height: 1.45; }
+.dpanel ul { padding-left: 20px; list-style: disc; font-size: 14px; line-height: 1.5; }
+.dpanel p { margin: 0; max-width: none; }
+.dpanel .ev { margin-left: 8px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--s-panel-border); color: var(--s-muted); font: 400 12px var(--font-mono); }
+.dpanel .rules { font: 500 12px/1.4 var(--font-sans); letter-spacing: 0.06em; color: var(--s-accent); }
+.dpanel .codeview { margin: 0; padding: 14px 16px; border-radius: 6px; background: var(--s-bg); font: 400 14px/1.6 var(--font-mono); color: color-mix(in srgb, var(--s-fg) 82%, var(--s-bg)); overflow-x: auto; }
+.dpanel .codeview div { display: flex; gap: 24px; white-space: pre; }
+.dpanel .codeview div.cur { background: color-mix(in srgb, var(--s-accent) 18%, transparent); }
+.dpanel .codeview s { text-decoration: none; color: var(--s-dim); min-width: 2ch; text-align: right; flex-shrink: 0; }
+.dpanel .io { font: 400 14px/1.8 var(--font-mono); color: var(--s-fg); }
+.dpanel .io i { font-style: normal; margin: 0 12px; color: var(--s-accent); }
+.dpanel h5 { margin: 0; font: 700 15px var(--font-sans); }
+.dpanel .cl { position: absolute; top: 8px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--s-panel-border); display: grid; place-items: center; color: var(--s-fg); }
+
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; align-items: start; }
+.drawer-stage { position: relative; height: 330px; overflow: hidden; }
+.hdrawer { position: absolute; top: calc(88px * var(--k)); right: 0; bottom: 0; box-sizing: border-box; width: calc(460px * var(--k)); padding: calc(20px * var(--k)); display: flex; flex-direction: column; gap: calc(14px * var(--k)); background: var(--s-panel); border-left: calc(2px * var(--k)) solid var(--s-panel-border); box-shadow: 0 calc(18px * var(--k)) calc(40px * var(--k)) var(--s-shadow); }
+.hdrawer .hs { padding: calc(12px * var(--k)) calc(16px * var(--k)); border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); color: var(--s-dim); font: 400 calc(20px * var(--k)) var(--font-sans); }
+.hdrawer ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(8px * var(--k)); }
+.hdrawer li { display: flex; align-items: stretch; gap: calc(8px * var(--k)); }
+.hdrawer .ho { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: calc(6px * var(--k)); padding: calc(12px * var(--k)) calc(14px * var(--k)); border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); }
+.hdrawer .ht { font: 500 calc(20px * var(--k)) var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdrawer .hm { display: flex; gap: calc(12px * var(--k)); align-items: baseline; color: var(--s-muted); font: 400 calc(16px * var(--k)) var(--font-sans); }
+.hdrawer .hm b { font-weight: 500; letter-spacing: 0.18em; }
+.hdrawer .hm b.pasta { color: var(--s-warm); }
+.hdrawer .hz { color: var(--s-muted); font: 400 calc(16px * var(--k)) var(--font-sans); }
+.hdrawer .star { display: grid; place-items: center; padding: 0 calc(10px * var(--k)); color: var(--s-dim); }
+.hdrawer .star.on { color: var(--s-accent); }
+.hdrawer .star svg { width: calc(22px * var(--k)); height: calc(22px * var(--k)); }
+.hdrawer .del { display: grid; place-items: center; padding: 0 calc(14px * var(--k)); border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); color: var(--s-muted); font: 500 calc(24px * var(--k)) var(--font-sans); }
+.dlg-stage { position: relative; padding: calc(88px * var(--k)) calc(16px * var(--k)) calc(16px * var(--k)); display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
+.dlg-stage::before { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--s-bg) 70%, transparent); }
+.sdlg { position: relative; box-sizing: border-box; width: min(calc(560px * var(--k)), 100%); padding: calc(24px * var(--k)); background: var(--s-panel); border: calc(2px * var(--k)) solid var(--s-panel-border); border-radius: calc(6px * var(--k)); box-shadow: 0 calc(18px * var(--k)) calc(40px * var(--k)) var(--s-shadow); display: flex; flex-direction: column; gap: calc(16px * var(--k)); }
+.sdlg h4 { margin: 0 0 calc(0px * var(--k)); font: 400 calc(30px * var(--k)) var(--font-display); }
+.sdlg label { display: flex; flex-direction: column; gap: calc(6px * var(--k)); font: 500 calc(18px * var(--k)) var(--font-sans); }
+.sdlg label.check { flex-direction: row; align-items: center; gap: calc(10px * var(--k)); }
+.sdlg label .f { padding: calc(10px * var(--k)) calc(14px * var(--k)); border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); color: var(--s-fg); font: 400 calc(18px * var(--k)) var(--font-sans); display: flex; justify-content: space-between; }
+.sdlg label .f.ph { color: var(--s-dim); }
+.sdlg .cb { width: calc(18px * var(--k)); height: calc(18px * var(--k)); border-radius: calc(3px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); flex-shrink: 0; }
+.sdlg .cb.on { background: var(--s-accent); border-color: var(--s-accent); }
+.sdlg .acts { display: flex; gap: calc(16px * var(--k)); align-items: center; }
 
 .specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0; border-top: 1px solid var(--line); margin: 0; }
 .specs div { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); }
@@ -323,6 +486,7 @@ footer { border-top: 1px solid var(--line); padding-top: 20px; font-size: 14px; 
 
 @media (prefers-reduced-motion: reduce) {
   .hero .wire-draw { animation: none; }
+  .sfield, .sfield input { transition: none; }
   html { scroll-behavior: auto; }
 }
 html { scroll-behavior: smooth; }
@@ -365,6 +529,7 @@ html { scroll-behavior: smooth; }
       <li><span class="pre">├─ </span><a href="#cores">cores</a></li>
       <li><span class="pre">├─ </span><a href="#tipografia">tipografia</a></li>
       <li><span class="pre">├─ </span><a href="#componentes">componentes</a></li>
+      <li><span class="pre">├─ </span><a href="#temas">temas</a></li>
       <li><span class="pre">└─ </span><a href="#tokens">tokens</a></li>
     </ol>
   </nav>
@@ -409,8 +574,7 @@ html { scroll-behavior: smooth; }
           <h3>A inspiração</h3>
           <p class="muted">O 8n8 se inspira no n8n. O n8n monta automações a partir de nós. O 8n8 faz o caminho contrário: lê um código pronto e desenha os nós dele. Por isso o nome inverte o n8n. Apesar da brincadeira com o nome, os dois produtos não têm nenhuma relação.</p>
           <h3>O nome</h3>
-          <p class="muted">Escreva sempre <code>8n8</code>: minúsculo, sem espaço, sem hífen. Nunca escreva "8N8", "8-n-8", "Eight" nem "Oito".</p>
-          <p class="muted"><b>Pronúncia:</b> incentiva-se "eight-en-eight", mas fica livre: cada um fala como preferir.</p>
+          <p class="muted">Escreva sempre <code>8n8</code>: minúsculo, sem espaço, sem hífen. Nunca escreva "8N8", "8-n-8" ou "Eight".</p>
           <p class="muted">O slogan é <b>O mapa do seu código.</b> Ele diz o que o 8n8 entrega: um mapa do código, com vista ampla e níveis que você abre, para ficar simples de entender.</p>
         </div>
         <div class="head">
@@ -438,7 +602,7 @@ html { scroll-behavior: smooth; }
           <tbody>
             <tr><td>Precisa</td><td class="bad">Aproximada</td><td>Cita arquivo e linha, sem "mais ou menos aqui".</td></tr>
             <tr><td>Calma</td><td class="bad">Alarmista</td><td>Uma sugestão é um cartão discreto, nunca um alerta vermelho.</td></tr>
-            <tr><td>Sóbria</td><td class="bad">Chamativa</td><td>Uma cor de destaque, usada pouco. Nada de neon.</td></tr>
+            <tr><td>Sóbria</td><td class="bad">Chamativa</td><td>O Petróleo como destaque, usado pouco. O Cobre só nas pastas. Nada de neon.</td></tr>
             <tr><td>Direta</td><td class="bad">Enfeitada</td><td>Sem emoji, sem exclamação, sem "ops".</td></tr>
           </tbody>
         </table>
@@ -554,7 +718,6 @@ html { scroll-behavior: smooth; }
       <div class="head"><h3>Usos errados</h3></div>
       <div class="dont-grid">
         <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-coral)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>use cores fora da paleta.</figcaption></figure>
-        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-limao)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>use o verde-limão antigo nem outra cor neon.</figcaption></figure>
         <figure class="dont"><div class="tile" style="background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>ponha o Petróleo claro sobre Papel. O contraste é de 2,0:1.</figcaption></figure>
         <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" preserveAspectRatio="none" style="width:86%;height:40%" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>estique nem comprima.</figcaption></figure>
         <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" aria-hidden="true"><g transform="translate(124 0) scale(-1 1)"><use href="#wordmark" width="124" height="80"/></g></svg></div><figcaption>espelhe: a aresta sai sempre do bloco de cima.</figcaption></figure>
@@ -567,7 +730,7 @@ html { scroll-behavior: smooth; }
         <p class="eyebrow">Cores</p>
         <h2 id="h-cores">Grafite, Papel e Petróleo</h2>
       </div>
-      <p class="lead">A marca é sóbria: poucas cores e nenhum tom chamativo. O Petróleo é a única cor de destaque. Ele marca o que liga, o que está em foco e a ação principal.</p>
+      <p class="lead">A marca é sóbria: poucas cores e nenhum tom chamativo. O Petróleo é a cor de destaque. Ele marca o que liga, o que está em foco e a ação principal. O Cobre é o tom de apoio e marca as pastas. Uma pasta não abre no painel lateral, que mostra o fluxo e o código. A tag PASTA, em Cobre, mostra essa diferença à primeira vista. O cobre oxidado vira verde, por isso os dois combinam.</p>
 
       <div class="theme-row">
         <h3>Tema escuro</h3>
@@ -594,7 +757,13 @@ html { scroll-behavior: smooth; }
             <div class="chip" style="background: var(--c-petroleo); color: var(--c-grafite)">--main</div>
             <h4>Petróleo</h4>
             <dl><dt>HEX</dt><dd>#3dbfa8</dd><dt>Grafite</dt><dd>7,8:1</dd></dl>
-            <p>Arestas, portas, nó selecionado, linha atual, botão principal.</p>
+            <p>Arestas, portas, nó selecionado, tag ARQUIVO, linha atual, selo de sugestões, botão principal.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-cobre); color: var(--c-grafite)">--warm</div>
+            <h4>Cobre</h4>
+            <dl><dt>HEX</dt><dd>#dc8a5c</dd><dt>Grafite</dt><dd>6,6:1</dd></dl>
+            <p>A tag PASTA, nos nós e no histórico. Pastas não abrem no painel lateral.</p>
           </div>
         </div>
       </div>
@@ -626,6 +795,12 @@ html { scroll-behavior: smooth; }
             <dl><dt>HEX</dt><dd>#0f7a6b</dd><dt>Papel</dt><dd>4,7:1</dd></dl>
             <p>O mesmo papel do Petróleo, escurecido para ler sobre Papel.</p>
           </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-cobre-escuro); color: var(--c-papel)">--warm</div>
+            <h4>Cobre escuro</h4>
+            <dl><dt>HEX</dt><dd>#a34f26</dd><dt>Papel</dt><dd>5,1:1</dd></dl>
+            <p>O mesmo papel do Cobre, escurecido para ler sobre Papel.</p>
+          </div>
         </div>
       </div>
 
@@ -637,7 +812,7 @@ html { scroll-behavior: smooth; }
           <div style="flex:8; background: var(--c-pedra); color: var(--c-grafite)">8</div>
           <div style="flex:5; background: var(--c-petroleo); color: var(--c-grafite)">5</div>
         </div>
-        <p class="muted">Se o Petróleo passa de 5% de uma tela, ele perde o sentido de foco. O Petróleo claro nunca vai sobre Papel (2,0:1). No tema claro, use o Petróleo escuro.</p>
+        <p class="muted">Se o Petróleo passa de 5% de uma tela, ele perde o sentido de foco. O Petróleo claro nunca vai sobre Papel (2,0:1). No tema claro, use o Petróleo escuro. O Cobre segue a mesma regra e usa o Cobre escuro sobre Papel. O Cobre aparece só na tag PASTA: use pouco texto em Cobre e nunca um fundo grande. Cobre e Petróleo ficam a cerca de 1,1:1 um do outro. Não use o Cobre como único sinal: a palavra PASTA já diz o tipo do nó.</p>
       </div>
 
       <div class="head">
@@ -676,84 +851,224 @@ html { scroll-behavior: smooth; }
         <table>
           <thead><tr><th>Papel no app</th><th>Fonte</th><th>Tamanho*</th><th>Detalhe</th></tr></thead>
           <tbody>
-            <tr><td>Nome do nó</td><td>Space Grotesk 700</td><td class="mono">27 px</td><td>Texto principal</td></tr>
-            <tr><td>Rótulo (eyebrow)</td><td>Space Grotesk 500</td><td class="mono">22 px</td><td>Caixa alta, espaço 0,18 em</td></tr>
-            <tr><td>Breadcrumb</td><td>DM Mono 400</td><td class="mono">22 px</td><td>Pedra; o último item no texto principal</td></tr>
-            <tr><td>Assinatura de função</td><td>DM Mono 400</td><td class="mono">20 px</td><td>Pedra</td></tr>
-            <tr><td>Tag do nó</td><td>Space Grotesk 500</td><td class="mono">16 px</td><td>Pedra; PASTA em Petróleo</td></tr>
-          </tbody>
-        </table>
+            <tr><td>Nome do nó</td><td>Space Grotesk 700</td><td class="mono">27 px</td><td>Névoa; uma linha, corta com …</td></tr>
+            <tr><td>Tag do nó</td><td>Space Grotesk 500</td><td class="mono">16 px</td><td>Caixa alta, espaço 0,18 em. ARQUIVO em Petróleo, PASTA em Cobre, FUNÇÃO, SE e RETORNO em Névoa, o resto em Pedra</td></tr>
+            <tr><td>Linha de código do nó</td><td>DM Mono 400</td><td class="mono">20 px</td><td>Pedra</td></tr>
+            <tr><td>Breadcrumb</td><td>DM Mono 400</td><td class="mono">22 px</td><td>Pedra; o último item em Névoa</td></tr>
+            <tr><td>Rótulo de ramo</td><td>Space Grotesk 500</td><td class="mono">22 px</td><td>Caixa alta, espaço 0,18 em. TRUE em Petróleo</td></tr>
+            <tr><td>Título do painel</td><td>Archivo Black 400</td><td class="mono">22 px</td><td>Névoa</td></tr>
+            <tr><td>Rótulo do painel</td><td>Space Grotesk 500</td><td class="mono">11 px</td><td>Caixa alta, espaço 0,14 em. Pedra</td></tr>
+            <tr><td>Título da tela inicial</td><td>Archivo Black 400</td><td class="mono">44 px</td><td>Névoa</td></tr>
+            <tr><td>Botão principal</td><td>Space Grotesk 700</td><td class="mono">26 px</td><td>Grafite sobre Petróleo</td></tr>
+          </table>
       </div>
-      <p class="muted">* Medidas no palco de 1920 × 1080 do vídeo de referência, como estão em <code>apps/web/src/styles.css</code>.</p>
+      <p class="muted">* Medidas no palco de 1920 × 1080, como estão em <code>apps/ui/src/styles.css</code>. O painel de detalhe, o título e o rótulo da tela inicial e os campos usam o tamanho real em px.</p>
     </section>
 
     <!-- ===================== COMPONENTES ===================== -->
     <section id="componentes" aria-labelledby="h-comp">
       <div class="head">
         <p class="eyebrow">Componentes</p>
-        <h2 id="h-comp">Nós, arestas e sugestões</h2>
+        <h2 id="h-comp">Nós, arestas e painéis</h2>
       </div>
-      <p class="lead">O canvas é Grafite com uma grade de pontos. Os nós são cartões. As arestas são traços em Petróleo que se desenham da saída para a entrada.</p>
+      <p class="lead">O canvas é Grafite com uma grade de pontos. Os nós são cartões. As arestas são traços em Petróleo que se desenham da saída para a entrada. Cada peça abaixo existe no app, com as mesmas medidas.</p>
+      <p class="muted">As medidas do app são do palco de 1920 × 1080 e estão em <code>apps/ui/src/styles.css</code>. As demos usam 62,5% desse tamanho. Só o painel de detalhe aparece no tamanho real.</p>
 
+      <div class="head"><h3>Nível de pasta</h3></div>
       <div class="scroll-x">
-        <div class="stage flow" role="img" aria-label="Exemplo de mapa: a pasta pedidos liga a frete.py e importa validar_pedido; frete.py, selecionado, liga a calcular_frete pelo ramo sim">
-          <svg class="wires" viewBox="0 0 760 350" aria-hidden="true">
-            <path class="wire" d="M224 92 H280"/>
-            <path class="wire imports" d="M224 92 C252 92 252 252 280 252"/>
-            <path class="wire" d="M480 92 C512 92 504 172 536 172"/>
-            <path class="wire" d="M480 252 C512 252 504 172 536 172" style="opacity:.45"/>
-            <circle class="port" cx="224" cy="92" r="6"/><circle class="port" cx="280" cy="92" r="6"/>
-            <circle class="port" cx="280" cy="252" r="6"/><circle class="port" cx="480" cy="92" r="6"/>
-            <circle class="port" cx="480" cy="252" r="6"/><circle class="port" cx="536" cy="172" r="6"/>
-          </svg>
-          <div class="node" style="left:24px; top:40px"><span class="ntag folder">Pasta</span><span class="nname">pedidos/</span><span class="nfn">3 arquivos</span></div>
-          <div class="node on" style="left:280px; top:40px"><span class="ntag">Arquivo</span><span class="nname">frete.py</span><span class="nfn">calcular_frete()</span><span class="badge">2</span></div>
-          <div class="node" style="left:280px; top:200px"><span class="ntag">Função</span><span class="nname">validar_pedido</span><span class="nfn">linhas 12–31</span></div>
-          <div class="node" style="left:536px; top:120px"><span class="ntag">Função</span><span class="nname">calcular_frete</span><span class="nfn">linhas 40–45</span></div>
-          <span class="branch yes" style="left:500px; top:104px">sim</span>
-          <span class="branch" style="left:500px; top:222px">não</span>
-          <span class="alert" style="left:24px; top:278px"><i></i>Trate o erro da API</span>
+        <div class="stage k flow" role="img" aria-label="Exemplo de nível de pasta: o hub pedidos, tracejado, com o botão de voltar e a contagem 3, ligado por arestas pontilhadas finas a frete.py (selecionado, com o selo de sugestões 2), validar.py e à pasta servicos; validar.py liga a estoque.py por uma aresta cheia; abaixo, um cartão de sugestão">
+          <svg class="wires" viewBox="0 0 760 350" aria-hidden="true"><path class="wire contains" pathLength="1" d="M249.38 174.75 C286.88 174.75 273.12 63.75 310.62 63.75"/><path class="wire contains" pathLength="1" d="M249.38 174.75 H310.62"/><path class="wire contains" pathLength="1" d="M249.38 174.75 C286.88 174.75 273.12 285.75 310.62 285.75"/><path class="wire" d="M509.38 174.75 C546.88 174.75 509.12 229.75 546.62 229.75"/></svg>
+          <div class="node hub" data-tag="PASTA" style="left:50px; top:131px"><span class="back"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span><span class="hubcount">3</span><span class="ntag">PASTA</span><span class="nname">pedidos</span><span class="nfn">pedidos/</span></div>
+          <div class="node on" data-tag="ARQUIVO" style="left:310px; top:20px"><span class="badge">2</span><span class="ntag">ARQUIVO</span><span class="nname">frete.py<i>›</i></span><span class="nfn">frete.py</span></div>
+          <div class="node" data-tag="ARQUIVO" style="left:310px; top:131px"><span class="ntag">ARQUIVO</span><span class="nname">validar.py<i>›</i></span><span class="nfn">validar.py</span></div>
+          <div class="node" data-tag="PASTA" style="left:310px; top:242px"><span class="ntag">PASTA</span><span class="nname">servicos<i>›</i></span><span class="nfn">servicos/</span></div>
+          <div class="node" data-tag="ARQUIVO" style="left:546px; top:186px"><span class="ntag">ARQUIVO</span><span class="nname">estoque.py<i>›</i></span><span class="nfn">estoque.py</span></div>
+          <svg class="ports" viewBox="0 0 760 350" aria-hidden="true"><circle class="port" cx="249.38" cy="174.75" r="5"/><circle class="port" cx="310.62" cy="63.75" r="5"/><circle class="port" cx="310.62" cy="174.75" r="5"/><circle class="port" cx="310.62" cy="285.75" r="5"/><circle class="port" cx="509.38" cy="174.75" r="5"/><circle class="port" cx="546.62" cy="229.75" r="5"/></svg>
+          <span class="alert" style="left:24px; top:276px"><i></i>Trate o erro da chamada HTTP</span>
         </div>
       </div>
 
       <ul class="legend">
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect x="2" y="2" width="40" height="18" rx="3" fill="#202323" stroke="#363b3a" stroke-width="2"/></svg><div><b>Nó</b><span>Cartão de 320 × 140 px, borda de 2 px, raio de 6 px.</span></div></li>
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect x="2" y="2" width="40" height="18" rx="3" fill="#202323" stroke="#3dbfa8" stroke-width="2"/></svg><div><b>Nó selecionado</b><span>A borda vira Petróleo. O resto continua igual.</span></div></li>
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><path d="M4 11 H40" stroke="#3dbfa8" stroke-width="3" stroke-linecap="round"/></svg><div><b>Aresta cheia</b><span>Chama. Traço de 4 px com ponta redonda.</span></div></li>
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><path d="M4 11 H40" stroke="#3dbfa8" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 7"/></svg><div><b>Aresta tracejada</b><span>Importa. Liga pastas e arquivos.</span></div></li>
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><circle cx="22" cy="11" r="6" fill="#3dbfa8"/></svg><div><b>Porta</b><span>Círculo de 16 px. A entrada fica à esquerda e a saída, à direita.</span></div></li>
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><circle cx="22" cy="11" r="8" fill="#3dbfa8"/><text x="22" y="15" font-size="11" font-weight="700" text-anchor="middle" fill="#161818" font-family="Space Grotesk, sans-serif">2</text></svg><div><b>Contador de passo</b><span>A ordem do nó no fluxo aberto.</span></div></li>
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect x="1" y="2" width="42" height="18" rx="3" fill="#e9ebea"/><circle cx="9" cy="11" r="3" fill="#161818"/><rect x="15" y="9" width="22" height="4" rx="1" fill="#161818"/></svg><div><b>Cartão de sugestão</b><span>Névoa com texto em Grafite. Começa pelo comando.</span></div></li>
-        <li><svg viewBox="0 0 44 22" aria-hidden="true"><rect width="44" height="22" rx="3" fill="#161818"/><text x="22" y="15" font-size="11" text-anchor="middle" fill="#3dbfa8" font-family="Space Grotesk, sans-serif">sim</text></svg><div><b>Rótulo de ramo</b><span>"true" em Petróleo. Os outros ramos em Pedra.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect class="c-card" x="6" y="6" width="44" height="20" rx="3"/></svg></span><div><b>Nó</b><span class="d">Cartão de 320 × 140 px, borda de 2 px, raio de 6 px.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect class="c-card c-main" x="6" y="6" width="44" height="20" rx="3"/></svg></span><div><b>Nó selecionado</b><span class="d">A borda vira Petróleo. O resto continua igual.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect class="c-card" x="6" y="6" width="44" height="20" rx="3" opacity="0.55"/></svg></span><div><b>Nó esmaecido</b><span class="d">Opacidade de 55%. Acontece nos outros nós quando um cartão de sugestão aparece.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect class="c-card" x="6" y="6" width="44" height="20" rx="3" stroke-dasharray="6 4"/></svg></span><div><b>Hub</b><span class="d">O nó aberto, no lugar de pai do nível. Mesmo tamanho, borda tracejada.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><circle cx="28" cy="16" r="11" fill="var(--s-bg)" stroke="var(--s-accent)" stroke-width="2"/><g transform="translate(21 9) scale(0.58)" fill="none" stroke="var(--s-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></g></svg></span><div><b>Botão de voltar</b><span class="d">Só no hub de um nível interno. Círculo de 44 px, borda de 2 px em Petróleo, 24 px para fora da borda esquerda.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect x="14" y="6" width="28" height="20" rx="10" fill="none" stroke="var(--s-accent)" stroke-width="2"/><text class="c-t" x="28" y="20" fill="var(--s-accent)">5</text></svg></span><div><b>Contagem do hub</b><span class="d">Quantos nós o nível mostra. Contorno de 2 px em Petróleo, 26 px de altura, canto superior direito do hub.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><circle cx="28" cy="16" r="10" class="c-fill"/><text class="c-t" x="28" y="20" fill="var(--s-bg)">2</text></svg></span><div><b>Selo de sugestões</b><span class="d">Quantas sugestões o nó tem. Preenchido em Petróleo, 26 px, número em Grafite. No hub, fica 56 px da borda.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><circle cx="28" cy="16" r="8" class="c-fill"/></svg></span><div><b>Porta</b><span class="d">Círculo de 16 px em Petróleo, sobre a borda do nó. Só aparece onde há aresta.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><path class="c-line" d="M6 16 H50"/></svg></span><div><b>Aresta cheia</b><span class="d">Chama ou importa. Traço de 4 px com ponta redonda, desenhado em 500 ms. Um pulso corre por ela.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><path class="c-dim" d="M6 16 H50"/></svg></span><div><b>Aresta pontilhada fina</b><span class="d">Liga o hub a cada nó do nível. Traço de 2 px em Dim, sem pulso.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><text x="8" y="14" font-size="9" font-weight="500" letter-spacing="1.6" fill="var(--s-accent)" font-family="Space Grotesk, sans-serif">TRUE</text><text x="8" y="27" font-size="9" font-weight="500" letter-spacing="1.6" fill="var(--s-muted)" font-family="Space Grotesk, sans-serif">FALSE</text></svg></span><div><b>Rótulo de ramo</b><span class="d">22 px, caixa alta. TRUE em Petróleo, os outros ramos em Pedra.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect x="4" y="5" width="48" height="22" rx="3" fill="var(--s-fg)"/><circle cx="12" cy="16" r="3" fill="var(--s-bg)"/><rect x="19" y="14" width="26" height="4" rx="1" fill="var(--s-bg)"/></svg></span><div><b>Cartão de sugestão</b><span class="d">Fundo Névoa no escuro e Tinta no claro, texto na cor do fundo da tela. Um ponto e o comando, em 24 px, 700. Um clique abre o nó na linha.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><text x="5" y="11" font-size="7" font-weight="500" letter-spacing="1.1" fill="var(--s-warm)" font-family="Space Grotesk, sans-serif">PASTA</text><text x="5" y="20" font-size="7" font-weight="500" letter-spacing="1.1" fill="var(--s-accent)" font-family="Space Grotesk, sans-serif">ARQUIVO</text><text x="5" y="29" font-size="7" font-weight="500" letter-spacing="1.1" fill="var(--s-fg)" font-family="Space Grotesk, sans-serif">FUNÇÃO</text><text x="38" y="29" font-size="7" font-weight="500" letter-spacing="1.1" fill="var(--s-muted)" font-family="Space Grotesk, sans-serif">HTTP</text></svg></span><div><b>Tag do nó</b><span class="d">Cobre nas pastas, Petróleo nos arquivos, Névoa nas funções e nos passos, Pedra nas pontes externas.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect x="14" y="2" width="28" height="28" rx="3" fill="none" stroke="var(--s-panel-border)" stroke-width="2"/><svg x="21" y="9" width="14" height="14" viewBox="0 0 24 24" style="color:var(--s-fg)"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg></svg></span><div><b>Botão de ícone</b><span class="d">60 × 60 px, borda de 2 px, raio de 6 px, ícone de 30 px. Busca, Configurações e Histórico, da esquerda para a direita.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><circle cx="28" cy="16" r="13" fill="var(--s-panel)" stroke="var(--s-panel-border)" stroke-width="2"/><path d="M31 10 l-6 6 6 6" fill="none" stroke="var(--s-fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Alça do painel</b><span class="d">Círculo de 56 px na borda direita, com o painel minimizado. Com o painel aberto, vira um X de 40 px no canto dele.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><text x="2" y="19" font-size="8" fill="var(--s-muted)" font-family="DM Mono, monospace" xml:space="preserve">loja › <tspan fill="var(--s-fg)">frete</tspan></text></svg></span><div><b>Breadcrumb</b><span class="d">DM Mono 22 px em Pedra, com › entre os itens. O último item fica em Névoa e não encolhe.</span></div></li>
       </ul>
 
+      <div class="head"><h3>Botões</h3></div>
+      <div class="stage k btn-row" role="img" aria-label="Botões: Salvar, Fechar, Gerar resumo e os três botões de ícone">
+        <span class="btn">Salvar</span>
+        <span class="btn-ghost">Fechar</span>
+        <span class="btn-ask">Gerar resumo</span>
+        <span style="position:relative; width:calc(60px * var(--k)); height:calc(60px * var(--k)); display:block"><span class="gbtn" style="top:0; left:0"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg></span></span>
+        <span style="position:relative; width:calc(60px * var(--k)); height:calc(60px * var(--k)); display:block"><span class="gbtn" style="top:0; left:0"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg></span></span>
+        <span style="position:relative; width:calc(60px * var(--k)); height:calc(60px * var(--k)); display:block"><span class="gbtn" style="top:0; left:0"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg></span></span>
+      </div>
+
+      <div class="head"><h3>Painel de detalhe</h3></div>
       <div class="stage panel-demo">
-        <div class="crumb" aria-label="Breadcrumb"><span>repositório</span><i>/</i><span>pedidos</span><i>/</i><span>frete.py</span><i>/</i><b>calcular_frete()</b></div>
+        <div class="crumb" aria-label="Breadcrumb">loja › pedidos.py › <b>Calcular frete</b></div>
         <div class="dpanel">
-          <h4>calcular_frete</h4>
-          <span class="ey">O que faz · Português Técnico Simplificado</span>
-          <p class="sum">A função calcula o frete pelo peso. Se o peso passa de 30 kg, a função usa a tabela pesada.</p>
-          <div class="io">peso: float<i>→</i>valor: Decimal</div>
-          <div class="codeview" aria-label="Código de frete.py, linhas 40 a 45">
-            <div><s>40</s>def calcular_frete(peso):</div>
-            <div><s>41</s>    tabela = TABELA_LEVE</div>
-            <div><s>42</s>    if peso &gt; 30:</div>
-            <div><s>43</s>        tabela = TABELA_PESADA</div>
-            <div class="cur"><s>44</s>    resposta = requests.get(URL_FRETE)</div>
-            <div><s>45</s>    return tabela[peso] + resposta.json()["taxa"]</div>
-          </div>
-          <div class="sug"><b>Trate o erro da chamada HTTP.</b>Se a API falhar, <code>calcular_frete()</code> falha junto. <code>frete.py</code>, linha 44.</div>
-          <span class="rev">revisado</span>
+          <span class="cl" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <h4>Calcular frete</h4>
+          <p class="ey">O que faz · Português Técnico Simplificado</p>
+          <span class="rev">Revisado</span>
+          <ol aria-label="Resumo">
+            <li><span>A função calcula o frete pelo peso.</span><span class="ev">L40–45</span></li>
+            <li><span>Se o peso passa de 30 kg, a função usa a tabela pesada.</span><span class="ev">L42–43</span></li>
+          </ol>
+          <p class="rules">2 frases · voz ativa · um termo por conceito</p>
+          <p class="ey">Código · frete.py, linhas 40 a 45</p>
+          <pre class="codeview" aria-label="Código de frete.py, linhas 40 a 45" style="margin:0">
+<div><s>40</s>def calcular_frete(peso):</div><div><s>41</s>    tabela = TABELA_LEVE</div><div><s>42</s>    if peso &gt; 30:</div><div><s>43</s>        tabela = TABELA_PESADA</div><div class="cur"><s>44</s>    resposta = requests.get(URL_FRETE)</div><div><s>45</s>    return tabela[peso] + resposta.json()["taxa"]</div></pre>
+          <p class="ey">Entrada e saída</p>
+          <div class="io">peso: float<span class="ev">L40</span><i>→</i>valor: Decimal<span class="ev">L45</span></div>
+          <h5>Efeitos externos</h5>
+          <ul><li>requests.get (HTTP, linha 44)</li></ul>
+          <h5>Sugestões</h5>
+          <ul><li><span class="ev" style="margin-left:0">Trate o erro da chamada HTTP (linha 44, alta)</span> <span>Se a API falhar, calcular_frete() falha junto.</span><span class="ev">L44</span></li></ul>
         </div>
       </div>
 
-      <dl class="specs">
-        <div><dt>Raio</dt><dd>6 px</dd></div>
-        <div><dt>Borda</dt><dd>2 px</dd></div>
-        <div><dt>Grade do canvas</dt><dd>40 px</dd></div>
-        <div><dt>Entrada do nó</dt><dd>500 ms</dd></div>
-      </dl>
-      <p class="muted">Movimento: os nós entram com <code>ease-out</code> em 500 ms e as arestas se desenham da saída para a entrada. Com "reduzir movimento" ligado, o nível aparece completo, sem animação.</p>
+      <div class="head">
+        <h3>Gaveta de histórico</h3>
+        <p class="muted">A gaveta abre abaixo dos botões de ícone, na borda direita. A pasta mostra a tag PASTA em Cobre. A estrela marcada fica em Petróleo.</p>
+      </div>
+      <div class="pair">
+        <div class="stage k drawer-stage" role="img" aria-label="Gaveta de histórico, tema escuro: campo Buscar pesquisa e duas pesquisas guardadas, a pasta loja com a estrela marcada e o trecho trecho.py">
+          <span class="gbtn" style="right:calc(168px * var(--k))"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg></span><span class="gbtn" style="right:calc(96px * var(--k))"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg></span><span class="gbtn" style="right:calc(24px * var(--k))"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg></span>
+          <aside class="hdrawer">
+            <div class="hs">Buscar pesquisa</div>
+            <ul>
+              <li><div class="ho"><span class="ht">loja</span><span class="hm"><b class="pasta">PASTA</b><span>há 2 h</span></span><span class="hz">412 linhas · 5 arquivos · 12 nós · 18 KB</span></div><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><span class="del">×</span></li>
+              <li><div class="ho"><span class="ht">trecho.py</span><span class="hm"><b>TRECHO</b><span>há 1 d</span></span><span class="hz">46 linhas · 1 arquivo · 7 nós · 2 KB</span></div><span class="star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><span class="del">×</span></li>
+            </ul>
+          </aside>
+        </div>
+        <div class="stage k light drawer-stage" role="img" aria-label="Gaveta de histórico, tema claro: campo Buscar pesquisa e duas pesquisas guardadas, a pasta loja com a estrela marcada e o trecho trecho.py">
+          <span class="gbtn" style="right:calc(168px * var(--k))"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg></span><span class="gbtn" style="right:calc(96px * var(--k))"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg></span><span class="gbtn" style="right:calc(24px * var(--k))"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg></span>
+          <aside class="hdrawer">
+            <div class="hs">Buscar pesquisa</div>
+            <ul>
+              <li><div class="ho"><span class="ht">loja</span><span class="hm"><b class="pasta">PASTA</b><span>há 2 h</span></span><span class="hz">412 linhas · 5 arquivos · 12 nós · 18 KB</span></div><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><span class="del">×</span></li>
+              <li><div class="ho"><span class="ht">trecho.py</span><span class="hm"><b>TRECHO</b><span>há 1 d</span></span><span class="hz">46 linhas · 1 arquivo · 7 nós · 2 KB</span></div><span class="star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><span class="del">×</span></li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+
+      <div class="head">
+        <h3>Diálogo de configurações</h3>
+        <p class="muted">O diálogo cobre o mapa com o fundo da tela a 70%. Esc fecha.</p>
+      </div>
+      <div class="pair">
+        <div class="stage k dlg-stage" role="img" aria-label="Diálogo de configurações, tema escuro: Tema, Provedor, Chave de API, Modelo, duas caixas de seleção, os botões Salvar e Fechar">
+          <div class="sdlg">
+            <h4>Configurações</h4>
+            <label>Tema<span class="f">Seguir o sistema<span>▾</span></span></label>
+            <label>Provedor<span class="f">anthropic<span>▾</span></span></label>
+            <label>Chave de API<span class="f ph">Cole a chave</span></label>
+            <label>Modelo<span class="f ph">claude-haiku-5-5</span></label>
+            <label class="check"><span class="cb on"></span>Gerar o resumo ao selecionar um nó</label>
+            <label class="check"><span class="cb"></span>Pedir as sugestões ao selecionar um nó</label>
+            <div class="acts"><span class="btn">Salvar</span><span class="btn-ghost">Fechar</span></div>
+          </div>
+        </div>
+        <div class="stage k light dlg-stage" role="img" aria-label="Diálogo de configurações, tema claro: Tema, Provedor, Chave de API, Modelo, duas caixas de seleção, os botões Salvar e Fechar">
+          <div class="sdlg">
+            <h4>Configurações</h4>
+            <label>Tema<span class="f">Seguir o sistema<span>▾</span></span></label>
+            <label>Provedor<span class="f">anthropic<span>▾</span></span></label>
+            <label>Chave de API<span class="f ph">Cole a chave</span></label>
+            <label>Modelo<span class="f ph">claude-haiku-5-5</span></label>
+            <label class="check"><span class="cb on"></span>Gerar o resumo ao selecionar um nó</label>
+            <label class="check"><span class="cb"></span>Pedir as sugestões ao selecionar um nó</label>
+            <div class="acts"><span class="btn">Salvar</span><span class="btn-ghost">Fechar</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="head">
+        <h3>Busca de nó</h3>
+        <p class="muted">Fechada, a busca é só uma lupa. Clique nela para ver o campo crescer.</p>
+      </div>
+      <div class="stage k search-demo">
+        <div class="sbox" id="sbox">
+          <div class="sfield"><button class="lupa" type="button" id="lupa" aria-label="Buscar nó" aria-expanded="false" aria-controls="sresults"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="7.5" cy="7.5" r="5"/><path d="M11.5 11.5 16 16"/></svg></button><input id="sinput" type="search" placeholder="Título ou nome da função" aria-label="Buscar nó" tabindex="-1" autocomplete="off"></div>
+          <div class="results" id="sresults" role="listbox" hidden></div>
+        </div>
+        <p class="hint">Teste com <code>cadastro_prod</code>, <code>frete</code> ou <code>e-mail</code>. O título pode ter sido reescrito pela LLM. O nome técnico não muda, e a busca olha os dois.</p>
+      </div>
+      <ol class="rules">
+        <li>Fechada, a busca é uma lupa no canto superior direito, à esquerda de Configurações e Histórico, com o mesmo botão de ícone dos dois. Nunca um campo aberto.</li>
+        <li>Ao clicar, o campo cresce de 60 para 480 px (no palco de 1920) em 200 ms, com <code>ease-out</code>, e o foco vai para ele. Esc ou um clique fora fecha. Com "reduzir movimento" ligado, o campo abre sem animação.</li>
+        <li>A busca procura no título e no nome técnico da função. Ela ignora maiúsculas, acentos e a diferença entre espaço e <code>_</code>. Cada palavra digitada precisa aparecer em um dos dois.</li>
+        <li>Cada resultado mostra o título em cima e o nome técnico embaixo, em fonte mono, com o arquivo e as linhas. O trecho achado fica em destaque.</li>
+        <li>Ao escolher um resultado, o canvas centraliza o nó e o seleciona em Petróleo. Se o nó está dentro de outro nível, a busca abre o caminho até ele.</li>
+      </ol>
+
+      <div class="head"><h3>Medidas</h3></div>
+      <div class="table-wrap"><table class="spec-table"><thead><tr><th>Componente</th><th>Medida (palco de 1920 × 1080)</th></tr></thead><tbody><tr><td>Nó</td><td>320 × 140 px. Padding 20 × 24, espaço de 8 entre as linhas, borda de 2 px, raio de 6 px, sombra <code>0 14 30</code>.</td></tr><tr><td>Tag do nó</td><td>Space Grotesk 500, 16 px, espaço 0,18 em. Cobre em PASTA, Petróleo em ARQUIVO, Névoa em FUNÇÃO, Pedra nas pontes externas.</td></tr><tr><td>Nome e código do nó</td><td>Nome em Space Grotesk 700, 27 px, com › em Petróleo quando o nó abre. Linha de código em DM Mono, 20 px, Pedra.</td></tr><tr><td>Hub</td><td>Mesmo cartão com borda tracejada de 2 px. Leva a contagem de nós, e o botão de voltar quando o nível é interno.</td></tr><tr><td>Botão de voltar</td><td>44 px, redondo, borda de 2 px em Petróleo, fundo Grafite, ícone de 22 px. No hover, o fundo vira Petróleo.</td></tr><tr><td>Contagem e selo</td><td>26 px de altura, número de 16 px em 700, a 16 px do canto superior direito. A contagem tem contorno de 2 px. O selo é preenchido.</td></tr><tr><td>Porta</td><td>Círculo de 16 px em Petróleo, centrado a 1 px da borda do nó.</td></tr><tr><td>Aresta</td><td>4 px, Petróleo, ponta redonda. Desenha em 500 ms. O pulso tem raio de 9 px e corre em 1500 ms. A aresta de importação usa traços de 2% do comprimento.</td></tr><tr><td>Aresta de hub</td><td>2 px, Dim, pontilhada, sem pulso.</td></tr><tr><td>Cartão de sugestão</td><td>Padding 14 × 22, raio de 6 px, texto de 24 px em 700, ponto de 14 px, sombra <code>0 12 26</code>.</td></tr><tr><td>Botão de ícone</td><td>60 × 60 px. Histórico a 24 px da borda direita, Configurações a 96 px e Busca a 168 px. Topo a 24 px.</td></tr><tr><td>Botão</td><td>Principal: padding 16 × 30, 26 px em 700, Grafite sobre Petróleo. Fantasma: padding 12 × 22, 22 px em 500, borda de 2 px.</td></tr><tr><td>Painel de detalhe</td><td>Largura de 400 a 520 px (31% da tela), margem de 24 px, padding 22 × 24, borda de 2 px, raio de 6 px, sombra <code>0 18 40</code>.</td></tr><tr><td>Gaveta de histórico</td><td>460 px de largura no máximo, a partir de 88 px do topo, borda esquerda de 2 px, padding 20 px.</td></tr><tr><td>Diálogo de configurações</td><td>560 px de largura no máximo, a 88 px do topo, padding 24 px, fundo da tela a 70% atrás.</td></tr><tr><td>Tela inicial</td><td>Grade de 1080 px, duas colunas com espaço de 64 px. Campo de 54 px de altura, botão de 52 px, cartões com borda de 2 px.</td></tr><tr><td>Canvas</td><td>Grade de pontos a cada 40 px, ponto de 2 px com 16% de Névoa (ou Tinta no claro).</td></tr><tr><td>Movimento</td><td>O nó entra em 250 ms com <code>ease-out</code>, com 150 ms de intervalo entre nós (o último entra até 1,2 s). A aresta se desenha em 500 ms com <code>ease-in-out</code>, depois que os dois nós aparecem.</td></tr></tbody></table></div>
+      <p class="muted">Com "reduzir movimento" ligado, o nível aparece completo, sem animação.</p>
+    </section>
+
+    <!-- ===================== TEMAS ===================== -->
+    <section id="temas" aria-labelledby="h-temas">
+      <div class="head">
+        <p class="eyebrow">Temas</p>
+        <h2 id="h-temas">Escuro e claro, lado a lado</h2>
+      </div>
+      <p class="lead">As três telas do sistema, como o app as desenha, nos dois temas. Só os tokens mudam: a estrutura, o tamanho e o lugar de cada peça ficam iguais.</p>
+
+      <div class="tabs">
+        <input type="radio" name="tela" id="t-ini" checked aria-label="Início">
+        <input type="radio" name="tela" id="t-pasta" aria-label="Mapa da pasta">
+        <input type="radio" name="tela" id="t-fluxo" aria-label="Fluxo da função">
+        <div class="tab-bar"><label for="t-ini">Início</label><label for="t-pasta">Mapa da pasta</label><label for="t-fluxo">Fluxo da função</label></div>
+        <div class="tab-panel" id="p-ini">
+        <div class="theme-row"><h3>Tema escuro</h3><div class="scroll-x"><div class="stage screen"><svg class="canvas" viewBox="0 0 1440 900" role="img" aria-label="Tela inicial no tema escuro: logo e botão Configurações, o título O mapa do seu código, o cartão Abrir pasta com o campo e o botão Mapear pasta, o cartão Colar trecho e o texto da coluna da direita"><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><rect class="ghost h" x="1317" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1331" y="39" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><text class="h-title" x="180" y="301">O mapa do seu</text><text class="h-title" x="180" y="349.4">código.</text><rect class="h-card on" x="181" y="382" width="506" height="229" rx="6"/><text class="h-label" x="202" y="415">ABRIR PASTA</text><rect class="h-field" x="203" y="435" width="462" height="56" rx="6"/><svg class="h-ico" x="218" y="452" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><text class="h-input" x="254" y="469">C:\projetos\loja</text><rect class="h-btn" x="202" y="506" width="464" height="52" rx="6"/><text class="h-btn-t" x="434" y="538.5">Mapear pasta</text><text class="h-small" x="202" y="586.5">O 8n8 lê os arquivos .py, .ts e .tsx da pasta e das subpastas.</text><rect class="h-card" x="181" y="630" width="506" height="76" rx="6"/><svg class="h-ico" x="202" y="657" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><text class="h-item" x="240" y="664">Colar trecho</text><text class="h-item-s" x="240" y="685">Mapeia um pedaço de código</text><text class="h-empty" x="752" y="278">Os mapas que você gerar aparecem aqui. Marque a estrela para</text><text class="h-empty" x="752" y="302">guardar um mapa nos favoritos.</text></svg></div></div></div>
+        <div class="theme-row"><h3>Tema claro</h3><div class="scroll-x"><div class="stage screen light"><svg class="canvas" viewBox="0 0 1440 900" role="img" aria-label="Tela inicial no tema claro: logo e botão Configurações, o título O mapa do seu código, o cartão Abrir pasta com o campo e o botão Mapear pasta, o cartão Colar trecho e o texto da coluna da direita"><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><rect class="ghost h" x="1317" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1331" y="39" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><text class="h-title" x="180" y="301">O mapa do seu</text><text class="h-title" x="180" y="349.4">código.</text><rect class="h-card on" x="181" y="382" width="506" height="229" rx="6"/><text class="h-label" x="202" y="415">ABRIR PASTA</text><rect class="h-field" x="203" y="435" width="462" height="56" rx="6"/><svg class="h-ico" x="218" y="452" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><text class="h-input" x="254" y="469">C:\projetos\loja</text><rect class="h-btn" x="202" y="506" width="464" height="52" rx="6"/><text class="h-btn-t" x="434" y="538.5">Mapear pasta</text><text class="h-small" x="202" y="586.5">O 8n8 lê os arquivos .py, .ts e .tsx da pasta e das subpastas.</text><rect class="h-card" x="181" y="630" width="506" height="76" rx="6"/><svg class="h-ico" x="202" y="657" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><text class="h-item" x="240" y="664">Colar trecho</text><text class="h-item-s" x="240" y="685">Mapeia um pedaço de código</text><text class="h-empty" x="752" y="278">Os mapas que você gerar aparecem aqui. Marque a estrela para</text><text class="h-empty" x="752" y="302">guardar um mapa nos favoritos.</text></svg></div></div></div>
+        </div>
+        <div class="tab-panel" id="p-pasta">
+        <div class="theme-row"><h3>Tema escuro</h3><div class="scroll-x"><div class="stage screen"><svg class="canvas" viewBox="0 0 1440 900" role="img" aria-label="Mapa da pasta no tema escuro: o hub loja, tracejado e com a contagem 5, ligado por arestas pontilhadas finas a três arquivos; pedidos.py liga a uma pasta e a um arquivo por arestas cheias"><defs><pattern id="dots-p-d" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle class="dots" cx="20" cy="20" r="2.3"/></pattern></defs><rect width="1440" height="900" fill="url(#dots-p-d)"/><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><text class="crumb-t" x="134" y="62">loja</text><rect class="ghost" x="1213" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1227" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg><rect class="ghost" x="1285" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1299" y="40" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><rect class="ghost" x="1357" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1371" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg><path class="wire contains" pathLength="1" d="M499 458 C559 458 501 258 561 258"/><path class="wire contains" pathLength="1" d="M499 458 H561"/><path class="wire contains" pathLength="1" d="M499 458 C559 458 501 658 561 658"/><path class="wire imports" pathLength="1" d="M879 658 C939 658 881 558 941 558"/><path class="wire imports" pathLength="1" d="M879 658 C939 658 881 758 941 758"/><g class="n hub"><rect class="n-card" x="181.00" y="389.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag pasta" x="206.00" y="426.00">PASTA</text><text class="n-name" x="206.00" y="464.00">loja</text><text class="n-fn" x="206.00" y="496.50">loja/</text><circle class="count" cx="469.00" cy="419.00" r="12.00"/><text class="count-t" x="469.00" y="425.00">5</text></g><g class="n"><rect class="n-card" x="561.00" y="189.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="226.00">ARQUIVO</text><text class="n-name" x="586.00" y="264.00">servidor.ts<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="296.50">servidor.ts</text></g><g class="n"><rect class="n-card" x="561.00" y="389.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="426.00">ARQUIVO</text><text class="n-name" x="586.00" y="464.00">relatorio.ts<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="496.50">relatorio.ts</text></g><g class="n"><rect class="n-card" x="561.00" y="589.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="626.00">ARQUIVO</text><text class="n-name" x="586.00" y="664.00">pedidos.py<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="696.50">pedidos.py</text></g><g class="n"><rect class="n-card" x="941.00" y="489.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag pasta" x="966.00" y="526.00">PASTA</text><text class="n-name" x="966.00" y="564.00">servicos<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="966.00" y="596.50">servicos/</text></g><g class="n"><rect class="n-card" x="941.00" y="689.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="966.00" y="726.00">ARQUIVO</text><text class="n-name" x="966.00" y="764.00">estoque.py<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="966.00" y="796.50">estoque.py</text></g><circle class="port" cx="499" cy="458" r="8"/><circle class="port" cx="561" cy="258" r="8"/><circle class="port" cx="561" cy="458" r="8"/><circle class="port" cx="561" cy="658" r="8"/><circle class="port" cx="879" cy="658" r="8"/><circle class="port" cx="941" cy="558" r="8"/><circle class="port" cx="941" cy="758" r="8"/></svg></div></div></div>
+        <div class="theme-row"><h3>Tema claro</h3><div class="scroll-x"><div class="stage screen light"><svg class="canvas" viewBox="0 0 1440 900" role="img" aria-label="Mapa da pasta no tema claro: o hub loja, tracejado e com a contagem 5, ligado por arestas pontilhadas finas a três arquivos; pedidos.py liga a uma pasta e a um arquivo por arestas cheias"><defs><pattern id="dots-p-l" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle class="dots" cx="20" cy="20" r="2.3"/></pattern></defs><rect width="1440" height="900" fill="url(#dots-p-l)"/><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><text class="crumb-t" x="134" y="62">loja</text><rect class="ghost" x="1213" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1227" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg><rect class="ghost" x="1285" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1299" y="40" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><rect class="ghost" x="1357" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1371" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg><path class="wire contains" pathLength="1" d="M499 458 C559 458 501 258 561 258"/><path class="wire contains" pathLength="1" d="M499 458 H561"/><path class="wire contains" pathLength="1" d="M499 458 C559 458 501 658 561 658"/><path class="wire imports" pathLength="1" d="M879 658 C939 658 881 558 941 558"/><path class="wire imports" pathLength="1" d="M879 658 C939 658 881 758 941 758"/><g class="n hub"><rect class="n-card" x="181.00" y="389.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag pasta" x="206.00" y="426.00">PASTA</text><text class="n-name" x="206.00" y="464.00">loja</text><text class="n-fn" x="206.00" y="496.50">loja/</text><circle class="count" cx="469.00" cy="419.00" r="12.00"/><text class="count-t" x="469.00" y="425.00">5</text></g><g class="n"><rect class="n-card" x="561.00" y="189.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="226.00">ARQUIVO</text><text class="n-name" x="586.00" y="264.00">servidor.ts<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="296.50">servidor.ts</text></g><g class="n"><rect class="n-card" x="561.00" y="389.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="426.00">ARQUIVO</text><text class="n-name" x="586.00" y="464.00">relatorio.ts<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="496.50">relatorio.ts</text></g><g class="n"><rect class="n-card" x="561.00" y="589.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="626.00">ARQUIVO</text><text class="n-name" x="586.00" y="664.00">pedidos.py<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="696.50">pedidos.py</text></g><g class="n"><rect class="n-card" x="941.00" y="489.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag pasta" x="966.00" y="526.00">PASTA</text><text class="n-name" x="966.00" y="564.00">servicos<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="966.00" y="596.50">servicos/</text></g><g class="n"><rect class="n-card" x="941.00" y="689.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="966.00" y="726.00">ARQUIVO</text><text class="n-name" x="966.00" y="764.00">estoque.py<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="966.00" y="796.50">estoque.py</text></g><circle class="port" cx="499" cy="458" r="8"/><circle class="port" cx="561" cy="258" r="8"/><circle class="port" cx="561" cy="458" r="8"/><circle class="port" cx="561" cy="658" r="8"/><circle class="port" cx="879" cy="658" r="8"/><circle class="port" cx="941" cy="558" r="8"/><circle class="port" cx="941" cy="758" r="8"/></svg></div></div></div>
+        </div>
+        <div class="tab-panel" id="p-fluxo">
+        <div class="theme-row"><h3>Tema escuro</h3><div class="scroll-x"><div class="stage screen"><svg class="canvas" style="--u:0.9125" viewBox="0 0 1440 900" role="img" aria-label="Fluxo da função no tema escuro: o hub Processar pedido com o botão de voltar e a contagem 7, e sete nós ligados por arestas, com a alça do painel minimizado à direita"><defs><pattern id="dots-f-d" x="2" y="2" width="40" height="40" patternUnits="userSpaceOnUse"><circle class="dots" cx="20" cy="20" r="2.3"/></pattern></defs><rect width="1440" height="900" fill="url(#dots-f-d)"/><rect class="frame" x="1" y="1" width="1438" height="898" rx="6"/><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><text class="crumb-t" x="134" y="62">loja › pedidos.py › <tspan class="last">Processar pedido</tspan></text><rect class="ghost" x="1213" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1227" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg><rect class="ghost" x="1285" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1299" y="40" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><rect class="ghost" x="1357" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1371" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg><path class="wire contains" pathLength="1" d="M343 363 H400"/><path class="wire" d="M692 363 H748"/><path class="wire" d="M1040 363 H1097"/><path class="wire" d="M1389 363 H1400 Q1420 363 1420 385 V462 Q1420 483 1399 483 H392 H44 Q21 483 21 505 V630 Q21 652 51 652"/><path class="wire" d="M370 483 V585 Q370 602 400 602"/><path class="wire" d="M343 652 C372 652 358 602 400 602"/><path class="wire" d="M692 602 H748"/><path class="wire" d="M1040 602 H1097"/><g class="n hub on"><rect class="n-card" x="50.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="73.72" y="334.68">FUNÇÃO</text><text class="n-name" x="73.72" y="369.35">Processar pedido</text><text class="n-fn" x="73.72" y="399.01">processar_pedido()</text><circle class="count" cx="313.71" cy="328.29" r="10.95"/><text class="count-t" x="313.71" y="333.76">7</text></g><g class="n"><rect class="n-card" x="400.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="423.73" y="334.68">FUNÇÃO</text><text class="n-name" x="423.73" y="369.35">Validar pedido<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="423.73" y="399.01">validar_pedido()</text></g><g class="n"><rect class="n-card" x="748.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="771.73" y="334.68">FUNÇÃO</text><text class="n-name" x="771.73" y="369.35">Calcular frete<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="771.73" y="399.01">calcular_frete()</text></g><g class="n"><rect class="n-card" x="1097.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="1120.72" y="334.68">SE</text><text class="n-name" x="1120.72" y="369.35">frete &gt; 50</text><text class="n-fn" x="1120.72" y="399.01">if frete &gt; 50</text></g><g class="n"><rect class="n-card" x="50.91" y="589.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag ext" x="73.72" y="623.67">HTTP</text><text class="n-name" x="73.72" y="658.35">Post</text><text class="n-fn" x="73.72" y="688.01">requests.post()</text></g><g class="n"><rect class="n-card" x="400.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag ext" x="423.73" y="573.67">BANCO</text><text class="n-name" x="423.73" y="608.35">Salvar</text><text class="n-fn" x="423.73" y="638.01">db.salvar()</text></g><g class="n"><rect class="n-card" x="748.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="771.73" y="573.67">FUNÇÃO</text><text class="n-name" x="771.73" y="608.35">Enviar email<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="771.73" y="638.01">enviar_email()</text></g><g class="n"><rect class="n-card" x="1097.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="1120.72" y="573.67">RETORNO</text><text class="n-name" x="1120.72" y="608.35">Retorno</text><text class="n-fn" x="1120.72" y="638.01">return {"ok": True, "…</text></g><circle class="port" cx="343" cy="363" r="7.3"/><circle class="port" cx="400" cy="363" r="7.3"/><circle class="port" cx="692" cy="363" r="7.3"/><circle class="port" cx="748" cy="363" r="7.3"/><circle class="port" cx="1040" cy="363" r="7.3"/><circle class="port" cx="1097" cy="363" r="7.3"/><circle class="port" cx="1389" cy="363" r="7.3"/><circle class="port" cx="51" cy="652" r="7.3"/><circle class="port" cx="343" cy="652" r="7.3"/><circle class="port" cx="400" cy="602" r="7.3"/><circle class="port" cx="692" cy="602" r="7.3"/><circle class="port" cx="748" cy="602" r="7.3"/><circle class="port" cx="1040" cy="602" r="7.3"/><circle class="port" cx="1097" cy="602" r="7.3"/><circle class="back" cx="50" cy="363" r="19"/><g transform="translate(40 353) scale(0.836)" fill="none" stroke="var(--s-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></g><circle class="toggle" cx="1388" cy="450" r="27"/><path class="toggle-i" transform="translate(1375 437) scale(1.0833)" d="M15 6l-6 6 6 6"/></svg></div></div></div>
+        <div class="theme-row"><h3>Tema claro</h3><div class="scroll-x"><div class="stage screen light"><svg class="canvas" style="--u:0.9125" viewBox="0 0 1440 900" role="img" aria-label="Fluxo da função no tema claro: o hub Processar pedido com o botão de voltar e a contagem 7, e sete nós ligados por arestas, com a alça do painel minimizado à direita"><defs><pattern id="dots-f-l" x="2" y="2" width="40" height="40" patternUnits="userSpaceOnUse"><circle class="dots" cx="20" cy="20" r="2.3"/></pattern></defs><rect width="1440" height="900" fill="url(#dots-f-l)"/><rect class="frame" x="1" y="1" width="1438" height="898" rx="6"/><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><text class="crumb-t" x="134" y="62">loja › pedidos.py › <tspan class="last">Processar pedido</tspan></text><rect class="ghost" x="1213" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1227" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg><rect class="ghost" x="1285" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1299" y="40" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><rect class="ghost" x="1357" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1371" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg><path class="wire contains" pathLength="1" d="M343 363 H400"/><path class="wire" d="M692 363 H748"/><path class="wire" d="M1040 363 H1097"/><path class="wire" d="M1389 363 H1400 Q1420 363 1420 385 V462 Q1420 483 1399 483 H392 H44 Q21 483 21 505 V630 Q21 652 51 652"/><path class="wire" d="M370 483 V585 Q370 602 400 602"/><path class="wire" d="M343 652 C372 652 358 602 400 602"/><path class="wire" d="M692 602 H748"/><path class="wire" d="M1040 602 H1097"/><g class="n hub on"><rect class="n-card" x="50.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="73.72" y="334.68">FUNÇÃO</text><text class="n-name" x="73.72" y="369.35">Processar pedido</text><text class="n-fn" x="73.72" y="399.01">processar_pedido()</text><circle class="count" cx="313.71" cy="328.29" r="10.95"/><text class="count-t" x="313.71" y="333.76">7</text></g><g class="n"><rect class="n-card" x="400.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="423.73" y="334.68">FUNÇÃO</text><text class="n-name" x="423.73" y="369.35">Validar pedido<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="423.73" y="399.01">validar_pedido()</text></g><g class="n"><rect class="n-card" x="748.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="771.73" y="334.68">FUNÇÃO</text><text class="n-name" x="771.73" y="369.35">Calcular frete<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="771.73" y="399.01">calcular_frete()</text></g><g class="n"><rect class="n-card" x="1097.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="1120.72" y="334.68">SE</text><text class="n-name" x="1120.72" y="369.35">frete &gt; 50</text><text class="n-fn" x="1120.72" y="399.01">if frete &gt; 50</text></g><g class="n"><rect class="n-card" x="50.91" y="589.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag ext" x="73.72" y="623.67">HTTP</text><text class="n-name" x="73.72" y="658.35">Post</text><text class="n-fn" x="73.72" y="688.01">requests.post()</text></g><g class="n"><rect class="n-card" x="400.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag ext" x="423.73" y="573.67">BANCO</text><text class="n-name" x="423.73" y="608.35">Salvar</text><text class="n-fn" x="423.73" y="638.01">db.salvar()</text></g><g class="n"><rect class="n-card" x="748.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="771.73" y="573.67">FUNÇÃO</text><text class="n-name" x="771.73" y="608.35">Enviar email<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="771.73" y="638.01">enviar_email()</text></g><g class="n"><rect class="n-card" x="1097.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="1120.72" y="573.67">RETORNO</text><text class="n-name" x="1120.72" y="608.35">Retorno</text><text class="n-fn" x="1120.72" y="638.01">return {"ok": True, "…</text></g><circle class="port" cx="343" cy="363" r="7.3"/><circle class="port" cx="400" cy="363" r="7.3"/><circle class="port" cx="692" cy="363" r="7.3"/><circle class="port" cx="748" cy="363" r="7.3"/><circle class="port" cx="1040" cy="363" r="7.3"/><circle class="port" cx="1097" cy="363" r="7.3"/><circle class="port" cx="1389" cy="363" r="7.3"/><circle class="port" cx="51" cy="652" r="7.3"/><circle class="port" cx="343" cy="652" r="7.3"/><circle class="port" cx="400" cy="602" r="7.3"/><circle class="port" cx="692" cy="602" r="7.3"/><circle class="port" cx="748" cy="602" r="7.3"/><circle class="port" cx="1040" cy="602" r="7.3"/><circle class="port" cx="1097" cy="602" r="7.3"/><circle class="back" cx="50" cy="363" r="19"/><g transform="translate(40 353) scale(0.836)" fill="none" stroke="var(--s-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></g><circle class="toggle" cx="1388" cy="450" r="27"/><path class="toggle-i" transform="translate(1375 437) scale(1.0833)" d="M15 6l-6 6 6 6"/></svg></div></div></div>
+        </div>
+      </div>
+
+      <div class="head">
+        <h3>O que muda de um tema para o outro</h3>
+        <div class="table-wrap">
+          <table class="theme-table">
+            <thead><tr><th>Papel</th><th>Escuro</th><th>Claro</th></tr></thead>
+            <tbody>
+              <tr><td>Fundo e grade</td><td><i style="background:#161818"></i>Grafite</td><td><i style="background:#f2f3f0"></i>Papel</td></tr>
+              <tr><td>Texto principal e cartão de sugestão</td><td><i style="background:#e9ebea"></i>Névoa</td><td><i style="background:#12292a"></i>Tinta</td></tr>
+              <tr><td>Rótulos e apoio</td><td><i style="background:#979d9b"></i>Pedra</td><td><i style="background:#5b6d6a"></i>Pedra escura</td></tr>
+              <tr><td>Arestas, foco, selo de sugestões e botão principal</td><td><i style="background:#3dbfa8"></i>Petróleo</td><td><i style="background:#0f7a6b"></i>Petróleo escuro</td></tr>
+              <tr><td>Pastas (tag PASTA)</td><td><i style="background:#dc8a5c"></i>Cobre</td><td><i style="background:#a34f26"></i>Cobre escuro</td></tr>
+              <tr><td>Cartões e bordas</td><td><i style="background:#202323"></i>#202323 e #363b3a</td><td><i style="background:#ffffff"></i>#ffffff e #d3d8d5</td></tr>
+              <tr><td>Painel lateral</td><td><i style="background:#1c1e1e"></i>#1c1e1e</td><td><i style="background:#f8f9f7"></i>#f8f9f7</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted">A tag PASTA usa o Cobre. A contagem do hub, o selo de sugestões e a borda do nó selecionado usam o Petróleo. O cartão de sugestão usa a cor do texto principal, com o texto na cor do fundo.</p>
+      </div>
     </section>
 
     <!-- ===================== TOKENS ===================== -->
@@ -762,7 +1077,7 @@ html { scroll-behavior: smooth; }
         <p class="eyebrow">Tokens</p>
         <h2 id="h-tokens">Para copiar</h2>
       </div>
-      <p>Os nomes dos tokens são os mesmos de <code>apps/web/src/styles.css</code>. Os valores são os novos. O app ainda usa a paleta antiga (verde-limão) e não tem tema claro.</p>
+      <p>Cada tema tem o seu bloco de tokens. Copie os dois e troque o tema com o atributo <code>data-theme</code>.</p>
       <div class="code-block">
         <button class="copy" type="button" id="copy-tokens">Copiar</button>
 <pre id="tokens-src">:root {
@@ -771,6 +1086,7 @@ html { scroll-behavior: smooth; }
   --main: #3dbfa8;    <span class="cm">/* Petróleo */</span>
   --second: #e9ebea;  <span class="cm">/* Névoa */</span>
   --accent: #979d9b;  <span class="cm">/* Pedra */</span>
+  --warm: #dc8a5c;    <span class="cm">/* Cobre: marca as pastas */</span>
 
   <span class="cm">/* superfícies */</span>
   --card-bg: #202323;
@@ -779,6 +1095,8 @@ html { scroll-behavior: smooth; }
   --panel-border: #2f3433;
   --code: color-mix(in srgb, var(--second) 82%, var(--ground));
   --dim: #6b706f;
+  --shadow: rgba(0, 0, 0, 0.25);
+  --shadow-strong: rgba(0, 0, 0, 0.3);
 
   <span class="cm">/* fontes */</span>
   --font-display: "Archivo Black", sans-serif;
@@ -792,11 +1110,14 @@ html { scroll-behavior: smooth; }
   --main: #0f7a6b;    <span class="cm">/* Petróleo escuro */</span>
   --second: #12292a;  <span class="cm">/* Tinta */</span>
   --accent: #5b6d6a;  <span class="cm">/* Pedra escura */</span>
+  --warm: #a34f26;    <span class="cm">/* Cobre escuro: marca as pastas */</span>
   --card-bg: #ffffff;
   --card-border: #d3d8d5;
   --panel-bg: #f8f9f7;
   --panel-border: #d3d8d5;
   --dim: #8f9a98;
+  --shadow: rgba(18, 41, 42, 0.1);
+  --shadow-strong: rgba(18, 41, 42, 0.14);
 }</pre>
       </div>
     </section>
@@ -838,6 +1159,74 @@ html { scroll-behavior: smooth; }
       navigator.clipboard.writeText(text).then(done, fallback);
     } catch (e) { fallback(); }
   });
+})();
+</script>
+<script>
+(function () {
+  var box = document.getElementById('sbox');
+  if (!box) return;
+  var lupa = document.getElementById('lupa');
+  var input = document.getElementById('sinput');
+  var list = document.getElementById('sresults');
+  var data = [
+    { t: 'Cadastro de produtos', n: 'cadastro_produto', p: 'produtos.py · 8–24' },
+    { t: 'Cálculo de frete', n: 'calcular_frete', p: 'frete.py · 40–45' },
+    { t: 'Validação do pedido', n: 'validar_pedido', p: 'frete.py · 12–31' },
+    { t: 'Envio de e-mail', n: 'enviar_email', p: 'notificacoes.py · 5–19' },
+    { t: 'Fechamento do pedido', n: 'fechar_pedido', p: 'pedidos.py · 30–52' }
+  ];
+  function norm(str) {
+    var out = '';
+    for (var i = 0; i < str.length; i++) {
+      var c = str.charAt(i).toLowerCase().normalize('NFD').charAt(0);
+      out += (c === '_' || c === '-') ? ' ' : c;
+    }
+    return out;
+  }
+  function words(q) { return norm(q).split(' ').filter(Boolean); }
+  function esc(str) { return str.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function mark(str, ws) {
+    var n = norm(str), hit = [], i;
+    for (i = 0; i < n.length; i++) hit.push(false);
+    ws.forEach(function (w) {
+      var at = n.indexOf(w);
+      while (at !== -1) { for (i = at; i < at + w.length; i++) hit[i] = true; at = n.indexOf(w, at + 1); }
+    });
+    var html = '', open = false;
+    for (i = 0; i < str.length; i++) {
+      if (hit[i] && !open) { html += '<mark>'; open = true; }
+      if (!hit[i] && open) { html += '</mark>'; open = false; }
+      html += esc(str.charAt(i));
+    }
+    return html + (open ? '</mark>' : '');
+  }
+  function render() {
+    var ws = words(input.value);
+    var found = data.filter(function (d) {
+      var hay = norm(d.t + ' ' + d.n);
+      return ws.every(function (w) { return hay.indexOf(w) !== -1; });
+    });
+    list.innerHTML = found.length ? found.map(function (d) {
+      return '<button type="button" class="res" role="option"><b>' + mark(d.t, ws) + '</b><span><em>' + mark(d.n, ws) + '</em><i>' + esc(d.p) + '</i></span></button>';
+    }).join('') : '<div class="none">Nenhum nó achado.</div>';
+    list.hidden = false;
+  }
+  function setOpen(on) {
+    box.classList.toggle('open', on);
+    lupa.setAttribute('aria-expanded', on ? 'true' : 'false');
+    input.tabIndex = on ? 0 : -1;
+    if (on) { render(); input.focus(); } else { list.hidden = true; input.value = ''; }
+  }
+  lupa.addEventListener('click', function () { setOpen(!box.classList.contains('open')); });
+  input.addEventListener('input', render);
+  input.addEventListener('keydown', function (e) { if (e.key === 'Escape') { setOpen(false); lupa.focus(); } });
+  list.addEventListener('click', function (e) {
+    var r = e.target.closest ? e.target.closest('.res') : null;
+    if (!r) return;
+    Array.prototype.forEach.call(list.querySelectorAll('.res'), function (x) { x.classList.remove('on'); });
+    r.classList.add('on');
+  });
+  document.addEventListener('click', function (e) { if (box.classList.contains('open') && !box.contains(e.target)) setOpen(false); });
 })();
 </script>
 </html>

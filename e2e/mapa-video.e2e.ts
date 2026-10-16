@@ -25,6 +25,7 @@ import {
   panel,
   SECOND,
   VIDEO,
+  WARM,
 } from "./mapa";
 
 // Feature 05, the look of the video and the editor (VID-01..05, 08, 09), on
@@ -242,6 +243,11 @@ test.describe("O visual do vídeo", () => {
     await clickCard(page, "dir:pedidos");
     await expect(nodes(page)).toHaveCount(3);
     const files = await levelTags(page);
+    // Folders do not open in the side panel: their tag is copper; files stay green.
+    const tagOf = (word: string) =>
+      nodes(page).filter({ hasText: word }).first().locator(".tag");
+    expect(await css(tagOf("PASTA"), "color")).toBe(WARM);
+    expect(await css(tagOf("ARQUIVO"), "color")).toBe(MAIN);
     expect(files).toEqual(["ARQUIVO", "ARQUIVO", "ARQUIVO"]);
     for (const t of files) seen.add(t);
 

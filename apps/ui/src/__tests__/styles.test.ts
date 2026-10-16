@@ -40,12 +40,18 @@ describe("styles: card tag", () => {
     return m[1];
   }
 
-  it("paints structure and the flow entry in the main green", () => {
-    for (const tag of ["GATILHO", "PASTA", "ARQUIVO", "CÓDIGO SOLTO"]) {
+  it("paints files and the flow entry in the main green", () => {
+    for (const tag of ["GATILHO", "ARQUIVO", "CÓDIGO SOLTO"]) {
       expect(ruleWith(`.node[data-tag="${tag}"] .tag`)).toContain(
         "color: var(--main);",
       );
     }
+  });
+
+  it("paints folders in copper, since they do not open in the side panel", () => {
+    expect(ruleWith('.node[data-tag="PASTA"] .tag')).toContain(
+      "color: var(--warm);",
+    );
   });
 
   it("paints the logic steps in the bright second colour", () => {

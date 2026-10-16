@@ -52,6 +52,7 @@ export const MAIN = "rgb(61, 191, 168)";
 export const GROUND = "rgb(22, 24, 24)";
 export const SECOND = "rgb(233, 235, 234)";
 export const ACCENT = "rgb(151, 157, 155)";
+export const WARM = "rgb(220, 138, 92)";
 
 export const canvas = (page: Page) => page.locator(".canvas");
 const flow = (page: Page) => page.getByRole("application");
