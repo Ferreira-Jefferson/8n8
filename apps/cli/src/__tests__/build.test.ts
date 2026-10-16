@@ -36,7 +36,9 @@ describe("bundle (DIST-12)", () => {
     expect(expected.python?.length).toBeGreaterThan(1);
     expect(expected.typescript?.length).toBeGreaterThan(1);
     expect(bundled.extractBoth()).toEqual(expected);
-  });
+    // A real esbuild bundle and two grammars: 2 to 5 s alone, more while other
+    // packages run their tests, so the 5 s default failed now and then.
+  }, 60_000);
 });
 
 describe("the published package.json (DIST-12, DIST-16)", () => {
