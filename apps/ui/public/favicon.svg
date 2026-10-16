@@ -13,7 +13,7 @@
     }
   </style>
   <rect class="tile" width="124" height="124" rx="27"/>
-  <g transform="translate(11.15 29.2) scale(0.82)" fill="none" stroke-width="6">
+  <g transform="translate(15.12 31.76) scale(0.7561)" fill="none" stroke-width="6">
     <rect class="faint" x="3" y="43" width="38" height="34" rx="6" stroke-opacity="0.2"/>
     <rect class="faint" x="83" y="3" width="38" height="34" rx="6" stroke-opacity="0.2"/>
     <rect class="mk" x="3" y="3" width="38" height="34" rx="6"/>

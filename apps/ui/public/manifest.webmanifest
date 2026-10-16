@@ -1,0 +1,14 @@
+{
+  "name": "8n8",
+  "short_name": "8n8",
+  "description": "Mapa do código em nós e arestas, com drill-down até as linhas reais.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#161818",
+  "theme_color": "#161818",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

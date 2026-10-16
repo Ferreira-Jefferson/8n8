@@ -21,14 +21,25 @@ const BRANCO = "rgb(255, 255, 255)";
 test("the tab says 8n8 and shows the symbol as its icon", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle("8n8");
-  const icon = page.locator('link[rel="icon"]');
+  const icon = page.locator('link[rel="icon"][type="image/svg+xml"]');
   // Relative since feature 10 (VSC-04): it resolves to the root's favicon.
   expect(await icon.evaluate((el) => (el as HTMLLinkElement).href)).toBe(
-    `${OFFLINE}/favicon.svg`,
+    `${OFFLINE}/favicon.svg?v=4`,
   );
   const res = await page.request.get(`${OFFLINE}/favicon.svg`);
   expect(res.status()).toBe(200);
-  expect(await res.text()).toContain("<title>8n8</title>");
+  const svg = await res.text();
+  expect(svg).toContain("<title>8n8</title>");
+  // The icon is the manual's logo on its tile: four blocks (two at 20%), two ports, the edge.
+  expect(svg.match(/<rect class="(mk|faint)"/g)).toHaveLength(4);
+  expect(svg.match(/class="faint"[^>]*stroke-opacity="0.2"/g)).toHaveLength(2);
+  expect(svg.match(/<circle [^>]*r="5"/g)).toHaveLength(2);
+  expect(svg).toContain('<path class="mk" d="M44 8C66 8 58 72 80 72"');
+  expect(svg).toContain('rx="27"');
+  // The raster icons are crisp at their own size: the ICO holds 16, 32, 48 and 256 px.
+  const ico = await page.request.get(`${OFFLINE}/favicon.ico`);
+  expect(ico.status()).toBe(200);
+  expect((await ico.body()).readUInt16LE(4)).toBe(4);
 });
 
 test("the launcher shows the full logo: linked blocks in Petróleo, the others faded", async ({
