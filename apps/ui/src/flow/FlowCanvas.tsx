@@ -71,6 +71,8 @@ export interface FlowCanvasProps {
   centerOn: { id: NodeId; nonce: number } | null;
   /** A click on a leaf (VID-25). */
   onSelect: (id: NodeId) => void;
+  /** The "ver detalhes" button of a card: select it and show its panel. */
+  onInspect: (id: NodeId) => void;
   /** A click on a node with an inner flow, after the frame grows (VID-18, 23). */
   onOpen: (node: FlowNode) => void;
   /** A click on a suggestion in a badge's balloon (VID-33). */
@@ -341,6 +343,7 @@ export function FlowCanvas({
   focusId,
   centerOn,
   onSelect,
+  onInspect,
   onOpen,
   onSuggestion,
   onBack,
@@ -597,7 +600,7 @@ export function FlowCanvas({
           suggestionCount: byNode.get(n.id)?.length,
           suggestionsOpen: n.id === popId,
           onSuggestions: (badge: HTMLElement) => toggleSuggestions(n.id, badge),
-          onInspect: () => onSelect(n.id),
+          onInspect: () => onInspect(n.id),
           ...(n === hub?.node
             ? {
                 isHub: true,
@@ -638,7 +641,7 @@ export function FlowCanvas({
     size,
     levelMoved,
     onBack,
-    onSelect,
+    onInspect,
     t,
   ]);
 

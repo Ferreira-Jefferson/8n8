@@ -1306,6 +1306,15 @@ describe("App, the panel starts minimized", () => {
     expect(localStorage.getItem("8n8.panelOpen")).toBe("1");
   });
 
+  it("Ver detalhes selects the card and opens the minimized panel on its own", async () => {
+    localStorage.removeItem("8n8.panelOpen");
+    await mapVideo();
+    act(() => currentCanvas().onInspect(`${P}/s0`));
+    expect(detail()).toBeTruthy();
+    expect(currentCanvas().selected).toBe(`${P}/s0`);
+    expect(localStorage.getItem("8n8.panelOpen")).toBe("1");
+  });
+
   it("Minimizar painel hides the panel, keeps the selection, and the choice holds for the next map", async () => {
     await mapVideo();
     act(() => currentCanvas().onSelect(`${P}/s0`));
