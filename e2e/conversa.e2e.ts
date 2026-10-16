@@ -383,3 +383,17 @@ test("the save icon shows on hover and stays when the answer is kept", async ({
   await log(page).locator(".msg.assistant").last().hover();
   await expect(keepIcon(page)).toHaveCSS("opacity", "1");
 });
+
+test("the marks of an answer are shaped: code, bold, italic and a list, with no mark left in the text", async ({
+  page,
+}) => {
+  await openStep(page);
+  await ask(page, "mostre o formato");
+  const answer = log(page).locator(".msg.assistant").last();
+  await expect(answer.locator("code", { hasText: "fetch()" })).toBeVisible();
+  await expect(answer.locator("strong")).toHaveText("frete");
+  await expect(answer.locator("em")).toHaveText("calcula");
+  await expect(answer.locator("li")).toHaveCount(2);
+  await expect(answer.getByRole("button", { name: "L18" })).toBeVisible();
+  expect(await answer.locator(".rich").innerText()).not.toMatch(/[`*_]/);
+});

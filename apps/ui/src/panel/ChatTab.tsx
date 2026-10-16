@@ -18,6 +18,7 @@ import {
 } from "react";
 import { type ExplainOrigin, fetchChat, fetchStructure } from "../api";
 import { useT } from "../i18n";
+import { type PlainRenderer, Rich } from "./Rich";
 
 /** One bubble of the conversation. A summary or suggestions bubble shows the node's own part, so it stays in step with the Resumo and Sugestões tabs. */
 export type ChatEntry =
@@ -85,7 +86,7 @@ function historyOf(entries: ChatEntry[]): ChatTurn[] {
   return turns.slice(-CHAT_MAX_TURNS);
 }
 
-/** An answer with `L12` marks: each one inside the node becomes a button that marks the line in the code. */
+/** An answer with `L12` marks: each one inside the node becomes a button that marks the line in the code. The Markdown marks around it are shaped. */
 function WithLines({
   text,
   node,
@@ -95,27 +96,29 @@ function WithLines({
   node: FlowNode;
   onMark: (lines: ReadonlySet<number>) => void;
 }) {
-  return text.split(/\b(L\d+)\b/).map((piece, i) => {
-    const n = /^L(\d+)$/.exec(piece)?.[1];
-    const line = n === undefined ? NaN : Number(n);
-    const inside = line >= node.range.start && line <= node.range.end;
-    return (
-      // biome-ignore lint/suspicious/noArrayIndexKey: the pieces never reorder
-      <Fragment key={i}>
-        {inside ? (
+  const plain: PlainRenderer = (piece, key) => (
+    <Fragment key={key}>
+      {piece.split(/\b(L\d+)\b/).map((part, i) => {
+        const n = /^L(\d+)$/.exec(part)?.[1];
+        const line = n === undefined ? NaN : Number(n);
+        const inside = line >= node.range.start && line <= node.range.end;
+        return inside ? (
           <button
+            // biome-ignore lint/suspicious/noArrayIndexKey: the pieces never reorder
+            key={i}
             type="button"
             className="line-ref"
             onClick={() => onMark(new Set([line]))}
           >
-            {piece}
+            {part}
           </button>
         ) : (
-          piece
-        )}
-      </Fragment>
-    );
-  });
+          part
+        );
+      })}
+    </Fragment>
+  );
+  return <Rich text={text} plain={plain} />;
 }
 
 /** Under an answer: the icon that keeps it as a suggestion (and takes it back), and what happened. */
@@ -361,9 +364,7 @@ export function ChatTab({
             {e.kind === "text" &&
               (e.role === "assistant" ? (
                 <>
-                  <p>
-                    <WithLines text={e.text} node={node} onMark={onMark} />
-                  </p>
+                  <WithLines text={e.text} node={node} onMark={onMark} />
                   <SaveBar
                     entry={e}
                     kept={e.savedId !== undefined && savedIds.has(e.savedId)}

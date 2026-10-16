@@ -35,6 +35,7 @@ import { type MessageKey, type Translate, useT } from "../i18n";
 import { type ChatEntry, ChatTab } from "./ChatTab";
 import { CodeView } from "./CodeView";
 import { formatLines } from "./format-lines";
+import { RichInline } from "./Rich";
 
 export interface DetailPanelProps {
   /** Text the node's lines come from: the snippet, or the node's whole file in a project. */
@@ -536,7 +537,9 @@ function Evidence({ lines, onMark }: { lines: number[]; onMark: Mark }) {
 function ClaimItem({ claim, onMark }: { claim: Claim; onMark: Mark }) {
   return (
     <li data-claim-id={claim.id}>
-      <span>{claim.text}</span>
+      <span>
+        <RichInline text={claim.text} />
+      </span>
       <Evidence lines={claim.lines} onMark={onMark} />
     </li>
   );
@@ -782,13 +785,17 @@ function SuggestionList({
       {suggestions.map((s) => (
         <li key={s.id} data-claim-id={s.id}>
           <button type="button" onClick={() => onMark(new Set([s.line]))}>
-            {t("panel.suggestionItem", {
-              command: s.command,
-              line: s.line,
-              severity: t(`severity.${s.severity}` as MessageKey),
-            })}
+            <RichInline
+              text={t("panel.suggestionItem", {
+                command: s.command,
+                line: s.line,
+                severity: t(`severity.${s.severity}` as MessageKey),
+              })}
+            />
           </button>
-          <span>{s.reason}</span>
+          <span>
+            <RichInline text={s.reason} />
+          </span>
           <Evidence lines={s.lines} onMark={onMark} />
           <button
             type="button"

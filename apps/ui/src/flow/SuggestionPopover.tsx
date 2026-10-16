@@ -1,6 +1,7 @@
 import type { NodeId } from "@8n8/model";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { plural, useT } from "../i18n";
+import { RichInline } from "../panel/Rich";
 import type { SuggestionCardModel } from "./suggestion-cards";
 
 /** The icon buttons sit 24 px from the top and are 60 px tall, plus a gap. */
@@ -95,12 +96,14 @@ export function SuggestionPopover({
                   <span className={`pop-severity ${card.severity}`}>
                     {t(`severity.${card.severity}`)}
                   </span>{" "}
-                  {card.text}
+                  <RichInline text={card.text} />
                 </span>
                 <span className="pop-line">
                   {t("suggestions.line", { line: card.line })}
                 </span>
-                <span className="pop-reason">{card.reason}</span>
+                <span className="pop-reason">
+                  <RichInline text={card.reason} />
+                </span>
               </button>
             </li>
           ))}

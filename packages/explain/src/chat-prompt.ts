@@ -28,7 +28,7 @@ Para apontar uma linha, escreva \`L12\` (a letra L e o número da linha do códi
 Explique só o que o código mostra. Não invente comportamento. Se o código não mostra a resposta, diga isso.`,
   format: `Responda só com JSON válido, sem texto fora do JSON e sem cercas de código.
 O JSON tem estes campos:
-- "reply": a resposta, em texto simples.
+- "reply": a resposta. Pode usar só estas marcas: **negrito** para o termo-chave, \`código\` para nomes do código, e uma lista com um item por linha, cada linha começando com "- " (use \\n entre as linhas). Sem títulos, tabelas ou blocos de código.
 - "suggestion": null. Só quando a resposta propõe uma melhoria concreta para o código, escreva um objeto com "command" (a ação, no imperativo), "reason" (o motivo), "line" (a linha do código numerado) e "severity" ("alta", "media" ou "baixa").
 Exemplo:
 {"reply":"A chamada pode travar. Defina um timeout (L18).","suggestion":{"command":"Defina um timeout na chamada HTTP.","reason":"Sem timeout a chamada pode travar.","line":18,"severity":"media"}}`,
@@ -55,7 +55,7 @@ To point at a line, write \`L12\` (the letter L and the number of the line in th
 Explain only what the code shows. Do not invent behavior. If the code does not show the answer, say so.`,
   format: `Answer with valid JSON only, with no text outside the JSON and no code fences.
 The JSON has these fields:
-- "reply": the answer, in plain text.
+- "reply": the answer. You can use only these marks: **bold** for the key term, \`code\` for names from the code, and a list with one item per line, each line starting with "- " (use \\n between the lines). No headings, tables or code blocks.
 - "suggestion": null. Only when the answer proposes a concrete improvement for the code, write an object with "command" (the action, in the imperative), "reason" (the reason), "line" (the line of the numbered code) and "severity" (write exactly one of "alta" for high, "media" for medium or "baixa" for low).
 Example:
 {"reply":"The call can hang. Set a timeout (L18).","suggestion":{"command":"Set a timeout on the HTTP call.","reason":"Without a timeout the call can hang.","line":18,"severity":"media"}}`,

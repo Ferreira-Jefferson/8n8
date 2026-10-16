@@ -466,6 +466,13 @@ function structureReply(text: string): string {
 /** The chat answer, scripted by a word of the question; "falha" gets the 500 of an unscripted call. */
 function chatReply(question: string): string | undefined {
   if (question.includes("falha")) return undefined;
+  if (question.includes("formato")) {
+    return JSON.stringify({
+      reply:
+        "Duas tarefas: - `fetch()` busca o **frete** (L18). - _calcula_ o total.",
+      suggestion: null,
+    });
+  }
   // The chat answers in JSON; a "melhoria" question gets a suggestion with it.
   if (question.includes("melhoria")) {
     return JSON.stringify({
