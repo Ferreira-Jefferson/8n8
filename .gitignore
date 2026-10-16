@@ -10,3 +10,6 @@ e2e/__screenshots__/
 *.vsix
 release/*
 !release/.gitkeep
+
+# specs por feature: ficam só na máquina
+.specs/features/
