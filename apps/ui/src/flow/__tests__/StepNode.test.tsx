@@ -222,6 +222,16 @@ describe("StepNode badges (CORE-06, CORE-23)", () => {
     ).toBeNull();
   });
 
+  it("shows no inspect button on a folder: a folder has no panel", () => {
+    renderStep(node({ kind: "folder" }), {
+      openable: true,
+      onInspect: vi.fn(),
+    });
+    expect(
+      screen.queryByRole("button", { name: "Ver detalhes do nó" }),
+    ).toBeNull();
+  });
+
   it("shows no badge when the count is 0", () => {
     const { container } = renderStep(node(), { suggestionCount: 0 });
     expect(container.querySelector(".step-badge")).toBeNull();
@@ -344,9 +354,9 @@ describe("StepNode, the ports of a dependency wire", () => {
       depIn: new Map([[Side.Left, "across"]]),
       depOut: new Map([[Side.Right, "inside"]]),
     });
-    expect(handle(container, "left", "in")?.className).toContain(
-      "port-dep port-across",
-    );
+    const across = handle(container, "left", "in")?.className ?? "";
+    expect(across).toContain("port-dep");
+    expect(across).not.toContain("port-inside");
     expect(handle(container, "right", "out")?.className).toContain(
       "port-dep port-inside",
     );

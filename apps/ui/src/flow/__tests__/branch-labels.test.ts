@@ -174,6 +174,23 @@ function labelSpots(graph: Graph, level: string) {
     });
 }
 
+describe("branch label of a wire that turns into a later band", () => {
+  it("sits above the top-left corner of its card, never left of the card, where the wire comes down", () => {
+    // turnPath: the wire comes down 24 px left of the port, often at the canvas edge.
+    const spot = branchLabelAt(50, 700, 300, Side.Left, true);
+    expect(spot).toEqual({
+      x: 54,
+      y: 700 - NODE_HEIGHT / 2 - 4,
+      above: true,
+      leftward: false,
+    });
+  });
+
+  it("keeps the label by the port when the wire does not turn", () => {
+    expect(branchLabelAt(50, 700, 300, Side.Left).leftward).toBe(true);
+  });
+});
+
 describe("branch labels of an if that raises (VID-21)", () => {
   it("stand each by the port of its own card: true by ValueError, false by the return", () => {
     const spots = labelSpots(RAISES, F);

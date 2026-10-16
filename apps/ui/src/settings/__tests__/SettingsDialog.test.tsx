@@ -65,8 +65,8 @@ describe("SettingsDialog fields (CFG-20)", () => {
     expect(screen.queryByLabelText("URL")).toBeNull();
     expect(field("Modelo").value).toBe("");
     expect(field("Modelo").placeholder).toBe(DEFAULT_MODEL);
-    expect(field("Gerar o resumo ao selecionar um nó").checked).toBe(false);
-    expect(field("Pedir as sugestões ao selecionar um nó").checked).toBe(false);
+    expect(field("Resumo automático").checked).toBe(false);
+    expect(field("Sugestão automática").checked).toBe(false);
     expect(screen.queryByRole("button", { name: "Apagar chave" })).toBeNull();
   });
 
@@ -132,7 +132,7 @@ describe("SettingsDialog save (CFG-21)", () => {
     saveMock.mockResolvedValue(saved);
     const { onSaved } = open();
     fireEvent.change(field("Chave de API"), { target: { value: " sk-x " } });
-    fireEvent.click(field("Gerar o resumo ao selecionar um nó"));
+    fireEvent.click(field("Resumo automático"));
     save();
     expect(await screen.findByText("Configurações salvas.")).toBeTruthy();
     expect(saveMock).toHaveBeenCalledWith({
@@ -242,7 +242,7 @@ describe("SettingsDialog with the environment (CFG-22)", () => {
       }),
     );
     expect(field("Chave de API").disabled).toBe(true);
-    expect(field("Gerar o resumo ao selecionar um nó").disabled).toBe(true);
+    expect(field("Resumo automático").disabled).toBe(true);
     expect(field("Modelo").disabled).toBe(false);
     expect(
       screen.getByText("Definido pela variável OPENROUTER_API_KEY"),

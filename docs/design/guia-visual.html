@@ -183,7 +183,10 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <li><a href="#niveis">Onde cada aresta aparece</a></li>
       <li><a href="#nunca">O que não vira linha</a></li>
       <li><a href="#cena">Uma tela, lida</a></li>
+      <li><a href="#painel">O painel</a></li>
       <li><a href="#pecas">Outras peças</a></li>
+      <li><a href="#teclado">Teclado e mouse</a></li>
+      <li><a href="#fora-do-app">CLI, VS Code e app instalado</a></li>
       <li><a href="#origem">De onde vem</a></li>
       <li><a href="#mudar">Onde o desenho vive</a></li>
     </ul>
@@ -198,15 +201,15 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <dt>origem, destino</dt><dd>O nó de onde a aresta sai e o nó onde ela entra. Quem chama e quem é chamado, quem importa e quem é importado, quem herda e quem é herdado.</dd>
       <dt>porta</dt><dd>O círculo na borda do cartão onde uma aresta toca. Só aparece onde há aresta.</dd>
       <dt>nível</dt><dd>Uma tela do mapa. O nível de fora mostra o trecho ou a pasta inteira. Abrir um nó mostra o nível de dentro dele.</dd>
-      <dt>hub</dt><dd>O nó aberto. Aparece à esquerda do seu nível, com borda tracejada, ligado aos filhos por linhas de "contém".</dd>
+      <dt>hub</dt><dd>O nó aberto. Aparece à esquerda do seu nível, com borda tracejada, ligado aos filhos por linhas de "contém". No topo de um mapa de pasta, o hub é a própria pasta: ele não tem botão de voltar, e o clique nele não faz nada.</dd>
       <dt>entrada</dt><dd>Um nó do nível de fora que ninguém chama: uma função que inicia um fluxo, ou o código solto do arquivo. A entrada não tem tag própria. Ela é uma FUNÇÃO ou um CÓDIGO SOLTO, e se reconhece por não receber linha de chamada.</dd>
       <dt>passo</dt><dd>Uma linha de código que virou nó dentro de uma função: chamada, condição, laço, bloco, código ou retorno.</dd>
       <dt>tag</dt><dd>A palavra em caixa alta no topo do cartão: FUNÇÃO, SE, PASTA. Diz o tipo do nó.</dd>
       <dt>título</dt><dd>O nome em negrito do cartão. Vem de uma frase curta revisada, ou do nome técnico enquanto não há revisão.</dd>
       <dt>linha de código</dt><dd>A linha em fonte mono, sob o título. É o nome técnico ou a primeira linha do nó.</dd>
-      <dt>contagem</dt><dd>O retângulo verde com um número. Diz quantos nós o nível de dentro mostra.</dd>
-      <dt>selo de sugestões</dt><dd>O retângulo branco (Névoa) com um ponto e um número. Diz quantas melhorias o nó tem. Um clique abre o balão.</dd>
-      <dt>botão de ver detalhes</dt><dd>O botão com o ícone de painel, no canto inferior direito dos nós que abrem. Mostra o painel do nó sem entrar nele.</dd>
+      <dt>contagem</dt><dd>O retângulo verde com um número. Diz quantos nós o nível de dentro mostra. Só pastas, arquivos, funções, classes e código solto têm contagem.</dd>
+      <dt>selo de sugestões</dt><dd>O retângulo na cor do texto (Névoa no escuro, Tinta no claro) com um ponto e um número. Diz quantas sugestões caem dentro do nó. Um clique abre o balão.</dd>
+      <dt>botão de ver detalhes</dt><dd>O botão com o ícone de painel, no canto inferior direito dos nós que abrem, menos as pastas. Mostra o painel do nó sem entrar nele.</dd>
       <dt>painel</dt><dd>A coluna à direita com o detalhe do nó selecionado: resumo, código, entrada e saída, efeitos e sugestões.</dd>
       <dt>balão</dt><dd>A janela pequena que abre sobre o selo de sugestões e lista cada sugestão.</dd>
     </dl>
@@ -214,43 +217,68 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
 
   <section id="tela">
     <h2>A tela do mapa</h2>
-    <p>O mapa de um trecho colado, com um nó aberto e o painel à direita. Cada número abaixo aponta uma peça.</p>
+    <p>O mapa de uma pasta, com o arquivo <code>orders.py</code> aberto e o painel de um nó à direita. Cada número abaixo aponta uma peça.</p>
     <div class="stage shot">
       <picture>
         <source media="(prefers-color-scheme: light)" srcset="../images/tela-light.png">
-        <img src="../images/tela-dark.png" width="1600" height="900" alt="A tela real do 8n8: um trecho colado, com o nó Process order aberto, o logotipo, a trilha, os botões da barra e o painel de detalhe à direita">
+        <img src="../images/tela-dark.png" width="1600" height="900" alt="A tela real do 8n8: o mapa da pasta store com o arquivo orders.py aberto, o logotipo, a trilha, os botões da barra, o botão de arquivos ignorados e o painel do nó Process order à direita">
       </picture>
       <svg class="leads" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M89 108 V72"/><path d="M423 108 V72"/><path d="M774 108 V82"/><path d="M906 108 V84"/><path d="M978 108 V84"/><path d="M1050 108 V84"/>
-        <path d="M141 600 V562"/><path d="M415 600 V562"/><path d="M552 440 V500"/>
+        <path d="M89 105 V72"/><path d="M250 105 V72"/><path d="M906 105 V84"/><path d="M978 105 V84"/><path d="M1050 105 V84"/>
+        <path d="M180 608 V578"/><path d="M552 608 V578"/><path d="M737 432 V500"/><path d="M98 855 H78"/><path d="M1544 98 V74"/>
       </svg>
       <span class="pin" style="left:5.56%;top:13%">1</span>
-      <span class="pin" style="left:26.4%;top:13%">2</span>
-      <span class="pin" style="left:48.4%;top:13%">3</span>
-      <span class="pin" style="left:56.6%;top:13%">4</span>
-      <span class="pin" style="left:61.1%;top:13%">5</span>
-      <span class="pin" style="left:65.6%;top:13%">6</span>
-      <span class="pin" style="left:35%;top:30%">7</span>
-      <span class="pin" style="left:8.8%;top:67%">8</span>
-      <span class="pin" style="left:25.9%;top:67%">9</span>
-      <span class="pin" style="left:34.5%;top:48.9%">10</span>
-      <span class="pin" style="left:84.5%;top:78%">11</span>
+      <span class="pin" style="left:15.6%;top:13%">2</span>
+      <span class="pin" style="left:56.6%;top:13%">3</span>
+      <span class="pin" style="left:61.1%;top:13%">4</span>
+      <span class="pin" style="left:65.6%;top:13%">5</span>
+      <span class="pin" style="left:35%;top:30%">6</span>
+      <span class="pin" style="left:11.25%;top:68.9%">7</span>
+      <span class="pin" style="left:34.5%;top:68.9%">8</span>
+      <span class="pin" style="left:46.1%;top:46.7%">9</span>
+      <span class="pin" style="left:6.9%;top:95%">10</span>
+      <span class="pin" style="left:69.7%;top:51.1%">11</span>
+      <span class="pin" style="left:96.5%;top:12.2%">12</span>
+      <span class="pin" style="left:84.5%;top:84.4%">13</span>
     </div>
-    <p class="small muted">A imagem é uma captura do app real, gerada por <code>pnpm prints</code>. Ela muda junto com a tela.</p>
+    <p class="small muted">A imagem é uma captura do app real, gerada por <code>pnpm prints</code>. Ela muda junto com a tela. A pasta de exemplo ganhou um arquivo de mais de 1 MB, para o botão 10 aparecer.</p>
     <ul class="callouts">
-      <li><span class="n">1</span><span><b>Logotipo.</b> Quatro blocos, dois deles ligados por uma aresta com duas portas. Leva ao início: volta à tela de abrir pasta ou colar trecho.</span></li>
-      <li><span class="n">2</span><span><b>Trilha.</b> O caminho até o nível aberto. Cada item volta àquele nível. O último é o nó aberto e não encolhe.</span></li>
-      <li><span class="n">3</span><span><b>Novo código.</b> Só num trecho colado. Volta ao editor com o texto mantido.</span></li>
-      <li><span class="n">4</span><span><b>Busca.</b> A lupa. Ao clicar, vira um campo. Procura nós por título ou nome técnico, em todos os níveis, e leva ao escolhido.</span></li>
-      <li><span class="n">5</span><span><b>Configurações.</b> A engrenagem. Abre provedor de LLM, modelo, tema e idioma.</span></li>
-      <li><span class="n">6</span><span><b>Histórico.</b> O relógio. Abre a gaveta com os mapas já gerados e os favoritos.</span></li>
-      <li><span class="n">7</span><span><b>Canvas.</b> O fundo com grade de pontos. Todo nó e toda aresta vivem aqui.</span></li>
-      <li><span class="n">8</span><span><b>Hub.</b> O nó aberto, com borda tracejada, a contagem de nós do nível e o botão de voltar à esquerda.</span></li>
-      <li><span class="n">9</span><span><b>Nó.</b> Um cartão do nível. O que está dentro dele é o assunto do próximo capítulo.</span></li>
-      <li><span class="n">10</span><span><b>Aresta.</b> A linha entre dois nós. Os capítulos de arestas explicam cada tipo.</span></li>
-      <li><span class="n">11</span><span><b>Painel de detalhe.</b> O resumo em português, o código com as linhas do nó, a entrada e a saída, os efeitos externos e as sugestões.</span></li>
+      <li><span class="n">1</span><span><b>Logotipo.</b> Quatro blocos, dois deles ligados por uma aresta com duas portas. No mapa e no editor, é um botão que leva à tela inicial. Na tela inicial, é só a marca.</span></li>
+      <li><span class="n">2</span><span><b>Trilha.</b> O caminho até o nível aberto. Num mapa de pasta, o primeiro item é o nome da pasta. Num trecho, é "Fluxo principal". Cada item volta àquele nível. O último é o nível aberto, não encolhe e, ao clicar, mostra o painel do nó aberto, se ele não for uma pasta.</span></li>
+      <li><span class="n">3</span><span><b>Busca.</b> A lupa. Ao clicar, vira um campo. Procura por título ou nome técnico em todos os níveis, e leva ao nó escolhido (capítulo <a href="#pecas">Outras peças</a>).</span></li>
+      <li><span class="n">4</span><span><b>Configurações.</b> A engrenagem. Abre o diálogo de provedor, chave, modelo, resumo e sugestão automáticos, tema e idioma.</span></li>
+      <li><span class="n">5</span><span><b>Histórico.</b> O relógio. Abre a gaveta com os mapas já gerados e os favoritos.</span></li>
+      <li><span class="n">6</span><span><b>Canvas.</b> O fundo com grade de pontos. Todo nó e toda aresta vivem aqui. Num nível de dentro, o canvas ganha uma borda verde.</span></li>
+      <li><span class="n">7</span><span><b>Hub.</b> O nó aberto, com borda tracejada, a contagem de nós do nível e o botão de voltar à esquerda.</span></li>
+      <li><span class="n">8</span><span><b>Nó.</b> Um cartão do nível. Este está selecionado: borda verde, e o painel mostra o detalhe dele. O capítulo <a href="#cartao">O cartão</a> explica cada parte.</span></li>
+      <li><span class="n">9</span><span><b>Aresta.</b> A linha entre dois nós. Aqui, uma chamada dentro do mesmo arquivo: cinza, com extremo cheio na origem e anel no destino. Os capítulos de arestas explicam cada tipo.</span></li>
+      <li><span class="n">10</span><span><b>Arquivos ignorados.</b> Um triângulo de aviso no canto inferior esquerdo, só num mapa de pasta e só quando o 8n8 pulou algum arquivo. O texto "1 arquivo ignorado" aparece ao passar o mouse.</span></li>
+      <li><span class="n">11</span><span><b>Barra do painel.</b> A faixa entre o canvas e o painel. Arraste, ou use as setas com ela em foco, para mudar a largura do painel.</span></li>
+      <li><span class="n">12</span><span><b>Minimizar painel.</b> O X no canto do painel. Com o painel minimizado, vira um círculo com ‹ na borda direita, que o abre de novo.</span></li>
+      <li><span class="n">13</span><span><b>Painel de detalhe.</b> O nome do nó, o resumo, o código com as linhas do nó, os efeitos externos e as sugestões. O capítulo <a href="#painel">O painel</a> explica cada estado.</span></li>
     </ul>
-    <p class="small muted">O canto inferior esquerdo do canvas fica livre. Só o botão de arquivos ignorados mora ali, num mapa de pasta. A contagem de nós vive nos cartões, e a linguagem do trecho aparece no título do painel (<code>trecho.py</code>).</p>
+    <p class="small muted">A contagem de nós vive nos cartões, e não há rodapé no mapa. A linguagem de um trecho aparece no cabeçalho do código, no painel (<code>CÓDIGO · trecho.py, linhas 1 a 5</code>).</p>
+
+    <h3>O mapa de um trecho colado</h3>
+    <p>Um trecho colado abre num editor. O botão "Gerar mapa" desenha o mapa. O mapa de um trecho tem a mesma tela do mapa de pasta, com duas diferenças: a trilha começa em "Fluxo principal", e a barra ganha o botão <b>Novo código</b> antes da lupa.</p>
+    <div class="stage shot">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="../images/editor-light.png">
+        <img src="../images/editor-dark.png" width="1600" height="900" alt="O editor de trecho: o logotipo, os botões de Configurações e Histórico, o painel com o cabeçalho TRECHO e o código colado, e o botão Gerar mapa">
+      </picture>
+    </div>
+    <div class="stage shot">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="../images/trecho-light.png">
+        <img src="../images/trecho-dark.png" width="1600" height="900" alt="O mapa de um trecho colado com a função Process order aberta, e o botão Novo código na barra, antes da lupa">
+      </picture>
+      <svg class="leads" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true"><path d="M1270 105 V82"/></svg>
+      <span class="pin" style="left:79.4%;top:13%">N</span>
+    </div>
+    <ul class="callouts">
+      <li><span class="n">N</span><span><b>Novo código.</b> Só existe no mapa de um trecho. Num mapa de pasta, ele não aparece. Volta ao editor com o texto mantido, para mudar o código e gerar o mapa de novo.</span></li>
+    </ul>
+    <p class="small muted">O editor não tem busca: ainda não há nós para buscar. Ele tem o logotipo, as Configurações e o Histórico.</p>
   </section>
 
   <section id="cartao">
@@ -260,13 +288,13 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     <ul class="callouts">
       <li><span class="n">A</span><span><b>Tag.</b> O tipo do nó, em caixa alta. A cor agrupa os tipos em famílias (capítulo <a href="#cores">Cores</a>).</span></li>
       <li><span class="n">B</span><span><b>Título.</b> O nome do nó em negrito. Vem de uma frase curta revisada ou, sem ela, do nome técnico.</span></li>
-      <li><span class="n">C</span><span><b>Marca de abrir (›).</b> Aparece depois do título quando um clique abre o fluxo de dentro do nó. Sem a marca, o clique só seleciona.</span></li>
-      <li><span class="n">D</span><span><b>Linha de código.</b> Fonte mono. É o nome técnico (<code>calcular_frete()</code>) ou a primeira linha do nó.</span></li>
-      <li><span class="n">E</span><span><b>Contagem.</b> O retângulo verde com número. <b>É quantos nós o nível de dentro mostra.</b> Aparece em todo nó que abre e no hub. O número 3 quer dizer que, ao abrir, você vê três nós.</span></li>
-      <li><span class="n">F</span><span><b>Selo de sugestões.</b> O retângulo branco com um ponto e um número. <b>É quantas melhorias o nó tem.</b> Vem da LLM, sempre presa a uma linha do código. Um clique abre o balão. Sem sugestões, o selo não existe.</span></li>
+      <li><span class="n">C</span><span><b>Marca de abrir (›).</b> Aparece depois do título quando um clique abre o fluxo de dentro do nó. Um nó só abre se tiver algo dentro, e uma chamada só abre se a função chamada estiver no código. Sem a marca, o clique só seleciona.</span></li>
+      <li><span class="n">D</span><span><b>Linha de código.</b> Fonte mono. É o nome técnico (<code>calcular_frete()</code>), o caminho de uma pasta (<code>services/</code>) ou de um arquivo, ou a primeira linha do nó, sem a docstring. Passa de 32 caracteres e corta com "…".</span></li>
+      <li><span class="n">E</span><span><b>Contagem.</b> O retângulo verde com número. <b>É quantos nós o nível de dentro mostra.</b> Aparece em pastas, arquivos, funções, classes e código solto, nos cartões e no hub. Laço, bloco e chamada abrem, mas não têm contagem. O número 3 quer dizer que, ao abrir, você vê três nós.</span></li>
+      <li><span class="n">F</span><span><b>Selo de sugestões.</b> O retângulo na cor do texto (Névoa no escuro, Tinta no claro) com um ponto e um número. <b>É quantas sugestões caem dentro do nó.</b> Cada sugestão vem da LLM, presa a uma linha do código, e vai para o menor cartão visível que contém essa linha. Uma sugestão sem cartão vai para o hub. O selo só aparece depois que as sugestões foram pedidas, no painel ou no modo automático. Um clique abre o balão.</span></li>
       <li><span class="n">G</span><span><b>Porta.</b> O círculo na borda. A aresta sai ou entra por ele. Só aparece onde há aresta. Numa aresta de dependência a porta de origem é um círculo cheio e a de destino é um anel oco.</span></li>
-      <li><span class="n">H</span><span><b>Botão de voltar.</b> O círculo com seta curva, só no hub. Volta um nível.</span></li>
-      <li><span class="n">I</span><span><b>Botão de ver detalhes.</b> O retângulo com o ícone de painel, no canto inferior direito. Aparece nos nós que abrem. <b>Mostra o painel do nó sem entrar nele.</b> O clique no cartão continua entrando. O hub não tem o botão.</span></li>
+      <li><span class="n">H</span><span><b>Botão de voltar.</b> O círculo com seta curva, só no hub de um nível de dentro. Volta um nível, como a tecla Esc.</span></li>
+      <li><span class="n">I</span><span><b>Botão de ver detalhes.</b> O retângulo com o ícone de painel, no canto inferior direito. Aparece nos nós que abrem, menos nas pastas: uma pasta não tem painel. <b>Mostra o painel do nó sem entrar nele.</b> Num arquivo, ele serve para ver o que o arquivo faz sem abrir as funções dele: o painel mostra o código e os botões de resumo e de sugestões. O clique no cartão continua entrando. O hub não tem o botão.</span></li>
     </ul>
     <h3>Estados do cartão</h3>
     <div class="stage" id="states"></div>
@@ -275,10 +303,11 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <tbody>
         <tr><td class="k">normal</td><td>Borda cinza, 2 px.</td><td>Nó do nível, sem seleção.</td></tr>
         <tr><td class="k">selecionado</td><td>Borda verde.</td><td>O painel mostra o detalhe deste nó. O nó com o balão de sugestões aberto também fica assim.</td></tr>
-        <tr><td class="k">hub</td><td>Borda tracejada, botão de voltar.</td><td>É o nó que você abriu. Os outros cartões do nível são os filhos dele.</td></tr>
-        <tr><td class="k">com contagem</td><td>Retângulo verde no canto.</td><td>Este nó abre. O número diz quantos nós há dentro.</td></tr>
-        <tr><td class="k">com selo</td><td>Retângulo branco ao lado da contagem.</td><td>Este nó tem sugestões de melhoria.</td></tr>
-        <tr><td class="k">erro de sintaxe</td><td>Texto verde sob o cartão: "Erro de sintaxe na linha 4".</td><td>O parser achou código inválido. O nó continua no mapa.</td></tr>
+        <tr><td class="k">hub</td><td>Borda tracejada, botão de voltar.</td><td>É o nó que você abriu. Os outros cartões do nível são os filhos dele. Um clique no hub mostra o painel dele, se ele não for uma pasta.</td></tr>
+        <tr><td class="k">com contagem</td><td>Retângulo verde no canto.</td><td>Pasta, arquivo, função, classe ou código solto que abre. O número diz quantos nós há dentro.</td></tr>
+        <tr><td class="k">com selo</td><td>Retângulo na cor do texto ao lado da contagem.</td><td>Há sugestões em linhas deste nó.</td></tr>
+        <tr><td class="k">erro de sintaxe</td><td>Texto verde sob o cartão: "Erro de sintaxe na linha 4".</td><td>O parser achou código inválido. O nó continua no mapa e ganha uma linha própria no nível de fora. Um código solto com erro aparece mesmo sem chamada.</td></tr>
+        <tr><td class="k">arrastado</td><td>O cartão sai do lugar do layout.</td><td>Você arrastou o cartão. A posição vale enquanto o mapa está aberto, e as arestas trocam de porta para seguir o cartão.</td></tr>
       </tbody>
     </table>
   </section>
@@ -290,9 +319,9 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <thead><tr><th>Tag</th><th>Tipo no modelo</th><th>O que representa</th><th>Abre?</th><th>Cor da tag</th></tr></thead>
       <tbody>
         <tr><td class="k">FUNÇÃO</td><td>function, class, call</td><td>Uma função, uma classe ou uma chamada a função do trecho. Uma chamada abre a função chamada. Uma função que ninguém chama é a entrada do nível de fora.</td><td>sim</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
-        <tr><td class="k">SE</td><td>condition</td><td>Um <code>if</code>. Do nó saem os ramos <b>true</b> e <b>false</b>.</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
+        <tr><td class="k">SE</td><td>condition</td><td>Um <code>if</code>. Do nó saem os ramos <b>true</b> e <b>false</b>. O ramo de um <code>elif</code> ou <code>else if</code> leva o texto da condição. O <code>switch</code> do TypeScript também é SE, com um ramo por <code>case</code>, mais <b>padrão</b> e <b>nenhum</b>.</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
         <tr><td class="k">LAÇO</td><td>loop</td><td>Um <code>for</code> ou <code>while</code>. Abre para mostrar o que roda a cada volta.</td><td>sim</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
-        <tr><td class="k">BLOCO</td><td>block</td><td>Um <code>try</code>, <code>with</code> ou <code>match</code>.</td><td>sim</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
+        <tr><td class="k">BLOCO</td><td>block</td><td>Em Python, um <code>try</code>, <code>with</code> ou <code>match</code>. Em TypeScript, um <code>try</code>.</td><td>sim</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
         <tr><td class="k">CÓDIGO</td><td>code</td><td>Um grupo de linhas seguidas sem chamada: contas, atribuições.</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
         <tr><td class="k">RETORNO</td><td>return</td><td>Um <code>return</code>. Não tem aresta de saída: ali a função termina.</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
         <tr><td class="k">HTTP, BANCO, DISCO, E-MAIL, EXTERNO</td><td>external</td><td>Uma chamada a algo que não é do trecho. A tag diz a categoria: rede, banco de dados, arquivo, e-mail ou outra.</td><td>não</td><td class="n"><span class="sw warm"></span>Cobre</td></tr>
@@ -301,7 +330,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
         <tr><td class="k">CÓDIGO SOLTO</td><td>module</td><td>O código do arquivo que está fora de qualquer função. Só aparece quando tem chamada.</td><td>sim</td><td class="n"><span class="sw main"></span>Petróleo</td></tr>
       </tbody>
     </table>
-    <p class="small muted">O texto de cada tag vem do dicionário da tela, nos dois idiomas. O valor em português serve de identificador estável para os estilos e para os testes.</p>
+    <p class="small muted">"Abre? sim" vale quando o nó tem algo dentro. Uma função vazia, ou uma chamada a uma função que não está no código, não abre. O texto de cada tag vem do dicionário da tela, nos dois idiomas (em inglês: FUNCTION, IF, LOOP, FOLDER, FILE e as outras). O valor em português serve de identificador estável para os estilos e para os testes.</p>
   </section>
 
   <section id="cores">
@@ -338,11 +367,11 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     <table>
       <thead><tr><th>Cor</th><th>Em nós</th><th>Em arestas</th><th>Em outras peças</th></tr></thead>
       <tbody>
-        <tr><td class="n"><span class="sw main"></span>Petróleo</td><td>Tags PASTA, ARQUIVO e CÓDIGO SOLTO. Borda do nó selecionado. Retângulo da contagem. Marca ›. Portas. Ícone e borda do botão de ver detalhes. Texto do erro de sintaxe.</td><td>Fluxo (sequência e ramos). Dependências entre arquivos. Rótulo TRUE. O pulso do fluxo.</td><td>Botão principal. Anel de foco. Resultado ativo da busca. Tag PASTA na gaveta do histórico.</td></tr>
+        <tr><td class="n"><span class="sw main"></span>Petróleo</td><td>Tags PASTA, ARQUIVO e CÓDIGO SOLTO. Borda do nó selecionado. Retângulo da contagem. Marca ›. Portas, menos as de dependência dentro de um arquivo. Ícone e borda do botão de ver detalhes e do botão de voltar. Texto do erro de sintaxe.</td><td>Fluxo (sequência e ramos). Dependências entre arquivos. Rótulo TRUE. O pulso do fluxo. Borda da etiqueta de uma aresta que não cruza linguagens.</td><td>Botão principal. Anel de foco. Resultado ativo da busca. Tag PASTA na gaveta do histórico. Estrela de favorito marcada. Marca "Revisado". Linha marcada no código do painel. "linha N" no balão. Borda verde do canvas num nível de dentro.</td></tr>
         <tr><td class="n"><span class="sw second"></span>Névoa</td><td>Título do cartão. Tags FUNÇÃO, SE, LAÇO, BLOCO, CÓDIGO e RETORNO. Fundo do selo de sugestões.</td><td>Nenhuma.</td><td>Texto principal da tela e do painel.</td></tr>
         <tr><td class="n"><span class="sw accent"></span>Pedra</td><td>Linha de código.</td><td>Rótulos de ramo que não são TRUE (FALSE, PADRÃO) e rótulos de ligação.</td><td>Trilha. Motivo da sugestão. Severidade baixa.</td></tr>
-        <tr><td class="n"><span class="sw dim"></span>Dim</td><td>Porta de uma dependência dentro de um arquivo.</td><td>Dependências dentro de um arquivo. Linha de "contém" do hub.</td><td>Números de linha do código. Estrela do favorito desmarcada. Placeholders.</td></tr>
-        <tr><td class="n"><span class="sw warm"></span>Cobre</td><td>Tags HTTP, BANCO, DISCO, E-MAIL e EXTERNO.</td><td>Nenhuma.</td><td>Severidade média no balão. Aviso de Claude Code ausente.</td></tr>
+        <tr><td class="n"><span class="sw dim"></span>Dim</td><td>Porta de uma dependência dentro de um arquivo.</td><td>Dependências dentro de um arquivo. Linha de "contém" do hub (as portas dela ficam verdes).</td><td>Números de linha do código. Estrela do favorito desmarcada. Placeholders. Arquivo e linhas num resultado da busca.</td></tr>
+        <tr><td class="n"><span class="sw warm"></span>Cobre</td><td>Tags HTTP, BANCO, DISCO, E-MAIL e EXTERNO.</td><td>Borda e tipo da etiqueta de uma ligação entre linguagens.</td><td>Severidade média no balão. Aviso de Claude Code ausente. Mensagens de erro da tela, como "Pasta não encontrada".</td></tr>
         <tr><td class="n"><span class="sw danger"></span>Perigo</td><td>Nenhum.</td><td>Nenhuma.</td><td>Severidade alta no balão. Lixeira do histórico ao passar o mouse.</td></tr>
       </tbody>
     </table>
@@ -455,7 +484,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
         <tr><td class="k">Muitas chamam a mesma</td><td>Cada chamador tem a sua linha. As linhas chegam à mesma porta do destino.</td></tr>
         <tr><td class="k">Chamada repetida</td><td>Se <code>a</code> chama <code>b</code> três vezes, há uma linha só. O grafo guarda uma aresta por par (chamador, chamado).</td></tr>
         <tr><td class="k">Chamada em método</td><td>A chamada feita dentro de um método sobe até o nó visível mais próximo. No nível de fora, a classe é a origem da linha.</td></tr>
-        <tr><td class="k">Rótulo da linha</td><td>O sistema escreve o rótulo de ramos (<code>true</code>, <code>false</code>) e de ligações (<code>HTTP GET /pedidos</code>) na língua do sistema. O rótulo de ramo fica junto ao cartão de destino. O rótulo de uma ligação não fica à vista. Ele aparece numa etiqueta ao lado do mouse, 180 ms depois que o mouse para sobre a linha. A etiqueta diz o tipo (chama, herda, importa), o alcance (no mesmo arquivo, entre arquivos, entre linguagens), o canal e os dois nós. O layout não abre vão para ela.</td></tr>
+        <tr><td class="k">Rótulo da linha</td><td>O sistema escreve o rótulo de ramos (<code>true</code>, <code>false</code>) e de ligações (<code>HTTP GET /pedidos</code>) na língua do sistema. O rótulo de ramo fica junto ao cartão de destino: à esquerda da porta de entrada ou, quando a aresta desce para a faixa seguinte de um nível quebrado, logo acima do canto superior esquerdo do cartão. Assim ele não sai do canvas nem cruza a própria linha. O rótulo de uma ligação não fica à vista. Ele aparece numa etiqueta ao lado do mouse, 180 ms depois que o mouse para sobre a linha. A etiqueta diz o tipo (chama, herda, importa), o alcance (no mesmo arquivo, entre arquivos, entre linguagens), o canal e os dois nós. O layout não abre vão para ela.</td></tr>
         <tr><td class="k">Mais de um tipo no mesmo par</td><td>Uma linha só, a do tipo mais forte: chama, depois herda, depois importa.</td></tr>
       </tbody>
     </table>
@@ -475,7 +504,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     </table>
     <p>O <code>return</code> fica dentro da função porque ele pertence a ela. Decidir se um retorno é relevante nunca dá certeza: um <code>return 0</code> pode ser o ponto central de uma função, e um JSON enorme pode não importar.</p>
     <p>As linhas se empilham na vertical, uma por função ou classe, na ordem do código. Uma linha de um cartão só fica mais perto da linha de cima, porque não tem cartão elevado para dar espaço. Uma aresta de dependência entre duas linhas vizinhas sai pela porta de baixo de um cartão e entra pela porta de cima do outro. Entre duas linhas que têm outra no meio, a aresta sai pela esquerda dos dois cartões e contorna o do meio, para nunca passar por trás de um cartão.</p>
-    <p class="small muted">Um nível que não cabe inteiro num zoom legível (0,6 ou mais) fica em zoom legível, e o resto está a um arrasto. Isso acontece num trecho com muitas funções ou ao lado do painel em telas pequenas.</p>
+    <p class="small muted">Um nível que não cabe inteiro num zoom legível (0,6 ou mais) primeiro se quebra em mais faixas, linhas ou colunas. Se ainda não couber, ele fica em zoom legível e o resto está a um arrasto. Isso acontece num trecho com muitas funções ou ao lado do painel em telas pequenas. Se toda função do trecho é chamada por outra, todas viram entradas.</p>
   </section>
 
   <section id="niveis">
@@ -499,7 +528,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <thead><tr><th>Situação</th><th>Por que não</th><th>Onde aparece</th></tr></thead>
       <tbody>
         <tr><td class="k">Chamada a biblioteca</td><td>Uma linha para <code>requests</code> criaria um cartão que não é do código do usuário.</td><td>Passo <b>EXTERNO</b> dentro da função, com a categoria (HTTP, BANCO, DISCO, E-MAIL).</td></tr>
-        <tr><td class="k">Método chama método da mesma classe</td><td>É detalhe interno da classe.</td><td>No nível de dentro da classe.</td></tr>
+        <tr><td class="k">Método chama método da mesma classe</td><td>É detalhe interno da classe.</td><td>Num cartão de chamada, dentro do fluxo do método. O nível de dentro da classe não desenha a linha.</td></tr>
         <tr><td class="k">Chamada dentro de uma função aberta</td><td>Ela já é um cartão de chamada no fluxo. Uma linha de dependência repetiria a informação.</td><td>O cartão de chamada, que abre a função chamada.</td></tr>
         <tr><td class="k">Retorno de valor</td><td>O extrator não resolve para onde o valor vai. Toda chamada devolve algo, então desenhar o retorno dobraria as linhas.</td><td>O passo <b>RETORNO</b> dentro da função.</td></tr>
         <tr><td class="k">Nome sem definição no trecho</td><td>Não há destino para ligar. Exemplo: chamar <code>fun1()</code> quando só existe <code>fun</code>.</td><td>Passo EXTERNO, porque o nome não é do trecho.</td></tr>
@@ -522,23 +551,96 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     <p class="small muted">As linhas não dizem onde está a chamada, em qual linha nem dentro de quê. Para saber, abra o nó de origem.</p>
   </section>
 
+  <section id="painel">
+    <h2>O painel</h2>
+    <p>O painel mostra o detalhe do nó selecionado. Ele só existe quando há algo para mostrar: código, resumo ou sugestões. Uma pasta não tem nada disso, então selecionar uma pasta não abre o painel, por nenhum caminho (cartão, hub, trilha ou busca). O painel começa minimizado. O 8n8 guarda se ele está aberto e a largura dele. A largura vai de 320 px a 70% da janela.</p>
+    <h3>As seções, de cima para baixo</h3>
+    <table>
+      <thead><tr><th>Seção</th><th>Quando aparece</th><th>O que mostra</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Nome</td><td>Sempre.</td><td>O título do nó, em Archivo Black.</td></tr>
+        <tr><td class="k">O que faz</td><td>Em todo nó com painel: arquivo, função, classe, código solto e passos.</td><td>O resumo em Português Técnico Simplificado, revisado contra o código. Um passo tem no máximo duas frases, e a linha "2 frases · voz ativa · um termo por conceito" aparece sob o resumo. Arquivo, função, classe e código solto não têm esse limite. O resumo de um arquivo lê o arquivo inteiro, sem as docstrings.</td></tr>
+        <tr><td class="k">Código</td><td>Em todo nó com painel.</td><td>O cabeçalho "CÓDIGO · arquivo, linhas a a b" e as linhas do nó, com os números de linha. Num trecho, o arquivo é <code>trecho.py</code>, <code>trecho.ts</code> ou só "trecho" quando a linguagem não foi detectada.</td></tr>
+        <tr><td class="k">Entrada e saída</td><td>Depois que o resumo chega, e só se ele achou entradas ou saídas.</td><td>O que entra, uma seta, o que sai.</td></tr>
+        <tr><td class="k">Efeitos externos</td><td>Em arquivo, função, classe e código solto.</td><td>As chamadas a rede, banco, disco, e-mail ou outra coisa de fora, com a categoria e a linha. Sem chamadas, "Nenhum efeito externo."</td></tr>
+        <tr><td class="k">Sugestões</td><td>Nos mesmos nós de "O que faz".</td><td>Cada sugestão com comando, linha e severidade.</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted">O painel de um arquivo mostra o código do arquivo inteiro, os efeitos externos de todas as funções dele e os botões de resumo e de sugestões. Uma pasta não tem painel.</p>
+    <h3>Resumo e sugestões, sob demanda</h3>
+    <p>A LLM só trabalha quando você pede. O painel mostra o botão <b>Gerar resumo</b> e o botão <b>Pedir sugestões</b>. Nas Configurações, as opções <b>Resumo automático</b> e <b>Sugestão automática</b> pedem os dois sozinhos ao selecionar um nó.</p>
+    <table>
+      <thead><tr><th>Estado</th><th>O que aparece</th></tr></thead>
+      <tbody>
+        <tr><td class="k">esperando</td><td>"Gerando resumo…" ou "Pedindo sugestões…".</td></tr>
+        <tr><td class="k">revisado</td><td>A marca "Revisado" ou "Revisado com cortes". "Com cortes" quer dizer que frases sem apoio no código foram removidas.</td></tr>
+        <tr><td class="k">atualizado</td><td>"Resumo atualizado: o código mudou", "os vizinhos mudaram" ou "o modelo ou o prompt mudou". O resumo guardado não valia mais.</td></tr>
+        <tr><td class="k">sem provedor</td><td>"Configure um provedor de LLM em Configurações.", com o botão "Abrir configurações". Com o provedor Claude Code e sem o executável, o aviso diz isso, em Cobre.</td></tr>
+        <tr><td class="k">falhou</td><td>"Resumo indisponível" ou "Sugestões indisponíveis", com "Tentar de novo". "Não foi possível gerar um resumo fiel." quando a revisão cortou tudo.</td></tr>
+        <tr><td class="k">trecho mudou</td><td>'O trecho mudou. Clique em "Gerar mapa" de novo.' O texto no editor não é mais o do mapa.</td></tr>
+      </tbody>
+    </table>
+    <h3>Das frases ao código</h3>
+    <p>Cada frase do resumo, cada entrada, cada saída e cada sugestão tem um botão com a linha de origem. O clique marca essas linhas no código do painel, em Petróleo. Uma sugestão escolhida no balão do cartão também abre o painel com a linha marcada.</p>
+  </section>
+
   <section id="pecas">
     <h2>Outras peças</h2>
     <p>As peças fora do mapa. As medidas estão no manual da marca.</p>
+    <div class="stage shot">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="../images/inicio-light.png">
+        <img src="../images/inicio-dark.png" width="1440" height="900" alt="A tela inicial vazia: o logotipo, o botão de Configurações, o título O mapa do seu código., o cartão Abrir pasta com o botão Buscar no PC, o cartão Colar trecho e o texto de lista vazia">
+      </picture>
+    </div>
+    <p class="small muted">A tela inicial, antes do primeiro mapa. Captura do app real.</p>
     <table>
       <thead><tr><th>Peça</th><th>O que é</th><th>O que significa</th></tr></thead>
       <tbody>
-        <tr><td class="k">Tela inicial</td><td>Título "O mapa do seu código.", o campo de pasta com "Mapear pasta", o cartão "Colar trecho" e a lista de mapas.</td><td>É onde um mapa começa. "Favoritos" e "Recentes" guardam os mapas já gerados.</td></tr>
-        <tr><td class="k">Editor de trecho</td><td>Um painel com o cabeçalho "trecho" e o botão "Gerar mapa".</td><td>Aceita código colado. O sistema detecta a linguagem e usa o nome dela no título do painel.</td></tr>
-        <tr><td class="k">Trilha</td><td>"Fluxo principal › função › passo", em fonte mono.</td><td>Mostra onde você está. Cada item leva de volta àquele nível.</td></tr>
-        <tr><td class="k">Busca</td><td>Uma lupa que cresce num campo, com uma lista de resultados.</td><td>Cada resultado mostra o título, o nome técnico e onde o nó está. Escolher um leva ao nó, mesmo dentro de outro nível.</td></tr>
-        <tr><td class="k">Painel de detalhe</td><td>A coluna à direita, com seções fixas.</td><td><b>O que faz:</b> resumo de duas frases em Português Técnico Simplificado, revisado contra o código. <b>Código:</b> as linhas do nó. <b>Entrada e saída:</b> o que entra e sai. <b>Efeitos externos:</b> as chamadas a rede, banco, disco e e-mail. <b>Sugestões:</b> melhorias presas a uma linha.</td></tr>
-        <tr><td class="k">Revisado</td><td>Uma marca no resumo: "Revisado" ou "Revisado com cortes".</td><td>Um segundo passo conferiu cada frase contra o código. "Com cortes" quer dizer que frases sem apoio no código foram removidas.</td></tr>
-        <tr><td class="k">Balão de sugestões</td><td>Uma janela sobre o selo, com uma lista.</td><td>Cada item traz a severidade (alta, média, baixa), o comando, a linha e o motivo. Um clique abre o nó na linha.</td></tr>
-        <tr><td class="k">Gaveta do histórico</td><td>Uma coluna na borda direita com os mapas já gerados.</td><td>Cada cartão leva a tag (PASTA ou TRECHO), o título, o tamanho, a estrela de favorito e a lixeira.</td></tr>
-        <tr><td class="k">Arquivos ignorados</td><td>Um botão "N arquivos ignorados" no canto inferior esquerdo de um mapa de pasta, com uma lista.</td><td>O 8n8 não leu esses arquivos. Cada linha diz o motivo (maior que 1 MB, fora de UTF-8, ilegível, link simbólico). "Adicionar ao mapa" tenta de novo.</td></tr>
-        <tr><td class="k">Configurações</td><td>Um diálogo sobre o mapa.</td><td>Escolhe provedor, chave, modelo, geração automática, tema (sistema, claro, escuro) e idioma.</td></tr>
-        <tr><td class="k">Alça do painel</td><td>Um círculo na borda direita.</td><td>Abre o painel minimizado. Com o painel aberto, vira um X que o minimiza.</td></tr>
+        <tr><td class="k">Tela inicial</td><td>O logotipo e o botão de Configurações no topo. À esquerda, o título "O mapa do seu código.", o cartão "Abrir pasta" e o cartão "Colar trecho" ("Mapeia um pedaço de código"). À direita, as listas.</td><td>É onde um mapa começa. O cartão "Abrir pasta" diz quais arquivos o 8n8 lê ("O 8n8 lê os arquivos .py, .ts e .tsx da pasta e das subpastas.").</td></tr>
+        <tr><td class="k">Buscar no PC / Mapear pasta</td><td>O botão do cartão "Abrir pasta". O texto muda com o campo.</td><td>Com o campo vazio, diz "Buscar no PC" e abre a janela do sistema para escolher um arquivo ou uma pasta. Com um caminho no campo, diz "Mapear pasta" e abre o mapa.</td></tr>
+        <tr><td class="k">Favoritos e Recentes</td><td>Duas listas à direita da tela inicial. Cada linha tem um ícone (pasta ou código), o título, o lugar, o número de nós, a data relativa e a estrela.</td><td>Os mapas marcados com estrela ficam em Favoritos. Os outros, no máximo cinco, em Recentes. "Ver todo o histórico" abre a gaveta. Sem mapas, a lista diz "Os mapas que você gerar aparecem aqui."</td></tr>
+        <tr><td class="k">Editor de trecho</td><td>Um painel com o cabeçalho "trecho", o código colado e o botão "Gerar mapa".</td><td>Aceita código colado. O sistema detecta a linguagem e usa o nome dela no cabeçalho do código, no painel (<code>trecho.py</code>).</td></tr>
+        <tr><td class="k">Trilha</td><td>"store › orders.py › Process order" num mapa de pasta, ou "Fluxo principal › Process order" num trecho, em fonte mono.</td><td>Mostra onde você está. Cada item leva de volta àquele nível. O último mostra o painel do nó aberto.</td></tr>
+        <tr><td class="k">Busca</td><td>Uma lupa que cresce num campo, com uma lista de até 50 resultados.</td><td>Procura pastas, arquivos, funções, classes, laços e blocos, por título ou nome técnico. Passos, retornos, chamadas e externos ficam de fora: eles só repetem um nome. Cada resultado mostra o título, o nome técnico e onde o nó está, com as letras achadas em destaque. Escolher um abre os níveis até o nó, centraliza e seleciona. Sem resultado, "Nenhum nó achado."</td></tr>
+        <tr><td class="k">Balão de sugestões</td><td>Uma janela sobre o selo, com uma seta para ele e um X.</td><td>Cada item traz a severidade (alta, média, baixa), o comando, a linha e o motivo. Um clique abre o painel do nó com a linha marcada. Abre acima do selo, ou abaixo quando falta espaço. Fecha com o X, com Esc ou com um clique fora.</td></tr>
+        <tr><td class="k">Gaveta do histórico</td><td>Uma coluna na borda direita, com o campo "Buscar pesquisa" e os mapas já gerados.</td><td>Cada cartão leva a tag (PASTA ou TRECHO), o título, o tamanho (linhas, arquivos, nós, bytes), a data relativa ("há 2 h"), a estrela de favorito e a lixeira. Abrir um mapa lê a pasta ou o texto de novo: o histórico não guarda código.</td></tr>
+        <tr><td class="k">Arquivos ignorados</td><td>Um triângulo de aviso no canto inferior esquerdo de um mapa de pasta. Ao passar o mouse, "N arquivos ignorados". O clique abre a lista.</td><td>O 8n8 não leu esses arquivos. Cada linha diz o motivo: maior que 1 MB, não está em UTF-8, não foi possível ler, link simbólico não seguido. Um arquivo de 1 MB a 20 MB tem o botão "Adicionar ao mapa", que refaz o mapa com ele. A pasta também pula o que o <code>.gitignore</code> ignora, <code>.git</code> e <code>node_modules</code>, sem listar.</td></tr>
+        <tr><td class="k">Configurações</td><td>Um diálogo sobre a tela. No título, dois botões de ícone: o tema e o idioma.</td><td><b>Tema:</b> cada clique troca entre sistema (meio círculo), claro (sol) e escuro (lua). <b>Idioma:</b> cada clique troca entre BR e EN; os resumos e as sugestões são pedidos de novo no idioma novo. Os dois salvam na hora. O resto salva com "Salvar": provedor, chave de API ("Chave guardada" e "Apagar chave" quando já existe), caminho do Claude Code ("Alterar", "Escolher…", "Usar o automático"), modelo (vazio usa o padrão do provedor), <b>Resumo automático</b> e <b>Sugestão automática</b>. Ligadas, essas duas opções pedem o resumo e as sugestões ao selecionar um nó. "Salvar" e "Fechar" têm o mesmo tamanho: só o preenchimento separa um do outro. Um campo definido por variável de ambiente fica travado e diz qual variável.</td></tr>
+        <tr><td class="k">Mensagens de erro</td><td>Texto em Cobre sob o conteúdo.</td><td>"Não foi possível gerar o mapa.", "Pasta não encontrada: caminho", "Nenhuma função ou instrução encontrada." num trecho, "Nenhum arquivo .py, .ts ou .tsx encontrado na pasta." numa pasta.</td></tr>
+        <tr><td class="k">Moldura de abertura</td><td>Uma borda verde que cresce do cartão até o canvas, em 1,1 s.</td><td>Mostra que você entrou no nó. Num nível de dentro, o canvas mantém a borda verde.</td></tr>
+        <tr><td class="k">Títulos dos cartões</td><td>Um nome provisório, depois a frase revisada.</td><td>O 8n8 pede à LLM os títulos de cada nível aberto, mesmo sem a geração automática. Até chegarem, o cartão mostra o nome técnico em forma legível ("Calcular frete", "Código", "Retorno", "Código solto").</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="teclado">
+    <h2>Teclado e mouse</h2>
+    <table>
+      <thead><tr><th>Ação</th><th>O que faz</th></tr></thead>
+      <tbody>
+        <tr><td class="k">Esc no mapa</td><td>Volta um nível, como o botão de voltar. Num campo de texto, não volta.</td></tr>
+        <tr><td class="k">Esc numa janela</td><td>Fecha a gaveta, o diálogo, a busca ou o balão. No balão, devolve o foco ao selo.</td></tr>
+        <tr><td class="k">Setas e Enter na busca</td><td>Andam pelos resultados e escolhem um.</td></tr>
+        <tr><td class="k">Setas na barra do painel</td><td>Mudam a largura em passos de 24 px.</td></tr>
+        <tr><td class="k">Enter ou espaço num nó</td><td>Seleciona o nó. Depois, as setas movem o cartão.</td></tr>
+        <tr><td class="k">Arrastar um cartão</td><td>Muda a posição dele no nível, enquanto o mapa está aberto. As arestas trocam de porta para seguir.</td></tr>
+        <tr><td class="k">Arrastar o fundo, roda do mouse</td><td>Movem e aproximam o mapa. O zoom vai até 0,2. O clique duplo não dá zoom.</td></tr>
+        <tr><td class="k">Clique numa chamada</td><td>Abre a função chamada. Num projeto, se ela está em outro arquivo, o mapa salta para lá e a trilha muda.</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted">Delete e Backspace não fazem nada no mapa: o 8n8 não apaga nós nem arestas. A ajuda de leitor de tela de um nó diz só como selecionar, mover e cancelar.</p>
+  </section>
+
+  <section id="fora-do-app">
+    <h2>CLI, VS Code e app instalado</h2>
+    <p>A mesma tela roda em três lugares. O que muda é o jeito de abrir.</p>
+    <table>
+      <thead><tr><th>Lugar</th><th>Como abre</th><th>O que tem de próprio</th></tr></thead>
+      <tbody>
+        <tr><td class="k">CLI</td><td><code>8n8 [pasta]</code>, com <code>--no-open</code>, <code>--no-app</code> e <code>--help</code>.</td><td>Abre <code>http://8n8.localhost:8148</code> numa janela sem barra de endereço. Com <code>--no-app</code>, abre uma aba comum. Com <code>--no-open</code>, não abre nada. Com uma pasta, a tela já começa no mapa dela.</td></tr>
+        <tr><td class="k">VS Code</td><td>O botão com o logotipo na barra de título do editor e o item com o logotipo na barra de status abrem a tela inicial. "8n8: Abrir mapa desta pasta", no menu de uma pasta do Explorer, abre o mapa dela.</td><td>A tela abre num painel ao lado do editor, com o título "8n8" e o ícone do logotipo. Se o painel já existe, ele só volta à frente, com o mapa como estava. O painel guarda o estado quando fica escondido.</td></tr>
+        <tr><td class="k">App instalado</td><td>A opção <b>Instalar</b> do Chrome ou do Edge, com o 8n8 rodando.</td><td>Janela própria, com o ícone do 8n8 e a cor da barra no tema do sistema. O app é só a janela: o 8n8 precisa estar rodando.</td></tr>
       </tbody>
     </table>
   </section>
@@ -572,7 +674,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
         <tr><td class="k">A cor de uma tag</td><td>As regras <code>.node[data-tag="..."] .tag</code> em <code>apps/ui/src/styles.css</code>. Um seletor por tag.</td></tr>
         <tr><td class="k">O padrão de traço e a cor de uma aresta</td><td>As regras <code>.edge-calls</code>, <code>.edge-imports</code>, <code>.edge-extends</code>, <code>.reach-inside</code> e <code>.reach-across</code> do <code>styles.css</code>.</td></tr>
         <tr><td class="k">Qual tipo de aresta ganha qual classe</td><td><code>toFlowEdges</code> em <code>apps/ui/src/flow/FlowCanvas.tsx</code>.</td></tr>
-        <tr><td class="k">Os extremos cheio e oco</td><td>As classes <code>port-dep</code>, <code>port-in</code>, <code>port-inside</code> e <code>port-across</code> do <code>styles.css</code>, postas pelo <code>StepNode.tsx</code>.</td></tr>
+        <tr><td class="k">Os extremos cheio e oco</td><td>As classes <code>port-dep</code>, <code>port-in</code> e <code>port-inside</code> do <code>styles.css</code>, postas pelo <code>StepNode.tsx</code>.</td></tr>
         <tr><td class="k">A alça de recursão e a etiqueta ao passar o mouse</td><td><code>apps/ui/src/flow/WireEdge.tsx</code>, que desenha o caminho de cada aresta e a etiqueta. Os dados da etiqueta (tipo, alcance, nomes) saem de <code>toFlowEdges</code>, e os textos estão em <code>apps/ui/src/i18n</code>.</td></tr>
         <tr><td class="k">Os lados das portas de uma aresta que volta</td><td><code>apps/ui/src/flow/dependency.ts</code> e <code>sides.ts</code>.</td></tr>
         <tr><td class="k">Quem aparece no nível de fora</td><td><code>apps/ui/src/flow/main-flow.ts</code> e <code>project-level.ts</code>.</td></tr>
@@ -606,7 +708,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     imp: { c: 'imp', col: 'green', ends: 'dir' },
     'kin-in': { c: 'kin-in', col: 'gray', ends: 'dir' },
     'kin-out': { c: 'kin-out', col: 'green', ends: 'dir' },
-    has: { c: 'has', col: 'gray', ends: 'both' },
+    has: { c: 'has', col: 'green', ends: 'both' },
     plain: { c: 'plain', col: 'gray', ends: 'none' },
     plainDir: { c: 'plain', col: 'gray', ends: 'dir' }
   };
@@ -713,7 +815,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       what: 'Um arquivo declara que usa outro. Importar não executa nada: por isso o padrão é parado e diferente dos traços de chamada. A direção está nos extremos.',
       code: 'from util import limpar', nodes: [['ARQUIVO', 'pedido.py'], ['ARQUIVO', 'util.py']], draw: function (a, b) { return line(R(a), Lp(b), 'imp'); } },
     { name: 'Contém', model: 'contains', trace: 'Pontilhado, fino', color: 'Cinza', src: 'A tela, a partir do hub', where: 'Do hub aos filhos do nível aberto.',
-      what: 'Só diz que o nó guarda os filhos. Não leva pulso nem movimento. Os dois extremos são cheios, porque não há origem nem destino de dados.',
+      what: 'Só diz que o nó guarda os filhos. Não leva pulso nem movimento. Os dois extremos são cheios, porque não há origem nem destino de dados. A linha é cinza, e as portas ficam verdes, como toda porta que não é de dependência.',
       code: '(pasta api)\n  rotas.py', nodes: [['PASTA', 'api'], ['ARQUIVO', 'rotas.py']], draw: function (a, b) { return line(R(a), Lp(b), 'has'); } },
     { name: 'Recursão', model: 'calls, origem igual ao destino', trace: 'Traços que encurtam, em alça', color: 'Cinza', src: 'build-graph.ts do extrator', where: 'Sobre o próprio cartão, no nível de fora e no nível de arquivo.',
       what: 'A função chama a si mesma. A linha sai e volta no mesmo cartão. O grafo guarda essa aresta, e a tela a desenha como alça.',

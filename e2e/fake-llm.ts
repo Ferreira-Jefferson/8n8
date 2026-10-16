@@ -88,6 +88,22 @@ const DOC_LIE = "A docstring fala de soma de preços, mas o código usa `len`.";
 const DOC_SUGGESTION = `Atualize a docstring: ${DOC_LIE.replace(/\.$/, "")} A docstring não reflete o que o código faz.`;
 
 const SCENARIOS: Scenario[] = [
+  // A whole file (ver-sem-entrar.e2e.ts): only its code has the imports of the top,
+  // and the reviewer gets the code alone. First: the file also holds its functions.
+  {
+    marker: "from stock import reserve_items",
+    draft: {
+      summary:
+        "O arquivo processa um pedido em `process_order`. O arquivo valida os itens do pedido em `validate_order`.",
+      inputs: [],
+      outputs: [],
+      suggestions: [],
+    },
+    evidence: {
+      "O arquivo processa um pedido em `process_order`.": [8],
+      "O arquivo valida os itens do pedido em `validate_order`.": [18],
+    },
+  },
   // Docstring E2E (e2e/docstring.e2e.ts). The model sees the docstring masked.
   {
     marker: "def total_mentiroso",

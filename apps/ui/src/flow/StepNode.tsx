@@ -1,6 +1,7 @@
 import type { FlowNode } from "@8n8/model";
 import { Handle, type Node, type NodeProps } from "@xyflow/react";
 import { plural, useT } from "../i18n";
+import { hasPanel } from "../nav/navigation";
 import { provisionalLabel, tagLabel, tagOf } from "./card";
 import type { Reach } from "./project-level";
 import { SIDES, type Side } from "./sides";
@@ -47,7 +48,9 @@ function depClass(
   side: Side,
 ): string {
   const reach = deps?.get(side);
-  return reach ? ` port-dep port-${reach}` : "";
+  if (!reach) return "";
+  // Only a wire inside a file changes the port's color; across files it keeps the green of every port.
+  return reach === "inside" ? " port-dep port-inside" : " port-dep";
 }
 
 /** One card: tag, title with › when it opens, and a code line (VID-03, 04, 15, 22, 26; CORE-06, 23). The hub of an inner level carries the back button; a node with suggestions, the badge that opens their balloon. */
@@ -117,7 +120,7 @@ export function StepNode({ data }: Pick<NodeProps<StepFlowNode>, "data">) {
           {t("step.syntaxError", { line: node.syntaxError.line })}
         </span>
       )}
-      {onInspect && data.openable && !data.isHub && (
+      {onInspect && data.openable && !data.isHub && hasPanel(node) && (
         <button
           type="button"
           className="step-inspect nodrag nopan"

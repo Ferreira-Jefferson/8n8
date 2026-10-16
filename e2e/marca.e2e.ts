@@ -8,6 +8,7 @@ import {
   nodes,
   OFFLINE,
   VIDEO,
+  WARM,
 } from "./mapa";
 
 // The 8n8 brand in the app (docs/design/manual-marca.html): name, logo, favicon and
@@ -120,4 +121,13 @@ test.describe("light theme", () => {
     await expect(edge).toBeAttached();
     expect(await css(edge, "stroke")).toBe(PETROLEO_ESCURO);
   });
+});
+
+test("an error message is Cobre, the color of attention", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Caminho da pasta").fill("Z:/8n8-nao-existe");
+  await page.getByRole("button", { name: "Mapear pasta" }).click();
+  const alert = page.getByRole("alert");
+  await expect(alert).toContainText("Pasta não encontrada");
+  expect(await css(alert, "color")).toBe(WARM);
 });

@@ -40,6 +40,7 @@ import { noFilesText, readsText, snippetFileName } from "./languages";
 import { Breadcrumb } from "./nav/Breadcrumb";
 import {
   ancestry,
+  hasPanel,
   initialNav,
   type NavAction,
   type NavState,
@@ -499,7 +500,8 @@ export function App({ initialFolder = null }: AppProps) {
     dispatch({ type: "reveal", path, id });
   }
   const selected = byId(nav.selected);
-  const panelNode = selected ? byId(panelNodeOf(selected)) : null;
+  const shown = selected ? byId(panelNodeOf(selected)) : null;
+  const panelNode = shown && hasPanel(shown) ? shown : null;
 
   if (view !== "map" || !mapped || !graph) {
     const messages = (

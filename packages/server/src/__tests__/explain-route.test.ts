@@ -262,8 +262,13 @@ describe("POST /api/summary (the request built on the server)", () => {
     });
   });
 
-  it("returns 400 node has no explanation for a folder and a file node (VID-28)", async () => {
-    const files = [{ path: "pkg/a.py", source: "def f():\n    pass\n" }];
+  it("returns 400 node has no explanation for a folder node, and explains a file node (VID-28)", async () => {
+    const files = [
+      {
+        path: "pkg/a.py",
+        source: '"""Módulo a."""\ndef f():\n    """Faz f."""\n    pass\n',
+      },
+    ];
     const received: ExplainRequest[] = [];
     const app = createApp({
       plugins: [pythonPlugin],
@@ -285,13 +290,8 @@ describe("POST /api/summary (the request built on the server)", () => {
       port: 8148,
       token: TEST_TOKEN,
     });
-    const graph = buildProject(files, [pythonPlugin]);
-    const ids = graph.nodes
-      .filter((n) => n.kind === "folder" || n.kind === "file")
-      .map((n) => n.id);
-    expect(ids).toEqual(expect.arrayContaining(["dir:pkg", "file:pkg/a.py"]));
-    for (const nodeId of ids) {
-      const res = await app.request("/api/summary", {
+    const post = (nodeId: string) =>
+      app.request("/api/summary", {
         method: "POST",
         headers: {
           host: "127.0.0.1:8148",
@@ -300,10 +300,22 @@ describe("POST /api/summary (the request built on the server)", () => {
         },
         body: JSON.stringify({ root: "/tmp/p", nodeId }),
       });
-      expect(res.status).toBe(400);
-      expect(await res.json()).toEqual({ error: "node has no explanation" });
-    }
+    const folder = await post("dir:pkg");
+    expect(folder.status).toBe(400);
+    expect(await folder.json()).toEqual({ error: "node has no explanation" });
     expect(received).toEqual([]);
+
+    expect((await post("file:pkg/a.py")).status).toBe(200);
+    const [req] = received;
+    expect(req?.nodeKind).toBe("file");
+    expect(req?.range.start).toBe(1);
+    // The whole file, with the docstring of the module and of the function hidden.
+    expect(req?.code).toContain("def f():");
+    expect(req?.code).toContain("    pass");
+    expect(req?.code).not.toContain("Módulo a.");
+    expect(req?.code).not.toContain("Faz f.");
+    expect(req?.code.match(/docstring omitida/g)).toHaveLength(2);
+    expect(req?.docstring).toEqual({ text: '"""Módulo a."""', line: 1 });
   });
 
   it("returns 400 for an invalid body", async () => {

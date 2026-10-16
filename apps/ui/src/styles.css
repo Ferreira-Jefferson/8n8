@@ -128,8 +128,9 @@ body {
   color: var(--dim);
 }
 
+/* An error asks for attention: Cobre, like the other warnings. */
 [role="alert"] {
-  color: var(--main);
+  color: var(--warm);
   font-size: 22px;
 }
 
@@ -2022,6 +2023,19 @@ body {
   gap: 8px;
 }
 
+/* Save and Close side by side: same size, only the fill tells them apart. */
+.dialog-actions .btn,
+.dialog-actions .btn-ghost {
+  min-width: 140px;
+  padding: 12px 24px;
+  border: 2px solid var(--panel-border);
+  font: 700 22px var(--font-sans);
+}
+
+.dialog-actions .btn {
+  border-color: var(--main);
+}
+
 .settings-dialog .claude-actions .btn-ghost {
   padding: 4px 14px;
   font-size: 18px;
@@ -2087,6 +2101,6 @@ body {
   border: 2px solid var(--main);
   background: transparent;
   color: var(--main);
-  font: 600 18px var(--font-sans);
+  font: 700 18px var(--font-sans);
   cursor: pointer;
 }

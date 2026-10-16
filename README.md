@@ -12,7 +12,7 @@
 
 O 8n8 é um mapa visual de código. Você aponta um arquivo, uma pasta ou um trecho, e ele mostra como as partes se conectam, como nós ligados por arestas.
 
-O mapa começa amplo. Você abre um nó para ver o fluxo interno dele e vai descendo, até as linhas reais de código. Cada nó traz um resumo e sugestões de melhoria.
+O mapa começa amplo. Você abre um nó para ver o fluxo interno dele e vai descendo, até as linhas reais de código. Cada arquivo, função e passo pode trazer um resumo e sugestões de melhoria.
 
 ## Por que o 8n8 existe
 
@@ -46,7 +46,7 @@ O código de exemplo está em [docs/sample-project](docs/sample-project). Para r
 ### O que o mapa oferece
 
 - **Busca de nó:** a lupa expande e procura por título ou por nome técnico.
-- **Card que abre:** o card mostra quantos nós tem dentro. O botão **Ver detalhes** abre o painel do nó sem entrar nele.
+- **Card que abre:** o card mostra quantos nós tem dentro. O botão **Ver detalhes** abre o painel do nó sem entrar nele. Num arquivo, você vê o código e pode pedir o resumo e as sugestões do arquivo inteiro sem abrir as funções. Uma pasta não tem o botão nem painel: ela não tem código para mostrar.
 - **Sugestões:** um selo no nó mostra quantas sugestões ele tem. O clique abre um balão com a lista.
 - **Ramos do `if`:** cada ramo traz o rótulo `true` ou `false`.
 - **Histórico e favoritos:** os mapas gerados ficam no histórico. A estrela guarda um mapa nos favoritos.
@@ -143,7 +143,7 @@ O jeito mais simples de configurar é pela tela: clique no botão **Configuraç�
 - **Provedor**: `claude-code` (a sua assinatura do Claude Code, sem chave; é o padrão quando o 8n8 acha o Claude Code), `openrouter` (o padrão sem ele), `openai`, `anthropic` (os três pedem uma chave de API) ou `openai-compatible` (Ollama, LM Studio ou um servidor seu, com a URL pela variável de ambiente). Com `claude-code`, a tela diz se achou o Claude Code e tem o botão **Escolher…**, que abre a janela de arquivo do sistema.
 - **Chave de API**: o campo só recebe a chave. Ela nunca volta para a tela: o diálogo diz só "Chave guardada".
 - **Modelo**: escreva o nome exato do modelo, como o provedor o conhece. Vazio usa o padrão do provedor, que aparece como dica no campo.
-- **Gerar o resumo ao selecionar um nó** e **Pedir as sugestões ao selecionar um nó**: desligados, o resumo e as sugestões só são pedidos quando você clica em "Gerar resumo" ou "Pedir sugestões". Assim nada é gasto enquanto você só navega. O que já está no cache aparece sem clique.
+- **Resumo automático** e **Sugestão automática**: ligados, o resumo e as sugestões são pedidos ao selecionar um nó. Desligados, o resumo e as sugestões só são pedidos quando você clica em "Gerar resumo" ou "Pedir sugestões". Assim nada é gasto enquanto você só navega. O que já está no cache aparece sem clique.
 
 Trocar o provedor apaga a chave e o modelo guardados, para a chave nunca ir a um serviço que você não escolheu.
 

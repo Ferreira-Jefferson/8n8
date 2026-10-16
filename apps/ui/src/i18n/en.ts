@@ -19,8 +19,8 @@ export const en: Record<MessageKey, string> = {
   "settings.claude.change": "Change",
   "settings.claude.auto": "Use the automatic one",
   "settings.model": "Model",
-  "settings.autoSummary": "Generate the summary when a node is selected",
-  "settings.autoSuggestions": "Ask for suggestions when a node is selected",
+  "settings.autoSummary": "Automatic summary",
+  "settings.autoSuggestions": "Automatic suggestion",
   "settings.lockedBy": "Set by the variable {name}",
   "settings.saved": "Settings saved.",
   "settings.failed": "Could not save. Check the key and the model.",
@@ -113,7 +113,6 @@ export const en: Record<MessageKey, string> = {
   "step.inspectTitle": "See code and explanation, without entering",
   "step.syntaxError": "Syntax error on line {line}",
   "panel.aria": "Node detail",
-  "panel.folder": "Folder: {path}",
   "panel.eyebrow": "WHAT IT DOES · SIMPLIFIED TECHNICAL ENGLISH",
   "panel.rules": "2 sentences · active voice · one term per concept",
   "panel.codeLine": "CODE · {file}, line {n}",
@@ -164,13 +163,13 @@ export const en: Record<MessageKey, string> = {
   "list.or": "or",
   "flow.edgeAria": "Edge from {from} to {to}",
   "flow.nodeHelp":
-    "Press Enter or Space to select a node. Press Delete to remove it and Esc to cancel.",
+    "Press Enter or Space to select a node. Press Esc to cancel.",
   "flow.nodeHelpKeyboard":
-    "Press Enter or Space to select a node. Then use the arrow keys to move the node. Press Delete to remove it and Esc to cancel.",
+    "Press Enter or Space to select a node. Then use the arrow keys to move the node. Press Esc to cancel.",
   "flow.nodeMoved":
     "Moved selected node {direction}. New position, x: {x}, y: {y}",
   "flow.edgeHelp":
-    "Press Enter or Space to select an edge. Then press Delete to remove it or Esc to cancel.",
+    "Press Enter or Space to select an edge. Press Esc to cancel.",
   "flow.handle": "Port",
   "edge.true": "true",
   "edge.false": "false",

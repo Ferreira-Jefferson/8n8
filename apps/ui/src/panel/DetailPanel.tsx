@@ -83,7 +83,7 @@ function nodeCode(source: string, node: FlowNode): string {
 }
 
 function explainKind(node: FlowNode): ExplainKind | null {
-  return node.kind === "folder" || node.kind === "file" ? null : node.kind;
+  return node.kind === "folder" ? null : node.kind;
 }
 
 /** "CÓDIGO · trecho.py, linha 18" or "CÓDIGO · trecho.py, linhas 6 a 14" (VID-29). */
@@ -141,15 +141,6 @@ export function DetailPanel({
 
   const name = title ?? provisionalLabel(node, t);
 
-  if (node.kind === "folder") {
-    return (
-      <aside className="panel detail-panel" aria-label={t("panel.aria")}>
-        <h2>{name}</h2>
-        <p>{t("panel.folder", { path: node.path ?? "" })}</p>
-      </aside>
-    );
-  }
-
   const io = summary.result.status === "ok" ? summary.result.result : null;
   return (
     <aside className="panel detail-panel" aria-label={t("panel.aria")}>
@@ -186,7 +177,8 @@ export function DetailPanel({
           </section>
         </>
       )}
-      {(node.kind === "function" ||
+      {(node.kind === "file" ||
+        node.kind === "function" ||
         node.kind === "class" ||
         node.kind === "module") && <EffectsView effects={effects} />}
       {kind !== null && (

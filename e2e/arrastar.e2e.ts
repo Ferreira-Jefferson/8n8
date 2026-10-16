@@ -59,6 +59,25 @@ async function wireStarts(page: Page) {
   );
 }
 
+test("Delete and Backspace never remove a card, and the help does not offer it", async ({
+  page,
+}) => {
+  await openFrete(page);
+  const count = await page.locator('[aria-roledescription="node"]').count();
+  const card = nodeById(page, SE);
+  await card.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Delete");
+  await page.keyboard.press("Backspace");
+  await expect(page.locator('[aria-roledescription="node"]')).toHaveCount(
+    count,
+  );
+  await expect(card).toBeVisible();
+  const help = page.locator('[id^="react-flow__node-desc"]');
+  await expect(help).toHaveCount(1);
+  await expect(help).not.toContainText("Delete");
+});
+
 test.describe("dragging cards", () => {
   test("a dragged card stays where it is dropped", async ({ page }) => {
     await openFrete(page);

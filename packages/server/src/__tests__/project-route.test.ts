@@ -199,12 +199,14 @@ describe("POST /api/summary with { root, nodeId } (PROJ-07, PROJ-09, AD-015)", (
     expect(received).toEqual([]);
   });
 
-  it("answers 400 for a folder node and a file node", async () => {
+  it("answers 400 for a folder node and explains a file node as a whole", async () => {
     const { received, post, root } = explainSetup(readFixture());
     expect((await post({ root, nodeId: "dir:frete" })).status).toBe(400);
-    expect((await post({ root, nodeId: "file:frete/calculo.py" })).status).toBe(
-      400,
-    );
     expect(received).toEqual([]);
+    expect((await post({ root, nodeId: "file:frete/calculo.py" })).status).toBe(
+      200,
+    );
+    expect(received.map((r) => r.nodeKind)).toEqual(["file"]);
+    expect(received[0]?.code).toContain("def calcular_frete");
   });
 });

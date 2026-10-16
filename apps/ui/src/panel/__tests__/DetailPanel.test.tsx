@@ -811,24 +811,9 @@ describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
     return n;
   };
 
-  it("shows only Pasta: <path> for a folder node, with no code and no explain request", () => {
-    const { container } = render(
-      <DetailPanel
-        source=""
-        origin={{ root }}
-        node={node("dir:frete")}
-        effects={[]}
-        auto={AUTO}
-        onSuggestions={() => {}}
-      />,
-    );
-    expect(screen.getByText("Pasta: frete")).toBeTruthy();
-    expect(codeLines(container)).toEqual([]);
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(suggestMock).not.toHaveBeenCalled();
-  });
-
-  it("shows every line of the file for a file node, with no explain request", () => {
+  it("shows every line of the file for a file node, and the buttons to explain it", async () => {
+    fetchMock.mockResolvedValue({ status: "not-cached" });
+    suggestMock.mockResolvedValue({ status: "not-cached" });
     const { container } = render(
       <DetailPanel
         source={calculo}
@@ -836,7 +821,7 @@ describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
         filePath="frete/calculo.py"
         node={node("file:frete/calculo.py")}
         effects={[]}
-        auto={AUTO}
+        auto={{ summary: false, suggestions: false }}
         onSuggestions={() => {}}
       />,
     );
@@ -846,7 +831,16 @@ describe("DetailPanel in a project (PROJ-02, PROJ-04, AD-015)", () => {
       "        return 50",
       "    return 20",
     ]);
-    expect(fetchMock).not.toHaveBeenCalled();
+    // Nothing is generated on opening: only the cache is asked, and the buttons wait for a click.
+    await screen.findByRole("button", { name: "Gerar resumo" });
+    expect(
+      screen.getByRole("button", { name: "Pedir sugestões" }),
+    ).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledWith(
+      { root },
+      "file:frete/calculo.py",
+      true,
+    );
   });
 
   it("names the file and the lines of a project function above its code and explains it by root", async () => {
