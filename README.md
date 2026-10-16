@@ -43,6 +43,15 @@ Com a IA, o código muda e cresce rápido demais para ler linha por linha. Eu pe
 
 O código de exemplo está em [docs/imagens/exemplo](docs/imagens/exemplo). Para refazer as imagens: `pnpm prints`.
 
+### O que o mapa oferece
+
+- **Busca de nó:** a lupa expande e procura por título ou por nome técnico.
+- **Card que abre:** o card mostra quantos nós tem dentro. O botão **Ver detalhes** abre o painel do nó sem entrar nele.
+- **Sugestões:** um selo no nó mostra quantas sugestões ele tem. O clique abre um balão com a lista.
+- **Ramos do `if`:** cada ramo traz o rótulo `true` ou `false`.
+- **Histórico e favoritos:** os mapas gerados ficam no histórico. A estrela guarda um mapa nos favoritos.
+- **Tema e idioma:** o tema claro ou escuro e o idioma (português ou inglês) mudam nas Configurações.
+
 ## Como funciona
 
 1. **O 8n8 lê o código.** Ele aceita um arquivo, uma pasta ou um trecho colado.
@@ -58,7 +67,9 @@ Em `apps/` há três pastas. Uma é a tela e duas são as formas de rodar o 8n8,
 - **CLI (`apps/cli`):** você roda o comando `8n8` no terminal (PowerShell ou Bash), e o mapa abre no navegador.
 - **Editores (`apps/editors`):** a extensão do VS Code abre o mapa num painel ao lado do código. Outros editores entram na mesma pasta.
 
-Os textos usam Português Técnico Simplificado: frases curtas, voz ativa, um termo por conceito. As regras estão em [docs/portugues-tecnico-simplificado.md](docs/portugues-tecnico-simplificado.md).
+A tela e o terminal falam português (pt-BR) ou inglês. O botão **BR/EN** nas Configurações troca o idioma, e a LLM responde no mesmo idioma.
+
+Os textos usam Português Técnico Simplificado: frases curtas, voz ativa, um termo por conceito. As regras estão em [docs/portugues-tecnico-simplificado.md](docs/portugues-tecnico-simplificado.md). Em inglês, valem as regras de [docs/ingles-tecnico-simplificado.md](docs/ingles-tecnico-simplificado.md).
 
 ## Linguagens suportadas
 
@@ -73,7 +84,9 @@ Para acoplar outra linguagem, siga o guia [docs/adicionar-linguagem.md](docs/adi
 
 ## Instalar
 
-O 8n8 precisa de Node 22.13 ou mais novo. Hoje a instalação parte do repositório. Há duas formas de usar: a CLI e a extensão do VS Code.
+O 8n8 precisa de Node 22.13 ou mais novo e do pnpm. Hoje a instalação parte do repositório. Há duas formas de usar: a CLI e a extensão do VS Code.
+
+Para gerar as duas de uma vez, rode `pnpm build:all`. Ele instala as dependências e cria os pacotes na pasta `release/`.
 
 ### A CLI
 
@@ -81,11 +94,10 @@ A CLI roda no terminal (PowerShell ou Bash) e abre o mapa de qualquer pasta no n
 
 ```bash
 pnpm install
-pnpm --filter @8n8/cli package
-npm install -g ./release/8n8-cli-0.0.1.tgz
+pnpm install:cli:global
 ```
 
-O pacote não tem dependências nem scripts de instalação: todo o código vai dentro dele. Depois, use o comando `8n8`:
+O `pnpm install:cli:global` gera o pacote (`release/8n8-cli-0.0.1.tgz`) e o instala com `npm install -g`. O pacote não tem dependências nem scripts de instalação: todo o código vai dentro dele. Depois, use o comando `8n8`:
 
 ```bash
 8n8 .              # abre o mapa da pasta atual, numa janela própria (Chrome ou Edge)
@@ -102,7 +114,7 @@ A extensão abre o mesmo mapa num painel ao lado do código. Ela precisa do VS C
 
 ```bash
 pnpm install
-pnpm --filter 8n8-vscode package
+pnpm build:ext
 code --install-extension release/8n8-vscode-0.0.1.vsix
 ```
 
@@ -110,9 +122,23 @@ Depois, rode **8n8: Abrir mapa** na paleta de comandos. Ele abre a tela inicial,
 
 Para acrescentar outro editor, veja [docs/adicionar-editor.md](docs/adicionar-editor.md).
 
+### Como app (PWA)
+
+A tela é um PWA: o navegador pode instalá-la como um app, com ícone e janela própria. Rode o 8n8 (`8n8 .` ou `pnpm open .`) e use a opção **Instalar** do Chrome ou do Edge. O ícone do app segue o [manual da marca](docs/marca/manual.html).
+
+O app instalado é só a janela. O núcleo continua local: o 8n8 precisa estar rodando para o app funcionar.
+
 ## Configurar o LLM
 
-Os resumos e as sugestões pedem um provedor de LLM. O jeito mais simples é pela tela: clique no botão **Configurações** (no canto de cima, em todas as telas) e preencha:
+Os resumos e as sugestões pedem um provedor de LLM. O 8n8 escolhe o provedor nesta ordem:
+
+1. A variável de ambiente `APP8N8_LLM_PROVIDER`, se existe.
+2. O provedor que você escolheu nas Configurações.
+3. Sem escolha, o 8n8 procura o Claude Code na sua máquina. Se acha, usa o `claude-code`, que aproveita a sua assinatura e não pede chave. Se não acha, usa o `openrouter`, que pede uma chave.
+
+Para usar a sua própria chave, escolha um provedor nas Configurações e cole a chave. Falta o seu provedor? Acrescente um: o guia [docs/adicionar-provedor-llm.md](docs/adicionar-provedor-llm.md) mostra como, e o projeto aceita contribuições.
+
+O jeito mais simples de configurar é pela tela: clique no botão **Configurações** (no canto de cima, em todas as telas) e preencha:
 
 - **Provedor**: `claude-code` (a sua assinatura do Claude Code, sem chave; é o padrão quando o 8n8 acha o Claude Code), `openrouter` (o padrão sem ele), `openai`, `anthropic` (os três pedem uma chave de API) ou `openai-compatible` (Ollama, LM Studio ou um servidor seu, com a URL pela variável de ambiente). Com `claude-code`, a tela diz se achou o Claude Code e tem o botão **Escolher…**, que abre a janela de arquivo do sistema.
 - **Chave de API**: o campo só recebe a chave. Ela nunca volta para a tela: o diálogo diz só "Chave guardada".
@@ -140,9 +166,35 @@ A CLI instalada nunca lê um `.env`.
 
 ### O provedor `claude-code`
 
-Com o `claude-code`, o 8n8 roda o seu Claude Code em modo não interativo, numa pasta vazia própria, sem ferramentas, sem MCP e sem arquivos de configuração. O código do nó vai pelo stdin. Ele nunca roda dentro da pasta analisada, então os hooks e o `CLAUDE.md` dela não são carregados. Os seus hooks e plugins de usuário também não rodam. O login continua valendo.
+Você só precisa do Claude Code instalado e com login. O 8n8 acha o executável, abre o Claude Code e pede cada resumo ou sugestão. Você não digita nenhuma opção.
 
-O 8n8 procura o Claude Code nesta ordem: `APP8N8_CLAUDE_PATH`, o arquivo escolhido em Configurações e os lugares de instalação conhecidos. No Windows, esses lugares são o npm global, o instalador oficial (`~/.local/bin`) e as pastas do `PATH`, inclusive o npm do nvm e do volta. O arquivo escolhido na tela vem só da janela de arquivo do sistema e precisa se chamar `claude` ou `claude.exe`. A API local nunca recebe um caminho.
+**O que o 8n8 executa.** Para cada pedido, o 8n8 roda o `claude` com estas opções:
+
+```text
+claude -p --input-format stream-json --output-format stream-json --verbose
+       --model <modelo> --effort low --system-prompt <regras>
+       --tools "" --no-session-persistence --setting-sources ""
+       --strict-mcp-config --disable-slash-commands
+```
+
+- `-p` roda o Claude Code em modo não interativo: ele responde um pedido e sai.
+- `--input-format` e `--output-format stream-json` trocam mensagens em JSON, uma por linha.
+- `--tools ""` desliga todas as ferramentas. O Claude Code só escreve texto.
+- `--setting-sources ""`, `--strict-mcp-config` e `--disable-slash-commands` desligam os arquivos de configuração, o MCP e os comandos `/`. Assim os seus hooks e plugins de usuário não rodam, e o início é mais rápido. O login continua valendo.
+- `--no-session-persistence` não guarda a conversa no histórico do Claude Code.
+- `--effort low` reduz o raciocínio escondido e deixa a resposta mais rápida.
+
+O 8n8 roda o processo numa pasta vazia própria (`8n8-claude`, dentro da pasta temporária do sistema), nunca na pasta analisada. Por isso os hooks e o `CLAUDE.md` do seu projeto não são carregados. O código do nó entra pelo stdin, nunca como argumento. O processo herda as variáveis de ambiente, menos `OPENROUTER_API_KEY` e `APP8N8_LLM_API_KEY`. Cada pedido tem limite de 180 segundos e de 5 MB de resposta.
+
+**Versão do Claude Code.** O 8n8 precisa de um Claude Code que aceite todas as opções acima. Elas existem na versão 2.1.145, a que está na máquina de desenvolvimento. A versão mínima exata ainda não foi medida. Se uma opção faltar, o pedido falha e a tela mostra o código de saída.
+
+**Como o 8n8 acha o Claude Code.** A busca segue esta ordem:
+
+1. `APP8N8_CLAUDE_PATH`, se a variável aponta para um arquivo. Se aponta para um arquivo que não existe, a busca para: o 8n8 não tenta outro caminho, e a tela avisa.
+2. O arquivo escolhido em Configurações.
+3. Os lugares de instalação conhecidos:
+   - **Windows:** o npm global (`%APPDATA%\npm`), o instalador oficial (`~/.local/bin/claude.exe`) e cada pasta do `PATH`, inclusive o npm do nvm e do volta.
+   - **macOS e Linux:** cada pasta do `PATH`, `~/.local/bin/claude` e `~/.claude/local/claude`. O arquivo escolhido na tela vem só da janela de arquivo do sistema e precisa se chamar `claude` ou `claude.exe`. A API local nunca recebe um caminho.
 
 O modelo padrão é o `claude-sonnet-5-5`, com esforço baixo. Para não esperar a abertura do Claude Code a cada pedido, o 8n8 deixa até 2 processos já abertos (cerca de 300 MB cada). Cada processo responde um pedido só. Um processo sem uso fecha depois de 10 minutos, e todos fecham junto com o 8n8.
 
