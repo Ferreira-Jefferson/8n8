@@ -15,6 +15,11 @@ export function fingerprintOf(
   return hash.digest("hex");
 }
 
+/** Names one build: the same files in another folder, or read with another set of options, are another build. */
+export function versionOf(key: string, fingerprint: string): string {
+  return createHash("sha1").update(`${key}\0${fingerprint}`).digest("hex");
+}
+
 /**
  * The last results, by key, each valid while its fingerprint holds. A request for
  * a result that is still being made waits for it instead of making it again, and
@@ -23,6 +28,13 @@ export function fingerprintOf(
 export function createProjectCache<T>(size = 2) {
   const entries = new Map<string, { fingerprint: string; value: Promise<T> }>();
   return {
+    /** The result made for a fingerprint, if it is still kept. */
+    find(fingerprint: string): Promise<T> | undefined {
+      for (const entry of entries.values()) {
+        if (entry.fingerprint === fingerprint) return entry.value;
+      }
+      return undefined;
+    },
     get(
       key: string,
       fingerprint: string,

@@ -142,6 +142,7 @@ export const en: Record<MessageKey, string> = {
   "panel.rules": "2 sentences · active voice · one term per concept",
   "panel.codeLine": "CODE · {file}, line {n}",
   "panel.codeLines": "CODE · {file}, lines {a} to {b}",
+  "panel.codeLoading": "Loading the code…",
   "panel.io": "INPUT AND OUTPUT",
   "panel.ioAria": "Input and output",
   "panel.noKey": "Set up an LLM provider in Settings.",
@@ -187,6 +188,7 @@ export const en: Record<MessageKey, string> = {
   "list.and": "and",
   "list.or": "or",
   "flow.edgeAria": "Edge from {from} to {to}",
+  "flow.loading": "Loading the file…",
   "flow.nodeHelp":
     "Press Enter or Space to select a node. Press Esc to cancel.",
   "flow.nodeHelpKeyboard":

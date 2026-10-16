@@ -1,12 +1,13 @@
+import { fold, SEARCHABLE_KINDS, searchText, searchWords } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { lojaGraph } from "../../flow/__tests__/loja-graph";
+import { mistaGraph } from "../../flow/__tests__/mista-graph";
 import {
-  fold,
   highlight,
   matchEntries,
+  mergeResults,
   type SearchEntry,
   searchEntries,
-  searchWords,
 } from "../match";
 
 const entry = (title: string, tech: string): SearchEntry => ({
@@ -23,13 +24,6 @@ const ENTRIES = [
 ];
 
 const ids = (list: SearchEntry[]) => list.map((e) => e.id);
-
-describe("fold", () => {
-  it("drops case and accents, and takes _ - and blanks as one space, keeping the length", () => {
-    expect(fold("Cálculo_de-Frete  X")).toBe("calculo de frete  x");
-    expect(fold("Ação").length).toBe("Ação".length);
-  });
-});
 
 describe("matchEntries", () => {
   it("finds by the technical name, even with the title rewritten", () => {
@@ -108,6 +102,22 @@ describe("highlight", () => {
   });
 });
 
+describe("searchEntries and the server's searchText", () => {
+  it("read the same text in every searchable node, so a search finds the same nodes on either side", () => {
+    for (const graph of [lojaGraph, mistaGraph]) {
+      const entries = searchEntries(graph, new Map());
+      const searchable = graph.nodes.filter((n) =>
+        SEARCHABLE_KINDS.has(n.kind),
+      );
+      expect(entries.length).toBe(searchable.length);
+      for (const [i, node] of searchable.entries()) {
+        const e = entries[i] as SearchEntry;
+        expect(searchText(node)).toBe(fold(`${e.title} ${e.tech}`));
+      }
+    }
+  });
+});
+
 describe("searchEntries", () => {
   it("lists the named nodes of every level, with the title, the name and where", () => {
     const id = "file:frete/calculo.py/fn:calcular_frete";
@@ -121,5 +131,35 @@ describe("searchEntries", () => {
     // A reviewed title only exists for the levels already opened: the rest keeps the provisional name.
     const other = list.find((e) => e.tech === "processar_pedido()");
     expect(other?.title).toBe("Processar pedido");
+  });
+});
+
+describe("mergeResults", () => {
+  const e = (id: string, title = id): SearchEntry => ({
+    id,
+    title,
+    tech: id,
+    where: "",
+  });
+
+  it("keeps the order of the server and gives the screen's entry, with its title, where both have the node", () => {
+    const merged = mergeResults(
+      [e("b", "Título revisado")],
+      [e("a"), { ...e("b"), ancestry: ["p"] }, e("c")],
+    );
+    expect(merged.map((x) => x.id)).toEqual(["a", "b", "c"]);
+    expect(merged[1]).toMatchObject({
+      title: "Título revisado",
+      ancestry: ["p"],
+    });
+  });
+
+  it("puts first what only the screen found, by a title, and keeps to the limit", () => {
+    const merged = mergeResults(
+      [e("x", "só pelo título")],
+      [e("a"), e("b"), e("c")],
+      3,
+    );
+    expect(merged.map((x) => x.id)).toEqual(["x", "a", "b"]);
   });
 });

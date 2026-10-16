@@ -4,7 +4,7 @@ import { join } from "node:path";
 import type {
   GraphResponse,
   LanguagesResponse,
-  ProjectResponse,
+  ProjectSkeleton,
 } from "@8n8/model";
 import { OFFLINE } from "./mapa";
 import { expect, type Page, test } from "./test";
@@ -194,7 +194,7 @@ test.describe("Multilinguagem", () => {
     const res = await postJson(page, "/api/project", { path: MISTA });
 
     expect(res.status()).toBe(200);
-    const body = (await res.json()) as ProjectResponse;
+    const body = (await res.json()) as ProjectSkeleton;
     expect(body.graph.language).toBe("mixed");
     const files = body.graph.nodes
       .filter((n) => n.kind === "file")
@@ -215,7 +215,7 @@ test.describe("Multilinguagem", () => {
   }) => {
     const body = (await (
       await postJson(page, "/api/project", { path: MISTA })
-    ).json()) as ProjectResponse;
+    ).json()) as ProjectSkeleton;
 
     const wire = body.graph.edges.find(
       (e) => e.kind === "calls" && e.label === "HTTP POST /api/frete",
@@ -231,7 +231,7 @@ test.describe("Multilinguagem", () => {
   }) => {
     const body = (await (
       await postJson(page, "/api/project", { path: MISTA })
-    ).json()) as ProjectResponse;
+    ).json()) as ProjectSkeleton;
 
     const wire = body.graph.edges.find(
       (e) => e.kind === "calls" && e.label === "processo",
@@ -246,7 +246,7 @@ test.describe("Multilinguagem", () => {
   }) => {
     const body = (await (
       await postJson(page, "/api/project", { path: MISTA })
-    ).json()) as ProjectResponse;
+    ).json()) as ProjectSkeleton;
 
     const wire = body.graph.edges.find(
       (e) => e.kind === "calls" && e.label === "nome",

@@ -18,15 +18,14 @@ import {
   type ExplainPart,
   type ExplainRequest,
   type ExplainResponse,
+  type FileDetail,
   type FlowNode,
-  fileNodeOf,
   type Graph,
   type GraphResponse,
   type LanguagePlugin,
   type LanguagesResponse,
   type Locale,
   type NodeNotes,
-  type ProjectResponse,
   type StructureRequest,
   type StructureResponse,
   suggestionKey,
@@ -37,16 +36,22 @@ import {
 } from "@8n8/model";
 import { detectLanguage, pluginForPath } from "@8n8/project";
 import { type Context, Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
 import { maskDocstring } from "./docstring";
 import type { History, MadeMap } from "./history";
 import type { PickPath } from "./pick-path";
+import {
+  callMapsOf,
+  indexOf,
+  type ProjectIndex,
+  type ProjectRead,
+} from "./project-index";
+import { detailOf, MAX_HITS, searchOf, skeletonOf } from "./project-views";
 import { InvalidSettings, type SettingsService } from "./settings";
 import { sameToken } from "./token";
 
-export type ProjectRead =
-  | { kind: "ok"; root: string; response: ProjectResponse }
-  | { kind: "not-found"; dependency?: true };
+export type { ProjectRead };
 
 export interface AppDeps {
   /** The registered languages, in a stable order: a snippet is read by the best score, a file by its extension. */
@@ -67,7 +72,12 @@ export interface AppDeps {
   /** What the person kept from the chat and removed, by language of the system; absent in tests that do not need it. */
   notes?: ((locale: Locale) => NotesStore) | undefined;
   /** `include`: files over 1 MB the person put on the map (CLEAN-06). */
-  readProject: (path: string, include?: string[]) => Promise<ProjectRead>;
+  readProject: (
+    path: string,
+    include?: string[],
+    /** The build the screen holds: the files of that build are served as they were, not read again. */
+    version?: string,
+  ) => Promise<ProjectRead>;
   port: number;
   /** The session token every /api call must carry in x-8n8-token (DIST-20). */
   token: string;
@@ -82,24 +92,35 @@ export interface AppDeps {
   pick?: PickPath | undefined;
 }
 
-/** Files over 1 MB put on the map: relative POSIX paths, never outside the folder (CLEAN-07). */
-const include = z
-  .array(
-    z
-      .string()
-      .min(1)
-      .max(1024)
-      .refine(
-        (p) =>
-          !p.startsWith("/") &&
-          !p.includes("\\") &&
-          !p.includes(":") &&
-          !p.split("/").includes(".."),
-      ),
-  )
-  .max(100)
-  .optional();
+/** A path inside the folder, as the map names it: relative, POSIX, never outside the folder (CLEAN-07). */
+const filePath = z
+  .string()
+  .min(1)
+  .max(1024)
+  .refine(
+    (p) =>
+      !p.startsWith("/") &&
+      !p.includes("\\") &&
+      !p.includes(":") &&
+      !p.split("/").includes(".."),
+  );
+/** Files over 1 MB put on the map (CLEAN-06). */
+const include = z.array(filePath).max(100).optional();
 const projectBody = z.object({ path: z.string().min(1), include });
+const projectFileBody = z.object({
+  root: z.string().min(1),
+  include,
+  version: z.string().max(100).optional(),
+  path: filePath,
+});
+const projectSearchBody = z.object({
+  root: z.string().min(1),
+  include,
+  version: z.string().max(100).optional(),
+  query: z.string().max(200),
+  limit: z.number().int().min(1).max(MAX_HITS).optional(),
+});
+const PROJECT_BODY_LIMIT = 1024 * 1024;
 const pickBody = z.object({ kind: z.enum(["folder", "file", "any"]) });
 // The Claude Code path never comes in the body: only the system chooser gives it (CC-12, CC-18).
 const claudePathBody = z.object({ action: z.enum(["pick", "auto"]) }).strict();
@@ -187,6 +208,11 @@ interface Origin {
   graph: Graph;
   /** The code of `node`, with its docstring masked when it has one. */
   codeOf: (node: FlowNode) => Pick<ExplainRequest, "code" | "docstring">;
+  /** The names of what `node` calls and what calls it. */
+  neighbours: (
+    node: FlowNode,
+    nameOf: (other: FlowNode) => string,
+  ) => { calls: string[]; calledBy: string[] };
   /** The name of `node` as seen from `home`. */
   nameOf: (node: FlowNode, home: FlowNode) => string;
   /** The language of `node`: the detected one in a snippet, the one of its file in a project. */
@@ -212,8 +238,12 @@ async function loadOrigin(
   if ("source" in body) {
     const { source } = body;
     const { plugin } = detectLanguage(source, deps.plugins);
+    const graph = plugin.extract(source);
+    const byId = new Map(graph.nodes.map((n) => [n.id, n]));
     return {
-      graph: plugin.extract(source),
+      graph,
+      neighbours: (node, nameOf) =>
+        neighboursOf({ byId, ...callMapsOf(graph.edges) }, node, nameOf),
       codeOf: (node) =>
         maskDocstring(
           node.range,
@@ -231,7 +261,8 @@ async function loadOrigin(
   if (read.kind === "not-found") return { notFound: body.root };
   const { response } = read;
   const graph = response.graph;
-  const filePath = (node: FlowNode) => fileNodeOf(graph, node.id)?.path ?? "";
+  const index = indexOf(read);
+  const filePath = (node: FlowNode) => index.filePathOf(node.id);
   // A file is read by its extension, so every node has the plugin of its file.
   const pluginOf = (node: FlowNode) => {
     const plugin = pluginForPath(filePath(node), deps.plugins);
@@ -240,20 +271,16 @@ async function loadOrigin(
   };
   return {
     graph,
+    neighbours: (node, nameOf) => neighboursOf(index, node, nameOf),
     codeOf: (node) => {
       const path = filePath(node);
-      const file = response.files.find((f) => f.path === path);
       // A file hides the docstrings of every node in it, like each node hides its own.
       const docstrings =
-        node.kind === "file"
-          ? graph.nodes.flatMap((n) =>
-              n.docstring && filePath(n) === path ? [n.docstring] : [],
-            )
-          : node.docstring;
+        node.kind === "file" ? index.docstrings.get(path) : node.docstring;
       return maskDocstring(
         node.range,
         docstrings,
-        (file?.source ?? "").split(/\r?\n/),
+        (index.sources.get(path) ?? "").split(/\r?\n/),
         pluginOf(node).commentPrefix,
         locale,
       );
@@ -270,24 +297,20 @@ async function loadOrigin(
 
 /** calls: targets of the outgoing `calls` wires plus `node.target`, once each; calledBy: sources of the incoming `calls` wires. */
 function neighboursOf(
-  graph: Graph,
+  index: Pick<ProjectIndex, "byId" | "callsOut" | "callsIn">,
   node: FlowNode,
   nameOf: (other: FlowNode) => string,
 ): { calls: string[]; calledBy: string[] } {
-  const byId = new Map(graph.nodes.map((n) => [n.id, n]));
-  const names = (ids: string[]) =>
+  const names = (ids: readonly string[]) =>
     ids.flatMap((id) => {
-      const other = byId.get(id);
+      const other = index.byId.get(id);
       return other ? [nameOf(other)] : [];
     });
-  const wires = graph.edges.filter((e) => e.kind === "calls");
-  const out = wires.filter((e) => e.source === node.id).map((e) => e.target);
+  const out = [...(index.callsOut.get(node.id) ?? [])];
   if (node.target) out.push(node.target);
   return {
     calls: names([...new Set(out)]),
-    calledBy: names(
-      wires.filter((e) => e.target === node.id).map((e) => e.source),
-    ),
+    calledBy: names(index.callsIn.get(node.id) ?? []),
   };
 }
 
@@ -409,7 +432,54 @@ export function createApp(deps: AppDeps): Hono {
         response: read.response,
       });
     }
-    return c.json(read.response);
+    // Only the top of the map: the inside of a file comes by POST /api/project/file.
+    return c.json(skeletonOf(read));
+  });
+
+  app.use(
+    "/api/project/*",
+    bodyLimit({
+      maxSize: PROJECT_BODY_LIMIT,
+      onError: (c) => c.json({ error: "too-large" }, 413),
+    }),
+  );
+
+  /** The source of one file of the folder the screen has open. */
+  app.post("/api/project/file", async (c) => {
+    const body = projectFileBody.safeParse(
+      await c.req.json().catch(() => null),
+    );
+    if (!body.success) return c.json({ error: "invalid body" }, 400);
+    const { root, include, version, path } = body.data;
+    const read = await deps.readProject(root, include, version);
+    if (read.kind === "not-found") {
+      return c.json({ error: "not-found", path: root }, 404);
+    }
+    const built = read.response.version;
+    if (version !== undefined && built !== undefined && version !== built) {
+      return c.json({ error: "stale", version: built }, 409);
+    }
+    const detail = detailOf(read, path);
+    if (!detail) return c.json({ error: "not-found", path }, 404);
+    return c.json(detail satisfies FileDetail);
+  });
+
+  /** The nodes of the whole folder whose name holds every word of the query. */
+  app.post("/api/project/search", async (c) => {
+    const body = projectSearchBody.safeParse(
+      await c.req.json().catch(() => null),
+    );
+    if (!body.success) return c.json({ error: "invalid body" }, 400);
+    const { root, include, version, query, limit } = body.data;
+    const read = await deps.readProject(root, include, version);
+    if (read.kind === "not-found") {
+      return c.json({ error: "not-found", path: root }, 404);
+    }
+    const built = read.response.version;
+    if (version !== undefined && built !== undefined && version !== built) {
+      return c.json({ error: "stale", version: built }, 409);
+    }
+    return c.json({ hits: searchOf(read, query, limit) });
   });
 
   // The server runs on the person's machine, so the chooser opens on their screen.
@@ -484,7 +554,7 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
+      const { graph, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
       const node = graph.nodes.find((n) => n.id === body.nodeId);
       if (!node) return c.json({ error: "unknown node" }, 404);
       if (node.kind === "folder") {
@@ -497,7 +567,7 @@ export function createApp(deps: AppDeps): Hono {
         nodeKind: node.kind,
         ...codeOf(node),
         range: node.range,
-        ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+        ...neighbours(node, (other) => nameOf(other, node)),
       };
     } catch (err) {
       return extractFailed(c, err);
@@ -530,7 +600,7 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
+      const { graph, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
       const node = graph.nodes.find((n) => n.id === body.nodeId);
       if (!node) return c.json({ error: "unknown node" }, 404);
       if (node.kind === "folder") {
@@ -557,7 +627,7 @@ export function createApp(deps: AppDeps): Hono {
                 },
               }
             : {}),
-          ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+          ...neighbours(node, (other) => nameOf(other, node)),
         },
       };
     } catch (err) {
@@ -716,7 +786,7 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, pluginOf, idPrefix } = origin;
+      const { graph, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
       const byId = new Map(graph.nodes.map((n) => [n.id, n]));
       // Each id once, in the order received; unknown, folder and file ids are dropped.
       items = [...new Set(body.nodeIds)].flatMap((id) => {
@@ -731,7 +801,7 @@ export function createApp(deps: AppDeps): Hono {
             name: nameOf(node, node),
             code: codeOf(node).code,
             range: node.range,
-            ...neighboursOf(graph, node, (other) => nameOf(other, node)),
+            ...neighbours(node, (other) => nameOf(other, node)),
           },
         ];
       });

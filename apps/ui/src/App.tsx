@@ -6,7 +6,7 @@ import {
   type HistoryEntry,
   type LanguageInfo,
   type NodeId,
-  type ProjectResponse,
+  type ProjectSkeleton,
   type SettingsResponse,
   type SnippetLanguage,
   type Suggestion,
@@ -19,6 +19,7 @@ import {
   useReducer,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import {
   type ExplainOrigin,
@@ -26,6 +27,8 @@ import {
   fetchLanguages,
   fetchPick,
   fetchProject,
+  fetchProjectFile,
+  fetchSearch,
   fetchSettings,
 } from "./api";
 import { codeLineOf } from "./flow/card";
@@ -51,7 +54,8 @@ import { DetailPanel, type PanelCache } from "./panel/DetailPanel";
 import { externalEffects } from "./panel/effects";
 import { IgnoredFiles } from "./panel/IgnoredFiles";
 import { clampPanel, PanelResizer } from "./panel/PanelResizer";
-import { searchEntries } from "./search/match";
+import { createProjectStore, type ProjectStore } from "./project-store";
+import { type SearchEntry, searchEntries, searchEntryOf } from "./search/match";
 import { NodeSearch } from "./search/NodeSearch";
 import { SettingsButton, SettingsDialog } from "./settings/SettingsDialog";
 
@@ -66,20 +70,30 @@ type Mapped =
   | {
       kind: "project";
       root: string;
-      response: ProjectResponse;
+      skeleton: ProjectSkeleton;
+      /** The skeleton plus the files the viewer opened: its graph is the one the map draws. */
+      store: ProjectStore;
       /** Files over 1 MB the person put on the map (CLEAN-06). */
       include: string[];
     };
 
 interface PanelInput {
-  source: string;
+  /** Absent while the node's file is on its way. */
+  source?: string | undefined;
   origin: ExplainOrigin;
   filePath?: string | undefined;
 }
 
-function graphOf(mapped: Mapped): Graph {
-  return mapped.kind === "snippet" ? mapped.graph : mapped.response.graph;
+/** Whether the map has nothing to draw: asked of the skeleton, which says so before any file loads. */
+function emptyOf(mapped: Mapped): boolean {
+  return mapped.kind === "snippet"
+    ? mapped.graph.empty
+    : mapped.skeleton.graph.empty;
 }
+
+const EMPTY_GRAPH: Graph = { language: "", empty: true, nodes: [], edges: [] };
+const noSubscribe = () => () => {};
+const noSources: ReadonlyMap<string, string> = new Map();
 
 function originOf(mapped: Mapped): ExplainOrigin {
   if (mapped.kind === "snippet") return { source: mapped.source };
@@ -89,26 +103,25 @@ function originOf(mapped: Mapped): ExplainOrigin {
 }
 
 /** The code, file and explain origin of a node: the snippet, or the node's file in a project (AD-015). */
-function panelInput(mapped: Mapped, node: FlowNode): PanelInput {
+function panelInput(
+  mapped: Mapped,
+  node: FlowNode,
+  lookup: Lookup,
+): PanelInput {
   if (mapped.kind === "snippet") {
     return { source: mapped.source, origin: originOf(mapped) };
   }
-  const filePath = fileNodeOf(mapped.response.graph, node.id)?.path;
-  const file = mapped.response.files.find((f) => f.path === filePath);
-  return { source: file?.source ?? "", origin: originOf(mapped), filePath };
+  const filePath = fileNodeOf(lookup.graph, node.id, lookup.byId)?.path;
+  const source =
+    filePath === undefined ? undefined : lookup.sources.get(filePath);
+  return { source, origin: originOf(mapped), filePath };
 }
 
-/** A call into another file of a project jumps to the target's ancestry; anything else stacks (PROJ-04). */
-function openAction(graph: Graph, node: FlowNode): NavAction {
-  const target = node.kind === "call" ? node.target : undefined;
-  if (
-    graph.project &&
-    target !== undefined &&
-    fileNodeOf(graph, target) !== fileNodeOf(graph, node.id)
-  ) {
-    return { type: "jump", path: ancestry(graph, target), via: node.id };
-  }
-  return { type: "click", node };
+/** What every card asks again on each render: the nodes by id and the source of each file, made once per map. */
+interface Lookup {
+  graph: Graph;
+  byId: ReadonlyMap<NodeId, FlowNode>;
+  sources: ReadonlyMap<string, string>;
 }
 
 /** A new map starts at its top level with nothing selected. */
@@ -336,7 +349,7 @@ export function App({ initialFolder = null }: AppProps) {
   function show(next: Mapped) {
     clearMap();
     setMapped(next);
-    if (!graphOf(next).empty) setView("map");
+    if (!emptyOf(next)) setView("map");
   }
 
   function fail(missing: string | null, dependency = false) {
@@ -363,7 +376,22 @@ export function App({ initialFolder = null }: AppProps) {
     try {
       const result = await fetchProject(path, include);
       if ("error" in result) fail(result.path, result.dependency === true);
-      else show({ kind: "project", root: path, response: result, include });
+      else {
+        const store = createProjectStore({
+          skeleton: result,
+          fetchFile: (file) =>
+            fetchProjectFile(path, include, file, result.version),
+          // The folder changed since the skeleton: open it again, with no error shown.
+          onStale: () => openFolder(path, include),
+        });
+        show({
+          kind: "project",
+          root: path,
+          skeleton: result,
+          store,
+          include,
+        });
+      }
     } catch {
       fail(null);
     }
@@ -446,7 +474,16 @@ export function App({ initialFolder = null }: AppProps) {
     dispatch({ type: "select", id });
   }, []);
 
-  const graph = mapped ? graphOf(mapped) : null;
+  const store = mapped?.kind === "project" ? mapped.store : null;
+  const storeGraph = useSyncExternalStore(
+    store?.subscribe ?? noSubscribe,
+    store ? store.getGraph : () => null,
+  );
+  const sources = useSyncExternalStore(
+    store?.subscribe ?? noSubscribe,
+    store ? store.getSources : () => noSources,
+  );
+  const graph = mapped?.kind === "snippet" ? mapped.graph : storeGraph;
   const levelId = nav.path.at(-1)?.id ?? null;
   const level = useMemo(
     () => (graph && !graph.empty ? projectLevel(graph, levelId) : null),
@@ -465,9 +502,41 @@ export function App({ initialFolder = null }: AppProps) {
     mapVersion,
     titled,
   );
+  const nodesById = useMemo(
+    () => new Map(graph?.nodes.map((n) => [n.id, n])),
+    [graph],
+  );
+  // The inside of a project's files comes by file: the open level's, the selected node's, the panel's and the file a selected call reaches.
+  const wantedFiles = useMemo(() => {
+    if (!graph?.project || !store) return [];
+    const selectedNode = nodesById.get(nav.selected ?? "");
+    const shownNode = selectedNode && nodesById.get(panelNodeOf(selectedNode));
+    const paths = [levelId, nav.selected, shownNode?.id].flatMap((id) => {
+      const path = id ? fileNodeOf(graph, id, nodesById)?.path : undefined;
+      return path === undefined ? [] : [path];
+    });
+    const reached = selectedNode && store.refOf(selectedNode.id);
+    return [...new Set(reached ? [...paths, reached] : paths)];
+  }, [graph, store, nodesById, levelId, nav.selected]);
+  const wantedKey = wantedFiles.join("\n");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: wantedKey stands for wantedFiles
+  useEffect(() => {
+    for (const path of wantedFiles) store?.ensureFile(path);
+  }, [store, wantedKey]);
+  // The open level is a file whose nodes have not come yet: the canvas shows its hub and says it loads.
+  const levelFile =
+    graph?.project && levelId !== null
+      ? fileNodeOf(graph, levelId, nodesById)?.path
+      : undefined;
+  const levelLoading = levelFile !== undefined && !sources.has(levelFile);
+  const lookup = useMemo<Lookup>(
+    () => ({ graph: graph ?? EMPTY_GRAPH, byId: nodesById, sources }),
+    [graph, nodesById, sources],
+  );
   const cardCode = useCallback(
-    (n: FlowNode) => codeLineOf(n, mapped ? panelInput(mapped, n).source : ""),
-    [mapped],
+    (n: FlowNode) =>
+      codeLineOf(n, (mapped && panelInput(mapped, n, lookup).source) ?? ""),
+    [mapped, lookup],
   );
 
   // The search covers the whole graph, not only the open level.
@@ -479,21 +548,61 @@ export function App({ initialFolder = null }: AppProps) {
   const byId = (id: NodeId | null) =>
     graph?.nodes.find((n) => n.id === id) ?? null;
 
-  /** A search pick: opens the levels down to the node, then centers and selects it. */
-  function goToNode(id: NodeId) {
-    const node = byId(id);
-    if (!graph || !node) return;
+  // The nodes of files not opened yet come from the server; the file of a hit is the `file` in its ancestry.
+  const remoteSearch = useMemo(() => {
+    if (mapped?.kind !== "project") return undefined;
+    const { root, include, skeleton, store: held } = mapped;
+    const files = new Map(
+      skeleton.graph.nodes.flatMap((n) =>
+        n.kind === "file" && n.path !== undefined ? [[n.id, n.path]] : [],
+      ),
+    );
+    return async (query: string): Promise<SearchEntry[]> => {
+      const found = await fetchSearch(root, include, query, skeleton.version);
+      if (found.status === "stale") {
+        held.reportStale();
+        return [];
+      }
+      return found.hits.map((hit) => {
+        const file = hit.ancestry.flatMap((id) => files.get(id) ?? []).at(-1);
+        return {
+          ...searchEntryOf(hit.node, file, undefined),
+          ancestry: hit.ancestry,
+        };
+      });
+    };
+  }, [mapped]);
+
+  // The latest navigation, for a pick that waits for a file before it moves.
+  const navNow = useRef(nav);
+  navNow.current = nav;
+
+  /** A search pick: loads the file of the node if it is not here, opens the levels down to the node, then centers and selects it. */
+  async function goToNode(entry: SearchEntry) {
+    const { id } = entry;
+    let where = graph;
+    if (store && !byId(id)) {
+      const file = entry.ancestry
+        ?.flatMap((a) => nodesById.get(a) ?? [])
+        .filter((n) => n.kind === "file")
+        .at(-1)?.path;
+      if (file === undefined || !(await store.ensureFile(file))) return;
+      where = store.getGraph();
+    }
+    const node = where?.nodes.find((n) => n.id === id);
+    if (!where || !node) return;
+    const open = navNow.current.path;
     const listed = (path: NodeId[]) =>
-      projectLevel(graph, path.at(-1) ?? null).nodes.some((n) => n.id === id);
-    let path = node.parentId === null ? [] : ancestry(graph, node.parentId);
+      projectLevel(where, path.at(-1) ?? null).nodes.some((n) => n.id === id);
+    let path = node.parentId === null ? [] : ancestry(where, node.parentId);
     // A node its parent's level leaves out (a function called, not an entry): open it instead.
-    if (!listed(path) && graph.nodes.some((n) => n.parentId === id)) {
-      path = ancestry(graph, id);
+    if (!listed(path) && where.nodes.some((n) => n.parentId === id)) {
+      path = ancestry(where, id);
     }
     setMark(undefined);
     if (
-      path.length === nav.path.length &&
-      path.every((p, i) => p === nav.path[i]?.id)
+      path.length === open.length &&
+      path.every((p, i) => p === open[i]?.id)
     ) {
       setCenter((c) => ({ id, nonce: (c?.nonce ?? 0) + 1 }));
       dispatch({ type: "select", id });
@@ -502,6 +611,22 @@ export function App({ initialFolder = null }: AppProps) {
     setFocusId(id);
     dispatch({ type: "reveal", path, id });
   }
+  /** A call into another file of a project loads that file, then jumps to the target's ancestry; anything else stacks (PROJ-04). */
+  async function openNode(node: FlowNode) {
+    const file = store?.refOf(node.id);
+    if (!store || !graph || node.kind !== "call" || !node.target || !file) {
+      dispatch({ type: "click", node });
+      return;
+    }
+    const target = node.target;
+    if (!(await store.ensureFile(file))) return;
+    dispatch({
+      type: "jump",
+      path: ancestry(store.getGraph(), target),
+      via: node.id,
+    });
+  }
+
   const selected = byId(nav.selected);
   const shown = selected ? byId(panelNodeOf(selected)) : null;
   const panelNode = shown && hasPanel(shown) ? shown : null;
@@ -636,15 +761,17 @@ export function App({ initialFolder = null }: AppProps) {
           onToggle={() => setHistoryOpen((o) => !o)}
         />
         <SettingsButton onOpen={openSettings} />
-        <NodeSearch entries={entries} onPick={goToNode} />
+        <NodeSearch entries={entries} remote={remoteSearch} onPick={goToNode} />
         {mapped.kind === "project" && (
           <IgnoredFiles
-            ignored={mapped.response.ignored}
+            ignored={mapped.skeleton.ignored}
             onAdd={(path) => openFolder(mapped.root, [...mapped.include, path])}
           />
         )}
         <FlowCanvas
           graph={graph}
+          mapKey={mapped}
+          loading={levelLoading}
           levelId={levelId}
           depth={nav.path.length}
           selected={nav.selected}
@@ -661,7 +788,7 @@ export function App({ initialFolder = null }: AppProps) {
           onOpen={(node) => {
             setFocusId(null);
             setMark(undefined);
-            dispatch(openAction(graph, node));
+            openNode(node);
           }}
           onSuggestion={(id, line) => {
             setMark((m) => ({ line, nonce: (m?.nonce ?? 0) + 1 }));
@@ -729,7 +856,7 @@ export function App({ initialFolder = null }: AppProps) {
       )}
       {panelNode && !panelCollapsed && (
         <DetailPanel
-          {...panelInput(mapped, panelNode)}
+          {...panelInput(mapped, panelNode, lookup)}
           snippetFile={snippetFileName(
             mapped.kind === "snippet" ? mapped.language : undefined,
             languages,

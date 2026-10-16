@@ -142,6 +142,7 @@ export const ptBR = {
   "panel.rules": "2 frases · voz ativa · um termo por conceito",
   "panel.codeLine": "CÓDIGO · {file}, linha {n}",
   "panel.codeLines": "CÓDIGO · {file}, linhas {a} a {b}",
+  "panel.codeLoading": "Carregando o código…",
   "panel.io": "ENTRADA E SAÍDA",
   "panel.ioAria": "Entrada e saída",
   "panel.noKey": "Configure um provedor de LLM em Configurações.",
@@ -187,6 +188,7 @@ export const ptBR = {
   "list.and": "e",
   "list.or": "ou",
   "flow.edgeAria": "Aresta de {from} para {to}",
+  "flow.loading": "Carregando o arquivo…",
   "flow.nodeHelp":
     "Tecle Enter ou espaço para selecionar um nó. Tecle Esc para cancelar.",
   "flow.nodeHelpKeyboard":

@@ -24,7 +24,7 @@ import { typescriptPlugin } from "@8n8/lang-typescript";
 import type {
   ExplainRequest,
   LanguagePlugin,
-  ProjectResponse,
+  ProjectData,
   TitleRequest,
 } from "@8n8/model";
 import { afterAll, describe, expect, it, vi } from "vitest";
@@ -679,7 +679,7 @@ describe("composeReadProject", () => {
     const read = await readProject(loja);
     rmSync(join(loja, ".."), { recursive: true, force: true });
     if (read.kind !== "ok") throw new Error("expected ok");
-    const response: ProjectResponse = read.response;
+    const response: ProjectData = read.response;
     expect(response.name).toBe("loja");
     expect(response.graph.project).toEqual({ name: "loja" });
     expect(response.files).toHaveLength(8);
@@ -687,6 +687,43 @@ describe("composeReadProject", () => {
       { path: "grande.py", reason: "too-large", addable: true },
       { path: "latin1.py", reason: "not-utf8" },
     ]);
+  });
+
+  it("names the build with a version; asking for it serves the build without reading the folder again", async () => {
+    const loja = makeLoja();
+    let reads = 0;
+    const counting = composeReadProject(
+      (path, filter) => {
+        reads += 1;
+        return readSourceFolder(path, filter);
+      },
+      [pythonPlugin],
+    );
+    const first = await counting(loja);
+    if (first.kind !== "ok") throw new Error("expected ok");
+    const { version } = first.response;
+    expect(version).toMatch(/^[0-9a-f]{40}$/);
+    const held = await counting(loja, [], version);
+    expect(held).toBe(first);
+    expect(reads).toBe(1);
+    // A version no build has is read as usual.
+    const other = await counting(loja, [], "nope");
+    rmSync(join(loja, ".."), { recursive: true, force: true });
+    expect(reads).toBe(2);
+    expect(other).toBe(first);
+  });
+
+  it("the same files in two folders are two builds: asking for the version of one never serves the other", async () => {
+    const one = makeLoja();
+    const two = makeLoja();
+    const a = await readProject(one);
+    const b = await readProject(two);
+    if (a.kind !== "ok" || b.kind !== "ok") throw new Error("expected ok");
+    expect(a.response.version).not.toBe(b.response.version);
+    expect(await readProject(one, [], a.response.version)).toBe(a);
+    expect(await readProject(two, [], b.response.version)).toBe(b);
+    rmSync(join(one, ".."), { recursive: true, force: true });
+    rmSync(join(two, ".."), { recursive: true, force: true });
   });
 
   it("gives not-found for a missing path (PROJ-05)", async () => {

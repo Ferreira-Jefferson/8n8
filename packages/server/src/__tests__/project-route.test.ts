@@ -2,14 +2,14 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { pythonPlugin } from "@8n8/lang-python";
-import type { ExplainRequest, ProjectResponse, SourceFile } from "@8n8/model";
+import type { ExplainRequest, ProjectData, SourceFile } from "@8n8/model";
 import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 import { fakeLang } from "./fake-lang";
 import { TEST_TOKEN } from "./test-token";
 
-const response: ProjectResponse = {
+const response: ProjectData = {
   name: "loja",
   graph: { language: "python", empty: false, nodes: [], edges: [] },
   files: [{ path: "a.py", source: "x = 1\n" }],
@@ -43,11 +43,17 @@ function setup(read: ProjectRead) {
 }
 
 describe("POST /api/project", () => {
-  it("returns { name, graph, files, ignored } from readProject, called with the typed path (PROJ-06)", async () => {
+  it("returns the skeleton of what readProject read, with no source, called with the typed path (PROJ-06)", async () => {
     const { paths, post } = setup({ kind: "ok", root: "/tmp/loja", response });
     const res = await post({ path: "./minha pasta/loja" });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual(response);
+    expect(await res.json()).toEqual({
+      name: "loja",
+      ignored: [{ path: "grande.py", reason: "too-large" }],
+      stats: { files: 0, nodes: 0, edges: 0 },
+      version: "",
+      graph: { language: "python", empty: false, nodes: [], edges: [] },
+    });
     expect(paths).toEqual(["./minha pasta/loja"]);
   });
 

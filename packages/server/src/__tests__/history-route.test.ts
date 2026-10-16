@@ -1,4 +1,4 @@
-import type { Graph, ProjectResponse } from "@8n8/model";
+import type { Graph, ProjectData } from "@8n8/model";
 import { describe, expect, it, vi } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 import { type History, openHistory } from "../history";
@@ -12,7 +12,7 @@ const graph: Graph = {
   edges: [],
 };
 const empty: Graph = { ...graph, empty: true };
-const response: ProjectResponse = {
+const response: ProjectData = {
   name: "loja",
   graph,
   files: [{ path: "a.py", source: "x = 1\n" }],

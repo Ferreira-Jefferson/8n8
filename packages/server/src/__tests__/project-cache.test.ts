@@ -37,6 +37,16 @@ describe("createProjectCache", () => {
     expect(make).toHaveBeenCalledTimes(1);
   });
 
+  it("finds a kept result by its fingerprint and nothing else", async () => {
+    const cache = createProjectCache<string>();
+    expect(cache.find("f1")).toBeUndefined();
+    await cache.get("k", "f1", () => "a");
+    expect(await cache.find("f1")).toBe("a");
+    expect(cache.find("f2")).toBeUndefined();
+    await cache.get("k", "f2", () => "b");
+    expect(cache.find("f1")).toBeUndefined();
+  });
+
   it("makes it again when the fingerprint changes", async () => {
     const cache = createProjectCache<string>();
     expect(await cache.get("k", "f1", () => "a")).toBe("a");

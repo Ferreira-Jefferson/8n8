@@ -49,6 +49,8 @@ export interface FlowNode {
   path?: string;
   /** function, class and module: the lines of its documentation comment (docstring, JSDoc), in the same absolute lines as `range`. */
   docstring?: LineRange;
+  /** Only on a `file` of a skeleton, whose inner nodes are not loaded: how many nodes its level shows. */
+  size?: number;
 }
 
 /**

@@ -1,5 +1,6 @@
 import type { EdgeKind, FlowEdge, FlowNode, Graph, NodeId } from "@8n8/model";
-import { hasCommands, mainFlowRows } from "./main-flow";
+import { shownInFile } from "@8n8/model";
+import { mainFlowRows } from "./main-flow";
 
 export interface Level {
   nodes: FlowNode[];
@@ -66,7 +67,7 @@ function innerLevel(
       };
     }
     if (kind === "file") {
-      const nodes = children.filter((n) => shownInFile(graph, n));
+      const nodes = children.filter((n) => shownInFile(graph.nodes, n));
       const visible = new Set(nodes.map((n) => n.id));
       return {
         nodes,
@@ -86,15 +87,6 @@ function innerLevel(
   return { nodes: children, edges, reach: "inside" };
 }
 
-/** Loose code with no call only sets names: it shows in the file's panel, not on its level. */
-function shownInFile(graph: Graph, n: FlowNode): boolean {
-  return (
-    n.kind !== "module" ||
-    n.syntaxError !== undefined ||
-    hasCommands(graph, n.id)
-  );
-}
-
 /** The kinds whose size says something before the viewer opens them. */
 const SIZED: ReadonlySet<FlowNode["kind"]> = new Set([
   "folder",
@@ -111,9 +103,11 @@ const SIZED: ReadonlySet<FlowNode["kind"]> = new Set([
  */
 export function levelSize(graph: Graph, node: FlowNode): number | undefined {
   if (!SIZED.has(node.kind)) return undefined;
+  // A file of a skeleton carries its size, counted by the same rule, before its nodes load.
+  if (node.size !== undefined) return node.size;
   const children = graph.nodes.filter((n) => n.parentId === node.id);
   if (graph.project && node.kind === "file") {
-    return children.filter((n) => shownInFile(graph, n)).length;
+    return children.filter((n) => shownInFile(graph.nodes, n)).length;
   }
   return children.length;
 }

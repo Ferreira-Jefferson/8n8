@@ -13,7 +13,7 @@ import { connect } from "node:net";
 import { networkInterfaces, tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ProjectResponse } from "@8n8/model";
+import type { FileDetail, ProjectSkeleton } from "@8n8/model";
 import { expect, type Page, test } from "./test";
 
 // Feature 02-pasta-local, end to end: real build, real server on 8148 with no key,
@@ -212,8 +212,15 @@ test.describe("Pasta local", () => {
   }) => {
     const project = page.waitForResponse("**/api/project");
     await openFolder(page, LOJA);
-    const { graph } = (await (await project).json()) as ProjectResponse;
+    const skeleton = (await (await project).json()) as ProjectSkeleton;
+    // The inside of a file comes when the file opens.
+    const file = page.waitForResponse(
+      (r) =>
+        r.url().endsWith("/api/project/file") &&
+        r.request().postDataJSON().path === "relatorio.py",
+    );
     await clickCard(page, "file:relatorio.py");
+    const detail = (await (await file).json()) as FileDetail;
     await clickCard(page, "file:relatorio.py/fn:gerar");
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "loja",
@@ -224,13 +231,15 @@ test.describe("Pasta local", () => {
     // `return calcular_frete(10)` is a RETORNO step (VID-20); the call it holds
     // is EXTERNO, with no target and no calls wire (PROJ-09).
     const STEP = "file:relatorio.py/fn:gerar/s0";
-    const node = graph.nodes.find((n) => n.id === STEP);
+    const node = detail.nodes.find((n) => n.id === STEP);
     expect(node?.kind).toBe("return");
     expect(node?.callee).toBe("calcular_frete");
     expect(node?.category).toBe("EXTERNO");
     expect(node?.target).toBeUndefined();
+    // No calls wire inside the file, and none from it to another file.
+    expect(detail.edges.filter((e) => e.kind === "calls")).toEqual([]);
     expect(
-      graph.edges.filter(
+      skeleton.graph.edges.filter(
         (e) => e.kind === "calls" && e.source.startsWith("file:relatorio.py"),
       ),
     ).toEqual([]);

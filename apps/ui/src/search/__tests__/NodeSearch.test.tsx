@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -96,7 +97,7 @@ describe("NodeSearch", () => {
     fireEvent.keyDown(field(), { key: "ArrowUp" });
     expect(selected(1)).toBe("true");
     fireEvent.keyDown(field(), { key: "Enter" });
-    expect(onPick).toHaveBeenCalledWith("b");
+    expect(onPick).toHaveBeenCalledWith(ENTRIES[1]);
     expect(screen.queryByRole("listbox")).toBeNull();
   });
 
@@ -105,14 +106,14 @@ describe("NodeSearch", () => {
     open();
     fireEvent.change(field(), { target: { value: "frete" } });
     fireEvent.keyDown(field(), { key: "Enter" });
-    expect(onPick).toHaveBeenCalledWith("b");
+    expect(onPick).toHaveBeenCalledWith(ENTRIES[1]);
   });
 
   it("a click on a result picks it and closes", () => {
     const { onPick } = setup();
     open();
     fireEvent.click(screen.getAllByRole("option")[0] as HTMLElement);
-    expect(onPick).toHaveBeenCalledWith("a");
+    expect(onPick).toHaveBeenCalledWith(ENTRIES[0]);
     expect(field().getAttribute("aria-expanded")).toBe("false");
   });
 
@@ -131,5 +132,99 @@ describe("NodeSearch", () => {
     open();
     fireEvent.mouseDown(screen.getByRole("button", { name: "fora" }));
     expect(field().getAttribute("aria-expanded")).toBe("false");
+  });
+});
+
+describe("NodeSearch with the server", () => {
+  const FAR: SearchEntry = {
+    id: "far",
+    title: "Cálculo de imposto",
+    tech: "calcular_imposto()",
+    where: "imposto.py · 1–9",
+    ancestry: ["dir:x", "file:imposto.py"],
+  };
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  function setupRemote(remote: (q: string) => Promise<SearchEntry[]>) {
+    const onPick = vi.fn();
+    render(<NodeSearch entries={ENTRIES} remote={remote} onPick={onPick} />);
+    return { onPick };
+  }
+
+  it("answers at once from the screen, asks the server after a pause and adds what it finds", async () => {
+    vi.useFakeTimers();
+    const remote = vi.fn(async () => [FAR]);
+    setupRemote(remote);
+    open();
+    fireEvent.change(field(), { target: { value: "calcular" } });
+    expect(screen.getAllByRole("option")).toHaveLength(1);
+    expect(remote).not.toHaveBeenCalled();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+    expect(remote).toHaveBeenCalledTimes(1);
+    expect(remote).toHaveBeenCalledWith("calcular");
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(2);
+    expect(options[1]?.textContent).toContain("calcular_imposto()");
+  });
+
+  it("asks once for a burst of keys and never for a blank query", async () => {
+    vi.useFakeTimers();
+    const remote = vi.fn(async () => []);
+    setupRemote(remote);
+    open();
+    fireEvent.change(field(), { target: { value: "c" } });
+    fireEvent.change(field(), { target: { value: "ca" } });
+    fireEvent.change(field(), { target: { value: "cal" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+    expect(remote).toHaveBeenCalledTimes(1);
+    expect(remote).toHaveBeenCalledWith("cal");
+    fireEvent.change(field(), { target: { value: "  " } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+    expect(remote).toHaveBeenCalledTimes(1);
+  });
+
+  it("drops the answer to an old query", async () => {
+    vi.useFakeTimers();
+    let answerOld: (list: SearchEntry[]) => void = () => {};
+    const remote = vi.fn(
+      (q: string) =>
+        new Promise<SearchEntry[]>((resolve) => {
+          if (q === "imp") answerOld = resolve;
+          else resolve([]);
+        }),
+    );
+    setupRemote(remote);
+    open();
+    fireEvent.change(field(), { target: { value: "imp" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+    fireEvent.change(field(), { target: { value: "frete" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+    await act(async () => answerOld([FAR]));
+    expect(screen.queryByText("calcular_imposto()")).toBeNull();
+  });
+
+  it("hands the pick of a hit of the server, with its ancestry, to the screen", async () => {
+    vi.useFakeTimers();
+    const { onPick } = setupRemote(async () => [FAR]);
+    open();
+    fireEvent.change(field(), { target: { value: "imposto" } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+    fireEvent.click(screen.getAllByRole("option")[0] as HTMLElement);
+    expect(onPick).toHaveBeenCalledWith(FAR);
   });
 });

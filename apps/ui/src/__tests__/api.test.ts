@@ -1,7 +1,7 @@
 import type {
   Graph,
   NodeTitle,
-  ProjectResponse,
+  ProjectSkeleton,
   SettingsResponse,
 } from "@8n8/model";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -12,6 +12,8 @@ import {
   fetchHistoryEntry,
   fetchLanguages,
   fetchProject,
+  fetchProjectFile,
+  fetchSearch,
   fetchSettings,
   fetchSuggestions,
   fetchSummary,
@@ -99,15 +101,85 @@ describe("fetchLanguages", () => {
   });
 });
 
+describe("fetchProjectFile", () => {
+  it("posts the folder, the path and the build version, and returns the detail", async () => {
+    const detail = {
+      path: "a.py",
+      source: "x = 1\n",
+      nodes: [],
+      edges: [],
+      refs: {},
+    };
+    const fn = fakeFetch(200, detail);
+    const result = await fetchProjectFile("C:/loja", ["g.py"], "a.py", "v1");
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/project/file");
+    expect(JSON.parse(init.body as string)).toEqual({
+      root: "C:/loja",
+      include: ["g.py"],
+      path: "a.py",
+      version: "v1",
+    });
+    expect(result).toEqual({ status: "ok", detail });
+  });
+
+  it("leaves out include and version when there are none", async () => {
+    const fn = fakeFetch(200, { path: "a.py", source: "" });
+    await fetchProjectFile("C:/loja", [], "a.py", undefined);
+    const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({
+      root: "C:/loja",
+      path: "a.py",
+    });
+  });
+
+  it("answers stale on 409 and throws on any other failure", async () => {
+    fakeFetch(409, { error: "stale", version: "v2" });
+    expect(await fetchProjectFile("C:/loja", [], "a.py", "v1")).toEqual({
+      status: "stale",
+    });
+    fakeFetch(404, { error: "not-found" });
+    await expect(
+      fetchProjectFile("C:/loja", [], "a.py", "v1"),
+    ).rejects.toThrow();
+  });
+});
+
+describe("fetchSearch", () => {
+  it("posts the folder, the query and the build version, and returns the hits", async () => {
+    const hits = [{ node: { id: "n" }, ancestry: ["dir:a"] }];
+    const fn = fakeFetch(200, { hits });
+    const result = await fetchSearch("C:/loja", [], "frete", "v1");
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/project/search");
+    expect(JSON.parse(init.body as string)).toEqual({
+      root: "C:/loja",
+      query: "frete",
+      version: "v1",
+    });
+    expect(result).toEqual({ status: "ok", hits });
+  });
+
+  it("answers stale on 409 and throws on any other failure", async () => {
+    fakeFetch(409, { error: "stale", version: "v2" });
+    expect(await fetchSearch("C:/loja", [], "x", "v1")).toEqual({
+      status: "stale",
+    });
+    fakeFetch(500, {});
+    await expect(fetchSearch("C:/loja", [], "x", "v1")).rejects.toThrow();
+  });
+});
+
 describe("fetchProject (PROJ-05)", () => {
-  const project: ProjectResponse = {
+  const project: ProjectSkeleton = {
     name: "loja",
     graph: { ...graph, project: { name: "loja" } },
-    files: [{ path: "main.py", source: "x = 1\n" }],
     ignored: [{ path: "grande.py", reason: "too-large" }],
+    stats: { files: 0, nodes: 0, edges: 0 },
+    version: "v1",
   };
 
-  it("posts { path } as JSON to /api/project and returns the body on 200", async () => {
+  it("posts { path } as JSON to /api/project and returns the skeleton on 200", async () => {
     const fn = fakeFetch(200, project);
     const result = await fetchProject("C:/loja");
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
