@@ -47,6 +47,7 @@ import type { Hono } from "hono";
 import { createApp, type ProjectRead } from "./app";
 import { type History, openHistory } from "./history";
 import { createPicker } from "./pick-path";
+import { createProjectCache, fingerprintOf } from "./project-cache";
 import {
   createSettingsService,
   type LlmSetup,
@@ -294,28 +295,35 @@ export function composeReadProject(
     extensions: plugins.flatMap((p) => p.extensions),
     ignoredDirs: plugins.flatMap((p) => p.ignoredDirs),
   };
+  // Reading is cheap and analyzing is not: a folder whose files did not change is not analyzed again.
+  // The summary, suggestion and chat requests read the folder on every call, so they hit this too.
+  const cache = createProjectCache<ProjectRead>();
   return async (path, include = []) => {
+    const ignoring = await ignoreDependencies();
     const folder = await read(path, {
       ...filter,
       include,
-      ignoreDependencies: await ignoreDependencies(),
+      ignoreDependencies: ignoring,
     });
     if (folder.kind === "not-found") return folder;
     const { name, root, files, ignored } = folder;
-    const { graph: built, offers, requests } = analyzeProject(files, plugins);
-    // Wires between languages (D3, D4); the nodes stay as the plugins made them.
-    const { edges: links } = linkProject({
-      offers,
-      requests,
-      nodes: built.nodes,
+    const key = [root, [...include].sort().join(","), ignoring].join("|");
+    return cache.get(key, fingerprintOf(files, ignored), () => {
+      const { graph: built, offers, requests } = analyzeProject(files, plugins);
+      // Wires between languages (D3, D4); the nodes stay as the plugins made them.
+      const { edges: links } = linkProject({
+        offers,
+        requests,
+        nodes: built.nodes,
+      });
+      const known = new Set(built.edges.map((e) => e.id));
+      const graph = {
+        ...built,
+        edges: [...built.edges, ...links.filter((e) => !known.has(e.id))],
+        project: { name },
+      };
+      return { kind: "ok", root, response: { name, graph, files, ignored } };
     });
-    const known = new Set(built.edges.map((e) => e.id));
-    const graph = {
-      ...built,
-      edges: [...built.edges, ...links.filter((e) => !known.has(e.id))],
-      project: { name },
-    };
-    return { kind: "ok", root, response: { name, graph, files, ignored } };
   };
 }
 

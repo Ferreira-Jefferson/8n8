@@ -27,7 +27,7 @@ import type {
   ProjectResponse,
   TitleRequest,
 } from "@8n8/model";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../app";
 import {
   composeExplain,
@@ -851,6 +851,32 @@ describe("composeReadProject: the plugin registry", () => {
         ignoreDependencies: true,
       },
     ]);
+  });
+
+  it("analyzes a folder once while its files do not change, and again when one does", async () => {
+    let files = [{ path: "a.py", source: "x = 1\n" }];
+    const analyze = vi.fn(pythonPlugin.analyze);
+    const spy = { ...pythonPlugin, analyze };
+    const readProject = composeReadProject(
+      async () => ({
+        kind: "ok",
+        name: "p",
+        root: "/p",
+        files,
+        ignored: [],
+      }),
+      [spy],
+    );
+
+    const first = await readProject("/p");
+    const second = await readProject("/p");
+    expect(second).toBe(first);
+    expect(analyze).toHaveBeenCalledTimes(1);
+
+    files = [{ path: "a.py", source: "x = 2\n" }];
+    const third = await readProject("/p");
+    expect(third).not.toBe(first);
+    expect(analyze).toHaveBeenCalledTimes(2);
   });
 
   it("registers the Python and TypeScript plugins", () => {

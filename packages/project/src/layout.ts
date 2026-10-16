@@ -5,7 +5,8 @@ export function byCode(a: string, b: string): number {
 }
 
 export function dirOf(path: string): string {
-  return path.split("/").slice(0, -1).join("/");
+  const slash = path.lastIndexOf("/");
+  return slash < 0 ? "" : path.slice(0, slash);
 }
 
 export function baseName(path: string): string {
