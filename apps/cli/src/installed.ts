@@ -16,6 +16,7 @@ process.exitCode = await run(process.argv.slice(2), {
     web: join(here, "web"),
     ptsRules: join(here, "pts.md"),
     steRules: join(here, "ste.md"),
+    analysisWorker: join(here, "analysis-worker.mjs"),
   },
   out: (line) => console.log(line),
   err: (line) => console.error(line),

@@ -26,6 +26,8 @@ export interface RunDeps {
     ptsRules: string;
     /** The Simplified Technical English rules file. */
     steRules: string;
+    /** The bundled analysis worker; undefined runs the analysis in the main thread (pnpm dev). */
+    analysisWorker?: string;
   };
   out: (line: string) => void;
   err: (line: string) => void;
@@ -92,6 +94,9 @@ export async function run(argv: string[], deps: RunDeps): Promise<number> {
     port,
     token,
     settings,
+    ...(deps.paths.analysisWorker === undefined
+      ? {}
+      : { analysisWorker: deps.paths.analysisWorker }),
   });
   if (deps.paths.web !== undefined) {
     app.use("/*", serveStatic({ root: deps.paths.web }));

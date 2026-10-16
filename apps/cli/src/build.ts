@@ -100,6 +100,11 @@ export async function buildCli(outDir = join(cliRoot, "dist")): Promise<void> {
   // Two files: 8n8.mjs sets the warning filter, then loads cli.mjs (see bin.ts).
   await bundle(join(cliRoot, "src/installed.ts"), join(outDir, "cli.mjs"));
   await bundle(join(cliRoot, "src/bin.ts"), join(outDir, "8n8.mjs"));
+  // The analysis worker threads load this file (see packages/server/src/analysis-pool.ts).
+  await bundle(
+    join(repoRoot, "packages/server/src/analysis-worker.ts"),
+    join(outDir, "analysis-worker.mjs"),
+  );
   copyGrammars(outDir);
   cpSync(web, join(outDir, "web"), { recursive: true });
   cpSync(

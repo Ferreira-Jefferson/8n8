@@ -22,8 +22,6 @@ import {
   titleNodes,
 } from "@8n8/explain";
 import { type FolderRead, type ReadFilter, readSourceFolder } from "@8n8/input";
-import { pythonPlugin } from "@8n8/lang-python";
-import { typescriptPlugin } from "@8n8/lang-typescript";
 import { linkProject } from "@8n8/links";
 import { resolveLlmConfig } from "@8n8/llm";
 import {
@@ -35,6 +33,7 @@ import {
   type ExplainResponse,
   type LanguagePlugin,
   type Locale,
+  type SourceFile,
   type StructureRequest,
   type StructureResponse,
   type TitleItem,
@@ -42,11 +41,17 @@ import {
   type TitlesResponse,
   translateSystem,
 } from "@8n8/model";
-import { analyzeProject } from "@8n8/project";
+import {
+  analyzeProject,
+  analyzeProjectParallel,
+  type ProjectBuild,
+} from "@8n8/project";
 import type { Hono } from "hono";
+import { createAnalysisPool } from "./analysis-pool";
 import { createApp, type ProjectRead } from "./app";
 import { type History, openHistory } from "./history";
 import { createPicker } from "./pick-path";
+import { languagePlugins } from "./plugins";
 import {
   createSettingsService,
   type LlmSetup,
@@ -278,17 +283,36 @@ export function resolvePort(env: Record<string, string | undefined>): number {
   return /^\d+$/.test(raw) && port >= 1 && port <= 65535 ? port : DEFAULT_PORT;
 }
 
-/** The languages the server knows; a new language is one more entry. */
-export const languagePlugins: LanguagePlugin[] = [
-  pythonPlugin,
-  typescriptPlugin,
-];
+export { languagePlugins };
+
+/** Builds the project graph from the files; the sequential `analyzeProject`, or the same result through worker threads. */
+export type Analyze = (
+  files: SourceFile[],
+  plugins: LanguagePlugin[],
+) => Promise<ProjectBuild>;
+
+/** Under this many files the workers cost more than they save. */
+const MIN_PARALLEL_FILES = 150;
+
+/** Analysis in worker threads, so the thread that serves the requests never waits for it; in this thread when the host gives no worker. */
+function composeAnalyze(worker: string | undefined): Analyze {
+  if (worker === undefined) {
+    return async (files, all) => analyzeProject(files, all);
+  }
+  const pool = createAnalysisPool({ worker });
+  return (files, all) =>
+    analyzeProjectParallel(files, all, {
+      runner: pool,
+      minFiles: MIN_PARALLEL_FILES,
+    });
+}
 
 /** Reads the files of the plugins' extensions and maps them: the project sets `graph.project` (PROJ-01, PROJ-05, PROJ-06, PROJ-07). */
 export function composeReadProject(
   read: (path: string, filter: ReadFilter) => Promise<FolderRead>,
   plugins: LanguagePlugin[],
   ignoreDependencies: () => Promise<boolean> = async () => true,
+  analyze: Analyze = async (files, all) => analyzeProject(files, all),
 ): (path: string, include?: string[]) => Promise<ProjectRead> {
   const filter: ReadFilter = {
     extensions: plugins.flatMap((p) => p.extensions),
@@ -302,7 +326,7 @@ export function composeReadProject(
     });
     if (folder.kind === "not-found") return folder;
     const { name, root, files, ignored } = folder;
-    const { graph: built, offers, requests } = analyzeProject(files, plugins);
+    const { graph: built, offers, requests } = await analyze(files, plugins);
     // Wires between languages (D3, D4); the nodes stay as the plugins made them.
     const { edges: links } = linkProject({
       offers,
@@ -355,6 +379,8 @@ export interface CoreOptions {
   token: string;
   /** Where the host keeps the LLM settings between runs (CFG-18). */
   settings: SettingsStore;
+  /** The bundled analysis worker (analysis-worker.mjs); without it, the analysis runs in the thread of the request. */
+  analysisWorker?: string;
 }
 
 /** The whole app, built from explicit options: the host decides where data lives and opens the port (AD-022). */
@@ -376,8 +402,11 @@ export function createCore(options: CoreOptions): Hono {
     titles: composeTitles(options.env, compose),
     ...composeChat(compose),
     notes: composeNotes(options.env, compose),
-    readProject: composeReadProject(readSourceFolder, languagePlugins, () =>
-      settings.ignoreDependencies(),
+    readProject: composeReadProject(
+      readSourceFolder,
+      languagePlugins,
+      () => settings.ignoreDependencies(),
+      composeAnalyze(options.analysisWorker),
     ),
     pick: createPicker(),
     history:
