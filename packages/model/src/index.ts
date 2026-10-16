@@ -67,6 +67,7 @@ export { childId, fileId, folderId, topLevelId } from "./ids";
 export { sliceLines, syntaxErrorLabel } from "./lines";
 export type { ChatMessage, LlmClient } from "./llm";
 export type {
+  AnalysisSlice,
   LanguageAnalysis,
   LanguagePlugin,
   LinkChannel,

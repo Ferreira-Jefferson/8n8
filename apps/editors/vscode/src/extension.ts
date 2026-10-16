@@ -54,6 +54,7 @@ export function activate(
         env: process.env,
         ptsRules: readFileSync(join(dist, "pts.md"), "utf8"),
         steRules: readFileSync(join(dist, "ste.md"), "utf8"),
+        analysisWorker: join(dist, "analysis-worker.mjs"),
         ...dataPaths(data, join),
         port: BRIDGE_PORT,
         token,

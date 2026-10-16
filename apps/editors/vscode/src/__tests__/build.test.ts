@@ -1,15 +1,22 @@
 import {
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { bundleCore, bundleExtension, copyGrammars } from "../build";
+import {
+  analysisWorkerEntry,
+  bundleCore,
+  bundleExtension,
+  copyGrammars,
+} from "../build";
 
 const out = mkdtempSync(join(tmpdir(), "8n8-vscode-"));
 afterAll(() => {
@@ -22,6 +29,7 @@ afterAll(() => {
 
 beforeAll(async () => {
   await bundleCore(join(out, "core.mjs"));
+  await bundleCore(join(out, "analysis-worker.mjs"), analysisWorkerEntry);
   await bundleExtension(join(out, "extension.cjs"));
   copyGrammars(out);
 }, 120_000);
@@ -81,4 +89,48 @@ describe("the extension build (VSC-07)", () => {
         .id,
     ).toBe("typescript");
   });
+
+  it("maps a large folder through the worker threads of the bundle", async () => {
+    const { createCore } = (await import(
+      pathToFileURL(join(out, "core.mjs")).href
+    )) as typeof import("@8n8/server");
+    // More files than the threshold below which the core stays in one thread.
+    const folder = join(out, "grande");
+    mkdirSync(folder, { recursive: true });
+    for (let i = 0; i < 200; i++) {
+      const next = (i + 1) % 200;
+      writeFileSync(
+        join(folder, `m${i}.py`),
+        `from m${next} import f${next}\n\n\ndef f${i}():\n    return f${next}()\n`,
+      );
+    }
+    const token = "vscode-build-token-not-a-secret-00000";
+    const app = createCore({
+      env: {},
+      ptsRules: "regras",
+      steRules: "regras",
+      cacheDir: join(out, "cache"),
+      analysisWorker: join(out, "analysis-worker.mjs"),
+      historyFile: undefined,
+      port: 8148,
+      token,
+      settings: { read: async () => ({}), write: async () => {} },
+    });
+    const res = await app.fetch(
+      new Request("http://127.0.0.1:8148/api/project", {
+        method: "POST",
+        headers: {
+          host: "127.0.0.1:8148",
+          "x-8n8-token": token,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ path: folder }),
+      }),
+    );
+    const { graph } = (await res.json()) as {
+      graph: { nodes: { kind: string }[]; edges: { kind: string }[] };
+    };
+    expect(graph.nodes.filter((n) => n.kind === "file")).toHaveLength(200);
+    expect(graph.edges.filter((e) => e.kind === "imports")).toHaveLength(200);
+  }, 60_000);
 });

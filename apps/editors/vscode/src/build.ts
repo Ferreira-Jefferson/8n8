@@ -17,6 +17,11 @@ import { build, type Plugin } from "esbuild";
 const extRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = join(extRoot, "../../..");
 const languagesDir = join(repoRoot, "packages/languages");
+/** The entry of the analysis worker threads; its bundle sits next to core.mjs. */
+export const analysisWorkerEntry = join(
+  repoRoot,
+  "packages/server/src/analysis-worker.ts",
+);
 
 /**
  * Inside the bundle, a language plugin's `createRequire(...).resolve("<pkg>/<file>.wasm")`
@@ -46,9 +51,12 @@ const grammars: Plugin = {
 };
 
 /** The core in one ESM file, every dependency inside (VSC-07). */
-export async function bundleCore(outfile: string): Promise<void> {
+export async function bundleCore(
+  outfile: string,
+  entry = join(extRoot, "src/core-entry.ts"),
+): Promise<void> {
   await build({
-    entryPoints: [join(extRoot, "src/core-entry.ts")],
+    entryPoints: [entry],
     outfile,
     bundle: true,
     platform: "node",
@@ -113,6 +121,8 @@ export async function buildExtension(
   }
   rmSync(outDir, { recursive: true, force: true });
   await bundleCore(join(outDir, "core.mjs"));
+  // The analysis worker threads load this file, next to core.mjs (see packages/server/src/analysis-pool.ts).
+  await bundleCore(join(outDir, "analysis-worker.mjs"), analysisWorkerEntry);
   await bundleExtension(join(outDir, "extension.cjs"));
   copyGrammars(outDir);
   cpSync(web, join(outDir, "web"), { recursive: true });

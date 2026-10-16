@@ -2,6 +2,9 @@ import type { LanguagePlugin, SourceFile } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { analysisProblems, graphProblems } from "./check";
 
+// A Node global; this package does not load the Node types.
+declare function structuredClone<T>(value: T): T;
+
 export { analysisProblems, graphProblems, lineCount } from "./check";
 
 export interface ConformanceFixtures {
@@ -78,6 +81,36 @@ export function describeLanguagePlugin(
 
       expect(new Set(ids).size).toBe(ids.length);
     });
+
+    it.skipIf(plugin.openSlice === undefined)(
+      "slices of the files, joined in order, give the same analysis as analyze",
+      () => {
+        const sorted = [...fixtures.files].sort((a, b) =>
+          a.path < b.path ? -1 : a.path > b.path ? 1 : 0,
+        );
+        const cut = (n: number) => Math.floor((sorted.length * n) / 3);
+        const slices = [0, 1, 2].map((i) =>
+          (plugin.openSlice as NonNullable<typeof plugin.openSlice>)(
+            sorted.slice(cut(i), cut(i + 1)),
+          ),
+        );
+        try {
+          // A worker thread sends the contributions through a structured clone.
+          const contributions = structuredClone(
+            slices.map((slice) => slice.contribute()),
+          );
+          const parts = slices.map((slice) => slice.analyze(contributions));
+          expect({
+            files: parts.flatMap((p) => p.files),
+            imports: parts.flatMap((p) => p.imports),
+            offers: parts.flatMap((p) => p.offers),
+            requests: parts.flatMap((p) => p.requests),
+          }).toEqual(plugin.analyze(fixtures.files));
+        } finally {
+          for (const slice of slices) slice.dispose();
+        }
+      },
+    );
 
     it("analyze of no files gives nothing", () => {
       expect(plugin.analyze([])).toEqual({

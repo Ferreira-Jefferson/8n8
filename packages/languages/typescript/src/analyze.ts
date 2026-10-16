@@ -1,5 +1,6 @@
 import { lastLine, markSyntaxErrors } from "@8n8/lang-treesitter";
 import {
+  type AnalysisSlice,
   type FlowEdge,
   type FlowNode,
   fileId,
@@ -95,11 +96,15 @@ function importsEdges(parsed: Parsed[], index: ModuleIndex): FlowEdge[] {
 }
 
 /**
- * Reads a set of TypeScript files: one graph per file, the `imports` wires
- * between them, and what each file offers and requests to other languages.
+ * Parses the files of one slice and keeps the trees until `dispose`. Phase 1 gives the
+ * slice's module index; phase 2 builds one graph per file, the `imports` wires, and what
+ * each file offers and requests to other languages, with the index of every slice.
  */
-export function analyzeFiles(files: SourceFile[]): LanguageAnalysis {
+export function openSlice(files: SourceFile[]): AnalysisSlice {
   const parsed: Parsed[] = [];
+  const dispose = () => {
+    for (const { tree } of parsed) tree.delete();
+  };
   try {
     for (const file of [...files].sort((a, b) => byCode(a.path, b.path))) {
       const parser = file.path.endsWith(".tsx")
@@ -109,32 +114,52 @@ export function analyzeFiles(files: SourceFile[]): LanguageAnalysis {
       if (!tree) throw new Error(`tree-sitter could not parse ${file.path}`);
       parsed.push({ file, tree });
     }
-    const index = buildModuleIndex(
-      parsed.map(({ file, tree }) => ({
-        path: file.path,
-        root: tree.rootNode,
-      })),
-    );
-    const result: LanguageAnalysis = {
-      files: [],
-      imports: importsEdges(parsed, index),
-      offers: [],
-      requests: [],
-    };
-    for (const p of parsed) {
-      const graph = fileGraph(p, index);
-      const { offers, requests } = collectLinks(
-        p.file.path,
-        p.tree.rootNode,
-        graph,
-        exportInfo(p.tree.rootNode),
+  } catch (error) {
+    dispose();
+    throw error;
+  }
+  return {
+    contribute: () =>
+      buildModuleIndex(
+        parsed.map(({ file, tree }) => ({
+          path: file.path,
+          root: tree.rootNode,
+        })),
+      ),
+    analyze(contributions) {
+      const index: ModuleIndex = new Map(
+        (contributions as ModuleIndex[]).flatMap((c) => [...c]),
       );
-      result.files.push({ path: p.file.path, graph });
-      result.offers.push(...offers);
-      result.requests.push(...requests);
-    }
-    return result;
+      const result: LanguageAnalysis = {
+        files: [],
+        imports: importsEdges(parsed, index),
+        offers: [],
+        requests: [],
+      };
+      for (const p of parsed) {
+        const graph = fileGraph(p, index);
+        const { offers, requests } = collectLinks(
+          p.file.path,
+          p.tree.rootNode,
+          graph,
+          exportInfo(p.tree.rootNode),
+        );
+        result.files.push({ path: p.file.path, graph });
+        result.offers.push(...offers);
+        result.requests.push(...requests);
+      }
+      return result;
+    },
+    dispose,
+  };
+}
+
+/** Reads a set of TypeScript files: one slice with all of them. */
+export function analyzeFiles(files: SourceFile[]): LanguageAnalysis {
+  const slice = openSlice(files);
+  try {
+    return slice.analyze([slice.contribute()]);
   } finally {
-    for (const { tree } of parsed) tree.delete();
+    slice.dispose();
   }
 }

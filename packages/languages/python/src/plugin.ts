@@ -1,5 +1,5 @@
 import type { Extractor, LanguagePlugin } from "@8n8/model";
-import { analyzeFiles } from "./analyze";
+import { analyzeFiles, openSlice } from "./analyze";
 import { buildGraph } from "./build-graph";
 import { detectPython } from "./detect";
 import { markSyntaxErrors } from "./errors";
@@ -35,6 +35,7 @@ export const pythonPlugin: LanguagePlugin = {
     }
   },
   analyze: (files) => analyzeFiles(parser, files),
+  openSlice: (files) => openSlice(parser, files),
 };
 
 /** Thin wrapper over the plugin, kept while the server still builds an `Extractor` (step 6 removes it). */
