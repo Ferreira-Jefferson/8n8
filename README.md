@@ -208,9 +208,15 @@ Abra o endereço que o terminal mostrar (`http://8n8.localhost:8148/#t=...`). O 
 
 Veja [CONTRIBUTING.md](CONTRIBUTING.md): ambiente, segredos (o hook do gitleaks), comandos de verificação, regras de fronteira entre pacotes e estilo de commit.
 
+## Licença
+
+O 8n8 é software livre, sob a GNU General Public License versão 3 (GPL-3.0). O texto completo está em [LICENSE](LICENSE).
+
+---
+
 ## Pix do Café
 
-O 8n8 é livre e gratuito. Se ele ajuda você, uma doação por Pix mantém o projeto vivo. Ela é opcional e não libera nada a mais. A tela também mostra o QR em **Configurações → Pix do Café**.
+O 8n8 é livre e gratuito. Se ele ajuda você, uma doação por Pix mantém o projeto vivo. Ela é opcional e não libera nada a mais.
 
 <img src="docs/doacao-pix.svg" alt="QR Code Pix para doação" width="200">
 
@@ -222,7 +228,3 @@ O 8n8 é livre e gratuito. Se ele ajuda você, uma doação por Pix mantém o pr
 ```
 
 </details>
-
-## Licença
-
-O 8n8 é software livre, sob a GNU General Public License versão 3 (GPL-3.0). O texto completo está em [LICENSE](LICENSE).

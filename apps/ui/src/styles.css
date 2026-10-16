@@ -1471,30 +1471,6 @@ body {
   align-items: center;
 }
 
-.settings-dialog .donate {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 2px solid var(--panel-border);
-}
-
-.settings-dialog .donate summary {
-  cursor: pointer;
-  font: 500 18px var(--font-sans);
-}
-
-.settings-dialog .donate p {
-  margin: 12px 0;
-  color: var(--dim);
-}
-
-.settings-dialog .donate-qr {
-  display: block;
-  width: 200px;
-  height: 200px;
-  margin-bottom: 12px;
-  border-radius: 6px;
-}
-
 /* ---- On-demand explanation (CFG-06) ---- */
 
 .detail-panel .ask {
