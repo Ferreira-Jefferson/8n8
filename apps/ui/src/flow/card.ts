@@ -118,5 +118,7 @@ export function isOpenable(node: FlowNode, graph: Graph): boolean {
   if (!node.openable) return false;
   // A call opens its target elsewhere, not inner children.
   if (node.kind === "call") return true;
+  // A file of a skeleton is open when it has something inside: the server said so in `openable`, before its nodes load.
+  if (node.kind === "file" && node.size !== undefined) return true;
   return graph.nodes.some((n) => n.parentId === node.id);
 }

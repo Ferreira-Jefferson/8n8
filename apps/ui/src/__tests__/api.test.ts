@@ -1,7 +1,7 @@
 import type {
   Graph,
   NodeTitle,
-  ProjectResponse,
+  ProjectSkeleton,
   SettingsResponse,
 } from "@8n8/model";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -101,8 +101,15 @@ describe("fetchLanguages", () => {
 });
 
 describe("fetchProjectFile", () => {
-  it("posts the folder, the path and the build version, and returns the source", async () => {
-    const fn = fakeFetch(200, { path: "a.py", source: "x = 1\n" });
+  it("posts the folder, the path and the build version, and returns the detail", async () => {
+    const detail = {
+      path: "a.py",
+      source: "x = 1\n",
+      nodes: [],
+      edges: [],
+      refs: {},
+    };
+    const fn = fakeFetch(200, detail);
     const result = await fetchProjectFile("C:/loja", ["g.py"], "a.py", "v1");
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("/api/project/file");
@@ -112,7 +119,7 @@ describe("fetchProjectFile", () => {
       path: "a.py",
       version: "v1",
     });
-    expect(result).toEqual({ status: "ok", source: "x = 1\n" });
+    expect(result).toEqual({ status: "ok", detail });
   });
 
   it("leaves out include and version when there are none", async () => {
@@ -138,14 +145,15 @@ describe("fetchProjectFile", () => {
 });
 
 describe("fetchProject (PROJ-05)", () => {
-  const project: ProjectResponse = {
+  const project: ProjectSkeleton = {
     name: "loja",
     graph: { ...graph, project: { name: "loja" } },
-
     ignored: [{ path: "grande.py", reason: "too-large" }],
+    stats: { files: 0, nodes: 0, edges: 0 },
+    version: "v1",
   };
 
-  it("posts { path } as JSON to /api/project and returns the body on 200", async () => {
+  it("posts { path, lazy } as JSON to /api/project and returns the skeleton on 200", async () => {
     const fn = fakeFetch(200, project);
     const result = await fetchProject("C:/loja");
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
@@ -154,7 +162,10 @@ describe("fetchProject (PROJ-05)", () => {
     expect(new Headers(init.headers).get("content-type")).toBe(
       "application/json",
     );
-    expect(JSON.parse(init.body as string)).toEqual({ path: "C:/loja" });
+    expect(JSON.parse(init.body as string)).toEqual({
+      path: "C:/loja",
+      lazy: true,
+    });
     expect(result).toEqual(project);
   });
 
@@ -164,6 +175,7 @@ describe("fetchProject (PROJ-05)", () => {
     const [, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
     expect(JSON.parse(init.body as string)).toEqual({
       path: "C:/loja",
+      lazy: true,
       include: ["dados/grande.py"],
     });
   });

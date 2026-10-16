@@ -12,7 +12,7 @@ import type {
   LanguagesResponse,
   NodeNotes,
   NodeTitle,
-  ProjectResponse,
+  ProjectSkeleton,
   SettingsPatch,
   SettingsResponse,
   StructureResponse,
@@ -73,16 +73,17 @@ export async function fetchLanguages(): Promise<LanguageInfo[]> {
 }
 
 export type ProjectResult =
-  | ProjectResponse
+  | ProjectSkeleton
   | { error: "not-found"; path: string; dependency?: true };
 
-/** Opens a local folder; `not-found` carries the path as typed (PROJ-05). `include`: files over 1 MB put on the map (CLEAN-06). */
+/** Opens a local folder and gets its skeleton: the inside of a file comes by `fetchProjectFile`. `not-found` carries the path as typed (PROJ-05). `include`: files over 1 MB put on the map (CLEAN-06). */
 export async function fetchProject(
   path: string,
   include: string[] = [],
 ): Promise<ProjectResult> {
   const res = await post("/api/project", {
     path,
+    lazy: true,
     ...(include.length > 0 ? { include } : {}),
   });
   if (res.status === 404) {
@@ -96,16 +97,16 @@ export async function fetchProject(
     };
   }
   if (!res.ok) throw new Error(`Falha ao abrir a pasta (HTTP ${res.status})`);
-  return (await res.json()) as ProjectResponse;
+  return (await res.json()) as ProjectSkeleton;
 }
 
-/** The source of one file of an open folder; `stale` when the folder changed since the build the screen holds (409). */
+/** The inside of one file of an open folder; `stale` when the folder changed since the build the screen holds (409). */
 export async function fetchProjectFile(
   root: string,
   include: string[],
   path: string,
   version: string | undefined,
-): Promise<{ status: "ok"; source: string } | { status: "stale" }> {
+): Promise<{ status: "ok"; detail: FileDetail } | { status: "stale" }> {
   const res = await post("/api/project/file", {
     root,
     path,
@@ -114,8 +115,7 @@ export async function fetchProjectFile(
   });
   if (res.status === 409) return { status: "stale" };
   if (!res.ok) throw new Error(`Falha ao ler o arquivo (HTTP ${res.status})`);
-  const body = (await res.json()) as FileDetail;
-  return { status: "ok", source: body.source };
+  return { status: "ok", detail: (await res.json()) as FileDetail };
 }
 
 /** Opens the system's chooser on this machine; `null` when the person cancels. */

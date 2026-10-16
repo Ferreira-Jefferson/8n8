@@ -103,6 +103,8 @@ const SIZED: ReadonlySet<FlowNode["kind"]> = new Set([
  */
 export function levelSize(graph: Graph, node: FlowNode): number | undefined {
   if (!SIZED.has(node.kind)) return undefined;
+  // A file of a skeleton carries its size, counted by the same rule, before its nodes load.
+  if (node.size !== undefined) return node.size;
   const children = graph.nodes.filter((n) => n.parentId === node.id);
   if (graph.project && node.kind === "file") {
     return children.filter((n) => shownInFile(graph.nodes, n)).length;

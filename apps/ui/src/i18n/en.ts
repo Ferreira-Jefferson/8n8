@@ -189,6 +189,7 @@ export const en: Record<MessageKey, string> = {
   "list.and": "and",
   "list.or": "or",
   "flow.edgeAria": "Edge from {from} to {to}",
+  "flow.loading": "Loading the file…",
   "flow.nodeHelp":
     "Press Enter or Space to select a node. Press Esc to cancel.",
   "flow.nodeHelpKeyboard":

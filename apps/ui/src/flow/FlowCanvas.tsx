@@ -55,6 +55,10 @@ import { WireEdge, type WireFlowEdge, type WireInfo } from "./WireEdge";
 
 export interface FlowCanvasProps {
   graph: Graph;
+  /** Who owns the dragged positions: they live as long as this value does. The graph itself changes each time a file loads, so a project passes its map; without it, the graph owns them. */
+  mapKey?: unknown;
+  /** The open level is a file whose inside is still on its way: only the hub shows, with a loading text. */
+  loading?: boolean;
   levelId: NodeId | null;
   /** How many levels are open; with `levelId` it keys the canvas, so a recursion animates again. */
   depth: number;
@@ -334,6 +338,8 @@ export function toFlowEdges(
 /** Draws one level; one click opens a node inside a growing frame or selects a leaf (VID-06, 18, 22, 23, 25, 27, 31, 32). */
 export function FlowCanvas({
   graph,
+  mapKey = graph,
+  loading = false,
   levelId,
   depth,
   selected,
@@ -373,7 +379,7 @@ export function FlowCanvas({
   const [frame, setFrame] = useState<Rect | null>(null);
   // The size is kept per level: a level that just opened waits for its own
   // canvas size before it chooses its rows and its first view.
-  const levelKey = `${depth}:${levelId}`;
+  const levelKey = `${depth}:${levelId}${loading ? ":loading" : ""}`;
   const [measured, setMeasured] = useState<{ level: string; size: Size }>({
     level: "",
     size: NO_SIZE,
@@ -392,12 +398,12 @@ export function FlowCanvas({
   const size = measured.level === levelKey ? measured.size : NO_SIZE;
   // Cards the viewer dragged, by level, for as long as this graph stays open.
   const [moved, setMoved] = useState<{
-    graph: Graph;
+    owner: unknown;
     levels: Map<string, Map<NodeId, Position>>;
-  }>({ graph, levels: new Map() });
+  }>({ owner: mapKey, levels: new Map() });
   const levelMoved = useMemo(
-    () => (moved.graph === graph ? moved.levels.get(levelKey) : undefined),
-    [moved, graph, levelKey],
+    () => (moved.owner === mapKey ? moved.levels.get(levelKey) : undefined),
+    [moved, mapKey, levelKey],
   );
   const expanding = frame !== null;
   // The card sizes React Flow measured on this level. Each rebuilt node
@@ -412,14 +418,14 @@ export function FlowCanvas({
       );
       if (drags.length > 0) {
         setMoved((prev) => {
-          const levels = new Map(prev.graph === graph ? prev.levels : []);
+          const levels = new Map(prev.owner === mapKey ? prev.levels : []);
           const level = new Map(levels.get(levelKey));
           for (const c of drags) {
             if (c.type === "position" && c.position)
               level.set(c.id, c.position);
           }
           levels.set(levelKey, level);
-          return { graph, levels };
+          return { owner: mapKey, levels };
         });
       }
       for (const c of changes) {
@@ -428,7 +434,7 @@ export function FlowCanvas({
         }
       }
     },
-    [levelKey, graph],
+    [levelKey, mapKey],
   );
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
@@ -747,6 +753,11 @@ export function FlowCanvas({
           />
         )}
       </ReactFlow>
+      {loading && (
+        <p className="canvas-loading" role="status">
+          {t("flow.loading")}
+        </p>
+      )}
       {frame && (
         <div
           className="open-frame"

@@ -189,6 +189,7 @@ export const ptBR = {
   "list.and": "e",
   "list.or": "ou",
   "flow.edgeAria": "Aresta de {from} para {to}",
+  "flow.loading": "Carregando o arquivo…",
   "flow.nodeHelp":
     "Tecle Enter ou espaço para selecionar um nó. Tecle Esc para cancelar.",
   "flow.nodeHelpKeyboard":

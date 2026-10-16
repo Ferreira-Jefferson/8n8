@@ -2532,3 +2532,14 @@ body {
   background: color-mix(in srgb, var(--panel-border) 60%, transparent);
   font: 400 0.9em var(--font-mono);
 }
+
+.canvas-loading {
+  position: absolute;
+  inset: auto 0 12% 0;
+  z-index: 5;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  color: var(--second);
+  pointer-events: none;
+}

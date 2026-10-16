@@ -91,7 +91,7 @@ describe("the API through the extension (VSC-04, VSC-11)", () => {
     const settings = saveSettings({ autoSummary: true });
     const [p, s] = posted as { id: number; method: string; body: string }[];
     expect(p).toMatchObject({ method: "POST", path: "/api/project" });
-    expect(JSON.parse(p?.body ?? "")).toEqual({ path: "C:/loja" });
+    expect(JSON.parse(p?.body ?? "")).toEqual({ path: "C:/loja", lazy: true });
     expect(s).toMatchObject({ method: "PUT", path: "/api/settings" });
     reply(s?.id ?? 0, 400, { error: "invalid settings" });
     reply(p?.id ?? 0, 404, { error: "not-found" });
