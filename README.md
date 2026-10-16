@@ -119,15 +119,36 @@ O `pnpm install:cli:global` gera o pacote (`release/8n8-0.0.1.tgz`) e o instala 
 
 ### A extensão do VS Code
 
-A extensão abre o mesmo mapa num painel ao lado do código. Ela precisa do VS Code 1.138 ou mais novo.
+A extensão abre o mesmo mapa num painel ao lado do código. Ela precisa do VS Code 1.138 ou mais novo. Como ela ainda não está no Marketplace, você gera o arquivo de instalação (`.vsix`) e instala a partir dele.
+
+**1. Gerar o arquivo.** Na pasta do repositório, rode:
 
 ```bash
 pnpm install
 pnpm build:ext
-code --install-extension release/8n8-vscode-0.0.1.vsix
 ```
 
-Depois, rode **8n8: Abrir mapa** na paleta de comandos. Ele abre a tela inicial, sem mapa: lá você digita a pasta ou cola um trecho. Para mapear uma pasta direto, clique nela com o botão direito no Explorer e escolha **8n8: Abrir mapa desta pasta**. No mapa de uma pasta, o botão **Início** volta à tela inicial.
+O comando constrói a tela e empacota a extensão. O arquivo sai em `release/8n8-vscode-0.0.1.vsix` (uns 1,5 MB). Se mudar o código, rode `pnpm build:ext` de novo.
+
+**2. Instalar o arquivo.** Daqui o caminho se divide em dois. Escolha um, e os dois levam ao mesmo resultado:
+
+- **Pela interface:**
+  1. Abra a aba **Extensions** (`Ctrl+Shift+X`).
+  2. Clique em **⋯** (**Views and More Actions**), no canto superior direito da aba.
+  3. Escolha **Install from VSIX…**.
+- **Pela paleta de comandos:**
+  1. Abra a paleta (`Ctrl+Shift+P`).
+  2. Digite **Extensions: Install from VSIX…** e tecle Enter.
+
+Nos dois caminhos, a janela de arquivos abre em seguida. Selecione `release/8n8-vscode-0.0.1.vsix` e confirme. (No terminal, o equivalente é `code --install-extension release/8n8-vscode-0.0.1.vsix`.)
+
+**3. Recarregar a janela.** Abra a paleta de comandos (`Ctrl+Shift+P`) e rode **Developer: Reload Window**. A extensão é nova, então o VS Code só mostra o ícone depois do recarregamento.
+
+**4. Achar o ícone.** Abra um arquivo qualquer. O ícone do 8n8 aparece na barra de título do editor, no canto superior direito, ao lado dos outros botões. Ele só aparece com um arquivo aberto. Se a barra estiver cheia, o ícone fica no menu **⋯** da mesma barra. Um clique nele abre o mapa.
+
+**5. Usar.** Você também pode rodar **8n8: Abrir mapa** na paleta de comandos. Ele abre a tela inicial, sem mapa: lá você digita a pasta ou cola um trecho. Para mapear uma pasta direto, clique nela com o botão direito no Explorer e escolha **8n8: Abrir mapa desta pasta**. No mapa de uma pasta, o botão **Início** volta à tela inicial.
+
+**Atualizar ou remover.** Para atualizar, gere o `.vsix` de novo e repita o passo 2: o VS Code troca a versão instalada. Para remover, abra a aba **Extensions**, clique na engrenagem do **8n8** e escolha **Uninstall**.
 
 Para acrescentar outro editor, veja [docs/guides/adicionar-editor.md](docs/guides/adicionar-editor.md).
 
