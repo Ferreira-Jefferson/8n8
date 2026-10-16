@@ -274,6 +274,40 @@ test.describe("Histórico", () => {
     ).toBeVisible();
   });
 
+  test("the star and the trash sit inside the card, top right, the trash right of the star", async ({
+    page,
+  }) => {
+    await generate(page, HISTORY, snippet("cantos_unico"));
+    const [item] = await saved(page, 1);
+    if (!item) throw new Error("no row");
+
+    await toggle(page).click();
+    const row = rows(page).first();
+    const card = await row.locator(".history-open").boundingBox();
+    const star = await row
+      .getByRole("button", { name: `Pôr ${item.title} nos favoritos` })
+      .boundingBox();
+    const trash = await row
+      .getByRole("button", { name: `Apagar ${item.title}` })
+      .boundingBox();
+    if (!card || !star || !trash) throw new Error("no box");
+
+    // Both icons inside the card, the card as wide as the row.
+    const rowBox = await row.boundingBox();
+    expect(card.width).toBeCloseTo(rowBox?.width ?? 0, 0);
+    for (const icon of [star, trash]) {
+      expect(icon.x).toBeGreaterThanOrEqual(card.x);
+      expect(icon.x + icon.width).toBeLessThanOrEqual(card.x + card.width);
+      expect(icon.y).toBeGreaterThanOrEqual(card.y);
+      // Top: the icon sits in the card's upper half.
+      expect(icon.y + icon.height / 2).toBeLessThan(card.y + card.height / 2);
+    }
+    expect(trash.x).toBeGreaterThan(star.x + star.width - 1);
+    // A trash icon, not the old ×.
+    await expect(row.locator(".history-delete svg")).toHaveCount(1);
+    await expect(row.locator(".history-delete")).toHaveText("");
+  });
+
   test("Esc and a click outside close the drawer", async ({ page }) => {
     await generate(page, HISTORY, snippet("fecha_unico"));
     await saved(page, 1);

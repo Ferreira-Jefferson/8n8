@@ -16,6 +16,7 @@
   --code: color-mix(in srgb, var(--second) 82%, var(--ground));
   --dim: #6b706f;
   --warm: #dc8a5c;
+  --danger: #e0735c;
   --shadow: rgba(0, 0, 0, 0.25);
   --shadow-strong: rgba(0, 0, 0, 0.3);
   --font-display: "Archivo Black", sans-serif;
@@ -39,6 +40,7 @@
     --panel-border: #d3d8d5;
     --dim: #8f9a98;
     --warm: #a34f26;
+    --danger: #b2452f;
     --shadow: rgba(18, 41, 42, 0.1);
     --shadow-strong: rgba(18, 41, 42, 0.14);
     color-scheme: light;
@@ -56,6 +58,7 @@
   --panel-border: #d3d8d5;
   --dim: #8f9a98;
   --warm: #a34f26;
+  --danger: #b2452f;
   --shadow: rgba(18, 41, 42, 0.1);
   --shadow-strong: rgba(18, 41, 42, 0.14);
   color-scheme: light;
@@ -1038,18 +1041,18 @@ body {
 }
 
 .history-drawer li {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
+  position: relative;
 }
 
 .history-open {
-  flex: 1;
-  min-width: 0;
+  box-sizing: border-box;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 12px 14px;
+  /* Room for the star and the trash in the top-right corner. */
+  padding-right: 92px;
   border-radius: 6px;
   border: 2px solid var(--panel-border);
   background: transparent;
@@ -1093,22 +1096,6 @@ body {
   font: 400 16px var(--font-sans);
 }
 
-.history-delete {
-  padding: 0 14px;
-  border-radius: 6px;
-  border: 2px solid var(--panel-border);
-  background: transparent;
-  color: var(--accent);
-  font: 500 24px var(--font-sans);
-  cursor: pointer;
-}
-
-.history-delete:hover,
-.history-delete:focus-visible {
-  color: var(--second);
-  border-color: var(--accent);
-}
-
 /* The favourite star, in the drawer and on the launcher. */
 .star-btn {
   display: flex;
@@ -1131,6 +1118,45 @@ body {
   outline: none;
   border-color: var(--panel-border);
   color: var(--main);
+}
+
+/* The star and the trash, inside the drawer card's top-right corner. */
+.history-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 2px;
+}
+
+.history-actions .star-btn,
+.history-delete {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.history-delete {
+  color: var(--accent);
+}
+
+.history-actions .star-btn:hover,
+.history-actions .star-btn:focus-visible,
+.history-delete:hover,
+.history-delete:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--second) 8%, transparent);
+}
+
+.history-delete:hover,
+.history-delete:focus-visible {
+  color: var(--danger);
 }
 
 /* ---- Launcher (home) ---- */

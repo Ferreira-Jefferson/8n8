@@ -176,19 +176,34 @@ export function HistoryDrawer({
                 </span>
                 <span className="history-sizes">{sizes(item, t)}</span>
               </button>
-              <StarButton
-                title={item.title}
-                starred={item.starred}
-                onToggle={() => star(item)}
-              />
-              <button
-                type="button"
-                className="history-delete"
-                aria-label={t("history.delete", { title: item.title })}
-                onClick={() => remove(item)}
-              >
-                ×
-              </button>
+              <span className="history-actions">
+                <StarButton
+                  title={item.title}
+                  starred={item.starred}
+                  onToggle={() => star(item)}
+                />
+                <button
+                  type="button"
+                  className="history-delete"
+                  aria-label={t("history.delete", { title: item.title })}
+                  title={t("history.delete", { title: item.title })}
+                  onClick={() => remove(item)}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 12.2h9.2L17.5 7M10.2 10.5v5.5M13.8 10.5v5.5" />
+                  </svg>
+                </button>
+              </span>
             </li>
           ))}
         </ul>
