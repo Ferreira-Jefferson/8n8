@@ -550,7 +550,7 @@ body {
   border-radius: 6px;
   box-shadow: 0 14px 30px var(--shadow);
   position: relative;
-  animation: node-in 500ms ease-out backwards;
+  animation: node-in 250ms ease-out backwards;
 }
 
 .react-flow__node.draggable .node {

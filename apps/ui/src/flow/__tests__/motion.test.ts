@@ -23,7 +23,7 @@ function at(entries: [string, number, number][]): Map<string, Position> {
 }
 
 describe("VID-06: schedule", () => {
-  it("nodes enter left to right, 350 ms apart", () => {
+  it("nodes enter left to right, 150 ms apart", () => {
     const s = schedule(
       ["c", "a", "b"].map(node),
       [],
@@ -34,10 +34,10 @@ describe("VID-06: schedule", () => {
       ]),
       false,
     );
-    expect(Object.fromEntries(s.enterAt)).toEqual({ a: 0, b: 350, c: 700 });
+    expect(Object.fromEntries(s.enterAt)).toEqual({ a: 0, b: 150, c: 300 });
   });
 
-  it("keeps 350 ms between the 8 cards of the video row", () => {
+  it("keeps 150 ms between the 8 cards of the video row", () => {
     const ids = Array.from({ length: 8 }, (_, i) => `n${i}`);
     const s = schedule(
       ids.map(node),
@@ -45,10 +45,10 @@ describe("VID-06: schedule", () => {
       at(ids.map((id, i) => [id, i * 380, 0])),
       false,
     );
-    expect(s.enterAt.get("n7")).toBe(7 * 350);
+    expect(s.enterAt.get("n7")).toBe(7 * 150);
   });
 
-  it("compresses the stagger of a long level so its last card enters at 2500 ms and settles by 3 s", () => {
+  it("compresses the stagger of a long level so its last card enters at 1200 ms", () => {
     const ids = Array.from({ length: 41 }, (_, i) => `n${i}`);
     const s = schedule(
       ids.map(node),
@@ -57,9 +57,9 @@ describe("VID-06: schedule", () => {
       false,
     );
     expect(s.enterAt.get("n0")).toBe(0);
-    expect(s.enterAt.get("n1")).toBe(62.5);
-    // The card fades in for 500 ms (styles.css, node-in).
-    expect(s.enterAt.get("n40")).toBe(2500);
+    expect(s.enterAt.get("n1")).toBe(30);
+    // The card fades in for 250 ms (styles.css, node-in).
+    expect(s.enterAt.get("n40")).toBe(1200);
   });
 
   it("a tie in x goes by y", () => {
@@ -72,10 +72,10 @@ describe("VID-06: schedule", () => {
       ]),
       false,
     );
-    expect(Object.fromEntries(s.enterAt)).toEqual({ high: 0, low: 350 });
+    expect(Object.fromEntries(s.enterAt)).toEqual({ high: 0, low: 150 });
   });
 
-  it("a wire starts drawing 400 ms after its source enters", () => {
+  it("a wire starts drawing 250 ms after both its ends enter", () => {
     const s = schedule(
       ["a", "b", "c"].map(node),
       [edge("a", "b"), edge("b", "c")],
@@ -88,11 +88,11 @@ describe("VID-06: schedule", () => {
     );
     expect(Object.fromEntries(s.drawAt)).toEqual({
       "next:a->b": 400,
-      "next:b->c": 750,
+      "next:b->c": 550,
     });
   });
 
-  it("pulses go once per wire in flow order, from max(drawAt) + 800, 750 ms apart", () => {
+  it("pulses go once per wire in flow order, from max(drawAt) + 800, 1500 ms apart", () => {
     const nodes = ["a", "b", "c", "d"].map(node);
     // Listed out of flow order on purpose.
     const edges = [edge("b", "d"), edge("a", "c"), edge("a", "b")];
@@ -107,12 +107,12 @@ describe("VID-06: schedule", () => {
       ]),
       false,
     );
-    // enterAt: a 0, b 350, c 700, d 1050. drawAt max = b->d = 350 + 400 = 750.
-    const t0 = 750 + 800;
+    // enterAt: a 0, b 150, c 300, d 450. drawAt max = b->d = 450 + 250 = 700.
+    const t0 = 700 + 800;
     expect(Object.fromEntries(s.pulseAt)).toEqual({
       "next:a->b": t0,
-      "next:a->c": t0 + 750,
-      "next:b->d": t0 + 1500,
+      "next:a->c": t0 + 1500,
+      "next:b->d": t0 + 3000,
     });
     expect(s.pulseAt.size).toBe(edges.length);
   });

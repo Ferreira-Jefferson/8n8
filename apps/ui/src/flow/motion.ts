@@ -2,16 +2,17 @@ import type { FlowEdge, FlowNode, NodeId } from "@8n8/model";
 import type { Position } from "./layout";
 
 /** Milliseconds from the moment a level appears (values from the video). */
-const ENTER_STEP = 350;
+const ENTER_STEP = 150;
 /**
- * The last card of a level enters by this time, so with its 500 ms fade a
- * whole level settles in about 3 s. A long level shortens the 350 ms step.
+ * The last card of a level enters by this time, so with its fade a whole
+ * level settles in about 1.5 s. A long level shortens the 150 ms step.
  */
-const ENTER_SPAN = 2500;
-const DRAW_DELAY = 400;
+const ENTER_SPAN = 1200;
+/** Fade of a card (styles.css, node-in). A wire waits for it to end. */
+const ENTER_FADE = 250;
 const DRAW_DURATION = 500;
 const PULSE_PAUSE = 300;
-const PULSE_STEP = 750;
+const PULSE_STEP = 1500;
 
 export interface Schedule {
   enterAt: Map<NodeId, number>;
@@ -23,8 +24,8 @@ export interface Schedule {
 
 /**
  * When each node enters, each wire draws and each pulse runs (VID-06). Nodes
- * enter 350 ms apart, or closer when the level is long, so the last one
- * enters by 2500 ms. With `reduced`, every value is 0 (VID-07).
+ * enter 150 ms apart, or closer when the level is long, so the last one
+ * enters by 1200 ms. A wire draws once both its ends have faded in. With `reduced`, every value is 0 (VID-07).
  */
 export function schedule(
   nodes: FlowNode[],
@@ -42,7 +43,10 @@ export function schedule(
   );
   const enter = (id: NodeId) => enterAt.get(id) ?? 0;
   const drawAt = new Map<string, number>(
-    edges.map((e) => [e.id, reduced ? 0 : enter(e.source) + DRAW_DELAY]),
+    edges.map((e) => [
+      e.id,
+      reduced ? 0 : Math.max(enter(e.source), enter(e.target)) + ENTER_FADE,
+    ]),
   );
   const t0 = Math.max(0, ...drawAt.values()) + DRAW_DURATION + PULSE_PAUSE;
   const flow = [...edges].sort(

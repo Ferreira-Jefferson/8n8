@@ -50,7 +50,7 @@ describe("WireEdge (VID-05, VID-06)", () => {
     expect(path?.style.animationDelay).toBe("400ms");
   });
 
-  it("runs one pulse of r 9 along the same curve at data-pulse-at, for 750 ms", () => {
+  it("runs one pulse of r 9 along the same curve at data-pulse-at, for 1500 ms", () => {
     const { container } = renderWire(timed);
     const pulses = container.querySelectorAll("circle.pulse");
     expect(pulses).toHaveLength(1);
@@ -59,7 +59,7 @@ describe("WireEdge (VID-05, VID-06)", () => {
     expect(pulse?.getAttribute("data-pulse-at")).toBe("2100");
     const motion = pulse?.querySelector("animateMotion");
     expect(motion?.getAttribute("begin")).toBe("2100ms");
-    expect(motion?.getAttribute("dur")).toBe("750ms");
+    expect(motion?.getAttribute("dur")).toBe("1500ms");
     expect(motion?.getAttribute("path")).toBe("M 0 0 C 60 0, 340 200, 400 200");
   });
 

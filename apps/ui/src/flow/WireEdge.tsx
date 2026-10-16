@@ -16,7 +16,7 @@ export interface WireData extends Record<string, unknown> {
 export type WireFlowEdge = Edge<WireData, "wire">;
 
 const BEND = 60;
-const PULSE_MS = 750;
+const PULSE_MS = 1500;
 /** A branch label starts this far right of the source port, past the wire's first bend. */
 const LABEL_X = 30;
 /** Space between a branch label and the line of the source port. */

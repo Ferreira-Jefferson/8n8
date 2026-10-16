@@ -550,7 +550,7 @@ test.describe("O movimento", () => {
     for (const w of wires) {
       const [source] = w.pair as [string, string];
       expect(w.drawAt).toBeGreaterThanOrEqual(
-        (enterAt.get(source) as number) + 400,
+        (enterAt.get(source) as number) + 250,
       );
       expect(w.pulses).toHaveLength(1);
     }

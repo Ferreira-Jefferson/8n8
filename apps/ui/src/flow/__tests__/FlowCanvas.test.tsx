@@ -332,7 +332,7 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
     const ids = [P, ...[0, 1, 2, 3, 4, 5, 6].map((i) => `${P}/s${i}`)];
     expect(
       ids.map((id) => card(container, id).getAttribute("data-enter-at")),
-    ).toEqual(["0", "350", "700", "1050", "1400", "1750", "2100", "2450"]);
+    ).toEqual(["0", "150", "300", "450", "600", "750", "900", "1050"]);
   });
 
   it("tags the entry GATILHO and shows the titles it gets (VID-04, VID-14)", () => {
