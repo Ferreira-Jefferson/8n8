@@ -220,7 +220,7 @@ figcaption b { color: var(--fg); font-weight: 500; }
 .construct svg { width: 100%; height: auto; display: block; }
 
 .icons { display: flex; flex-wrap: wrap; align-items: end; gap: 28px; }
-.icon { background: var(--c-grafite); border-radius: 22%; display: grid; place-items: center; --logo-n: var(--c-petroleo); color: var(--c-nevoa); border: 1px solid var(--line); }
+.icon { background: var(--c-grafite); display: grid; place-items: center; --logo-n: var(--c-petroleo); color: var(--c-nevoa); border: 1px solid var(--line); }
 .icon.light { background: var(--c-papel); --logo-n: var(--c-petroleo-escuro); color: var(--c-tinta); }
 .icon svg { width: 74%; height: auto; }
 .icon-wrap { display: grid; gap: 8px; justify-items: center; font: 400 12px var(--font-mono); color: var(--muted); }
@@ -691,7 +691,7 @@ html { scroll-behavior: smooth; }
         <div><dt>Porta</dt><dd>Ø 10 u</dd></div>
         <div><dt>Respiro</dt><dd>20 u</dd></div>
       </dl>
-      <p class="muted">A unidade <code>u</code> vale 1/80 da altura do logotipo. O logotipo tem no mínimo 40 px de largura. Abaixo disso, use o símbolo.</p>
+      <p class="muted">A unidade <code>u</code> vale 1/80 da altura do logotipo. O logotipo tem no mínimo 40 px de largura. Abaixo disso, use o desenho de ícone ajustado ao pixel.</p>
 
       <div class="logo-grid">
         <figure><div class="tile t-dark"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Principal, escuro.</b> Névoa e Petróleo sobre Grafite.</figcaption></figure>
@@ -703,15 +703,15 @@ html { scroll-behavior: smooth; }
 
       <div class="split">
         <div class="head">
-          <h3>Símbolo</h3>
-          <p class="muted">O símbolo guarda só o caminho: os dois blocos ligados e a aresta. Use no favicon, no ícone do app e no avatar. Ele se lê até 16 px, onde o logotipo inteiro vira um borrão.</p>
+          <h3>Ícone do app</h3>
+          <p class="muted">O favicon e o ícone do app usam o logotipo completo, sem fundo. Os blocos ligados ficam em Petróleo. Sem tema (barra de tarefas, dock), os outros dois ficam em Pedra a 50%, legíveis em fundo claro e escuro. De 16 a 48 px, cada tamanho tem um desenho próprio com as linhas no grid de pixels. Gere todos os arquivos com <code>node scripts/icones.mjs</code>, nunca reduzindo uma imagem grande.</p>
         </div>
         <div class="icons">
-          <div class="icon-wrap"><div class="icon" style="width:96px;height:96px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark" width="96" height="76"/></svg></div>96</div>
-          <div class="icon-wrap"><div class="icon" style="width:48px;height:48px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark" width="96" height="76"/></svg></div>48</div>
-          <div class="icon-wrap"><div class="icon" style="width:32px;height:32px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark" width="96" height="76"/></svg></div>32</div>
-          <div class="icon-wrap"><div class="icon" style="width:16px;height:16px;border-radius:3px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8"><use href="#mark" width="96" height="76"/></svg></div>16</div>
-          <div class="icon-wrap"><div class="icon light" style="width:48px;height:48px"><svg viewBox="-8 -8 112 92" role="img" aria-label="Símbolo 8n8, claro"><use href="#mark" width="96" height="76"/></svg></div>claro</div>
+          <div class="icon-wrap"><div class="icon" style="width:96px;height:96px"><img src="../../apps/ui/public/icon-96.png" width="96" height="96" alt="Ícone 8n8"></div>96</div>
+          <div class="icon-wrap"><div class="icon" style="width:48px;height:48px"><img src="../../apps/ui/public/icon-48.png" width="48" height="48" alt="Ícone 8n8"></div>48</div>
+          <div class="icon-wrap"><div class="icon" style="width:32px;height:32px"><img src="../../apps/ui/public/icon-32.png" width="32" height="32" alt="Ícone 8n8"></div>32</div>
+          <div class="icon-wrap"><div class="icon" style="width:16px;height:16px"><img src="../../apps/ui/public/icon-16.png" width="16" height="16" alt="Ícone 8n8"></div>16</div>
+          <div class="icon-wrap"><div class="icon light" style="width:48px;height:48px"><img src="../../apps/ui/public/icon-48.png" width="48" height="48" alt="Ícone 8n8, fundo claro"></div>claro</div>
         </div>
       </div>
 

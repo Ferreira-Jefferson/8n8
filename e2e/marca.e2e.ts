@@ -18,28 +18,50 @@ const TINTA = "rgb(18, 41, 42)";
 const PETROLEO_ESCURO = "rgb(15, 122, 107)";
 const BRANCO = "rgb(255, 255, 255)";
 
-test("the tab says 8n8 and shows the symbol as its icon", async ({ page }) => {
+test("the tab says 8n8 and shows the full logo as its icon", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(page).toHaveTitle("8n8");
   const icon = page.locator('link[rel="icon"][type="image/svg+xml"]');
   // Relative since feature 10 (VSC-04): it resolves to the root's favicon.
   expect(await icon.evaluate((el) => (el as HTMLLinkElement).href)).toBe(
-    `${OFFLINE}/favicon.svg?v=4`,
+    `${OFFLINE}/favicon.svg?v=5`,
   );
   const res = await page.request.get(`${OFFLINE}/favicon.svg`);
   expect(res.status()).toBe(200);
   const svg = await res.text();
   expect(svg).toContain("<title>8n8</title>");
-  // The icon is the manual's logo on its tile: four blocks (two at 20%), two ports, the edge.
+  // The icon is the manual's full logo with no tile: four blocks (two at 20%), two ports, the edge.
   expect(svg.match(/<rect class="(mk|faint)"/g)).toHaveLength(4);
   expect(svg.match(/class="faint"[^>]*stroke-opacity="0.2"/g)).toHaveLength(2);
-  expect(svg.match(/<circle [^>]*r="5"/g)).toHaveLength(2);
-  expect(svg).toContain('<path class="mk" d="M44 8C66 8 58 72 80 72"');
-  expect(svg).toContain('rx="27"');
-  // The raster icons are crisp at their own size: the ICO holds 16, 32, 48 and 256 px.
+  expect(svg.match(/<circle class="mkf"/g)).toHaveLength(2);
+  expect(svg.match(/<path class="mk"/g)).toHaveLength(1);
+  expect(svg).not.toMatch(/<rect class="tile"/);
+  // Drawn on a 16 grid: every block edge lands on a whole pixel at 16, 32 and 48 px.
+  for (const m of svg.matchAll(
+    /<rect [^>]*x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"[^>]*stroke-width="([\d.]+)"/g,
+  )) {
+    const [x, y, w, h, t] = m.slice(1).map(Number) as [
+      number,
+      number,
+      number,
+      number,
+      number,
+    ];
+    for (const edge of [x - t / 2, y - t / 2, x + w + t / 2, y + h + t / 2])
+      expect(Number.isInteger(edge)).toBe(true);
+  }
+  // The raster icons are crisp at their own size: the ICO holds 16, 24, 32, 48, 64 and 256 px.
   const ico = await page.request.get(`${OFFLINE}/favicon.ico`);
   expect(ico.status()).toBe(200);
-  expect((await ico.body()).readUInt16LE(4)).toBe(4);
+  const body = await ico.body();
+  const count = body.readUInt16LE(4);
+  const sizes = Array.from(
+    { length: count },
+    (_, i) => body[6 + 16 * i] || 256,
+  );
+  expect(sizes).toEqual([16, 24, 32, 48, 64, 256]);
 });
 
 test("the launcher shows the full logo: linked blocks in Petróleo, the others faded", async ({
