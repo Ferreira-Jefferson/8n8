@@ -1,7 +1,8 @@
 import { execFile } from "node:child_process";
 import { DEFAULT_LOCALE, type Locale } from "@8n8/model";
 
-export type PickKind = "folder" | "file";
+/** "any": one window where the person chooses a file or a folder. */
+export type PickKind = "folder" | "file" | "any";
 
 /** Opens the system's own chooser and returns the path, or null when the person cancels. */
 export type PickPath = (
@@ -19,9 +20,13 @@ export type RunPicker = (
   args: string[],
 ) => Promise<{ kind: "ok"; stdout: string } | { kind: "cancelled" }>;
 
-const WORDS: Record<Locale, { code: string; all: string }> = {
-  "pt-BR": { code: "Código", all: "Todos os arquivos" },
-  en: { code: "Code", all: "All files" },
+const WORDS: Record<Locale, { code: string; all: string; here: string }> = {
+  "pt-BR": {
+    code: "Código",
+    all: "Todos os arquivos",
+    here: "Abrir esta pasta",
+  },
+  en: { code: "Code", all: "All files", here: "Open this folder" },
 };
 
 /** Windows: `*.py;*.ts` style filter; only plain extensions get in, so the text is never code. */
@@ -38,17 +43,29 @@ function windows(
   extensions: string[],
   label: string,
   all: string,
+  here: string,
 ): [string, string[]] {
+  // Windows has no window for "file or folder". "any" uses the file window with a
+  // placeholder name: opening a folder with it returns `folder\placeholder`, whose parent is the choice.
   const dialog =
     kind === "folder"
       ? "$d = New-Object System.Windows.Forms.FolderBrowserDialog"
-      : `$d = New-Object System.Windows.Forms.OpenFileDialog; $d.Filter = '${winFilter(extensions, label, all)}'`;
-  const result = kind === "folder" ? "$d.SelectedPath" : "$d.FileName";
-  // A hidden top-most owner keeps the dialog in front of the browser or editor.
+      : kind === "any"
+        ? `$d = New-Object System.Windows.Forms.OpenFileDialog; $d.CheckFileExists = $false; $d.ValidateNames = $false; $d.FileName = '${here}'; $d.Filter = '${winFilter(extensions, label, all)}'`
+        : `$d = New-Object System.Windows.Forms.OpenFileDialog; $d.Filter = '${winFilter(extensions, label, all)}'`;
+  const result =
+    kind === "folder"
+      ? "$d.SelectedPath"
+      : kind === "any"
+        ? "if (Test-Path -LiteralPath $d.FileName) { $d.FileName } else { Split-Path -Parent $d.FileName }"
+        : "$d.FileName";
+  // The server runs in the background, so Windows keeps its new windows behind the browser.
+  // An Alt key press lets this process take the front; the invisible top-most owner then keeps the dialog there.
   const script = [
     "[Console]::OutputEncoding = [Text.Encoding]::UTF8",
     "Add-Type -AssemblyName System.Windows.Forms",
-    "$f = New-Object System.Windows.Forms.Form; $f.TopMost = $true",
+    "(New-Object -ComObject WScript.Shell).SendKeys('%')",
+    "$f = New-Object System.Windows.Forms.Form; $f.TopMost = $true; $f.Opacity = 0; $f.ShowInTaskbar = $false; $f.Show(); $f.Activate()",
     dialog,
     `if ($d.ShowDialog($f) -eq 'OK') { ${result} } else { exit 1 }`,
   ].join("; ");
@@ -56,11 +73,18 @@ function windows(
 }
 
 function mac(kind: PickKind): [string, string[]] {
+  if (kind === "any") {
+    // NSOpenPanel takes files and folders in the same window; exit 1 means cancelled.
+    const script =
+      "ObjC.import('AppKit'); ObjC.import('stdlib'); const p = $.NSOpenPanel.openPanel; p.canChooseFiles = true; p.canChooseDirectories = true; if (p.runModal === 1) { p.URL.path.js } else { $.exit(1) }";
+    return ["osascript", ["-l", "JavaScript", "-e", script]];
+  }
   const what = kind === "folder" ? "folder" : "file";
   return ["osascript", ["-e", `POSIX path of (choose ${what})`]];
 }
 
 function linux(kind: PickKind): [string, string[]] {
+  // zenity cannot take both in one window: "any" opens the file one.
   const args = ["--file-selection"];
   if (kind === "folder") args.push("--directory");
   return ["zenity", args];
@@ -91,6 +115,7 @@ export function createPicker(
             extensions,
             (label ?? words.code).replace(/[^\p{L}\p{N} ]/gu, ""),
             words.all,
+            words.here,
           )
         : platform === "darwin"
           ? mac(kind)

@@ -44,7 +44,7 @@ import { TEST_TOKEN } from "./test-token";
 
 const ptsRules = readFileSync(
   new URL(
-    "../../../../docs/portugues-tecnico-simplificado.md",
+    "../../../../docs/writing-rules/portugues-tecnico-simplificado.md",
     import.meta.url,
   ),
   "utf8",

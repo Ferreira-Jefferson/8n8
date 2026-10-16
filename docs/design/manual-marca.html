@@ -1,0 +1,1321 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual da marca 8n8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap">
+<style>
+/* Layout: árvore de arquivos à esquerda (como o explorador de um repositório), capítulos numa coluna;
+   o produto aparece em "palcos" com a grade de pontos do canvas. Escuro por padrão, claro pelo tema. */
+:root {
+  /* Marca, tema escuro */
+  --c-grafite: #161818;
+  --c-nevoa: #e9ebea;
+  --c-pedra: #979d9b;
+  --c-petroleo: #3dbfa8;
+  --c-cobre: #dc8a5c;
+  /* Marca, tema claro */
+  --c-papel: #f2f3f0;
+  --c-tinta: #12292a;
+  --c-pedra-escura: #5b6d6a;
+  --c-petroleo-escuro: #0f7a6b;
+  --c-cobre-escuro: #a34f26;
+  --c-coral: #ea4b71;
+
+  --bg: #161818;
+  --fg: #e9ebea;
+  --muted: #979d9b;
+  --ink: #3dbfa8;
+  --surface: #1d2020;
+  --line: #313635;
+  --dim: #6b706f;
+
+  --font-display: "Archivo Black", "Arial Black", Impact, sans-serif;
+  --font-sans: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f2f3f0; --fg: #12292a; --muted: #5b6d6a; --ink: #0f7a6b;
+    --surface: #e8ebe8; --line: #d3d8d5; --dim: #8f9a98; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f2f3f0; --fg: #12292a; --muted: #5b6d6a; --ink: #0f7a6b;
+  --surface: #e8ebe8; --line: #d3d8d5; --dim: #8f9a98; color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 16px/1.6 var(--font-sans);
+  padding-inline: 16px;
+}
+code, .mono { font-family: var(--font-mono); }
+code { font-size: 0.92em; color: var(--ink); }
+a { color: var(--ink); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+.shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  padding-block: 24px 96px;
+}
+@media (min-width: 1000px) {
+  .shell { grid-template-columns: 200px minmax(0, 1fr); gap: 56px; }
+}
+
+/* ---- Árvore de navegação ---- */
+.tree {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 20;
+  background: var(--bg);
+  font: 400 14px/1.9 var(--font-mono);
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  padding-block: 10px;
+}
+.tree .root { color: var(--fg); font-weight: 500; display: none; }
+.tree ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 18px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+.tree a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+.tree a::before { content: ""; width: 8px; height: 8px; border-radius: 2px; border: 1.5px solid var(--dim); flex-shrink: 0; }
+.tree a:hover { color: var(--fg); }
+.tree a[aria-current="true"] { color: var(--fg); }
+.tree a[aria-current="true"]::before { background: var(--ink); border-color: var(--ink); }
+.tree .pre { display: none; color: var(--dim); }
+@media (min-width: 1000px) {
+  .tree { align-self: start; top: calc(env(safe-area-inset-top, 0px) + 24px); border-bottom: 0; padding-block: 0; }
+  .tree .root { display: block; margin-bottom: 4px; }
+  .tree ol { display: block; overflow: visible; }
+  .tree li { display: flex; }
+  .tree .pre { display: inline; white-space: pre; }
+}
+
+main { min-width: 0; display: grid; gap: 112px; }
+section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; scroll-margin-top: 72px; }
+
+.eyebrow {
+  font: 500 12px/1.3 var(--font-sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h2 { font: 400 clamp(30px, 5vw, 44px)/1.05 var(--font-display); letter-spacing: -0.01em; }
+h3 { font: 700 19px/1.3 var(--font-sans); }
+p { margin: 0; max-width: 64ch; }
+.lead { font-size: 19px; line-height: 1.55; max-width: 60ch; }
+.muted { color: var(--muted); }
+.head { display: grid; gap: 12px; }
+
+/* ---- Palco: o mundo do produto no tema escuro ---- */
+.stage {
+  --s-bg: var(--c-grafite);
+  --s-fg: var(--c-nevoa);
+  --s-muted: var(--c-pedra);
+  --s-accent: var(--c-petroleo);
+  --s-card: #202323;
+  --s-card-border: #363b3a;
+  --s-panel: #1c1e1e;
+  --s-panel-border: #2f3433;
+  --s-dim: #6b706f;
+  --s-warm: var(--c-cobre);
+  --s-danger: #e0735c;
+  --s-code: var(--c-grafite);
+  --s-dot: color-mix(in srgb, var(--c-nevoa) 16%, transparent);
+  --s-shadow: rgba(0, 0, 0, 0.25);
+  --s-shadow-strong: rgba(0, 0, 0, 0.3);
+  position: relative;
+  background-color: var(--s-bg);
+  background-image: radial-gradient(var(--s-dot) 1.25px, transparent 1.625px);
+  background-size: 25px 25px;
+  color: var(--s-fg);
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.stage.light {
+  --s-bg: var(--c-papel);
+  --s-fg: var(--c-tinta);
+  --s-muted: var(--c-pedra-escura);
+  --s-accent: var(--c-petroleo-escuro);
+  --s-card: #ffffff;
+  --s-card-border: #d3d8d5;
+  --s-panel: #f8f9f7;
+  --s-panel-border: #d3d8d5;
+  --s-dim: #8f9a98;
+  --s-warm: var(--c-cobre-escuro);
+  --s-danger: #b2452f;
+  --s-code: #ffffff;
+  --s-dot: color-mix(in srgb, var(--c-tinta) 16%, transparent);
+  --s-shadow: rgba(18, 41, 42, 0.1);
+  --s-shadow-strong: rgba(18, 41, 42, 0.14);
+}
+.scroll-x { overflow-x: auto; border-radius: 6px; }
+
+/* ---- Hero ---- */
+.hero { padding: clamp(28px, 6vw, 64px) clamp(20px, 5vw, 56px); display: grid; gap: 36px; overflow: hidden; }
+.hero .logo { width: min(100%, 380px); height: auto; color: var(--c-nevoa); --logo-n: var(--c-petroleo); display: block; }
+.hero .tag { font: 400 clamp(22px, 3.4vw, 32px)/1.2 var(--font-sans); max-width: 22ch; text-wrap: balance; }
+.hero .tag b { color: var(--c-petroleo); font-weight: 500; }
+.hero .slogan { display: grid; gap: 6px; }
+.hero .slogan .tag { font: 400 clamp(30px, 5vw, 48px)/1.05 var(--font-display); }
+.hero .tag-pt { font: 400 clamp(17px, 2.2vw, 20px)/1.3 var(--font-sans); color: var(--s-muted); }
+.hero dl { display: flex; flex-wrap: wrap; gap: 12px 40px; margin: 0; font: 400 14px/1.4 var(--font-mono); }
+.hero dt { color: var(--s-muted); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; font-family: var(--font-sans); font-weight: 500; }
+.hero dd { margin: 4px 0 0; }
+.hero .wire-draw { stroke-dasharray: 1; stroke-dashoffset: 0; animation: draw 1.1s 0.2s ease-out backwards; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/* ---- Blocos de conteúdo ---- */
+.promise {
+  font: 400 clamp(26px, 4.4vw, 40px)/1.15 var(--font-display);
+  border-left: 4px solid var(--ink);
+  padding-left: 20px;
+  max-width: 22ch;
+}
+.principles { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 40px; margin: 0; }
+.principles div { display: grid; gap: 6px; align-content: start; border-top: 1px solid var(--line); padding-top: 14px; }
+.principles dt { font-weight: 700; }
+.principles dd { margin: 0; color: var(--muted); }
+
+.ladder { display: grid; gap: 6px; font: 400 15px/1.3 var(--font-mono); margin: 0; padding: 0; list-style: none; }
+.ladder li { display: flex; align-items: center; gap: 12px; }
+.ladder li::before { content: ""; width: 10px; height: 10px; border-radius: 2px; border: 2px solid var(--ink); flex-shrink: 0; }
+.ladder li span { color: var(--muted); font-family: var(--font-sans); font-size: 14px; }
+
+.split { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px 40px; align-items: start; }
+
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line); }
+th { font: 500 11px/1.3 var(--font-sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+td.bad { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
+.table-wrap { overflow-x: auto; }
+.table-wrap table { min-width: 560px; }
+
+.rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: r; }
+.rules li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 8px; }
+.rules li::before { counter-increment: r; content: counter(r); font: 500 13px/1.7 var(--font-mono); color: var(--ink); }
+
+/* ---- Logo ---- */
+.logo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.tile { min-width: 0; border-radius: 6px; aspect-ratio: 16 / 10; max-width: 100%; display: grid; place-items: center; padding: 24px; border: 1px solid var(--line); }
+.tile svg { width: 58%; height: auto; }
+.tile.t-dark { background: var(--c-grafite); color: var(--c-nevoa); --logo-n: var(--c-petroleo); }
+.tile.t-light { background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo-escuro); }
+.tile.t-dark-mono { background: var(--c-grafite); color: var(--c-nevoa); --logo-n: var(--c-nevoa); }
+.tile.t-light-mono { background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-tinta); }
+.tile.t-accent { background: var(--c-petroleo); color: var(--c-grafite); --logo-n: var(--c-grafite); }
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+figcaption { font-size: 14px; color: var(--muted); }
+figcaption b { color: var(--fg); font-weight: 500; }
+
+.construct { padding: 24px; }
+.construct svg { width: 100%; height: auto; display: block; }
+
+.icons { display: flex; flex-wrap: wrap; align-items: end; gap: 28px; }
+.icon { background: var(--c-grafite); display: grid; place-items: center; --logo-n: var(--c-petroleo); color: var(--c-nevoa); border: 1px solid var(--line); }
+.icon.light { background: var(--c-papel); --logo-n: var(--c-petroleo-escuro); color: var(--c-tinta); }
+.icon svg { width: 74%; height: auto; }
+.icon-wrap { display: grid; gap: 8px; justify-items: center; font: 400 12px var(--font-mono); color: var(--muted); }
+
+.dont-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.dont .tile { aspect-ratio: 4 / 3; position: relative; }
+.dont .tile::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(to top right, transparent calc(50% - 1px), color-mix(in srgb, #d0453b 85%, transparent) 50%, transparent calc(50% + 1px));
+  border-radius: 6px;
+  pointer-events: none;
+}
+.dont figcaption::before { content: "Não "; color: var(--fg); font-weight: 700; }
+
+
+/* ---- Cores ---- */
+.theme-row { display: grid; gap: 14px; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+.swatch { display: grid; gap: 10px; }
+.chip { border-radius: 6px; aspect-ratio: 3 / 2; max-width: 100%; border: 1px solid var(--line); padding: 14px; display: flex; align-items: end; font: 500 12px/1.2 var(--font-mono); }
+.swatch h4 { margin: 0; font: 700 16px/1.3 var(--font-sans); }
+.swatch dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; font: 400 13px/1.5 var(--font-mono); }
+.swatch dt { color: var(--muted); }
+.swatch dd { margin: 0; font-variant-numeric: tabular-nums; }
+.swatch p { font-size: 14px; color: var(--muted); }
+
+.ratio { display: flex; height: 56px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
+.ratio div { display: flex; align-items: end; padding: 8px 10px; font: 500 12px var(--font-mono); min-width: 0; }
+
+.derived { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.derived div { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 14px; }
+.derived i { width: 36px; height: 36px; border-radius: 6px; border: 1px solid var(--line); display: block; }
+.derived span { display: grid; line-height: 1.3; }
+.derived small { font: 400 12px var(--font-mono); color: var(--muted); }
+
+/* ---- Temas: as telas reais do sistema (1440 x 900), em SVG ---- */
+.tabs > input { position: absolute; opacity: 0; pointer-events: none; }
+.tabs .tab-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.tabs label { font: 500 14px/1.2 var(--font-mono); padding: 9px 14px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); cursor: pointer; }
+.tabs label:hover { color: var(--fg); }
+.tab-panel { display: none; gap: 28px; }
+#t-ini:checked ~ .tab-bar label[for="t-ini"],
+#t-pasta:checked ~ .tab-bar label[for="t-pasta"],
+#t-fluxo:checked ~ .tab-bar label[for="t-fluxo"] { color: var(--fg); border-color: var(--ink); }
+#t-ini:focus-visible ~ .tab-bar label[for="t-ini"],
+#t-pasta:focus-visible ~ .tab-bar label[for="t-pasta"],
+#t-fluxo:focus-visible ~ .tab-bar label[for="t-fluxo"] { outline: 2px solid var(--ink); outline-offset: 3px; }
+#t-ini:checked ~ #p-ini, #t-pasta:checked ~ #p-pasta, #t-fluxo:checked ~ #p-fluxo { display: grid; }
+
+.screen { display: block; overflow: hidden; background-image: none; }
+.screen svg.canvas { --u: 1; display: block; width: 100%; height: auto; min-width: 640px; }
+.screen .dots { fill: var(--s-dot); }
+.screen .s-mark { color: var(--s-fg); --logo-n: var(--s-accent); }
+.screen .crumb-t { font: 400 22px var(--font-mono); fill: var(--s-muted); white-space: pre; }
+.screen .crumb-t .last { fill: var(--s-fg); }
+.screen .frame { fill: none; stroke: var(--s-accent); stroke-width: 2; }
+.screen .ghost { fill: none; stroke: var(--s-panel-border); stroke-width: 2; }
+.screen .ghost.h { stroke: var(--s-card-border); }
+.screen .ico { color: var(--s-fg); }
+.screen .n-card { fill: var(--s-card); stroke: var(--s-card-border); stroke-width: calc(2px * var(--u)); filter: drop-shadow(0 calc(14px * var(--u)) calc(15px * var(--u)) var(--s-shadow)); }
+.screen .n.on .n-card { stroke: var(--s-accent); }
+.screen .hub .n-card { stroke-dasharray: calc(6px * var(--u)) calc(4px * var(--u)); }
+.screen .n-tag { font: 500 calc(16px * var(--u)) var(--font-sans); letter-spacing: 0.18em; fill: var(--s-muted); }
+.screen .n-tag.fn { fill: var(--s-fg); }
+.screen .n-tag.arquivo { fill: var(--s-accent); }
+.screen .n-tag.pasta { fill: var(--s-accent); }
+.screen .n-tag.ext { fill: var(--s-warm); }
+.screen .n-name { font: 700 calc(27px * var(--u)) var(--font-sans); fill: var(--s-fg); }
+.screen .n-open { fill: var(--s-accent); }
+.screen .n-fn { font: 400 calc(20px * var(--u)) var(--font-mono); fill: var(--s-muted); }
+.screen .wire { fill: none; stroke: var(--s-accent); stroke-width: calc(4px * var(--u)); stroke-linecap: round; stroke-linejoin: round; }
+.screen .wire.dep { stroke-width: calc(3.5px * var(--u)); stroke-linecap: butt; }
+.screen .wire.calls { stroke-dasharray: 29 8 18 8 10 8 3 8; }
+.screen .wire.contains { stroke: var(--s-dim); stroke-width: calc(2px * var(--u)); stroke-dasharray: 0.004 0.012; }
+.screen .port { fill: var(--s-accent); }
+.screen .port.ring { fill: var(--s-bg); stroke: var(--s-accent); stroke-width: 3; }
+.screen .count { fill: var(--s-accent); }
+.screen .count-t { font: 700 calc(16px * var(--u)) var(--font-sans); fill: var(--s-bg); text-anchor: middle; }
+.screen .sbadge { fill: var(--s-fg); }
+.screen .sbadge-d { fill: var(--s-bg); }
+.screen .sbadge-t { font: 700 calc(16px * var(--u)) var(--font-sans); fill: var(--s-bg); }
+.screen .back { fill: var(--s-bg); stroke: var(--s-accent); stroke-width: 2; }
+.screen .toggle { fill: var(--s-panel); stroke: var(--s-panel-border); stroke-width: 2; }
+.screen .toggle-i { fill: none; stroke: var(--s-fg); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.screen .h-title { font: 400 44px var(--font-display); fill: var(--s-fg); }
+.screen .h-card { fill: var(--s-card); stroke: var(--s-card-border); stroke-width: 2; }
+.screen .h-card.on { stroke: var(--s-accent); }
+.screen .h-label { font: 500 13px var(--font-sans); letter-spacing: 0.18em; fill: var(--s-muted); }
+.screen .h-field { fill: var(--s-panel); stroke: var(--s-card-border); stroke-width: 2; }
+.screen .h-ico { color: var(--s-muted); }
+.screen .h-input { font: 400 18px var(--font-mono); fill: var(--s-dim); }
+.screen .h-btn { fill: var(--s-accent); }
+.screen .h-btn-t { font: 700 18px var(--font-sans); fill: var(--s-bg); text-anchor: middle; }
+.screen .h-small { font: 400 15px var(--font-sans); fill: var(--s-muted); }
+.screen .h-item { font: 500 17px var(--font-sans); fill: var(--s-fg); }
+.screen .h-item-s { font: 400 14px var(--font-sans); fill: var(--s-muted); }
+.screen .h-empty { font: 400 16px var(--font-sans); fill: var(--s-muted); }
+
+.theme-table td:first-child, .spec-table td:first-child { font-weight: 500; white-space: nowrap; vertical-align: top; }
+.spec-table td:first-child { padding-right: 24px; }
+.spec-table { min-width: 560px; }
+.theme-table i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); margin-right: 8px; vertical-align: -1px; }
+
+/* ---- Busca de nó ---- */
+.sbox { position: relative; display: inline-block; }
+.sfield { display: flex; align-items: center; box-sizing: border-box; width: calc(60px * var(--k)); height: calc(60px * var(--k)); overflow: hidden; border: calc(2px * var(--k)) solid var(--s-panel-border); border-radius: calc(6px * var(--k)); background: transparent; color: var(--s-fg); transition: width 200ms ease-out, border-color 200ms ease-out; }
+.sfield .lupa { flex: 0 0 calc(56px * var(--k)); height: calc(56px * var(--k)); display: grid; place-items: center; color: var(--s-fg); background: none; border: 0; padding: 0; cursor: pointer; }
+.sfield input { flex: 1; min-width: 0; height: calc(56px * var(--k)); background: none; border: 0; outline: 0; color: var(--s-fg); font: 400 calc(20px * var(--k)) var(--font-sans); opacity: 0; transition: opacity 200ms ease-out; }
+.sfield input::placeholder { color: var(--s-muted); }
+.sbox.open .sfield { width: calc(420px * var(--k)); border-color: var(--s-muted); }
+.sbox.open .sfield input { opacity: 1; }
+.sbox .results { position: absolute; top: 38px; left: 0; width: 360px; max-width: 80vw; background: var(--s-panel); border: 2px solid var(--s-panel-border); border-radius: 6px; box-shadow: 0 10px 22px var(--s-shadow); z-index: 2; overflow: hidden; }
+.sbox .results[hidden] { display: none; }
+.sbox .res { display: grid; gap: 2px; width: 100%; text-align: left; padding: 9px 12px; background: none; border: 0; border-left: 3px solid transparent; color: var(--s-fg); font: inherit; cursor: pointer; }
+.sbox .res + .res { border-top: 1px solid var(--s-panel-border); }
+.sbox .res:hover, .sbox .res.on { background: color-mix(in srgb, var(--s-accent) 12%, transparent); border-left-color: var(--s-accent); }
+.sbox .res b { font: 700 14px/1.3 var(--font-sans); }
+.sbox .res span { display: flex; justify-content: space-between; gap: 12px; font: 400 12px/1.4 var(--font-mono); color: var(--s-muted); }
+.sbox .res span em { font-style: normal; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sfield input::-webkit-search-cancel-button { appearance: none; display: none; }
+.sbox .res span i { font-style: normal; color: var(--s-dim); white-space: nowrap; }
+.sbox .res mark { background: color-mix(in srgb, var(--s-accent) 28%, transparent); color: inherit; border-radius: 2px; }
+.sbox .none { padding: 12px; font-size: 13px; color: var(--s-muted); }
+.search-demo { padding: 24px; min-height: 330px; display: grid; align-content: start; gap: 16px; }
+.search-demo .hint { font: 400 13px var(--font-sans); color: var(--s-muted); margin: 0; max-width: 60ch; }
+
+/* ---- Tipografia ---- */
+.faces { display: grid; gap: 0; }
+.face { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding-block: 24px; border-top: 1px solid var(--line); }
+@media (min-width: 720px) { .face { grid-template-columns: 220px minmax(0, 1fr); gap: 32px; } }
+.face .meta { display: grid; gap: 4px; align-content: start; font-size: 14px; color: var(--muted); }
+.face .meta b { color: var(--fg); font-size: 16px; }
+.face .sample { min-width: 0; overflow-wrap: anywhere; }
+.s-display { font: 400 clamp(40px, 7vw, 68px)/1 var(--font-display); }
+.s-sans { font: 400 clamp(22px, 3vw, 28px)/1.3 var(--font-sans); }
+.s-sans .w5 { font-weight: 500; } .s-sans .w7 { font-weight: 700; }
+.s-mono { font: 400 clamp(17px, 2.4vw, 22px)/1.5 var(--font-mono); }
+
+/* ---- Componentes: as medidas do app são do palco de 1920 px; as demos usam a escala k = 0,625 ---- */
+.k { --k: 0.625; }
+.flow { width: 760px; height: 350px; }
+.flow svg { position: absolute; inset: 0; width: 760px; height: 350px; overflow: visible; }
+.flow svg.ports { z-index: 2; }
+.wire { fill: none; stroke: var(--s-accent); stroke-width: calc(4px * var(--k)); stroke-linecap: round; }
+.wire.contains { stroke: var(--s-dim); stroke-width: calc(2px * var(--k)); stroke-dasharray: 0.004 0.012; }
+.wire.dep { stroke-width: calc(3.5px * var(--k)); stroke-linecap: butt; }
+.wire.dep.inside { stroke: var(--s-dim); }
+.wire.dep.across { stroke: var(--s-accent); }
+.wire.calls { stroke-dasharray: 18 5 11 5 6 5 2 5; }
+.wire.imports { stroke-dasharray: 12 5 2 5; }
+.wire.extends { stroke-dasharray: 12 5 2 5 2 5; }
+.port { fill: var(--s-accent); }
+.port.ring { fill: var(--s-bg); stroke: var(--s-accent); stroke-width: 2; }
+.port.dim { fill: var(--s-dim); }
+.port.ring.dim { fill: var(--s-bg); stroke: var(--s-dim); }
+.node {
+  position: absolute;
+  box-sizing: border-box;
+  width: calc(320px * var(--k)); height: calc(140px * var(--k));
+  padding: calc(20px * var(--k)) calc(24px * var(--k));
+  display: flex; flex-direction: column; gap: calc(8px * var(--k));
+  background: var(--s-card);
+  border: calc(2px * var(--k)) solid var(--s-card-border);
+  border-radius: calc(6px * var(--k));
+  box-shadow: 0 calc(14px * var(--k)) calc(30px * var(--k)) var(--s-shadow);
+}
+.node.on { border-color: var(--s-accent); }
+.node.hub { border-style: dashed; }
+.node .ntag { font: 500 calc(16px * var(--k))/1.2 var(--font-sans); letter-spacing: 0.18em; color: var(--s-muted); }
+.node[data-tag="PASTA"] .ntag, .node[data-tag="ARQUIVO"] .ntag, .node[data-tag="CÓDIGO SOLTO"] .ntag { color: var(--s-accent); }
+.node[data-tag="HTTP"] .ntag, .node[data-tag="BANCO"] .ntag, .node[data-tag="DISCO"] .ntag, .node[data-tag="E-MAIL"] .ntag, .node[data-tag="EXTERNO"] .ntag { color: var(--s-warm); }
+.node[data-tag="FUNÇÃO"] .ntag, .node[data-tag="SE"] .ntag, .node[data-tag="LAÇO"] .ntag, .node[data-tag="BLOCO"] .ntag, .node[data-tag="CÓDIGO"] .ntag, .node[data-tag="RETORNO"] .ntag { color: var(--s-fg); }
+.node .nname { font: 700 calc(27px * var(--k))/1.1 var(--font-sans); color: var(--s-fg); white-space: nowrap; }
+.node .nname i { font-style: normal; margin-left: 0.25em; color: var(--s-accent); }
+.node .nfn { font: 400 calc(20px * var(--k))/1.3 var(--font-mono); color: var(--s-muted); white-space: nowrap; }
+.node .hubcount { position: absolute; right: calc(16px * var(--k)); top: calc(16px * var(--k)); min-width: calc(26px * var(--k)); height: calc(26px * var(--k)); padding: 0 calc(8px * var(--k)); border-radius: calc(5px * var(--k)); background: var(--s-accent); color: var(--s-bg); font: 700 calc(16px * var(--k)) var(--font-sans); line-height: calc(26px * var(--k)); text-align: center; box-sizing: border-box; }
+.node .badge { position: absolute; right: calc(16px * var(--k)); top: calc(16px * var(--k)); height: calc(26px * var(--k)); padding: 0 calc(8px * var(--k)); display: flex; align-items: center; gap: calc(6px * var(--k)); border-radius: calc(5px * var(--k)); background: var(--s-fg); color: var(--s-bg); font: 700 calc(16px * var(--k)) var(--font-sans); box-shadow: 0 calc(4px * var(--k)) calc(10px * var(--k)) var(--s-shadow); box-sizing: border-box; }
+.node .badge i { width: calc(7px * var(--k)); height: calc(7px * var(--k)); border-radius: 50%; background: var(--s-bg); display: block; }
+.node .badge.open { outline: calc(2px * var(--k)) solid var(--s-accent); outline-offset: calc(2px * var(--k)); }
+.node.has-count .badge { right: calc(56px * var(--k)); }
+.node .back { position: absolute; left: calc(-24px * var(--k)); top: 50%; width: calc(44px * var(--k)); height: calc(44px * var(--k)); margin-top: calc(-22px * var(--k)); border-radius: 50%; border: calc(2px * var(--k)) solid var(--s-accent); background: var(--s-bg); color: var(--s-accent); display: grid; place-items: center; }
+.node .back svg { position: static; width: calc(22px * var(--k)); height: calc(22px * var(--k)); fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+/* Balão de sugestões: abre no selo, com a seta apontada para ele. */
+.spop { position: absolute; z-index: 3; box-sizing: border-box; width: calc(340px * var(--k)); padding: calc(12px * var(--k)) calc(14px * var(--k)) calc(8px * var(--k)); background: var(--s-panel); color: var(--s-fg); border: 1px solid var(--s-card-border); border-radius: calc(8px * var(--k)); box-shadow: 0 calc(16px * var(--k)) calc(34px * var(--k)) var(--s-shadow-strong); }
+.spop::after { content: ""; position: absolute; top: calc(-7px * var(--k)); left: var(--ax, 50%); width: calc(12px * var(--k)); height: calc(12px * var(--k)); margin-left: calc(-6px * var(--k)); background: var(--s-panel); border: 1px solid var(--s-card-border); border-right: 0; border-bottom: 0; transform: rotate(45deg); }
+.spop .ph { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: calc(4px * var(--k)); font: 500 calc(12px * var(--k)) var(--font-sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--s-muted); }
+.spop .ph span { font-size: calc(18px * var(--k)); letter-spacing: 0; }
+.spop .pi { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: calc(2px * var(--k)) calc(10px * var(--k)); padding: calc(9px * var(--k)) calc(4px * var(--k)); }
+.spop .pi + .pi { border-top: 1px solid var(--s-card-border); }
+.spop .pc { font: 700 calc(14px * var(--k))/1.3 var(--font-sans); }
+.spop .sev { margin-right: calc(6px * var(--k)); font: 500 calc(10px * var(--k)) var(--font-sans); letter-spacing: 0.12em; text-transform: uppercase; }
+.spop .sev.alta { color: var(--s-danger); }
+.spop .sev.media { color: var(--s-warm); }
+.spop .sev.baixa { color: var(--s-muted); }
+.spop .pl { font: 400 calc(12px * var(--k)) var(--font-mono); color: var(--s-accent); white-space: nowrap; }
+.spop .pr { grid-column: 1 / -1; font: 400 calc(13px * var(--k))/1.4 var(--font-sans); color: var(--s-muted); }
+.gbtn { position: absolute; top: calc(24px * var(--k)); box-sizing: border-box; width: calc(60px * var(--k)); height: calc(60px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); border-radius: calc(6px * var(--k)); display: grid; place-items: center; color: var(--s-fg); }
+.gbtn svg { width: calc(30px * var(--k)); height: calc(30px * var(--k)); }
+.btn, .btn-ghost { font-family: var(--font-sans); border-radius: calc(6px * var(--k)); }
+.btn { display: inline-block; padding: calc(16px * var(--k)) calc(30px * var(--k)); background: var(--s-accent); color: var(--s-bg); font-size: calc(26px * var(--k)); font-weight: 700; }
+.btn-ghost { display: inline-block; padding: calc(12px * var(--k)) calc(22px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); color: var(--s-fg); font-size: calc(22px * var(--k)); font-weight: 500; }
+.btn-ask { display: inline-block; padding: calc(10px * var(--k)) calc(18px * var(--k)); border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-accent); color: var(--s-accent); font: 600 calc(18px * var(--k)) var(--font-sans); }
+.btn-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 24px; }
+
+.legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px 32px; font-size: 15px; }
+.legend li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; align-items: start; }
+.legend .stage { width: 56px; height: 32px; border-radius: 4px; border: 0; background-image: none; display: block; }
+.legend .stage svg { width: 56px; height: 32px; display: block; }
+.legend .c-card { fill: var(--s-card); stroke: var(--s-card-border); stroke-width: 2; }
+.legend .c-main { stroke: var(--s-accent); }
+.legend .c-warm { fill: var(--s-warm); }
+.legend .c-fill { fill: var(--s-accent); }
+.legend .c-line { fill: none; stroke: var(--s-accent); stroke-width: 4; stroke-linecap: round; }
+.legend .c-dim { fill: none; stroke: var(--s-dim); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 1 5; }
+.legend .c-dep { fill: none; stroke: var(--s-dim); stroke-width: 3.5; }
+.legend .c-dep.across { stroke: var(--s-accent); }
+.legend .c-ring { fill: var(--s-bg); stroke: var(--s-dim); stroke-width: 2.5; }
+.legend .c-dot { fill: var(--s-dim); }
+.legend .c-t { font: 700 12px var(--font-sans); text-anchor: middle; }
+.legend b { font-weight: 500; }
+.legend span.d { color: var(--muted); display: block; font-size: 14px; }
+
+.panel-demo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 20px; }
+.crumb { display: flex; flex-wrap: wrap; font: 400 calc(22px * var(--k))/1.6 var(--font-mono); color: var(--s-muted); white-space: pre; overflow-x: auto; }
+.crumb b { color: var(--s-fg); font-weight: 400; }
+.dpanel { position: relative; background: var(--s-panel); border: 2px solid var(--s-panel-border); border-radius: 6px; box-shadow: 0 18px 40px var(--s-shadow); padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; max-width: 520px; }
+.dpanel > * { min-width: 0; }
+.dpanel h4 { margin: 0; padding-right: 40px; font: 400 22px var(--font-display); }
+.dpanel .ey { font: 500 11px/1.5 var(--font-sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--s-muted); margin: 0; }
+.dpanel .rev { align-self: flex-start; padding: 4px 10px; border-radius: 4px; background: color-mix(in srgb, var(--s-accent) 16%, transparent); color: var(--s-accent); font: 500 12px var(--font-sans); letter-spacing: 0.06em; }
+.dpanel ol, .dpanel ul { margin: 0; padding: 0; list-style: none; font-size: 16px; line-height: 1.45; }
+.dpanel ul { padding-left: 20px; list-style: disc; font-size: 14px; line-height: 1.5; }
+.dpanel p { margin: 0; max-width: none; }
+.dpanel .ev { margin-left: 8px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--s-panel-border); color: var(--s-muted); font: 400 12px var(--font-mono); }
+.dpanel .rules { font: 500 12px/1.4 var(--font-sans); letter-spacing: 0.06em; color: var(--s-accent); }
+.dpanel .codeview { margin: 0; padding: 14px 16px; border-radius: 6px; background: var(--s-bg); font: 400 14px/1.6 var(--font-mono); color: color-mix(in srgb, var(--s-fg) 82%, var(--s-bg)); overflow-x: auto; }
+.dpanel .codeview div { display: flex; gap: 24px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dpanel .codeview div.cur { background: color-mix(in srgb, var(--s-accent) 18%, transparent); }
+.dpanel .codeview s { text-decoration: none; color: var(--s-dim); min-width: 2ch; text-align: right; flex-shrink: 0; }
+.dpanel .io { font: 400 14px/1.8 var(--font-mono); color: var(--s-fg); }
+.dpanel .io i { font-style: normal; margin: 0 12px; color: var(--s-accent); }
+.dpanel h5 { margin: 0; font: 700 15px var(--font-sans); }
+.dpanel .cl { position: absolute; top: 8px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--s-panel-border); display: grid; place-items: center; color: var(--s-fg); }
+
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; align-items: start; }
+.drawer-stage { position: relative; height: 330px; overflow: hidden; }
+.hdrawer { position: absolute; top: calc(88px * var(--k)); right: 0; bottom: 0; box-sizing: border-box; width: calc(460px * var(--k)); padding: calc(20px * var(--k)); display: flex; flex-direction: column; gap: calc(14px * var(--k)); background: var(--s-panel); border-left: calc(2px * var(--k)) solid var(--s-panel-border); box-shadow: 0 calc(18px * var(--k)) calc(40px * var(--k)) var(--s-shadow); }
+.hdrawer .hs { padding: calc(12px * var(--k)) calc(16px * var(--k)); border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); color: var(--s-dim); font: 400 calc(20px * var(--k)) var(--font-sans); }
+.hdrawer ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: calc(8px * var(--k)); }
+.hdrawer li { position: relative; }
+.hdrawer .ho { min-width: 0; display: flex; flex-direction: column; gap: calc(6px * var(--k)); padding: calc(12px * var(--k)) calc(92px * var(--k)) calc(12px * var(--k)) calc(14px * var(--k)); border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); }
+.hdrawer .ht { font: 500 calc(20px * var(--k)) var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdrawer .hm { display: flex; gap: calc(12px * var(--k)); align-items: baseline; color: var(--s-muted); font: 400 calc(16px * var(--k)) var(--font-sans); }
+.hdrawer .hm b { font-weight: 500; letter-spacing: 0.18em; }
+.hdrawer .hm b.pasta { color: var(--s-accent); }
+.hdrawer .hz { color: var(--s-muted); font: 400 calc(16px * var(--k)) var(--font-sans); }
+.hdrawer .acts { position: absolute; top: calc(8px * var(--k)); right: calc(8px * var(--k)); display: flex; gap: calc(2px * var(--k)); }
+.hdrawer .star, .hdrawer .del { width: calc(36px * var(--k)); height: calc(36px * var(--k)); display: grid; place-items: center; border-radius: calc(6px * var(--k)); }
+.hdrawer .star { color: var(--s-dim); }
+.hdrawer .star.on { color: var(--s-accent); }
+.hdrawer .del { color: var(--s-muted); }
+.hdrawer .del.hover { color: var(--s-danger); background: color-mix(in srgb, var(--s-fg) 8%, transparent); }
+.hdrawer .star svg, .hdrawer .del svg { width: calc(20px * var(--k)); height: calc(20px * var(--k)); }
+.dlg-stage { position: relative; padding: calc(88px * var(--k)) calc(16px * var(--k)) calc(16px * var(--k)); display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
+.dlg-stage::before { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--s-bg) 70%, transparent); }
+.sdlg { position: relative; box-sizing: border-box; width: min(calc(560px * var(--k)), 100%); padding: calc(24px * var(--k)); background: var(--s-panel); border: calc(2px * var(--k)) solid var(--s-panel-border); border-radius: calc(6px * var(--k)); box-shadow: 0 calc(18px * var(--k)) calc(40px * var(--k)) var(--s-shadow); display: flex; flex-direction: column; gap: calc(16px * var(--k)); }
+.sdlg h4 { margin: 0 0 calc(0px * var(--k)); font: 400 calc(30px * var(--k)) var(--font-display); }
+.sdlg .shead { display: flex; justify-content: space-between; align-items: center; gap: calc(16px * var(--k)); }
+.sdlg .tbtn { width: calc(44px * var(--k)); height: calc(44px * var(--k)); display: grid; place-items: center; border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); color: var(--s-fg); flex-shrink: 0; }
+.sdlg .hbtns { display: flex; gap: calc(8px * var(--k)); }
+.sdlg .lbtn { font: 700 calc(16px * var(--k)) var(--font-sans); }
+.sdlg .tbtn svg { width: calc(26px * var(--k)); height: calc(26px * var(--k)); }
+.sdlg label { display: flex; flex-direction: column; gap: calc(6px * var(--k)); font: 500 calc(18px * var(--k)) var(--font-sans); }
+.sdlg label.check { flex-direction: row; align-items: center; gap: calc(10px * var(--k)); }
+.sdlg label .f { padding: calc(10px * var(--k)) calc(14px * var(--k)); border-radius: calc(6px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); color: var(--s-fg); font: 400 calc(18px * var(--k)) var(--font-sans); display: flex; justify-content: space-between; }
+.sdlg label .f.ph { color: var(--s-dim); }
+.sdlg .cb { width: calc(18px * var(--k)); height: calc(18px * var(--k)); border-radius: calc(3px * var(--k)); border: calc(2px * var(--k)) solid var(--s-panel-border); flex-shrink: 0; }
+.sdlg .cb.on { background: var(--s-accent); border-color: var(--s-accent); }
+.sdlg .acts { display: flex; gap: calc(16px * var(--k)); align-items: center; }
+
+.specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0; border-top: 1px solid var(--line); margin: 0; }
+.specs div { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); }
+.specs dt { font: 500 11px/1.3 var(--font-sans); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+.specs dd { margin: 6px 0 0; font: 400 20px/1.2 var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ---- Tokens ---- */
+.code-block { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.code-block pre { margin: 0; padding: 20px; overflow-x: auto; font: 400 13px/1.7 var(--font-mono); color: var(--fg); }
+.code-block .cm { color: var(--muted); }
+.copy { position: absolute; top: 10px; right: 10px; font: 500 13px var(--font-sans); background: var(--fg); color: var(--bg); border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+
+footer { border-top: 1px solid var(--line); padding-top: 20px; font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero .wire-draw { animation: none; }
+  .sfield, .sfield input { transition: none; }
+  html { scroll-behavior: auto; }
+}
+html { scroll-behavior: smooth; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Logotipo: dois 8 de blocos; os blocos ligados e a aresta na cor de destaque, os outros dois com 20% de opacidade. -->
+    <symbol id="wordmark" viewBox="0 0 124 80">
+      <g fill="none" stroke-width="6">
+        <rect x="3" y="43" width="38" height="34" rx="6" stroke="currentColor" stroke-opacity="0.2"/>
+        <rect x="83" y="3" width="38" height="34" rx="6" stroke="currentColor" stroke-opacity="0.2"/>
+        <rect x="3" y="3" width="38" height="34" rx="6" stroke="var(--logo-n, currentColor)"/>
+        <rect x="83" y="43" width="38" height="34" rx="6" stroke="var(--logo-n, currentColor)"/>
+        <path d="M44 8C66 8 58 72 80 72" stroke="var(--logo-n, currentColor)" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <circle cx="44" cy="8" r="5" fill="var(--logo-n, currentColor)"/>
+      <circle cx="80" cy="72" r="5" fill="var(--logo-n, currentColor)"/>
+    </symbol>
+    <!-- Símbolo: só o caminho, para tamanhos pequenos. -->
+    <symbol id="mark" viewBox="0 0 96 76">
+      <g fill="none" stroke="var(--logo-n, currentColor)">
+        <rect x="3" y="3" width="34" height="34" rx="6" stroke-width="6"/>
+        <rect x="59" y="39" width="34" height="34" rx="6" stroke-width="6"/>
+        <path d="M40 8C52 8 44 68 56 68" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <circle cx="40" cy="8" r="5" fill="var(--logo-n, currentColor)"/>
+      <circle cx="56" cy="68" r="5" fill="var(--logo-n, currentColor)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="shell">
+  <nav class="tree" aria-label="Capítulos">
+    <div class="root">8n8/manual/</div>
+    <ol>
+      <li><span class="pre">├─ </span><a href="#essencia">essencia</a></li>
+      <li><span class="pre">├─ </span><a href="#voz">voz</a></li>
+      <li><span class="pre">├─ </span><a href="#logo">logo</a></li>
+      <li><span class="pre">├─ </span><a href="#cores">cores</a></li>
+      <li><span class="pre">├─ </span><a href="#tipografia">tipografia</a></li>
+      <li><span class="pre">├─ </span><a href="#componentes">componentes</a></li>
+      <li><span class="pre">├─ </span><a href="#temas">temas</a></li>
+      <li><span class="pre">└─ </span><a href="#tokens">tokens</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="stage hero">
+      <p class="eyebrow" style="color: var(--c-pedra)">Manual da marca · versão 0.4 · outubro de 2026</p>
+      <svg class="logo" viewBox="-4 -4 132 88" role="img" aria-label="8n8">
+        <g fill="none" stroke-width="6">
+          <rect x="3" y="43" width="38" height="34" rx="6" stroke="currentColor" stroke-opacity="0.2"/>
+          <rect x="83" y="3" width="38" height="34" rx="6" stroke="currentColor" stroke-opacity="0.2"/>
+          <rect x="3" y="3" width="38" height="34" rx="6" stroke="var(--logo-n)"/>
+          <rect x="83" y="43" width="38" height="34" rx="6" stroke="var(--logo-n)"/>
+          <path class="wire-draw" pathLength="1" d="M44 8C66 8 58 72 80 72" stroke="var(--logo-n)" stroke-width="5" stroke-linecap="round"/>
+        </g>
+        <circle cx="44" cy="8" r="5" fill="var(--logo-n)"/>
+        <circle cx="80" cy="72" r="5" fill="var(--logo-n)"/>
+      </svg>
+      <div class="slogan">
+        <p class="tag">O <b>mapa</b> do seu código.</p>
+      </div>
+      <dl>
+        <div><dt>Escrita</dt><dd>8n8</dd></div>
+        <div><dt>Autor</dt><dd><a href="https://github.com/Ferreira-Jefferson" style="color: inherit">Jefferson Ferreira</a></dd></div>
+        <div><dt>Repositório</dt><dd><a href="https://github.com/Ferreira-Jefferson/8n8" style="color: inherit">github.com/Ferreira-Jefferson/8n8</a></dd></div>
+      </dl>
+    </header>
+
+    <!-- ===================== ESSÊNCIA ===================== -->
+    <section id="essencia" aria-labelledby="h-essencia">
+      <div class="head">
+        <p class="eyebrow">Essência</p>
+        <h2 id="h-essencia">O que o 8n8 é</h2>
+      </div>
+      <p class="lead">O 8n8 lê um código e desenha esse código como um diagrama de fluxo hierárquico: nós ligados por arestas. Você começa na vista ampla. Depois, abre um nó para ver o fluxo interno dele e desce até as linhas reais.</p>
+      <p>O 8n8 é para quem precisa supervisionar código, muitas vezes escrito por IA, sem ler linha por linha. A ideia de nós ligados por arestas veio do n8n, que serviu de inspiração.</p>
+
+      <p class="promise">Todo nó leva de volta à linha.</p>
+
+      <div class="split">
+        <div class="head">
+          <h3>A inspiração</h3>
+          <p class="muted">O 8n8 se inspira no n8n. O n8n monta automações a partir de nós. O 8n8 faz o caminho contrário: lê um código pronto e desenha os nós dele. Por isso o nome inverte o n8n. Apesar da brincadeira com o nome, os dois produtos não têm nenhuma relação.</p>
+          <h3>O nome</h3>
+          <p class="muted">Escreva sempre <code>8n8</code>: minúsculo, sem espaço, sem hífen. Nunca escreva "8N8", "8-n-8" ou "Eight".</p>
+          <p class="muted">O slogan é <b>O mapa do seu código.</b> Ele diz o que o 8n8 entrega: um mapa do código, com vista ampla e níveis que você abre, para ficar simples de entender.</p>
+        </div>
+        <div class="head">
+          <h3>A escada de níveis</h3>
+          <ol class="ladder" aria-label="Níveis do mapa">
+            <li>repositório <span>a vista inicial</span></li>
+            <li style="padding-left:16px">módulo</li>
+            <li style="padding-left:32px">arquivo</li>
+            <li style="padding-left:48px">função</li>
+            <li style="padding-left:64px">bloco <span>a linha real</span></li>
+          </ol>
+        </div>
+      </div>
+
+      <dl class="principles">
+        <div><dt>A estrutura vem do parser</dt><dd>O Tree-sitter monta o mapa. O LLM só escreve resumos e sugestões, e cada texto aponta o nó e a linha de origem.</dd></div>
+        <div><dt>Amplo primeiro, fundo depois</dt><dd>A tela abre no nível mais alto. Você escolhe onde descer.</dd></div>
+        <div><dt>Sempre volta ao código</dt><dd>Todo nó mostra o arquivo e as linhas. Nenhum nó fica sem origem.</dd></div>
+        <div><dt>Uma palavra, um sentido</dt><dd>Nó é etapa. Aresta é conexão. A interface e os textos usam os mesmos termos.</dd></div>
+      </dl>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>A marca é</th><th>A marca não é</th><th>Na prática</th></tr></thead>
+          <tbody>
+            <tr><td>Precisa</td><td class="bad">Aproximada</td><td>Cita arquivo e linha, sem "mais ou menos aqui".</td></tr>
+            <tr><td>Calma</td><td class="bad">Alarmista</td><td>Uma sugestão é um selo discreto no nó, nunca um alerta vermelho.</td></tr>
+            <tr><td>Sóbria</td><td class="bad">Chamativa</td><td>O Petróleo como destaque, usado pouco. O Cobre só nas pastas e nos avisos. Nada de neon.</td></tr>
+            <tr><td>Direta</td><td class="bad">Enfeitada</td><td>Sem emoji, sem exclamação, sem "ops".</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== VOZ ===================== -->
+    <section id="voz" aria-labelledby="h-voz">
+      <div class="head">
+        <p class="eyebrow">Voz</p>
+        <h2 id="h-voz">Português Técnico Simplificado</h2>
+      </div>
+      <p class="lead">A marca fala em Português Técnico Simplificado (PTS): a adaptação do ASD-STE100, a norma aeroespacial para manuais sem ambiguidade. O leitor entende a frase na primeira leitura.</p>
+      <div class="split">
+        <ol class="rules">
+          <li>Use voz ativa. O sujeito faz a ação.</li>
+          <li>Use o presente para descrever o código e o imperativo para instruir.</li>
+          <li>Use o verbo, não o substantivo: "valida", não "faz a validação".</li>
+          <li>Escreva até 25 palavras por frase e até 2 frases por resumo de nó.</li>
+          <li>Mantenha os nomes do código como estão, em formato de código.</li>
+          <li>Na sugestão, dê primeiro o comando, depois o motivo e o local.</li>
+        </ol>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Termo</th><th>Sentido</th><th>Não use</th></tr></thead>
+            <tbody>
+              <tr><td>nó</td><td>uma etapa do fluxo no mapa</td><td class="bad">bloco, caixa</td></tr>
+              <tr><td>aresta</td><td>a conexão entre dois nós</td><td class="bad">fio, linha, seta, link</td></tr>
+              <tr><td>entrada / saída</td><td>o dado que o nó recebe / produz</td><td class="bad">input, output</td></tr>
+              <tr><td>chama</td><td>uma função executa outra</td><td class="bad">invoca, dispara</td></tr>
+              <tr><td>falha</td><td>um erro acontece</td><td class="bad">quebra, estoura</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Onde</th><th>Antes</th><th>Na voz do 8n8</th></tr></thead>
+          <tbody>
+            <tr><td>Botão</td><td class="bad">Clique aqui para realizar a análise</td><td>Mapear código</td></tr>
+            <tr><td>Busca vazia</td><td class="bad">Nenhum resultado encontrado :(</td><td>Nenhum nó com esse nome. Busque pelo nome da função ou do arquivo.</td></tr>
+            <tr><td>Erro</td><td class="bad">Ops! Algo deu errado.</td><td>O parser falhou em <code>app.ts</code>, linha 42. Corrija a sintaxe e mapeie de novo.</td></tr>
+            <tr><td>Resumo de nó</td><td class="bad">Essa função é responsável por realizar a busca da UF a partir do CEP.</td><td>A função consulta uma API externa com o CEP. A função retorna a UF.</td></tr>
+            <tr><td>Sugestão</td><td class="bad">Talvez seja interessante considerar tratar possíveis erros aqui.</td><td>Trate o erro da chamada HTTP. Se a API falhar, <code>calcular_frete()</code> falha junto. <code>frete.py</code>, linha 44.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="muted">A norma completa e o glossário ficam em <code>docs/writing-rules/portugues-tecnico-simplificado.md</code>.</p>
+      <div class="head">
+        <h3>Em inglês</h3>
+        <p class="muted">A interface fala português do Brasil ou inglês. A pessoa escolhe no botão BR/EN de Configurações, e os resumos e as sugestões da LLM chegam no mesmo idioma. Em inglês, a voz segue o Simplified Technical English (STE), com as mesmas regras: voz ativa, frases curtas, um termo por conceito. Os termos são <code>node</code> (nó) e <code>edge</code> (aresta), e as tags vêm traduzidas (FOLDER, FILE, TRIGGER). A norma fica em <code>docs/writing-rules/ingles-tecnico-simplificado.md</code>.</p>
+      </div>
+    </section>
+
+    <!-- ===================== LOGO ===================== -->
+    <section id="logo" aria-labelledby="h-logo">
+      <div class="head">
+        <p class="eyebrow">Logo</p>
+        <h2 id="h-logo">Dois 8 e uma aresta</h2>
+      </div>
+      <p class="lead">Cada 8 é feito de dois blocos empilhados, como os nós do canvas. A aresta liga a saída de um bloco à entrada do outro e desenha o n. Os dois blocos ligados ficam na cor de destaque. Os outros dois ficam na cor do texto com 20% de opacidade: eles quase somem, e o caminho aparece primeiro.</p>
+
+      <div class="stage construct scroll-x">
+        <svg viewBox="-30 -26 236 136" role="img" aria-label="Construção do logotipo: blocos de 44 por 40, traço 6, aresta 5, portas de diâmetro 10, distância de 36 entre os dois 8">
+          <g stroke="var(--c-pedra)" stroke-width="0.5" fill="none">
+            <rect x="-20" y="-20" width="164" height="120" stroke-dasharray="2 2"/>
+            <line x1="-12" y1="0" x2="140" y2="0"/>
+            <line x1="-12" y1="40" x2="140" y2="40" stroke-dasharray="1 2"/>
+            <line x1="-12" y1="80" x2="140" y2="80"/>
+            <line x1="44" y1="-10" x2="44" y2="90" stroke-dasharray="1 2"/>
+            <line x1="80" y1="-10" x2="80" y2="90" stroke-dasharray="1 2"/>
+            <line x1="44" y1="88" x2="80" y2="88"/>
+          </g>
+          <use href="#wordmark" x="0" y="0" width="124" height="80" style="color: var(--c-nevoa); --logo-n: var(--c-petroleo)"/>
+          <g font-family="DM Mono, monospace" font-size="4.6" fill="var(--c-pedra)">
+            <text x="148" y="3.5">topo</text>
+            <text x="148" y="42">meio</text>
+            <text x="148" y="82">base</text>
+            <text x="54" y="95">36 = espaço da aresta</text>
+            <text x="-20" y="106">respiro mínimo: 20 u em toda a volta (metade da altura de um bloco)</text>
+          </g>
+        </svg>
+      </div>
+      <dl class="specs">
+        <div><dt>Bloco</dt><dd>44 × 40 u</dd></div>
+        <div><dt>Traço</dt><dd>6 u</dd></div>
+        <div><dt>Raio</dt><dd>6 u</dd></div>
+        <div><dt>Aresta</dt><dd>5 u</dd></div>
+        <div><dt>Sem destaque</dt><dd>20%</dd></div>
+        <div><dt>Porta</dt><dd>Ø 10 u</dd></div>
+        <div><dt>Respiro</dt><dd>20 u</dd></div>
+      </dl>
+      <p class="muted">A unidade <code>u</code> vale 1/80 da altura do logotipo. O logotipo tem no mínimo 40 px de largura. Abaixo disso, use o desenho de ícone ajustado ao pixel.</p>
+
+      <div class="logo-grid">
+        <figure><div class="tile t-dark"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Principal, escuro.</b> Névoa e Petróleo sobre Grafite.</figcaption></figure>
+        <figure><div class="tile t-light"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Principal, claro.</b> Tinta e Petróleo escuro sobre Papel.</figcaption></figure>
+        <figure><div class="tile t-dark-mono"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Uma cor, escuro.</b> Para fundos escuros com outras cores perto.</figcaption></figure>
+        <figure><div class="tile t-light-mono"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Uma cor, claro.</b> Para impressão em uma cor.</figcaption></figure>
+        <figure><div class="tile t-accent"><svg viewBox="-4 -4 132 88" role="img" aria-label="8n8"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption><b>Sobre Petróleo.</b> Grafite sobre Petróleo. Só em peças de destaque.</figcaption></figure>
+      </div>
+
+      <div class="split">
+        <div class="head">
+          <h3>Ícone do app</h3>
+          <p class="muted">O favicon e o ícone do app usam o logotipo completo, sem fundo. Os blocos ligados ficam em Petróleo. Sem tema (barra de tarefas, dock), os outros dois ficam em Pedra a 50%, legíveis em fundo claro e escuro. De 16 a 48 px, cada tamanho tem um desenho próprio com as linhas no grid de pixels. Gere todos os arquivos com <code>node scripts/icones.mjs</code>, nunca reduzindo uma imagem grande.</p>
+        </div>
+        <div class="icons">
+          <div class="icon-wrap"><div class="icon" style="width:96px;height:96px"><img src="../../apps/ui/public/icon-96.png" width="96" height="96" alt="Ícone 8n8"></div>96</div>
+          <div class="icon-wrap"><div class="icon" style="width:48px;height:48px"><img src="../../apps/ui/public/icon-48.png" width="48" height="48" alt="Ícone 8n8"></div>48</div>
+          <div class="icon-wrap"><div class="icon" style="width:32px;height:32px"><img src="../../apps/ui/public/icon-32.png" width="32" height="32" alt="Ícone 8n8"></div>32</div>
+          <div class="icon-wrap"><div class="icon" style="width:16px;height:16px"><img src="../../apps/ui/public/icon-16.png" width="16" height="16" alt="Ícone 8n8"></div>16</div>
+          <div class="icon-wrap"><div class="icon light" style="width:48px;height:48px"><img src="../../apps/ui/public/icon-48.png" width="48" height="48" alt="Ícone 8n8, fundo claro"></div>claro</div>
+        </div>
+      </div>
+
+      <div class="head"><h3>Usos errados</h3></div>
+      <div class="dont-grid">
+        <figure class="dont"><div class="tile t-dark" style="--logo-n: var(--c-coral)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>use cores fora da paleta.</figcaption></figure>
+        <figure class="dont"><div class="tile" style="background: var(--c-papel); color: var(--c-tinta); --logo-n: var(--c-petroleo)"><svg viewBox="-4 -4 132 88" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>ponha o Petróleo claro sobre Papel. O contraste é de 2,0:1.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" preserveAspectRatio="none" style="width:86%;height:40%" aria-hidden="true"><use href="#wordmark" width="124" height="80"/></svg></div><figcaption>estique nem comprima.</figcaption></figure>
+        <figure class="dont"><div class="tile t-dark"><svg viewBox="-4 -4 132 88" aria-hidden="true"><g transform="translate(124 0) scale(-1 1)"><use href="#wordmark" width="124" height="80"/></g></svg></div><figcaption>espelhe: a aresta sai sempre do bloco de cima.</figcaption></figure>
+      </div>
+    </section>
+
+    <!-- ===================== CORES ===================== -->
+    <section id="cores" aria-labelledby="h-cores">
+      <div class="head">
+        <p class="eyebrow">Cores</p>
+        <h2 id="h-cores">Grafite, Papel e Petróleo</h2>
+      </div>
+      <p class="lead">A marca é sóbria: poucas cores e nenhum tom chamativo. O Petróleo é a cor de destaque. Ele marca o que liga, o que está em foco e a ação principal. O Cobre é o tom de atenção. Ele marca o que sai do código, como as chamadas a rede, banco, disco e e-mail, e os avisos. Uma tag em Cobre diz à primeira vista que o nó toca o mundo de fora. O cobre oxidado vira verde, por isso os dois combinam.</p>
+
+      <div class="theme-row">
+        <h3>Tema escuro</h3>
+        <div class="swatches">
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-grafite); color: var(--c-nevoa)">--ground</div>
+            <h4>Grafite</h4>
+            <dl><dt>HEX</dt><dd>#161818</dd><dt>RGB</dt><dd>22 24 24</dd></dl>
+            <p>O fundo do canvas e das peças escuras.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-nevoa); color: var(--c-grafite)">--second</div>
+            <h4>Névoa</h4>
+            <dl><dt>HEX</dt><dd>#e9ebea</dd><dt>Grafite</dt><dd>14,7:1</dd></dl>
+            <p>Texto principal, nomes dos nós, selo de sugestões.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-pedra); color: var(--c-grafite)">--accent</div>
+            <h4>Pedra</h4>
+            <dl><dt>HEX</dt><dd>#979d9b</dd><dt>Grafite</dt><dd>6,4:1</dd></dl>
+            <p>Rótulos, tags, assinaturas de função, breadcrumb.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-petroleo); color: var(--c-grafite)">--main</div>
+            <h4>Petróleo</h4>
+            <dl><dt>HEX</dt><dd>#3dbfa8</dd><dt>Grafite</dt><dd>7,8:1</dd></dl>
+            <p>Arestas de fluxo, portas, nó selecionado, tags PASTA, ARQUIVO e CÓDIGO SOLTO, contagem de nós, linha atual, botão principal.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-cobre); color: var(--c-grafite)">--warm</div>
+            <h4>Cobre</h4>
+            <dl><dt>HEX</dt><dd>#dc8a5c</dd><dt>Grafite</dt><dd>6,6:1</dd></dl>
+            <p>As tags dos nós externos (HTTP, BANCO, DISCO, E-MAIL e EXTERNO), a severidade média das sugestões e o aviso do Claude Code nas Configurações.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="theme-row">
+        <h3>Tema claro</h3>
+        <div class="swatches">
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-papel); color: var(--c-tinta)">--ground</div>
+            <h4>Papel</h4>
+            <dl><dt>HEX</dt><dd>#f2f3f0</dd><dt>RGB</dt><dd>242 243 240</dd></dl>
+            <p>O fundo no tema claro, em documentos e impressos.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-tinta); color: var(--c-papel)">--second</div>
+            <h4>Tinta</h4>
+            <dl><dt>HEX</dt><dd>#12292a</dd><dt>Papel</dt><dd>13,7:1</dd></dl>
+            <p>Texto principal. Um preto puxado para o petróleo.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-pedra-escura); color: var(--c-papel)">--accent</div>
+            <h4>Pedra escura</h4>
+            <dl><dt>HEX</dt><dd>#5b6d6a</dd><dt>Papel</dt><dd>4,9:1</dd></dl>
+            <p>Rótulos e textos de apoio.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-petroleo-escuro); color: var(--c-papel)">--main</div>
+            <h4>Petróleo escuro</h4>
+            <dl><dt>HEX</dt><dd>#0f7a6b</dd><dt>Papel</dt><dd>4,7:1</dd></dl>
+            <p>O mesmo papel do Petróleo, escurecido para ler sobre Papel.</p>
+          </div>
+          <div class="swatch">
+            <div class="chip" style="background: var(--c-cobre-escuro); color: var(--c-papel)">--warm</div>
+            <h4>Cobre escuro</h4>
+            <dl><dt>HEX</dt><dd>#a34f26</dd><dt>Papel</dt><dd>5,1:1</dd></dl>
+            <p>O mesmo papel do Cobre, escurecido para ler sobre Papel.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="head">
+        <h3>Proporção</h3>
+        <div class="ratio" role="img" aria-label="Proporção de uso no tema escuro: Grafite 75%, Névoa 12%, Pedra 8%, Petróleo 5%">
+          <div style="flex:75; background: var(--c-grafite); color: var(--c-pedra)">Grafite 75</div>
+          <div style="flex:12; background: var(--c-nevoa); color: var(--c-grafite)">Névoa 12</div>
+          <div style="flex:8; background: var(--c-pedra); color: var(--c-grafite)">8</div>
+          <div style="flex:5; background: var(--c-petroleo); color: var(--c-grafite)">5</div>
+        </div>
+        <p class="muted">Se o Petróleo passa de 5% de uma tela, ele perde o sentido de foco. O Petróleo claro nunca vai sobre Papel (2,0:1). No tema claro, use o Petróleo escuro. O Cobre segue a mesma regra e usa o Cobre escuro sobre Papel. O Cobre aparece só nas tags dos nós externos, na severidade média das sugestões e em avisos curtos: use pouco texto em Cobre e nunca um fundo grande. Cobre e Petróleo ficam a cerca de 1,1:1 um do outro. Não use o Cobre como único sinal: a palavra da tag (HTTP, BANCO, DISCO, E-MAIL, EXTERNO) já diz o tipo do nó.</p>
+      </div>
+
+      <div class="head">
+        <h3>Superfícies</h3>
+        <p class="muted">Cartões e bordas saem de misturas do fundo com o texto. Use estas misturas, não cinzas novos.</p>
+        <div class="derived">
+          <div><i style="background:#202323"></i><span>Cartão, escuro <small>#202323</small></span></div>
+          <div><i style="background:#363b3a"></i><span>Borda, escuro <small>#363b3a</small></span></div>
+          <div><i style="background:#ffffff"></i><span>Cartão, claro <small>#ffffff</small></span></div>
+          <div><i style="background:#d3d8d5"></i><span>Borda, claro <small>#d3d8d5</small></span></div>
+          <div><i style="background:#1c1e1e"></i><span>Painel, escuro <small>#1c1e1e</small></span></div>
+          <div><i style="background:#2f3433"></i><span>Borda do painel, escuro <small>#2f3433</small></span></div>
+          <div><i style="background:#f8f9f7"></i><span>Painel, claro <small>#f8f9f7</small></span></div>
+          <div><i style="background:#d3d8d5"></i><span>Borda do painel, claro <small>#d3d8d5</small></span></div>
+          <div><i style="background:#6b706f"></i><span>Dim, escuro <small>#6b706f</small></span></div>
+          <div><i style="background:#8f9a98"></i><span>Dim, claro <small>#8f9a98</small></span></div>
+        </div>
+        <p class="muted">O Dim marca o que fica em segundo plano: a aresta de hub, os números de linha e a estrela vazia. O código do painel usa o texto principal misturado a 82% com o fundo (<code>--code</code>).</p>
+      </div>
+
+      <div class="head">
+        <h3>Perigo</h3>
+        <p class="muted">O Perigo aparece em dois lugares: no hover de um botão que apaga, como a lixeira do histórico, e na severidade alta de uma sugestão. Ele nunca marca um erro de código nem um aviso: a marca é calma.</p>
+        <div class="derived">
+          <div><i style="background:#e0735c"></i><span>Perigo, escuro <small>#e0735c · 5,8:1 no Grafite</small></span></div>
+          <div><i style="background:#b2452f"></i><span>Perigo, claro <small>#b2452f · 5,0:1 no Papel</small></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TIPOGRAFIA ===================== -->
+    <section id="tipografia" aria-labelledby="h-tipo">
+      <div class="head">
+        <p class="eyebrow">Tipografia</p>
+        <h2 id="h-tipo">Três fontes, três papéis</h2>
+      </div>
+      <div class="faces">
+        <div class="face">
+          <div class="meta"><b>Archivo Black</b>Títulos de capítulo e do painel. Só em tamanhos grandes, nunca em texto corrido.</div>
+          <div class="sample s-display">Mapa do pedido</div>
+        </div>
+        <div class="face">
+          <div class="meta"><b>Space Grotesk</b>Interface e texto. Pesos 400, 500 e 700.</div>
+          <div class="sample s-sans">A função valida o pedido. <span class="w5">Se o pedido é válido,</span> <span class="w7">o fluxo segue.</span></div>
+        </div>
+        <div class="face">
+          <div class="meta"><b>DM Mono</b>Código, caminhos, breadcrumb, números de linha e contadores.</div>
+          <div class="sample s-mono">frete.py:44 · calcular_frete(peso) → valor</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Papel no app</th><th>Fonte</th><th>Tamanho*</th><th>Detalhe</th></tr></thead>
+          <tbody>
+            <tr><td>Nome do nó</td><td>Space Grotesk 700</td><td class="mono">27 px</td><td>Névoa; uma linha, corta com …</td></tr>
+            <tr><td>Tag do nó</td><td>Space Grotesk 500</td><td class="mono">16 px</td><td>Caixa alta, espaço 0,18 em. PASTA, ARQUIVO e CÓDIGO SOLTO em Petróleo. FUNÇÃO, SE, LAÇO, BLOCO, CÓDIGO e RETORNO em Névoa. As pontes externas (HTTP, BANCO, DISCO, E-MAIL, EXTERNO) em Pedra</td></tr>
+            <tr><td>Linha de código do nó</td><td>DM Mono 400</td><td class="mono">20 px</td><td>Pedra</td></tr>
+            <tr><td>Breadcrumb</td><td>DM Mono 400</td><td class="mono">22 px</td><td>Pedra; o último item em Névoa</td></tr>
+            <tr><td>Rótulo de ramo</td><td>Space Grotesk 500</td><td class="mono">22 px</td><td>Caixa alta, espaço 0,18 em. TRUE em Petróleo</td></tr>
+            <tr><td>Título do painel</td><td>Archivo Black 400</td><td class="mono">22 px</td><td>Névoa</td></tr>
+            <tr><td>Rótulo do painel</td><td>Space Grotesk 500</td><td class="mono">11 px</td><td>Caixa alta, espaço 0,14 em. Pedra</td></tr>
+            <tr><td>Título da tela inicial</td><td>Archivo Black 400</td><td class="mono">44 px</td><td>Névoa</td></tr>
+            <tr><td>Botão principal</td><td>Space Grotesk 700</td><td class="mono">26 px</td><td>Grafite sobre Petróleo</td></tr>
+            <tr><td>Contagem e selo</td><td>Space Grotesk 700</td><td class="mono">16 px</td><td>Contagem em Petróleo. Selo em Grafite sobre Névoa</td></tr>
+            <tr><td>Balão de sugestões</td><td>Space Grotesk 700 / 400</td><td class="mono">14 / 13 px</td><td>Comando em 700, motivo em 400 e Pedra. Linha em DM Mono 12 px, Petróleo</td></tr>
+            <tr><td>Título do diálogo</td><td>Archivo Black 400</td><td class="mono">30 px</td><td>Névoa</td></tr>
+            <tr><td>Resultado da busca</td><td>Space Grotesk 700 / DM Mono 400</td><td class="mono">20 / 16 px</td><td>Título em cima, nome técnico, arquivo e linhas embaixo, em Pedra</td></tr>
+            <tr><td>Título no histórico</td><td>DM Mono 500</td><td class="mono">20 px</td><td>Névoa; uma linha, corta com …</td></tr>
+          </table>
+      </div>
+      <p class="muted">* Medidas no palco de 1920 × 1080, como estão em <code>apps/ui/src/styles.css</code>. O painel de detalhe, o balão de sugestões, o título e o rótulo da tela inicial e os campos usam o tamanho real em px.</p>
+    </section>
+
+    <!-- ===================== COMPONENTES ===================== -->
+    <section id="componentes" aria-labelledby="h-comp">
+      <div class="head">
+        <p class="eyebrow">Componentes</p>
+        <h2 id="h-comp">Nós, arestas e painéis</h2>
+      </div>
+      <p class="lead">O canvas é Grafite com uma grade de pontos. Os nós são cartões. As arestas são traços em Petróleo que se desenham da saída para a entrada. Cada peça abaixo existe no app, com as mesmas medidas.</p>
+      <p class="muted">As medidas do app são do palco de 1920 × 1080 e estão em <code>apps/ui/src/styles.css</code>. As demos usam 62,5% desse tamanho. Só o painel de detalhe aparece no tamanho real.</p>
+
+      <div class="head"><h3>Nível de pasta</h3></div>
+      <div class="scroll-x">
+        <div class="stage k flow" role="img" aria-label="Exemplo de nível de pasta: o hub pedidos, tracejado, com o botão de voltar e a contagem 4, ligado por arestas pontilhadas finas a frete.py, validar.py e à pasta servicos; validar.py chama estoque.py por uma aresta de chamada, tracejada e verde, com um anel oco no destino; cada nó que abre mostra a contagem de nós; frete.py tem o selo branco com 2 sugestões e o balão aberto, com a seta no selo e as duas sugestões">
+          <svg class="wires" viewBox="0 0 760 350" aria-hidden="true"><path class="wire contains" pathLength="1" d="M249.38 174.75 C286.88 174.75 273.12 63.75 310.62 63.75"/><path class="wire contains" pathLength="1" d="M249.38 174.75 H310.62"/><path class="wire contains" pathLength="1" d="M249.38 174.75 C286.88 174.75 273.12 285.75 310.62 285.75"/><path class="wire" pathLength="1" stroke-dasharray="0.02 0.015" d="M509.38 174.75 C546.88 174.75 509.12 229.75 546.62 229.75"/></svg>
+          <div class="node hub has-count" data-tag="PASTA" style="left:50px; top:131px"><span class="back"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span><span class="hubcount">4</span><span class="ntag">PASTA</span><span class="nname">pedidos</span><span class="nfn">pedidos/</span></div>
+          <div class="node on has-count" data-tag="ARQUIVO" style="left:310px; top:20px"><span class="hubcount">2</span><span class="badge open"><i></i>2</span><span class="ntag">ARQUIVO</span><span class="nname">frete.py<i>›</i></span><span class="nfn">frete.py</span></div>
+          <div class="node has-count" data-tag="ARQUIVO" style="left:310px; top:131px"><span class="hubcount">3</span><span class="ntag">ARQUIVO</span><span class="nname">validar.py<i>›</i></span><span class="nfn">validar.py</span></div>
+          <div class="node has-count" data-tag="PASTA" style="left:310px; top:242px"><span class="hubcount">2</span><span class="ntag">PASTA</span><span class="nname">servicos<i>›</i></span><span class="nfn">servicos/</span></div>
+          <div class="node has-count" data-tag="ARQUIVO" style="left:546px; top:186px"><span class="hubcount">1</span><span class="ntag">ARQUIVO</span><span class="nname">estoque.py<i>›</i></span><span class="nfn">estoque.py</span></div>
+          <svg class="ports" viewBox="0 0 760 350" aria-hidden="true"><circle class="port" cx="249.38" cy="174.75" r="5"/><circle class="port" cx="310.62" cy="63.75" r="5"/><circle class="port" cx="310.62" cy="174.75" r="5"/><circle class="port" cx="310.62" cy="285.75" r="5"/><circle class="port" cx="509.38" cy="174.75" r="5"/><circle class="port" cx="546.62" cy="229.75" r="5"/></svg>
+          <div class="spop" style="left:357px; top:54px; --ax:106px"><div class="ph">2 sugestões<span>×</span></div><div class="pi"><span class="pc"><span class="sev alta">alta</span>Trate o erro da chamada HTTP</span><span class="pl">linha 44 ›</span><span class="pr">Se a API falhar, calcular_frete() falha junto.</span></div><div class="pi"><span class="pc"><span class="sev baixa">baixa</span>Dê nome ao limite de peso</span><span class="pl">linha 42 ›</span><span class="pr">O número 30 aparece sem explicação.</span></div></div>
+        </div>
+      </div>
+
+      <ul class="legend">
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect class="c-card" x="6" y="6" width="44" height="20" rx="3"/></svg></span><div><b>Nó</b><span class="d">Cartão de 320 × 140 px, borda de 2 px, raio de 6 px.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect class="c-card c-main" x="6" y="6" width="44" height="20" rx="3"/></svg></span><div><b>Nó selecionado</b><span class="d">A borda vira Petróleo. O resto continua igual. O nó com o balão de sugestões aberto também fica assim.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect class="c-card" x="6" y="6" width="44" height="20" rx="3" stroke-dasharray="6 4"/></svg></span><div><b>Hub</b><span class="d">O nó aberto, no lugar de pai do nível. Mesmo tamanho, borda tracejada.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><circle cx="28" cy="16" r="11" fill="var(--s-bg)" stroke="var(--s-accent)" stroke-width="2"/><g transform="translate(21 9) scale(0.58)" fill="none" stroke="var(--s-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></g></svg></span><div><b>Botão de voltar</b><span class="d">Só no hub de um nível interno. Círculo de 44 px, borda de 2 px em Petróleo, 24 px para fora da borda esquerda.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect x="12" y="7" width="32" height="18" rx="3" fill="var(--s-accent)"/><text class="c-t" x="28" y="20" fill="var(--s-bg)">5</text></svg></span><div><b>Contagem de nós</b><span class="d">Quantos nós o nível mostra. Fica no hub e em todo nó que abre. Retângulo cheio em Petróleo, 26 px de altura, número na cor do fundo da tela, canto superior direito.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect x="12" y="7" width="32" height="18" rx="3" fill="var(--s-fg)"/><circle cx="20" cy="16" r="2.5" fill="var(--s-bg)"/><text class="c-t" x="32" y="20" fill="var(--s-bg)">2</text></svg></span><div><b>Selo de sugestões</b><span class="d">Quantas sugestões o nó tem. Retângulo de 26 px de altura, fundo Névoa (Tinta no claro), ponto e número na cor do fundo da tela. Fica ao lado da contagem, a 56 px da borda. A cor separa os dois: retângulo Petróleo conta os nós de dentro, retângulo Névoa (Tinta no claro), com ponto, mostra as sugestões.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><circle cx="28" cy="16" r="8" class="c-fill"/></svg></span><div><b>Porta</b><span class="d">Círculo de 16 px em Petróleo, sobre a borda do nó, em qualquer dos quatro lados. Só aparece onde há aresta.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><path class="c-line" d="M6 16 H50"/></svg></span><div><b>Aresta cheia</b><span class="d">Fluxo: a sequência dos passos e os ramos de uma condição. Traço de 4 px com ponta redonda, desenhado em 500 ms. Um pulso corre por ela.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><path class="c-dep" d="M4 16 H52" stroke-dasharray="14 4 9 4 5 4 2 4"/><circle class="c-dot" cx="6" cy="16" r="4"/><circle class="c-ring" cx="50" cy="16" r="3.5"/></svg></span><div><b>Aresta de chamada</b><span class="d">Quem chama e quem é chamado. Traço de 3,5 px que encurta ao longo da linha (longo, médio, curto, ponto) e anda da origem ao destino, sem pulso. Dim dentro de um arquivo, Petróleo entre arquivos. Com movimento reduzido, fica parada.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><path class="c-dep across" d="M4 16 H52" stroke-dasharray="10 4 2 4"/></svg></span><div><b>Aresta de import</b><span class="d">Um arquivo importa outro, e não há chamada entre os dois. Traço e ponto, parada, Petróleo.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><path class="c-dep" d="M4 16 H52" stroke-dasharray="10 4 2 4 2 4"/></svg></span><div><b>Aresta de herança</b><span class="d">Da classe filha para a classe base. Traço, ponto, ponto, parada. Dim dentro de um arquivo, Petróleo entre arquivos.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><path class="c-dep" d="M42 24 C52 4 4 4 14 24" stroke-dasharray="9 3 5 3 2 3"/><circle class="c-dot" cx="42" cy="24" r="3.5"/><circle class="c-ring" cx="14" cy="24" r="3"/></svg></span><div><b>Alça de recursão</b><span class="d">A função chama a si mesma. A linha sai pela porta direita, passa por cima do cartão e entra pela porta esquerda.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><circle class="c-dot" cx="16" cy="16" r="6"/><circle class="c-ring" cx="40" cy="16" r="5"/></svg></span><div><b>Porta de dependência</b><span class="d">Onde uma aresta de chamada, de herança ou de import começa, o círculo é cheio e leva a cor da aresta. Onde ela termina, é um anel oco com borda de 3 px. Assim a direção se lê sem seta.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect x="12" y="7" width="32" height="18" rx="3" fill="none" stroke="var(--s-accent)" stroke-width="2"/><path d="M32 7 V25" stroke="var(--s-accent)" stroke-width="2"/></svg></span><div><b>Botão de ver detalhes</b><span class="d">Nos nós que abrem. Mostra o painel do nó sem entrar nele. Fica no canto inferior direito do cartão. O hub não tem o botão.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><path class="c-dim" d="M6 16 H50"/></svg></span><div><b>Aresta pontilhada fina</b><span class="d">Liga o hub a cada nó do nível. Traço de 2 px em Dim, sem pulso.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><text x="8" y="14" font-size="9" font-weight="500" letter-spacing="1.6" fill="var(--s-accent)" font-family="Space Grotesk, sans-serif">TRUE</text><text x="8" y="27" font-size="9" font-weight="500" letter-spacing="1.6" fill="var(--s-muted)" font-family="Space Grotesk, sans-serif">FALSE</text></svg></span><div><b>Rótulo de ramo</b><span class="d">22 px, caixa alta. TRUE em Petróleo. FALSE, PADRÃO, NENHUM e os nomes de caso em Pedra.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect x="4" y="9" width="48" height="20" rx="3" fill="var(--s-panel)" stroke="var(--s-card-border)" stroke-width="1.5"/><path d="M23 9.8 L28 4 L33 9.8" fill="var(--s-panel)" stroke="var(--s-card-border)" stroke-width="1.5" stroke-linejoin="round"/><rect x="9" y="14" width="26" height="3" rx="1" fill="var(--s-fg)"/><rect x="9" y="21" width="34" height="3" rx="1" fill="var(--s-muted)"/></svg></span><div><b>Balão de sugestões</b><span class="d">Abre com um clique no selo, com a seta apontada para ele, acima do selo ou abaixo quando falta espaço. Lista cada sugestão com severidade, comando, linha e motivo. Um clique numa sugestão abre o nó na linha. Esc ou um clique fora fecha. Só um balão fica aberto por vez, e nenhum cartão flutua sobre o diagrama.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><text x="5" y="11" font-size="7" font-weight="500" letter-spacing="1.1" fill="var(--s-accent)" font-family="Space Grotesk, sans-serif">PASTA</text><text x="5" y="20" font-size="7" font-weight="500" letter-spacing="1.1" fill="var(--s-accent)" font-family="Space Grotesk, sans-serif">ARQUIVO</text><text x="5" y="29" font-size="7" font-weight="500" letter-spacing="1.1" fill="var(--s-fg)" font-family="Space Grotesk, sans-serif">FUNÇÃO</text><text x="38" y="29" font-size="7" font-weight="500" letter-spacing="1.1" fill="var(--s-warm)" font-family="Space Grotesk, sans-serif">HTTP</text></svg></span><div><b>Tag do nó</b><span class="d">Petróleo nas pastas, nos arquivos e no código solto. Névoa nas funções e nos passos. Cobre nas pontes externas.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect class="c-card" x="6" y="3" width="44" height="14" rx="3"/><text x="6" y="28" font-size="7" fill="var(--s-accent)" font-family="Space Grotesk, sans-serif">linha 4</text></svg></span><div><b>Erro de sintaxe</b><span class="d">Um texto em Petróleo, 18 px, 8 px abaixo do nó: "Erro de sintaxe na linha 4". O nó continua no mapa.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><rect x="14" y="2" width="28" height="28" rx="3" fill="none" stroke="var(--s-panel-border)" stroke-width="2"/><svg x="21" y="9" width="14" height="14" viewBox="0 0 24 24" style="color:var(--s-fg)"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg></svg></span><div><b>Botão de ícone</b><span class="d">60 × 60 px, borda de 2 px, raio de 6 px, ícone de 30 px. Busca, Configurações e Histórico, da esquerda para a direita.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><circle cx="28" cy="16" r="13" fill="var(--s-panel)" stroke="var(--s-panel-border)" stroke-width="2"/><path d="M31 10 l-6 6 6 6" fill="none" stroke="var(--s-fg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Alça do painel</b><span class="d">Círculo de 56 px na borda direita, com o painel minimizado. Com o painel aberto, vira um X de 40 px no canto dele.</span></div></li>
+        <li><span class="stage k"><svg viewBox="0 0 56 32" aria-hidden="true"><text x="2" y="19" font-size="8" fill="var(--s-muted)" font-family="DM Mono, monospace" xml:space="preserve">loja › <tspan fill="var(--s-fg)">frete</tspan></text></svg></span><div><b>Breadcrumb</b><span class="d">DM Mono 22 px em Pedra, com › entre os itens. O último item fica em Névoa e não encolhe.</span></div></li>
+      </ul>
+
+      <div class="head"><h3>Botões</h3></div>
+      <div class="stage k btn-row" role="img" aria-label="Botões: Salvar, Fechar, Gerar resumo e os três botões de ícone">
+        <span class="btn">Salvar</span>
+        <span class="btn-ghost">Fechar</span>
+        <span class="btn-ask">Gerar resumo</span>
+        <span style="position:relative; width:calc(60px * var(--k)); height:calc(60px * var(--k)); display:block"><span class="gbtn" style="top:0; left:0"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg></span></span>
+        <span style="position:relative; width:calc(60px * var(--k)); height:calc(60px * var(--k)); display:block"><span class="gbtn" style="top:0; left:0"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg></span></span>
+        <span style="position:relative; width:calc(60px * var(--k)); height:calc(60px * var(--k)); display:block"><span class="gbtn" style="top:0; left:0"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg></span></span>
+      </div>
+
+      <div class="head"><h3>Painel de detalhe</h3></div>
+      <div class="stage panel-demo">
+        <div class="crumb" aria-label="Breadcrumb">loja › pedidos.py › <b>Calcular frete</b></div>
+        <div class="dpanel">
+          <span class="cl" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <h4>Calcular frete</h4>
+          <p class="ey">O que faz · Português Técnico Simplificado</p>
+          <span class="rev">Revisado</span>
+          <ol aria-label="Resumo">
+            <li><span>A função calcula o frete pelo peso.</span><span class="ev">L40–45</span></li>
+            <li><span>Se o peso passa de 30 kg, a função usa a tabela pesada.</span><span class="ev">L42–43</span></li>
+          </ol>
+          <p class="rules">2 frases · voz ativa · um termo por conceito</p>
+          <p class="ey">Código · frete.py, linhas 40 a 45</p>
+          <pre class="codeview" aria-label="Código de frete.py, linhas 40 a 45" style="margin:0">
+<div><s>40</s>def calcular_frete(peso):</div><div><s>41</s>    tabela = TABELA_LEVE</div><div><s>42</s>    if peso &gt; 30:</div><div><s>43</s>        tabela = TABELA_PESADA</div><div class="cur"><s>44</s>    resposta = requests.get(URL_FRETE)</div><div><s>45</s>    return tabela[peso] + resposta.json()["taxa"]</div></pre>
+          <p class="ey">Entrada e saída</p>
+          <div class="io">peso: float<span class="ev">L40</span><i>→</i>valor: Decimal<span class="ev">L45</span></div>
+          <h5>Efeitos externos</h5>
+          <ul><li>requests.get (HTTP, linha 44)</li></ul>
+          <h5>Sugestões</h5>
+          <ul><li><span class="ev" style="margin-left:0">Trate o erro da chamada HTTP (linha 44, alta)</span> <span>Se a API falhar, calcular_frete() falha junto.</span><span class="ev">L44</span></li></ul>
+        </div>
+      </div>
+
+      <div class="head">
+        <h3>Gaveta de histórico</h3>
+        <p class="muted">A gaveta abre abaixo dos botões de ícone, na borda direita. A pasta mostra a tag PASTA em Cobre. A estrela e a lixeira ficam dentro do cartão, no canto superior direito. A estrela marcada fica em Petróleo. A lixeira fica em Perigo só no hover. Sem pesquisa guardada, a gaveta diz "Nenhuma pesquisa guardada."; sem resultado na busca, "Nada encontrado."</p>
+      </div>
+      <div class="pair">
+        <div class="stage k drawer-stage" role="img" aria-label="Gaveta de histórico, tema escuro: campo Buscar pesquisa e duas pesquisas guardadas, a pasta loja com a estrela marcada e a lixeira em hover, e o trecho trecho.py">
+          <span class="gbtn" style="right:calc(168px * var(--k))"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg></span><span class="gbtn" style="right:calc(96px * var(--k))"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg></span><span class="gbtn" style="right:calc(24px * var(--k))"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg></span>
+          <aside class="hdrawer">
+            <div class="hs">Buscar pesquisa</div>
+            <ul>
+              <li><div class="ho"><span class="ht">loja</span><span class="hm"><b class="pasta">PASTA</b><span>há 2 h</span></span><span class="hz">412 linhas · 5 arquivos · 12 nós · 18 KB</span></div><span class="acts"><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><span class="del hover"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 12.2h9.2L17.5 7M10.2 10.5v5.5M13.8 10.5v5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span></li>
+              <li><div class="ho"><span class="ht">trecho.py</span><span class="hm"><b>TRECHO</b><span>há 1 d</span></span><span class="hz">46 linhas · 1 arquivo · 7 nós · 2 KB</span></div><span class="acts"><span class="star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><span class="del"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 12.2h9.2L17.5 7M10.2 10.5v5.5M13.8 10.5v5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span></li>
+            </ul>
+          </aside>
+        </div>
+        <div class="stage k light drawer-stage" role="img" aria-label="Gaveta de histórico, tema claro: campo Buscar pesquisa e duas pesquisas guardadas, a pasta loja com a estrela marcada e a lixeira em hover, e o trecho trecho.py">
+          <span class="gbtn" style="right:calc(168px * var(--k))"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg></span><span class="gbtn" style="right:calc(96px * var(--k))"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg></span><span class="gbtn" style="right:calc(24px * var(--k))"><svg viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg></span>
+          <aside class="hdrawer">
+            <div class="hs">Buscar pesquisa</div>
+            <ul>
+              <li><div class="ho"><span class="ht">loja</span><span class="hm"><b class="pasta">PASTA</b><span>há 2 h</span></span><span class="hz">412 linhas · 5 arquivos · 12 nós · 18 KB</span></div><span class="acts"><span class="star on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="currentColor" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><span class="del hover"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 12.2h9.2L17.5 7M10.2 10.5v5.5M13.8 10.5v5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span></li>
+              <li><div class="ho"><span class="ht">trecho.py</span><span class="hm"><b>TRECHO</b><span>há 1 d</span></span><span class="hz">46 linhas · 1 arquivo · 7 nós · 2 KB</span></div><span class="acts"><span class="star"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><span class="del"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l.9 12.2h9.2L17.5 7M10.2 10.5v5.5M13.8 10.5v5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span></li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+
+      <div class="head">
+        <h3>Diálogo de configurações</h3>
+        <p class="muted">O diálogo cobre o mapa com o fundo da tela a 70%. Esc fecha. Os botões de idioma e de tema ficam à direita do título, lado a lado, ambos quadrados de 44 px. O de idioma mostra as letras do idioma atual em Space Grotesk 700: BR para português do Brasil, EN para inglês. O de tema mostra meio círculo para Seguir o sistema, sol para Claro, lua para Escuro. Cada clique passa ao próximo e salva na hora, sem o Salvar. Um campo definido por variável de ambiente fica travado, com a nota "Definido pela variável" em DM Mono, Pedra. Com o provedor Claude Code, a chave some: o diálogo mostra "Claude Code encontrado." em Petróleo com o caminho em mono, ou o aviso em Cobre, e os botões Escolher… e Usar o automático.</p>
+      </div>
+      <div class="pair">
+        <div class="stage k dlg-stage" role="img" aria-label="Diálogo de configurações, tema escuro: o título com os botões de idioma (BR) e de tema (Seguir o sistema) à direita, Provedor, Chave de API, Modelo, duas caixas de seleção, os botões Salvar e Fechar">
+          <div class="sdlg">
+            <div class="shead"><h4>Configurações</h4><span class="hbtns"><span class="tbtn lbtn">BR</span><span class="tbtn"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></g></svg></span></span></div>
+            <label>Provedor<span class="f">anthropic<span>▾</span></span></label>
+            <label>Chave de API<span class="f ph">Cole a chave</span></label>
+            <label>Modelo<span class="f ph">claude-haiku-5-5</span></label>
+            <label class="check"><span class="cb on"></span>Gerar o resumo ao selecionar um nó</label>
+            <label class="check"><span class="cb"></span>Pedir as sugestões ao selecionar um nó</label>
+            <div class="acts"><span class="btn">Salvar</span><span class="btn-ghost">Fechar</span></div>
+          </div>
+        </div>
+        <div class="stage k light dlg-stage" role="img" aria-label="Diálogo de configurações, tema claro: o título com os botões de idioma (BR) e de tema (Claro) à direita, Provedor, Chave de API, Modelo, duas caixas de seleção, os botões Salvar e Fechar">
+          <div class="sdlg">
+            <div class="shead"><h4>Configurações</h4><span class="hbtns"><span class="tbtn lbtn">BR</span><span class="tbtn"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></g></svg></span></span></div>
+            <label>Provedor<span class="f">anthropic<span>▾</span></span></label>
+            <label>Chave de API<span class="f ph">Cole a chave</span></label>
+            <label>Modelo<span class="f ph">claude-haiku-5-5</span></label>
+            <label class="check"><span class="cb on"></span>Gerar o resumo ao selecionar um nó</label>
+            <label class="check"><span class="cb"></span>Pedir as sugestões ao selecionar um nó</label>
+            <div class="acts"><span class="btn">Salvar</span><span class="btn-ghost">Fechar</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="head">
+        <h3>Busca de nó</h3>
+        <p class="muted">Fechada, a busca é só uma lupa. Clique nela para ver o campo crescer.</p>
+      </div>
+      <div class="stage k search-demo">
+        <div class="sbox" id="sbox">
+          <div class="sfield"><button class="lupa" type="button" id="lupa" aria-label="Buscar nó" aria-expanded="false" aria-controls="sresults"><svg viewBox="0 0 18 18" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="7.5" cy="7.5" r="5"/><path d="M11.5 11.5 16 16"/></svg></button><input id="sinput" type="search" placeholder="Título ou nome da função" aria-label="Buscar nó" tabindex="-1" autocomplete="off"></div>
+          <div class="results" id="sresults" role="listbox" hidden></div>
+        </div>
+        <p class="hint">Teste com <code>cadastro_prod</code>, <code>frete</code> ou <code>e-mail</code>. O título pode ter sido reescrito pela LLM. O nome técnico não muda, e a busca olha os dois.</p>
+      </div>
+      <ol class="rules">
+        <li>Fechada, a busca é uma lupa no canto superior direito, à esquerda de Configurações e Histórico, com o mesmo botão de ícone dos dois. Nunca um campo aberto.</li>
+        <li>Ao clicar, o campo cresce de 60 para 420 px (no palco de 1920) em 200 ms, com <code>ease-out</code>, e o foco vai para ele. A borda aberta fica em Pedra. A lista de resultados tem até 480 px. Esc ou um clique fora fecha. Com "reduzir movimento" ligado, o campo abre sem animação.</li>
+        <li>A busca procura no título e no nome técnico da função. Ela ignora maiúsculas, acentos e a diferença entre espaço, <code>_</code> e <code>-</code>. Cada palavra digitada precisa aparecer em um dos dois.</li>
+        <li>Cada resultado mostra o título em cima e o nome técnico embaixo, em fonte mono, com o arquivo e as linhas. O trecho achado fica em destaque.</li>
+        <li>Ao escolher um resultado, o canvas centraliza o nó e o seleciona em Petróleo. Se o nó está dentro de outro nível, a busca abre o caminho até ele.</li>
+      </ol>
+
+      <div class="head"><h3>Medidas</h3></div>
+      <div class="table-wrap"><table class="spec-table"><thead><tr><th>Componente</th><th>Medida (palco de 1920 × 1080)</th></tr></thead><tbody><tr><td>Nó</td><td>320 × 140 px. Padding 20 × 24, espaço de 8 entre as linhas, borda de 2 px, raio de 6 px, sombra <code>0 14 30</code>.</td></tr><tr><td>Tag do nó</td><td>Space Grotesk 500, 16 px, espaço 0,18 em. Petróleo em PASTA, ARQUIVO e CÓDIGO SOLTO. Névoa em FUNÇÃO, SE, LAÇO, BLOCO, CÓDIGO e RETORNO. Cobre nas pontes externas (HTTP, BANCO, DISCO, E-MAIL e EXTERNO).</td></tr><tr><td>Nome e código do nó</td><td>Nome em Space Grotesk 700, 27 px, com › em Petróleo quando o nó abre. Linha de código em DM Mono, 20 px, Pedra.</td></tr><tr><td>Botão de ver detalhes</td><td>Só nos nós que abrem, nunca no hub. 30 × 26 px, raio de 5 px, borda de 2 px em Petróleo, fundo Grafite, ícone de painel de 18 px. A 16 px do canto inferior direito. No hover, o fundo vira Petróleo.</td></tr><tr><td>Porta de dependência</td><td>Círculo de 16 px. Onde a aresta começa, cheio na cor dela. Onde termina, anel oco de 3 px sobre o fundo da tela.</td></tr><tr><td>Aresta de dependência</td><td>3,5 px, ponta reta. Chama: traços de 29, 18, 10 e 3 px com vão de 8, que andam da origem ao destino. Import: traço de 19 e ponto de 3. Herança: traço de 19 e dois pontos de 3. Dim dentro de um arquivo, Petróleo entre arquivos. Sem pulso.</td></tr><tr><td>Hub</td><td>Mesmo cartão com borda tracejada de 2 px. Leva a contagem de nós, e o botão de voltar quando o nível é interno.</td></tr><tr><td>Botão de voltar</td><td>44 px, redondo, borda de 2 px em Petróleo, fundo Grafite, ícone de 22 px. No hover, o fundo vira Petróleo.</td></tr><tr><td>Contagem de nós</td><td>No hub e em todo nó que abre. 26 px de altura, padding 0 × 8, raio de 5 px, fundo Petróleo, número de 16 px em 700 na cor do fundo da tela, a 16 px do canto superior direito.</td></tr><tr><td>Selo de sugestões</td><td>26 px de altura, padding 0 × 8, raio de 5 px, fundo Névoa (Tinta no claro), ponto de 7 px e número de 16 px em 700 na cor do fundo, sombra <code>0 4 10</code>. A 16 px da borda, ou a 56 px quando o nó tem contagem. Aberto, ganha um contorno de 2 px em Petróleo.</td></tr><tr><td>Porta</td><td>Círculo de 16 px em Petróleo, centrado a 1 px da borda do nó, em qualquer dos quatro lados.</td></tr><tr><td>Aresta</td><td>4 px, Petróleo, ponta redonda. Desenha em 500 ms. O pulso tem raio de 9 px e corre em 1500 ms. A aresta de importação usa traços de 2% do comprimento.</td></tr><tr><td>Aresta de hub</td><td>2 px, Dim, pontilhada, sem pulso.</td></tr><tr><td>Balão de sugestões</td><td>340 px de largura no tamanho da tela, em qualquer zoom. Padding 12 × 14, raio de 8 px, borda de 1 px, fundo do painel, sombra <code>0 16 34</code>. Seta de 12 px no selo, 12 px de distância. Entra em 140 ms.</td></tr><tr><td>Botão de ícone</td><td>60 × 60 px. Histórico a 24 px da borda direita, Configurações a 96 px e Busca a 168 px. Topo a 24 px.</td></tr><tr><td>Botão</td><td>Principal: padding 16 × 30, 26 px em 700, Grafite sobre Petróleo. Fantasma: padding 12 × 22, 22 px em 500, borda de 2 px.</td></tr><tr><td>Painel de detalhe</td><td>Largura de 400 a 520 px (31% da tela), margem de 24 px, padding 22 × 24, borda de 2 px, raio de 6 px, sombra <code>0 18 40</code>. A alça de 8 px entre o canvas e o painel muda a largura e fica em Petróleo a 45% no hover. A linha longa de código quebra, sem rolagem lateral.</td></tr><tr><td>Gaveta de histórico</td><td>460 px de largura no máximo, a partir de 88 px do topo, borda esquerda de 2 px, padding 20 px. Estrela e lixeira de 36 px a 8 px do canto superior direito de cada cartão.</td></tr><tr><td>Diálogo de configurações</td><td>560 px de largura no máximo, a 88 px do topo, padding 24 px, fundo da tela a 70% atrás. Título em Archivo Black 30 px, botão de tema de 44 px à direita, ícone de 26 px.</td></tr><tr><td>Tela inicial</td><td>Grade de 1080 px, duas colunas com espaço de 64 px. Campo de 54 px de altura, botão de 52 px, cartões com borda de 2 px.</td></tr><tr><td>Canvas</td><td>Grade de pontos a cada 40 px, ponto de 2 px com 16% de Névoa (ou Tinta no claro).</td></tr><tr><td>Movimento</td><td>O nó entra em 250 ms com <code>ease-out</code>, com 150 ms de intervalo entre nós (o último entra até 1,2 s). A aresta se desenha em 500 ms com <code>ease-in-out</code>, depois que os dois nós aparecem.</td></tr></tbody></table></div>
+      <p class="muted">Com "reduzir movimento" ligado, o nível aparece completo, sem animação.</p>
+    </section>
+
+    <!-- ===================== TEMAS ===================== -->
+    <section id="temas" aria-labelledby="h-temas">
+      <div class="head">
+        <p class="eyebrow">Temas</p>
+        <h2 id="h-temas">Escuro e claro, lado a lado</h2>
+      </div>
+      <p class="lead">As três telas do sistema, como o app as desenha, nos dois temas. Só os tokens mudam: a estrutura, o tamanho e o lugar de cada peça ficam iguais.</p>
+      <p class="muted">O app segue o tema do sistema. O botão de tema, ao lado do título das Configurações, passa de Seguir o sistema para Claro e depois para Escuro, e salva na hora.</p>
+
+      <div class="tabs">
+        <input type="radio" name="tela" id="t-ini" checked aria-label="Início">
+        <input type="radio" name="tela" id="t-pasta" aria-label="Mapa da pasta">
+        <input type="radio" name="tela" id="t-fluxo" aria-label="Fluxo da função">
+        <div class="tab-bar"><label for="t-ini">Início</label><label for="t-pasta">Mapa da pasta</label><label for="t-fluxo">Fluxo da função</label></div>
+        <div class="tab-panel" id="p-ini">
+        <div class="theme-row"><h3>Tema escuro</h3><div class="scroll-x"><div class="stage screen"><svg class="canvas" viewBox="0 0 1440 900" role="img" aria-label="Tela inicial no tema escuro: logo e botão Configurações, o título O mapa do seu código, o cartão Abrir pasta com o campo e o botão Mapear pasta, o cartão Colar trecho e o texto da coluna da direita"><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><rect class="ghost h" x="1317" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1331" y="39" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><text class="h-title" x="180" y="301">O mapa do seu</text><text class="h-title" x="180" y="349.4">código.</text><rect class="h-card on" x="181" y="382" width="506" height="229" rx="6"/><text class="h-label" x="202" y="415">ABRIR PASTA</text><rect class="h-field" x="203" y="435" width="462" height="56" rx="6"/><svg class="h-ico" x="218" y="452" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><text class="h-input" x="254" y="469">C:\projetos\loja</text><rect class="h-btn" x="202" y="506" width="464" height="52" rx="6"/><text class="h-btn-t" x="434" y="538.5">Mapear pasta</text><text class="h-small" x="202" y="586.5">O 8n8 lê os arquivos .py, .ts e .tsx da pasta e das subpastas.</text><rect class="h-card" x="181" y="630" width="506" height="76" rx="6"/><svg class="h-ico" x="202" y="657" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><text class="h-item" x="240" y="664">Colar trecho</text><text class="h-item-s" x="240" y="685">Mapeia um pedaço de código</text><text class="h-empty" x="752" y="278">Os mapas que você gerar aparecem aqui. Marque a estrela para</text><text class="h-empty" x="752" y="302">guardar um mapa nos favoritos.</text></svg></div></div></div>
+        <div class="theme-row"><h3>Tema claro</h3><div class="scroll-x"><div class="stage screen light"><svg class="canvas" viewBox="0 0 1440 900" role="img" aria-label="Tela inicial no tema claro: logo e botão Configurações, o título O mapa do seu código, o cartão Abrir pasta com o campo e o botão Mapear pasta, o cartão Colar trecho e o texto da coluna da direita"><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><rect class="ghost h" x="1317" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1331" y="39" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><text class="h-title" x="180" y="301">O mapa do seu</text><text class="h-title" x="180" y="349.4">código.</text><rect class="h-card on" x="181" y="382" width="506" height="229" rx="6"/><text class="h-label" x="202" y="415">ABRIR PASTA</text><rect class="h-field" x="203" y="435" width="462" height="56" rx="6"/><svg class="h-ico" x="218" y="452" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><text class="h-input" x="254" y="469">C:\projetos\loja</text><rect class="h-btn" x="202" y="506" width="464" height="52" rx="6"/><text class="h-btn-t" x="434" y="538.5">Mapear pasta</text><text class="h-small" x="202" y="586.5">O 8n8 lê os arquivos .py, .ts e .tsx da pasta e das subpastas.</text><rect class="h-card" x="181" y="630" width="506" height="76" rx="6"/><svg class="h-ico" x="202" y="657" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 7 3.5 12l5 5M15.5 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><text class="h-item" x="240" y="664">Colar trecho</text><text class="h-item-s" x="240" y="685">Mapeia um pedaço de código</text><text class="h-empty" x="752" y="278">Os mapas que você gerar aparecem aqui. Marque a estrela para</text><text class="h-empty" x="752" y="302">guardar um mapa nos favoritos.</text></svg></div></div></div>
+        </div>
+        <div class="tab-panel" id="p-pasta">
+        <div class="theme-row"><h3>Tema escuro</h3><div class="scroll-x"><div class="stage screen"><svg class="canvas" viewBox="0 0 1440 900" role="img" aria-label="Mapa da pasta no tema escuro: o hub loja, tracejado e com a contagem 5, ligado por arestas pontilhadas finas a três arquivos; pedidos.py chama uma pasta e um arquivo por arestas de chamada, tracejadas e verdes, com um anel oco no destino; cada nó que abre mostra a contagem"><defs><pattern id="dots-p-d" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle class="dots" cx="20" cy="20" r="2.3"/></pattern></defs><rect width="1440" height="900" fill="url(#dots-p-d)"/><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><text class="crumb-t" x="134" y="62">loja</text><rect class="ghost" x="1213" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1227" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg><rect class="ghost" x="1285" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1299" y="40" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><rect class="ghost" x="1357" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1371" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg><path class="wire contains" pathLength="1" d="M499 458 C559 458 501 258 561 258"/><path class="wire contains" pathLength="1" d="M499 458 H561"/><path class="wire contains" pathLength="1" d="M499 458 C559 458 501 658 561 658"/><path class="wire dep calls" d="M879 658 C939 658 881 558 941 558"/><path class="wire dep calls" d="M879 658 C939 658 881 758 941 758"/><g class="n hub"><rect class="n-card" x="181.00" y="389.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag pasta" x="206.00" y="426.00">PASTA</text><text class="n-name" x="206.00" y="464.00">loja</text><text class="n-fn" x="206.00" y="496.50">loja/</text><rect class="count" x="456.00" y="406.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="469.00" y="425.00">5</text></g><g class="n"><rect class="n-card" x="561.00" y="189.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="226.00">ARQUIVO</text><text class="n-name" x="586.00" y="264.00">servidor.ts<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="296.50">servidor.ts</text><rect class="count" x="836.00" y="206.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="849.00" y="225.00">4</text></g><g class="n"><rect class="n-card" x="561.00" y="389.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="426.00">ARQUIVO</text><text class="n-name" x="586.00" y="464.00">relatorio.ts<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="496.50">relatorio.ts</text><rect class="count" x="836.00" y="406.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="849.00" y="425.00">3</text></g><g class="n"><rect class="n-card" x="561.00" y="589.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="626.00">ARQUIVO</text><text class="n-name" x="586.00" y="664.00">pedidos.py<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="696.50">pedidos.py</text><rect class="count" x="836.00" y="606.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="849.00" y="625.00">6</text></g><g class="n"><rect class="n-card" x="941.00" y="489.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag pasta" x="966.00" y="526.00">PASTA</text><text class="n-name" x="966.00" y="564.00">servicos<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="966.00" y="596.50">servicos/</text><rect class="count" x="1216.00" y="506.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="1229.00" y="525.00">2</text></g><g class="n"><rect class="n-card" x="941.00" y="689.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="966.00" y="726.00">ARQUIVO</text><text class="n-name" x="966.00" y="764.00">estoque.py<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="966.00" y="796.50">estoque.py</text><rect class="count" x="1216.00" y="706.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="1229.00" y="725.00">3</text></g><circle class="port" cx="499" cy="458" r="8"/><circle class="port" cx="561" cy="258" r="8"/><circle class="port" cx="561" cy="458" r="8"/><circle class="port" cx="561" cy="658" r="8"/><circle class="port" cx="879" cy="658" r="8"/><circle class="port ring" cx="941" cy="558" r="8"/><circle class="port ring" cx="941" cy="758" r="8"/></svg></div></div></div>
+        <div class="theme-row"><h3>Tema claro</h3><div class="scroll-x"><div class="stage screen light"><svg class="canvas" viewBox="0 0 1440 900" role="img" aria-label="Mapa da pasta no tema claro: o hub loja, tracejado e com a contagem 5, ligado por arestas pontilhadas finas a três arquivos; pedidos.py chama uma pasta e um arquivo por arestas de chamada, tracejadas e verdes, com um anel oco no destino; cada nó que abre mostra a contagem"><defs><pattern id="dots-p-l" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle class="dots" cx="20" cy="20" r="2.3"/></pattern></defs><rect width="1440" height="900" fill="url(#dots-p-l)"/><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><text class="crumb-t" x="134" y="62">loja</text><rect class="ghost" x="1213" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1227" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg><rect class="ghost" x="1285" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1299" y="40" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><rect class="ghost" x="1357" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1371" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg><path class="wire contains" pathLength="1" d="M499 458 C559 458 501 258 561 258"/><path class="wire contains" pathLength="1" d="M499 458 H561"/><path class="wire contains" pathLength="1" d="M499 458 C559 458 501 658 561 658"/><path class="wire dep calls" d="M879 658 C939 658 881 558 941 558"/><path class="wire dep calls" d="M879 658 C939 658 881 758 941 758"/><g class="n hub"><rect class="n-card" x="181.00" y="389.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag pasta" x="206.00" y="426.00">PASTA</text><text class="n-name" x="206.00" y="464.00">loja</text><text class="n-fn" x="206.00" y="496.50">loja/</text><rect class="count" x="456.00" y="406.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="469.00" y="425.00">5</text></g><g class="n"><rect class="n-card" x="561.00" y="189.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="226.00">ARQUIVO</text><text class="n-name" x="586.00" y="264.00">servidor.ts<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="296.50">servidor.ts</text><rect class="count" x="836.00" y="206.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="849.00" y="225.00">4</text></g><g class="n"><rect class="n-card" x="561.00" y="389.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="426.00">ARQUIVO</text><text class="n-name" x="586.00" y="464.00">relatorio.ts<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="496.50">relatorio.ts</text><rect class="count" x="836.00" y="406.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="849.00" y="425.00">3</text></g><g class="n"><rect class="n-card" x="561.00" y="589.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="586.00" y="626.00">ARQUIVO</text><text class="n-name" x="586.00" y="664.00">pedidos.py<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="586.00" y="696.50">pedidos.py</text><rect class="count" x="836.00" y="606.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="849.00" y="625.00">6</text></g><g class="n"><rect class="n-card" x="941.00" y="489.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag pasta" x="966.00" y="526.00">PASTA</text><text class="n-name" x="966.00" y="564.00">servicos<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="966.00" y="596.50">servicos/</text><rect class="count" x="1216.00" y="506.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="1229.00" y="525.00">2</text></g><g class="n"><rect class="n-card" x="941.00" y="689.00" width="318.00" height="138.00" rx="6.00"/><text class="n-tag arquivo" x="966.00" y="726.00">ARQUIVO</text><text class="n-name" x="966.00" y="764.00">estoque.py<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="966.00" y="796.50">estoque.py</text><rect class="count" x="1216.00" y="706.00" width="26.00" height="26.00" rx="5.00"/><text class="count-t" x="1229.00" y="725.00">3</text></g><circle class="port" cx="499" cy="458" r="8"/><circle class="port" cx="561" cy="258" r="8"/><circle class="port" cx="561" cy="458" r="8"/><circle class="port" cx="561" cy="658" r="8"/><circle class="port" cx="879" cy="658" r="8"/><circle class="port ring" cx="941" cy="558" r="8"/><circle class="port ring" cx="941" cy="758" r="8"/></svg></div></div></div>
+        </div>
+        <div class="tab-panel" id="p-fluxo">
+        <div class="theme-row"><h3>Tema escuro</h3><div class="scroll-x"><div class="stage screen"><svg class="canvas" style="--u:0.9125" viewBox="0 0 1440 900" role="img" aria-label="Fluxo da função no tema escuro: o hub Processar pedido com o botão de voltar e a contagem 7, e sete nós ligados por arestas; os nós que abrem mostram a contagem, Calcular frete e Salvar mostram o selo de sugestões; a alça do painel minimizado fica à direita"><defs><pattern id="dots-f-d" x="2" y="2" width="40" height="40" patternUnits="userSpaceOnUse"><circle class="dots" cx="20" cy="20" r="2.3"/></pattern></defs><rect width="1440" height="900" fill="url(#dots-f-d)"/><rect class="frame" x="1" y="1" width="1438" height="898" rx="6"/><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><text class="crumb-t" x="134" y="62">loja › pedidos.py › <tspan class="last">Processar pedido</tspan></text><rect class="ghost" x="1213" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1227" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg><rect class="ghost" x="1285" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1299" y="40" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><rect class="ghost" x="1357" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1371" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg><path class="wire contains" pathLength="1" d="M343 363 H400"/><path class="wire" d="M692 363 H748"/><path class="wire" d="M1040 363 H1097"/><path class="wire" d="M1389 363 H1400 Q1420 363 1420 385 V462 Q1420 483 1399 483 H392 H44 Q21 483 21 505 V630 Q21 652 51 652"/><path class="wire" d="M370 483 V585 Q370 602 400 602"/><path class="wire" d="M343 652 C372 652 358 602 400 602"/><path class="wire" d="M692 602 H748"/><path class="wire" d="M1040 602 H1097"/><g class="n hub on"><rect class="n-card" x="50.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="73.72" y="334.68">FUNÇÃO</text><text class="n-name" x="73.72" y="369.35">Processar pedido</text><text class="n-fn" x="73.72" y="399.01">processar_pedido()</text><rect class="count" x="301.85" y="316.43" width="23.72" height="23.72" rx="4.56"/><text class="count-t" x="313.71" y="333.76">7</text></g><g class="n"><rect class="n-card" x="400.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="423.73" y="334.68">FUNÇÃO</text><text class="n-name" x="423.73" y="369.35">Validar pedido<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="423.73" y="399.01">validar_pedido()</text><rect class="count" x="651.85" y="316.43" width="23.72" height="23.72" rx="4.56"/><text class="count-t" x="663.71" y="333.77">3</text></g><g class="n"><rect class="n-card" x="748.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="771.73" y="334.68">FUNÇÃO</text><text class="n-name" x="771.73" y="369.35">Calcular frete<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="771.73" y="399.01">calcular_frete()</text><rect class="count" x="999.85" y="316.43" width="23.72" height="23.72" rx="4.56"/><text class="count-t" x="1011.71" y="333.77">5</text><rect class="sbadge" x="953.31" y="315.51" width="34.67" height="23.72" rx="4.56"/><circle class="sbadge-d" cx="963.80" cy="327.37" r="3.19"/><text class="sbadge-t" x="972.47" y="332.39">2</text></g><g class="n"><rect class="n-card" x="1097.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="1120.72" y="334.68">SE</text><text class="n-name" x="1120.72" y="369.35">frete &gt; 50</text><text class="n-fn" x="1120.72" y="399.01">if frete &gt; 50</text></g><g class="n"><rect class="n-card" x="50.91" y="589.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag ext" x="73.72" y="623.67">HTTP</text><text class="n-name" x="73.72" y="658.35">Post</text><text class="n-fn" x="73.72" y="688.01">requests.post()</text></g><g class="n"><rect class="n-card" x="400.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag ext" x="423.73" y="573.67">BANCO</text><text class="n-name" x="423.73" y="608.35">Salvar</text><text class="n-fn" x="423.73" y="638.01">db.salvar()</text><rect class="sbadge" x="641.82" y="554.51" width="34.67" height="23.72" rx="4.56"/><circle class="sbadge-d" cx="652.31" cy="566.37" r="3.19"/><text class="sbadge-t" x="660.98" y="571.39">1</text></g><g class="n"><rect class="n-card" x="748.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="771.73" y="573.67">FUNÇÃO</text><text class="n-name" x="771.73" y="608.35">Enviar email<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="771.73" y="638.01">enviar_email()</text><rect class="count" x="999.85" y="555.43" width="23.72" height="23.72" rx="4.56"/><text class="count-t" x="1011.71" y="572.76">2</text></g><g class="n"><rect class="n-card" x="1097.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="1120.72" y="573.67">RETORNO</text><text class="n-name" x="1120.72" y="608.35">Retorno</text><text class="n-fn" x="1120.72" y="638.01">return {"ok": True, "…</text></g><circle class="port" cx="343" cy="363" r="7.3"/><circle class="port" cx="400" cy="363" r="7.3"/><circle class="port" cx="692" cy="363" r="7.3"/><circle class="port" cx="748" cy="363" r="7.3"/><circle class="port" cx="1040" cy="363" r="7.3"/><circle class="port" cx="1097" cy="363" r="7.3"/><circle class="port" cx="1389" cy="363" r="7.3"/><circle class="port" cx="51" cy="652" r="7.3"/><circle class="port" cx="343" cy="652" r="7.3"/><circle class="port" cx="400" cy="602" r="7.3"/><circle class="port" cx="692" cy="602" r="7.3"/><circle class="port" cx="748" cy="602" r="7.3"/><circle class="port" cx="1040" cy="602" r="7.3"/><circle class="port" cx="1097" cy="602" r="7.3"/><circle class="back" cx="50" cy="363" r="19"/><g transform="translate(40 353) scale(0.836)" fill="none" stroke="var(--s-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></g><circle class="toggle" cx="1388" cy="450" r="27"/><path class="toggle-i" transform="translate(1375 437) scale(1.0833)" d="M15 6l-6 6 6 6"/></svg></div></div></div>
+        <div class="theme-row"><h3>Tema claro</h3><div class="scroll-x"><div class="stage screen light"><svg class="canvas" style="--u:0.9125" viewBox="0 0 1440 900" role="img" aria-label="Fluxo da função no tema claro: o hub Processar pedido com o botão de voltar e a contagem 7, e sete nós ligados por arestas; os nós que abrem mostram a contagem, Calcular frete e Salvar mostram o selo de sugestões; a alça do painel minimizado fica à direita"><defs><pattern id="dots-f-l" x="2" y="2" width="40" height="40" patternUnits="userSpaceOnUse"><circle class="dots" cx="20" cy="20" r="2.3"/></pattern></defs><rect width="1440" height="900" fill="url(#dots-f-l)"/><rect class="frame" x="1" y="1" width="1438" height="898" rx="6"/><use class="s-mark" href="#wordmark" x="64" y="38" width="50" height="32"/><text class="crumb-t" x="134" y="62">loja › pedidos.py › <tspan class="last">Processar pedido</tspan></text><rect class="ghost" x="1213" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1227" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M18 18l6 6"/></g></svg><rect class="ghost" x="1285" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1299" y="40" width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.14 12.94a7.5 7.5 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.68 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.5 7.5 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64z"/><circle cx="12" cy="12" r="3"/></g></svg><rect class="ghost" x="1357" y="25" width="58" height="58" rx="6"/><svg class="ico" x="1371" y="40" width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="14" r="11"/><path d="M14 7v7l5 3"/></g></svg><path class="wire contains" pathLength="1" d="M343 363 H400"/><path class="wire" d="M692 363 H748"/><path class="wire" d="M1040 363 H1097"/><path class="wire" d="M1389 363 H1400 Q1420 363 1420 385 V462 Q1420 483 1399 483 H392 H44 Q21 483 21 505 V630 Q21 652 51 652"/><path class="wire" d="M370 483 V585 Q370 602 400 602"/><path class="wire" d="M343 652 C372 652 358 602 400 602"/><path class="wire" d="M692 602 H748"/><path class="wire" d="M1040 602 H1097"/><g class="n hub on"><rect class="n-card" x="50.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="73.72" y="334.68">FUNÇÃO</text><text class="n-name" x="73.72" y="369.35">Processar pedido</text><text class="n-fn" x="73.72" y="399.01">processar_pedido()</text><rect class="count" x="301.85" y="316.43" width="23.72" height="23.72" rx="4.56"/><text class="count-t" x="313.71" y="333.76">7</text></g><g class="n"><rect class="n-card" x="400.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="423.73" y="334.68">FUNÇÃO</text><text class="n-name" x="423.73" y="369.35">Validar pedido<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="423.73" y="399.01">validar_pedido()</text><rect class="count" x="651.85" y="316.43" width="23.72" height="23.72" rx="4.56"/><text class="count-t" x="663.71" y="333.77">3</text></g><g class="n"><rect class="n-card" x="748.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="771.73" y="334.68">FUNÇÃO</text><text class="n-name" x="771.73" y="369.35">Calcular frete<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="771.73" y="399.01">calcular_frete()</text><rect class="count" x="999.85" y="316.43" width="23.72" height="23.72" rx="4.56"/><text class="count-t" x="1011.71" y="333.77">5</text><rect class="sbadge" x="953.31" y="315.51" width="34.67" height="23.72" rx="4.56"/><circle class="sbadge-d" cx="963.80" cy="327.37" r="3.19"/><text class="sbadge-t" x="972.47" y="332.39">2</text></g><g class="n"><rect class="n-card" x="1097.91" y="300.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="1120.72" y="334.68">SE</text><text class="n-name" x="1120.72" y="369.35">frete &gt; 50</text><text class="n-fn" x="1120.72" y="399.01">if frete &gt; 50</text></g><g class="n"><rect class="n-card" x="50.91" y="589.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag ext" x="73.72" y="623.67">HTTP</text><text class="n-name" x="73.72" y="658.35">Post</text><text class="n-fn" x="73.72" y="688.01">requests.post()</text></g><g class="n"><rect class="n-card" x="400.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag ext" x="423.73" y="573.67">BANCO</text><text class="n-name" x="423.73" y="608.35">Salvar</text><text class="n-fn" x="423.73" y="638.01">db.salvar()</text><rect class="sbadge" x="641.82" y="554.51" width="34.67" height="23.72" rx="4.56"/><circle class="sbadge-d" cx="652.31" cy="566.37" r="3.19"/><text class="sbadge-t" x="660.98" y="571.39">1</text></g><g class="n"><rect class="n-card" x="748.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="771.73" y="573.67">FUNÇÃO</text><text class="n-name" x="771.73" y="608.35">Enviar email<tspan class="n-open" dx="0.25em">›</tspan></text><text class="n-fn" x="771.73" y="638.01">enviar_email()</text><rect class="count" x="999.85" y="555.43" width="23.72" height="23.72" rx="4.56"/><text class="count-t" x="1011.71" y="572.76">2</text></g><g class="n"><rect class="n-card" x="1097.91" y="539.91" width="290.18" height="125.92" rx="5.47"/><text class="n-tag fn" x="1120.72" y="573.67">RETORNO</text><text class="n-name" x="1120.72" y="608.35">Retorno</text><text class="n-fn" x="1120.72" y="638.01">return {"ok": True, "…</text></g><circle class="port" cx="343" cy="363" r="7.3"/><circle class="port" cx="400" cy="363" r="7.3"/><circle class="port" cx="692" cy="363" r="7.3"/><circle class="port" cx="748" cy="363" r="7.3"/><circle class="port" cx="1040" cy="363" r="7.3"/><circle class="port" cx="1097" cy="363" r="7.3"/><circle class="port" cx="1389" cy="363" r="7.3"/><circle class="port" cx="51" cy="652" r="7.3"/><circle class="port" cx="343" cy="652" r="7.3"/><circle class="port" cx="400" cy="602" r="7.3"/><circle class="port" cx="692" cy="602" r="7.3"/><circle class="port" cx="748" cy="602" r="7.3"/><circle class="port" cx="1040" cy="602" r="7.3"/><circle class="port" cx="1097" cy="602" r="7.3"/><circle class="back" cx="50" cy="363" r="19"/><g transform="translate(40 353) scale(0.836)" fill="none" stroke="var(--s-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></g><circle class="toggle" cx="1388" cy="450" r="27"/><path class="toggle-i" transform="translate(1375 437) scale(1.0833)" d="M15 6l-6 6 6 6"/></svg></div></div></div>
+        </div>
+      </div>
+
+      <div class="head">
+        <h3>O que muda de um tema para o outro</h3>
+        <div class="table-wrap">
+          <table class="theme-table">
+            <thead><tr><th>Papel</th><th>Escuro</th><th>Claro</th></tr></thead>
+            <tbody>
+              <tr><td>Fundo e grade</td><td><i style="background:#161818"></i>Grafite</td><td><i style="background:#f2f3f0"></i>Papel</td></tr>
+              <tr><td>Texto principal e selo de sugestões</td><td><i style="background:#e9ebea"></i>Névoa</td><td><i style="background:#12292a"></i>Tinta</td></tr>
+              <tr><td>Rótulos e apoio</td><td><i style="background:#979d9b"></i>Pedra</td><td><i style="background:#5b6d6a"></i>Pedra escura</td></tr>
+              <tr><td>Arestas, foco, contagem de nós e botão principal</td><td><i style="background:#3dbfa8"></i>Petróleo</td><td><i style="background:#0f7a6b"></i>Petróleo escuro</td></tr>
+              <tr><td>Nós externos e avisos</td><td><i style="background:#dc8a5c"></i>Cobre</td><td><i style="background:#a34f26"></i>Cobre escuro</td></tr>
+              <tr><td>Cartões e bordas</td><td><i style="background:#202323"></i>#202323 e #363b3a</td><td><i style="background:#ffffff"></i>#ffffff e #d3d8d5</td></tr>
+              <tr><td>Painel lateral e balão</td><td><i style="background:#1c1e1e"></i>#1c1e1e e #2f3433</td><td><i style="background:#f8f9f7"></i>#f8f9f7 e #d3d8d5</td></tr>
+              <tr><td>Segundo plano (Dim)</td><td><i style="background:#6b706f"></i>#6b706f</td><td><i style="background:#8f9a98"></i>#8f9a98</td></tr>
+              <tr><td>Perigo (apagar e severidade alta)</td><td><i style="background:#e0735c"></i>#e0735c</td><td><i style="background:#b2452f"></i>#b2452f</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="muted">A tag PASTA usa o Cobre. A contagem de nós, um retângulo cheio com o número na cor do fundo, e a borda do nó selecionado usam o Petróleo. O selo de sugestões usa a cor do texto principal, com o número na cor do fundo: Névoa no escuro, Tinta no claro, porque o cartão claro já é branco.</p>
+      </div>
+    </section>
+
+    <!-- ===================== TOKENS ===================== -->
+    <section id="tokens" aria-labelledby="h-tokens">
+      <div class="head">
+        <p class="eyebrow">Tokens</p>
+        <h2 id="h-tokens">Para copiar</h2>
+      </div>
+      <p>Copie os três blocos. Sem o atributo <code>data-theme</code>, o tema segue o sistema. Com <code>data-theme="light"</code> ou <code>"dark"</code>, vale o tema escolhido nas Configurações.</p>
+      <div class="code-block">
+        <button class="copy" type="button" id="copy-tokens">Copiar</button>
+<pre id="tokens-src">:root {
+  <span class="cm">/* marca, tema escuro */</span>
+  --ground: #161818;  <span class="cm">/* Grafite */</span>
+  --main: #3dbfa8;    <span class="cm">/* Petróleo */</span>
+  --second: #e9ebea;  <span class="cm">/* Névoa */</span>
+  --accent: #979d9b;  <span class="cm">/* Pedra */</span>
+  --warm: #dc8a5c;    <span class="cm">/* Cobre: pastas e avisos */</span>
+  --danger: #e0735c;  <span class="cm">/* Perigo: só no hover de apagar */</span>
+
+  <span class="cm">/* superfícies */</span>
+  --card-bg: #202323;
+  --card-border: #363b3a;
+  --panel-bg: #1c1e1e;
+  --panel-border: #2f3433;
+  --code: color-mix(in srgb, var(--second) 82%, var(--ground));
+  --dim: #6b706f;
+  --shadow: rgba(0, 0, 0, 0.25);
+  --shadow-strong: rgba(0, 0, 0, 0.3);
+
+  <span class="cm">/* fontes */</span>
+  --font-display: "Archivo Black", sans-serif;
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+<span class="cm">/* tema claro pelo sistema, se a pessoa não escolheu o escuro */</span>
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --ground: #f2f3f0;  <span class="cm">/* Papel */</span>
+    --main: #0f7a6b;    <span class="cm">/* Petróleo escuro */</span>
+    --second: #12292a;  <span class="cm">/* Tinta */</span>
+    --accent: #5b6d6a;  <span class="cm">/* Pedra escura */</span>
+    --warm: #a34f26;    <span class="cm">/* Cobre escuro */</span>
+    --danger: #b2452f;
+    --card-bg: #ffffff;
+    --card-border: #d3d8d5;
+    --panel-bg: #f8f9f7;
+    --panel-border: #d3d8d5;
+    --dim: #8f9a98;
+    --shadow: rgba(18, 41, 42, 0.1);
+    --shadow-strong: rgba(18, 41, 42, 0.14);
+    color-scheme: light;
+  }
+}
+
+<span class="cm">/* tema claro escolhido nas Configurações */</span>
+:root[data-theme="light"] {
+  --ground: #f2f3f0;  <span class="cm">/* Papel */</span>
+  --main: #0f7a6b;    <span class="cm">/* Petróleo escuro */</span>
+  --second: #12292a;  <span class="cm">/* Tinta */</span>
+  --accent: #5b6d6a;  <span class="cm">/* Pedra escura */</span>
+  --warm: #a34f26;    <span class="cm">/* Cobre escuro */</span>
+  --danger: #b2452f;
+  --card-bg: #ffffff;
+  --card-border: #d3d8d5;
+  --panel-bg: #f8f9f7;
+  --panel-border: #d3d8d5;
+  --dim: #8f9a98;
+  --shadow: rgba(18, 41, 42, 0.1);
+  --shadow-strong: rgba(18, 41, 42, 0.14);
+  color-scheme: light;
+}</pre>
+      </div>
+    </section>
+
+    <footer>
+      <span>8n8 · manual da marca · v0.4</span>
+      <span>O mapa do seu código.</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.tree a'));
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  function mark(id) {
+    links.forEach(function (a) { a.removeAttribute('aria-current'); });
+    if (byId[id]) byId[id].setAttribute('aria-current', 'true');
+  }
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) mark(e.target.id); });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+    Object.keys(byId).forEach(function (id) { var s = document.getElementById(id); if (s) io.observe(s); });
+  }
+  mark('essencia');
+
+  var btn = document.getElementById('copy-tokens');
+  btn.addEventListener('click', function () {
+    var text = document.getElementById('tokens-src').textContent;
+    function done() { btn.textContent = 'Copiado'; setTimeout(function () { btn.textContent = 'Copiar'; }, 1600); }
+    function fallback() {
+      var r = document.createRange(); r.selectNodeContents(document.getElementById('tokens-src'));
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = 'Selecionado';
+    }
+    try {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } catch (e) { fallback(); }
+  });
+})();
+</script>
+<script>
+(function () {
+  var box = document.getElementById('sbox');
+  if (!box) return;
+  var lupa = document.getElementById('lupa');
+  var input = document.getElementById('sinput');
+  var list = document.getElementById('sresults');
+  var data = [
+    { t: 'Cadastro de produtos', n: 'cadastro_produto', p: 'produtos.py · 8–24' },
+    { t: 'Cálculo de frete', n: 'calcular_frete', p: 'frete.py · 40–45' },
+    { t: 'Validação do pedido', n: 'validar_pedido', p: 'frete.py · 12–31' },
+    { t: 'Envio de e-mail', n: 'enviar_email', p: 'notificacoes.py · 5–19' },
+    { t: 'Fechamento do pedido', n: 'fechar_pedido', p: 'pedidos.py · 30–52' }
+  ];
+  function norm(str) {
+    var out = '';
+    for (var i = 0; i < str.length; i++) {
+      var c = str.charAt(i).toLowerCase().normalize('NFD').charAt(0);
+      out += (c === '_' || c === '-') ? ' ' : c;
+    }
+    return out;
+  }
+  function words(q) { return norm(q).split(' ').filter(Boolean); }
+  function esc(str) { return str.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function mark(str, ws) {
+    var n = norm(str), hit = [], i;
+    for (i = 0; i < n.length; i++) hit.push(false);
+    ws.forEach(function (w) {
+      var at = n.indexOf(w);
+      while (at !== -1) { for (i = at; i < at + w.length; i++) hit[i] = true; at = n.indexOf(w, at + 1); }
+    });
+    var html = '', open = false;
+    for (i = 0; i < str.length; i++) {
+      if (hit[i] && !open) { html += '<mark>'; open = true; }
+      if (!hit[i] && open) { html += '</mark>'; open = false; }
+      html += esc(str.charAt(i));
+    }
+    return html + (open ? '</mark>' : '');
+  }
+  function render() {
+    var ws = words(input.value);
+    var found = data.filter(function (d) {
+      var hay = norm(d.t + ' ' + d.n);
+      return ws.every(function (w) { return hay.indexOf(w) !== -1; });
+    });
+    list.innerHTML = found.length ? found.map(function (d) {
+      return '<button type="button" class="res" role="option"><b>' + mark(d.t, ws) + '</b><span><em>' + mark(d.n, ws) + '</em><i>' + esc(d.p) + '</i></span></button>';
+    }).join('') : '<div class="none">Nenhum nó achado.</div>';
+    list.hidden = false;
+  }
+  function setOpen(on) {
+    box.classList.toggle('open', on);
+    lupa.setAttribute('aria-expanded', on ? 'true' : 'false');
+    input.tabIndex = on ? 0 : -1;
+    if (on) { render(); input.focus(); } else { list.hidden = true; input.value = ''; }
+  }
+  lupa.addEventListener('click', function () { setOpen(!box.classList.contains('open')); });
+  input.addEventListener('input', render);
+  input.addEventListener('keydown', function (e) { if (e.key === 'Escape') { setOpen(false); lupa.focus(); } });
+  list.addEventListener('click', function (e) {
+    var r = e.target.closest ? e.target.closest('.res') : null;
+    if (!r) return;
+    Array.prototype.forEach.call(list.querySelectorAll('.res'), function (x) { x.classList.remove('on'); });
+    r.classList.add('on');
+  });
+  document.addEventListener('click', function (e) { if (box.classList.contains('open') && !box.contains(e.target)) setOpen(false); });
+})();
+</script>
+</html>

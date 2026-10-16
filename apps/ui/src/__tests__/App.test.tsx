@@ -646,10 +646,10 @@ async function mapVideo() {
 }
 
 describe("App, editor and map (VID-08, VID-09)", () => {
-  it("opens on the launcher: the folder field, Mapear pasta, Colar trecho and no editor", () => {
+  it("opens on the launcher: the folder field, Buscar no PC, Colar trecho and no editor", () => {
     render(<App />);
     expect(screen.getByLabelText("Caminho da pasta")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Mapear pasta" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Buscar no PC" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Colar trecho/ })).toBeTruthy();
     expect(screen.queryByLabelText("Trecho de código")).toBeNull();
     expect(screen.queryByRole("button", { name: "Novo código" })).toBeNull();
@@ -700,7 +700,7 @@ describe("App, editor and map (VID-08, VID-09)", () => {
     expect(screen.getByRole("button", { name: "Novo código" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Início" }));
     expect(screen.queryByTestId("canvas")).toBeNull();
-    expect(screen.getByRole("button", { name: "Mapear pasta" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Buscar no PC" })).toBeTruthy();
   });
 
   it("a folder map has Início, not Novo código, and it goes back to the launcher with the folder kept (HOME-03)", async () => {

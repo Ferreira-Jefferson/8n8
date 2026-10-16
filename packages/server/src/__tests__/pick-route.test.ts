@@ -103,6 +103,23 @@ describe("createPicker", () => {
     expect(script).toContain("'x evil y|*.exe|");
   });
 
+  it("any: one window for a file or a folder, on Windows and macOS", async () => {
+    let win = "";
+    let mac: string[] = [];
+    await createPicker("win32", async (_c, args) => {
+      win = args.at(-1) ?? "";
+      return { kind: "ok", stdout: "C:\\loja\n" };
+    })("any", [".py"]);
+    await createPicker("darwin", async (_c, args) => {
+      mac = args;
+      return { kind: "ok", stdout: "/loja\n" };
+    })("any", [".py"]);
+    expect(win).toContain("OpenFileDialog");
+    expect(win).toContain("CheckFileExists = $false");
+    expect(win).toContain("Split-Path -Parent $d.FileName");
+    expect(mac.join(" ")).toContain("canChooseDirectories = true");
+  });
+
   it("maps a cancel or an empty answer to null", async () => {
     const cancelled = createPicker("linux", async () => ({
       kind: "cancelled",

@@ -73,7 +73,7 @@ const include = z
   .max(100)
   .optional();
 const projectBody = z.object({ path: z.string().min(1), include });
-const pickBody = z.object({ kind: z.enum(["folder", "file"]) });
+const pickBody = z.object({ kind: z.enum(["folder", "file", "any"]) });
 // The Claude Code path never comes in the body: only the system chooser gives it (CC-12, CC-18).
 const claudePathBody = z.object({ action: z.enum(["pick", "auto"]) }).strict();
 const graphBody = z.object({ source: z.string() });

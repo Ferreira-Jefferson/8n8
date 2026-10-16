@@ -86,7 +86,7 @@ export async function fetchProject(
 
 /** Opens the system's chooser on this machine; `null` when the person cancels. */
 export async function fetchPick(
-  kind: "folder" | "file",
+  kind: "folder" | "file" | "any",
 ): Promise<string | null> {
   const res = await post("/api/pick", { kind });
   if (!res.ok) throw new Error(`Falha ao abrir o seletor (HTTP ${res.status})`);

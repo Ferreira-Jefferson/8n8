@@ -188,14 +188,13 @@ describe("Home", () => {
     expect(onOpenFolder).toHaveBeenCalledTimes(2);
   });
 
-  it("offers the system chooser for a folder or a file when the field is empty", async () => {
+  it("the button is Buscar no PC when the field is empty, and opens the one chooser for a file or a folder", async () => {
     listMock.mockResolvedValue([]);
     const { onOpenFolder, onPick } = setup({ folder: "" });
-    fireEvent.click(screen.getByRole("button", { name: "Mapear pasta" }));
+    expect(screen.queryByRole("button", { name: "Mapear pasta" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Buscar no PC" }));
     expect(onOpenFolder).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Escolher arquivo" }));
-    fireEvent.click(screen.getByRole("button", { name: "Escolher pasta" }));
-    expect(onPick.mock.calls).toEqual([["file"], ["folder"]]);
+    expect(onPick.mock.calls).toEqual([["any"]]);
   });
 
   it("shows the sentence it gets about what the folder reads", async () => {

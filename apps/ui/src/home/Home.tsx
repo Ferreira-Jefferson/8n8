@@ -74,8 +74,8 @@ export function Home({
   folder: string;
   onFolderChange: (path: string) => void;
   onOpenFolder: () => void;
-  /** Opens the system chooser for a folder or a file; the caller maps the choice. */
-  onPick: (kind: "folder" | "file") => void;
+  /** Opens the system chooser, for a file or a folder; the caller maps the choice. */
+  onPick: (kind: "any") => void;
   onPaste: () => void;
   onOpenEntry: (entry: HistoryEntry) => void;
   onShowHistory: () => void;
@@ -86,7 +86,6 @@ export function Home({
   const locale = useLocale();
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [choosing, setChoosing] = useState(false);
 
   useEffect(() => {
     if (historyOpen) return;
@@ -161,8 +160,8 @@ export function Home({
           aria-label={t("home.openFolder")}
           onSubmit={(e) => {
             e.preventDefault();
-            // An empty field has nothing to map: offer the system chooser.
-            if (folder.trim() === "") setChoosing(true);
+            // An empty field has nothing to map: open the system chooser.
+            if (folder.trim() === "") onPick("any");
             else onOpenFolder();
           }}
         >
@@ -174,35 +173,13 @@ export function Home({
               aria-label={t("home.folderPath")}
               placeholder="C:\projetos\loja"
               value={folder}
-              onChange={(e) => {
-                setChoosing(false);
-                onFolderChange(e.target.value);
-              }}
+              onChange={(e) => onFolderChange(e.target.value)}
               spellCheck={false}
             />
           </label>
-          {choosing ? (
-            <div className="home-choose">
-              <button
-                type="button"
-                className="home-btn"
-                onClick={() => onPick("folder")}
-              >
-                {t("home.chooseFolder")}
-              </button>
-              <button
-                type="button"
-                className="home-btn"
-                onClick={() => onPick("file")}
-              >
-                {t("home.chooseFile")}
-              </button>
-            </div>
-          ) : (
-            <button type="submit" className="home-btn">
-              {t("home.mapFolder")}
-            </button>
-          )}
+          <button type="submit" className="home-btn">
+            {t(folder.trim() === "" ? "home.browse" : "home.mapFolder")}
+          </button>
           <small>{reads}</small>
         </form>
         <button
