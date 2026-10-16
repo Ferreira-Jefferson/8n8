@@ -8,16 +8,21 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck && tsc -p e2e",
     "check": "biome check . && depcruise packages apps --config .dependency-cruiser.cjs",
     "dev": "node scripts/dev.mjs",
     "dev:server": "tsx watch --env-file-if-exists=.env apps/cli/src/main.ts --no-open",
     "dev:ui": "pnpm --filter @8n8/ui dev",
     "start": "pnpm --filter @8n8/cli build && node --env-file-if-exists=.env apps/cli/dist/8n8.mjs --no-open",
-    "prints": "pnpm --filter @8n8/cli build && node scripts/prints-readme.mjs",
+    "build:all": "pnpm install && pnpm build:cli && pnpm build:ext",
+    "build:cli": "pnpm --filter @8n8/cli package",
+    "build:ext": "pnpm --filter 8n8-vscode package",
+    "install:cli:global": "pnpm build:cli && npm install -g ./release/8n8-cli-0.0.1.tgz",
+    "open": "pnpm --filter @8n8/cli build && node scripts/open.mjs",
+    "test": "pnpm -r --if-present test",
     "e2e": "pnpm --filter @8n8/cli build && playwright test",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git config core.hooksPath .githooks",
+    "prints":"pnpm --filter @8n8/cli build && node scripts/prints-readme.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

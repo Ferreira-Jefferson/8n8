@@ -37,17 +37,32 @@ As regras ficam em [.gitleaks.toml](.gitleaks.toml): as regras padrão do gitlea
 
 Você pode usar o mesmo hook nos seus projetos: copie `.githooks/pre-commit` e rode `git config core.hooksPath .githooks`.
 
-## Verificação
+## Comandos
 
-Toda mudança precisa de verificação antes do commit.
+Todos os comandos rodam na raiz do repositório.
 
 | Comando | O que faz |
 |---|---|
-| `pnpm test` | Roda os testes unitários de todos os pacotes (Vitest). |
+| `pnpm install` | Instala as dependências de todos os pacotes. Também liga a pasta `.githooks`. |
+| `pnpm dev` | Inicia o servidor (porta 8148) e a tela (Vite). Os dois recarregam quando você muda o código. |
+| `pnpm dev:server` | Inicia só o servidor, sem abrir o navegador. |
+| `pnpm dev:ui` | Inicia só a tela, com o Vite. |
+| `pnpm start` | Constrói a tela e inicia o servidor e a tela juntos, sem recarga. Não abre o navegador. |
+| `pnpm open <pasta>` | Constrói o CLI e abre o mapa da pasta. Uma pasta relativa vale a partir de onde você digitou o comando. |
+| `pnpm build:cli` | Gera o pacote do CLI em `release/8n8-cli-0.0.1.tgz`. |
+| `pnpm build:ext` | Gera o pacote da extensão em `release/8n8-vscode-0.0.1.vsix`. |
+| `pnpm build:all` | Instala as dependências e gera o CLI e a extensão. |
+| `pnpm install:cli:global` | Gera o CLI e instala o comando `8n8` no terminal. |
+| `pnpm prints` | Constrói o CLI e refaz as imagens do README em `docs/imagens`. |
+| `pnpm test` | Roda os testes unitários (Vitest) de todos os pacotes. |
 | `pnpm typecheck` | Roda o TypeScript em todos os pacotes e em `e2e`. |
 | `pnpm check` | Roda o Biome (estilo) e o dependency-cruiser (fronteiras). |
-| `pnpm e2e` | Constrói a CLI e roda os testes de ponta a ponta (Playwright) contra ela. |
-| `pnpm --filter 8n8-vscode test:integration` | Constrói a extensão e roda o teste dela num VS Code de verdade, com pastas de usuário próprias. Usa o VS Code instalado, ou baixa um. |
+| `pnpm e2e` | Constrói o CLI e roda os testes de ponta a ponta (Playwright). |
+| `pnpm --filter 8n8-vscode test:integration` | Constrói a extensão e roda o teste dela num VS Code de verdade. Usa o VS Code instalado ou baixa um. |
+
+## Verificação
+
+Toda mudança precisa de verificação antes do commit. Rode `pnpm test`, `pnpm typecheck` e `pnpm check`. Rode `pnpm e2e` quando a mudança toca a tela ou o CLI.
 
 Num pull request, a CI (`.github/workflows/ci.yml`) roda os mesmos gates e o gitleaks sobre todo o histórico. Veja também o [SECURITY.md](SECURITY.md).
 

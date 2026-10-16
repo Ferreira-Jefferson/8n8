@@ -188,6 +188,37 @@ pnpm start
 
 Abra o endereço que o terminal mostrar (`http://8n8.localhost:8148/#t=...`). O `#t=` é o token da sessão. A porta muda com a variável `APP8N8_PORT`.
 
+Para abrir uma pasta direto, sem instalar nada:
+
+```bash
+pnpm open <pasta>
+```
+
+O `pnpm open` constrói o CLI e abre a pasta. Uma pasta relativa vale a partir de onde você digitou o comando. As opções do CLI passam direto (`pnpm open . --no-open`).
+
+### Comandos
+
+Todos os comandos rodam na raiz do repositório.
+
+| Comando | O que faz |
+|---|---|
+| `pnpm install` | Instala as dependências de todos os pacotes. Também liga a pasta `.githooks`. |
+| `pnpm dev` | Inicia o servidor (porta 8148) e a tela (Vite). Os dois recarregam quando você muda o código. |
+| `pnpm dev:server` | Inicia só o servidor, sem abrir o navegador. |
+| `pnpm dev:ui` | Inicia só a tela, com o Vite. |
+| `pnpm start` | Constrói a tela e inicia o servidor e a tela juntos, sem recarga. Não abre o navegador. |
+| `pnpm open <pasta>` | Constrói o CLI e abre o mapa da pasta. Uma pasta relativa vale a partir de onde você digitou o comando. |
+| `pnpm build:cli` | Gera o pacote do CLI em `release/8n8-cli-0.0.1.tgz`. |
+| `pnpm build:ext` | Gera o pacote da extensão em `release/8n8-vscode-0.0.1.vsix`. |
+| `pnpm build:all` | Instala as dependências e gera o CLI e a extensão. |
+| `pnpm install:cli:global` | Gera o CLI e instala o comando `8n8` no terminal. |
+| `pnpm prints` | Constrói o CLI e refaz as imagens do README em `docs/imagens`. |
+| `pnpm test` | Roda os testes unitários (Vitest) de todos os pacotes. |
+| `pnpm typecheck` | Roda o TypeScript em todos os pacotes e em `e2e`. |
+| `pnpm check` | Roda o Biome (estilo) e o dependency-cruiser (fronteiras). |
+| `pnpm e2e` | Constrói o CLI e roda os testes de ponta a ponta (Playwright). |
+| `pnpm --filter 8n8-vscode test:integration` | Constrói a extensão e roda o teste dela num VS Code de verdade. Usa o VS Code instalado ou baixa um. |
+
 ### Estrutura do repositório
 
 | Pasta | O que tem |
@@ -204,7 +235,7 @@ Abra o endereço que o terminal mostrar (`http://8n8.localhost:8148/#t=...`). O 
 | `packages/llm` | Provedores de LLM. |
 | `packages/server` | O núcleo: as rotas da API, montadas por `createCore`. |
 | `e2e` | Testes de ponta a ponta com Playwright. |
-| `scripts` | `dev.mjs` (o `pnpm dev`) e `prints-readme.mjs` (o `pnpm prints`). |
+| `scripts` | `dev.mjs` (o `pnpm dev`), `open.mjs` (o `pnpm open`) e `prints-readme.mjs` (o `pnpm prints`). |
 | `docs` | Guias, o manual da marca e as imagens do README (`docs/imagens`). |
 | `release` | Os pacotes gerados (`.tgz` e `.vsix`). O git ignora o conteúdo. |
 
