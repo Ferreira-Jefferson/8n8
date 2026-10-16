@@ -366,7 +366,7 @@ export function App({ initialFolder = null }: AppProps) {
   }
 
   /** The system chooser; a chosen path fills the field and maps at once. */
-  async function pick(kind: "folder" | "file") {
+  async function pick(kind: "folder" | "file" | "any") {
     try {
       const path = await fetchPick(kind);
       if (path === null) return;
