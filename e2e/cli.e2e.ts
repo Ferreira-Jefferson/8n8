@@ -19,19 +19,20 @@ import {
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, test } from "@playwright/test";
+import { LANE_PORT, lanePort, RUN, runPort } from "./lane";
 import { breadcrumb, clickCard, expectLevel } from "./mapa";
+import { expect, test } from "./test";
 
 // Feature 07-cli, end to end: the package `pnpm pack` makes (pnpm e2e builds the CLI
 // first), installed with `npm install -g --offline` into a temp prefix and run as the
-// `8n8` command, with its home in a temp folder and the fake LLM of 8288.
+// `8n8` command, with its home in a temp folder and the fake LLM of its lane (lane.ts).
 
 const REPO = fileURLToPath(new URL("..", import.meta.url));
 const FIXTURE = join(
   REPO,
   "packages/languages/python/src/__tests__/fixtures/projeto-loja",
 );
-const PORT = "4330";
+const PORT = String(runPort(RUN.cli));
 // A function the fake LLM summarizes and its reviewer accepts (fake-llm.ts), so the
 // explanation is cached. A project node id carries its file (AD-013).
 const CONTAGEM =
@@ -79,7 +80,7 @@ function cliEnv(): NodeJS.ProcessEnv {
     USERPROFILE: home,
     APP8N8_PORT: PORT,
     OPENROUTER_API_KEY: "e2e-fake-key",
-    OPENROUTER_BASE_URL: "http://127.0.0.1:8288/v1",
+    OPENROUTER_BASE_URL: `http://127.0.0.1:${lanePort(LANE_PORT.fake)}/v1`,
     APP8N8_MODEL: "e2e/drafter",
     APP8N8_REVIEW_MODEL: "e2e/reviewer",
     // The claude of this machine stays out: openrouter is the provider (CC-15).
@@ -196,7 +197,9 @@ test.afterAll(() => {
 test("DIST-12, DIST-01: the installed 8n8 prints an address that opens the folder's map, with the fragment's token alone", async ({
   page,
 }) => {
-  expect(url).toMatch(/^http:\/\/8n8\.localhost:4330\/#t=[0-9a-f]{64}&pasta=/);
+  expect(url).toMatch(
+    new RegExp(`^http://8n8\\.localhost:${PORT}/#t=[0-9a-f]{64}&pasta=`),
+  );
   await page.goto(url);
   await expectLevel(page, [
     "dir:frete",
@@ -255,7 +258,7 @@ test("DIST-06: a second 8n8 on the same port prints the port message and exits 1
 
 test("DIST-22: no run of the installed CLI prints the API key, whole or by its start", () => {
   // The server run, --help, the missing folder and the busy port all printed something.
-  expect(terminal).toContain("8n8 em http://8n8.localhost:4330/");
+  expect(terminal).toContain(`8n8 em http://8n8.localhost:${PORT}/`);
   expect(terminal).toContain("Pasta não encontrada:");
   expect(terminal).not.toContain("e2e-fake-key");
   expect(terminal).not.toContain("e2e-fa");

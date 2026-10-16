@@ -38,7 +38,9 @@ As visualizações podem ser descartáveis: uma vista gerada para responder a um
 - `pnpm test`: Roda os testes unitários (Vitest) de todos os pacotes.
 - `pnpm typecheck`: Roda o TypeScript em todos os pacotes e em `e2e`.
 - `pnpm check`: Roda o Biome (estilo) e o dependency-cruiser (fronteiras).
-- `pnpm e2e`: Constrói o CLI e roda os testes de ponta a ponta (Playwright).
+- `pnpm e2e`: Constrói o CLI e roda os testes de ponta a ponta (Playwright). Cada execução sorteia uma faixa de portas livres (nunca a 8148). `E2E_WORKERS` muda o número de workers.
+- `pnpm verify`: Roda só os testes, o typecheck e os e2e que a mudança afeta (`--plan` só mostra o plano; `--base <ref>` compara com outro commit).
+- `pnpm e2e:map`: Roda a suíte e2e inteira e refaz o mapa de cobertura (`e2e/coverage-map.json`, versionado) que o `pnpm verify` usa. Leva uns 8 minutos.
 - `pnpm --filter 8n8-vscode test:integration`: Constrói a extensão e roda o teste dela num VS Code de verdade. Usa o VS Code instalado ou baixa um.
 
 Guias: [docs/guides/adicionar-linguagem.md](docs/guides/adicionar-linguagem.md), [docs/guides/adicionar-provedor-llm.md](docs/guides/adicionar-provedor-llm.md), [docs/guides/adicionar-editor.md](docs/guides/adicionar-editor.md). Contribuição: [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -59,7 +61,9 @@ Guias: [docs/guides/adicionar-linguagem.md](docs/guides/adicionar-linguagem.md),
 ## Verificação
 
 - Toda mudança precisa ser verificada antes de ser dada como pronta: rode os testes, o typecheck ou o app. Se não deu para verificar, diga isso.
-- Durante o trabalho, rode só as specs e2e ligadas à mudança (`pnpm e2e e2e/<spec>.e2e.ts`). Rode a suíte inteira uma vez, antes do commit.
+- Durante o trabalho, rode só as specs e2e ligadas à mudança (`pnpm e2e e2e/<spec>.e2e.ts`). Antes do commit, rode `pnpm verify`: ele roda só o que a mudança afeta. A suíte inteira roda no CI, em cada pull request e push na main.
+- Refaça o mapa (`pnpm e2e:map`) e commite o `e2e/coverage-map.json` quando o `verify` avisar que ele está velho ou depois de criar um spec. Até lá, um spec novo roda sempre.
+- Quando outro chat pode estar no mesmo repositório, trabalhe num git worktree próprio (EnterWorktree). Os testes sorteiam as portas, mas o `.cache` e o `apps/cli/dist` são da pasta.
 - Relate o resultado como ele é. Teste falhando é reportado com a saída.
 - Quando houver uma referência visual (vídeo, mock, print), compare prints do app com ela antes de dar a feature como pronta. Teste passando não prova que a tela é a que foi pedida.
 

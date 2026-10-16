@@ -1,12 +1,14 @@
 import { createServer, type IncomingMessage } from "node:http";
 import { pathToFileURL } from "node:url";
+import { LANE_PORT, lanePort } from "./lane";
 
 // OpenAI-compatible fake LLM for the E2E of features 04 and 05. The keyed server points
 // OPENROUTER_BASE_URL here, so the real review pipeline runs without the network.
 // Answers are scripted by request content; any other content gets 500 so an
 // unexpected call fails loudly.
 
-const PORT = 8288;
+// The config starts one fake per lane with E2E_FAKE_PORT; a worker talks to its lane's.
+const PORT = Number(process.env.E2E_FAKE_PORT ?? lanePort(LANE_PORT.fake));
 const FAKE_URL = `http://127.0.0.1:${PORT}`;
 /** The only key the fake accepts: a real key reaching it is a test setup bug. */
 const FAKE_KEY = "e2e-fake-key";

@@ -57,20 +57,28 @@ Todos os comandos rodam na raiz do repositório.
 | `pnpm test` | Roda os testes unitários (Vitest) de todos os pacotes. |
 | `pnpm typecheck` | Roda o TypeScript em todos os pacotes e em `e2e`. |
 | `pnpm check` | Roda o Biome (estilo) e o dependency-cruiser (fronteiras). |
-| `pnpm e2e` | Constrói o CLI e roda os testes de ponta a ponta (Playwright). |
+| `pnpm e2e` | Constrói o CLI e roda os testes de ponta a ponta (Playwright). `E2E_WORKERS` muda o número de workers. |
+| `pnpm verify` | Roda só o que a mudança afeta: unitários, typecheck e e2e (`--plan` só mostra o plano). |
+| `pnpm e2e:map` | Refaz o mapa de cobertura dos e2e, que o `pnpm verify` usa. |
 | `pnpm --filter 8n8-vscode test:integration` | Constrói a extensão e roda o teste dela num VS Code de verdade. Usa o VS Code instalado ou baixa um. |
 
 ## Verificação
 
-Toda mudança precisa de verificação antes do commit. Rode `pnpm test`, `pnpm typecheck` e `pnpm check`. Rode `pnpm e2e` quando a mudança toca a tela ou o CLI.
+Toda mudança precisa de verificação antes do commit. Rode `pnpm verify`: ele roda o `pnpm check` e, só nos pacotes e specs que a mudança afeta, os unitários, o typecheck e os e2e. O `pnpm verify --plan` mostra o que vai rodar e por quê.
 
-Num pull request, a CI (`.github/workflows/ci.yml`) roda os mesmos gates e o gitleaks sobre todo o histórico. Veja também o [SECURITY.md](SECURITY.md).
+Os e2e afetados vêm de um mapa de cobertura versionado (`e2e/coverage-map.json`): para cada spec, as funções de `src/` que ele executa e as regras de CSS que a tela dele usa. Uma linha alterada dentro de uma função roda só os specs que executaram essa função. Uma linha fora de função (import, constante) roda os specs que usam o arquivo. O que o mapa não explica roda todos os specs.
 
-Durante o trabalho, rode só o teste ligado à mudança. Por exemplo, `pnpm e2e e2e/<spec>.e2e.ts`. Rode a suíte inteira uma vez, antes do commit.
+O mapa chega com o `git pull`. Quando o `pnpm verify` avisar que ele está velho, ou depois de criar um spec, rode `pnpm e2e:map` (uns 8 minutos) e commite o arquivo. Um spec que o mapa ainda não conhece roda sempre. Um mapa velho nunca deixa de rodar um spec por linha errada: o `verify` compara o código com o commit em que o mapa foi feito.
+
+Num pull request e em push na `main`, a CI (`.github/workflows/ci.yml`) roda a suíte inteira e o gitleaks sobre todo o histórico. Veja também o [SECURITY.md](SECURITY.md).
+
+Durante o trabalho, rode só o teste ligado à mudança. Por exemplo, `pnpm e2e e2e/<spec>.e2e.ts`.
+
+Cada execução dos e2e sorteia uma faixa de portas livres entre 20000 e 59999. Duas execuções ao mesmo tempo, ou o app na 8148, não se esbarram. O `.cache` e o `apps/cli/dist` continuam sendo da pasta: para rodar testes em paralelo, use um git worktree por tarefa.
 
 ### Nota do Windows: `pnpm e2e` não termina
 
-No Windows, o Playwright encerra os servidores de teste com o comando `taskkill`. Se a pasta `C:\Windows\System32` não está no `PATH` do seu shell, o `taskkill` não é encontrado. Os testes passam, mas o `pnpm e2e` não termina, e a execução seguinte falha com "is already used" nas portas 8148 e 8288 a 4322.
+No Windows, o Playwright encerra os servidores de teste com o comando `taskkill`. Se a pasta `C:\Windows\System32` não está no `PATH` do seu shell, o `taskkill` não é encontrado. Os testes passam, mas o `pnpm e2e` não termina, e os servidores de teste ficam abertos.
 
 Inclua `System32` no `PATH`. Num shell Bash, por exemplo:
 

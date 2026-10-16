@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 
 // Empty field + click: the system chooser (faked here, a native dialog cannot be driven)
 // returns a path and the app maps it at once. A single file maps as a one-file project.

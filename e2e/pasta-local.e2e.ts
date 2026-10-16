@@ -14,7 +14,7 @@ import { networkInterfaces, tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ProjectResponse } from "@8n8/model";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./test";
 
 // Feature 02-pasta-local, end to end: real build, real server on 8148 with no key,
 // real disk. The committed projeto-loja fixture is copied to a temp folder, plus

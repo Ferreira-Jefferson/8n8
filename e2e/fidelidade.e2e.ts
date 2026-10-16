@@ -1,7 +1,8 @@
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { expect, type Locator, type Page, test } from "@playwright/test";
 import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
+import { LANE_PORT, laneDir, lanePort } from "./lane";
+import { expect, type Locator, type Page, test } from "./test";
 
 // Feature 04, story P1 (fidelity), end to end through the REAL review pipeline:
 // the keyed server (4319) drafts, checks, reviews, redrafts and cuts against the
@@ -10,13 +11,15 @@ import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 // "title-review") come with each level; the call counts here look only at
 // drafts and reviews (D2).
 
-const REAL = "http://127.0.0.1:4319";
+const REAL = `http://127.0.0.1:${lanePort(LANE_PORT.real)}`;
 const OFFLINE = `http://127.0.0.1:${process.env.E2E_PORT ?? 8148}`;
-const CACHE = fileURLToPath(new URL("../.cache/e2e-real", import.meta.url));
+const CACHE = fileURLToPath(
+  new URL(`../.cache/${laneDir("e2e-real")}`, import.meta.url),
+);
 /** Keyed server with no model set (CORE-21). */
-const DEFAULT_MODEL_SERVER = "http://127.0.0.1:4320";
+const DEFAULT_MODEL_SERVER = `http://127.0.0.1:${lanePort(LANE_PORT.defaultModel)}`;
 const DEFAULT_CACHE = fileURLToPath(
-  new URL("../.cache/e2e-default-model", import.meta.url),
+  new URL(`../.cache/${laneDir("e2e-default-model")}`, import.meta.url),
 );
 
 const VIDEO = readFileSync(

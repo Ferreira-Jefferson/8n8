@@ -1,4 +1,3 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
 import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 import {
   cardNames,
@@ -15,6 +14,7 @@ import {
   REAL,
   VIDEO,
 } from "./mapa";
+import { expect, type Locator, type Page, test } from "./test";
 
 // Feature 05, story P2 (VID-28..30): a step inside a function gets its own
 // summary of at most 2 sentences, through the real review pipeline on the

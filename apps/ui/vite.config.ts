@@ -5,6 +5,8 @@ export default defineConfig({
   // Relative paths: the CLI serves the page at the root, the VS Code webview from a <base> (VSC-04).
   base: "./",
   plugins: [react()],
+  // The e2e coverage map (scripts/mapa-e2e.mjs) traces the bundle back to src/.
+  build: { sourcemap: Boolean(process.env.E2E_COVERAGE) },
   server: {
     proxy: {
       // changeOrigin rewrites Host to 127.0.0.1:8148; the server refuses any other Host.

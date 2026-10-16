@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./test";
 
 // The hub: each level draws the open node on its left, wired to the nodes no
 // other wire reaches, with a round button that goes back one level. A file

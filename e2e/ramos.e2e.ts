@@ -1,5 +1,5 @@
-import { expect, type Locator, test } from "@playwright/test";
 import { box, canvas, generate, nodeById, nodes, OFFLINE } from "./mapa";
+import { expect, type Locator, test } from "./test";
 
 // VID-21: the "true" and "false" labels of an `if` stay apart and clear of
 // every card, whether the `if` has an `else` or only raises.

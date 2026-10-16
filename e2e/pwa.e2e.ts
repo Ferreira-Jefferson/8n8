@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
 import { OFFLINE } from "./mapa";
+import { expect, test } from "./test";
 
 // The app installs as a window of its own (manifest) and answers at 8n8.localhost,
 // the name the CLI shows. The server is the built CLI on the default port (8148).

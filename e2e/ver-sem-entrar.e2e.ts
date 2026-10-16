@@ -1,4 +1,3 @@
-import { expect, test } from "@playwright/test";
 import {
   clickCard,
   expectLevel,
@@ -11,6 +10,7 @@ import {
   REAL,
   VIDEO,
 } from "./mapa";
+import { expect, test } from "./test";
 
 // A card that opens shows its panel (code, summary, suggestions) through a
 // button, without entering the node. A click on the card still enters.

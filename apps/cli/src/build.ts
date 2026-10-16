@@ -55,6 +55,8 @@ export async function bundle(entry: string, outfile: string): Promise<void> {
       js: '#!/usr/bin/env node\nimport { createRequire as __createRequire } from "node:module";\nconst require = __createRequire(import.meta.url);',
     },
     plugins: [grammars],
+    // The e2e coverage map (scripts/mapa-e2e.mjs) traces the bundle back to src/.
+    sourcemap: Boolean(process.env.E2E_COVERAGE),
     logLevel: "warning",
   });
 }

@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { expect, type Page, test } from "@playwright/test";
 import {
   box,
   breadcrumb,
@@ -27,6 +26,7 @@ import {
   REAL,
   VIDEO,
 } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // Feature 05, navigation (VID-18..27): one click opens a node's inner flow and
 // shows its panel; Esc goes back one level at a time. On the keyed

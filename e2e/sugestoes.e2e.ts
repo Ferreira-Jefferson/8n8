@@ -1,4 +1,3 @@
-import { expect, type Page, test } from "@playwright/test";
 import {
   box,
   cardNames,
@@ -18,6 +17,7 @@ import {
   SECOND,
   VIDEO,
 } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // Feature 05, story P3 (VID-31, 33): the suggestions of an opened node show as
 // a badge on the visible node whose lines hold the suggestion's line; a click

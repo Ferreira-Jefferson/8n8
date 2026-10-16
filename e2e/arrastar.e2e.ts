@@ -1,4 +1,3 @@
-import { expect, type Page, test } from "@playwright/test";
 import {
   box,
   cardOf,
@@ -15,6 +14,7 @@ import {
   panel,
   VIDEO,
 } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // The viewer can drag a card to a new place; its wires follow it, and two
 // wires that share a gap never run together.

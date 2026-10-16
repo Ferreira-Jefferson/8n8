@@ -1,13 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { Graph, ReviewStatus, Suggestion, Summary } from "@8n8/model";
-import {
-  expect,
-  type Locator,
-  type Page,
-  type Route,
-  test,
-} from "@playwright/test";
+import { expect, type Locator, type Page, type Route, test } from "./test";
 
 // Feature 01-fatia-central, end to end: real build, real server, real parser.
 // /api/summary and /api/suggestions are mocked only where a fake LLM answer is needed

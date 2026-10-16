@@ -9,8 +9,9 @@ import {
 } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, type Locator, type Page, test } from "@playwright/test";
 import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
+import { LANE_PORT, laneDir, lanePort } from "./lane";
+import { expect, type Locator, type Page, test } from "./test";
 
 // Feature 04, story P2 (cache by node), end to end through the REAL pipeline and
 // the REAL disk cache of the keyed server (4319), against the fake LLM.
@@ -19,8 +20,10 @@ import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 // calcular_frete (VID-24). The call counts look only at the drafts and reviews
 // of calcular_frete (D2): titles and the loop's own request are not about it.
 
-const REAL = "http://127.0.0.1:4319";
-const CACHE = fileURLToPath(new URL("../.cache/e2e-real", import.meta.url));
+const REAL = `http://127.0.0.1:${lanePort(LANE_PORT.real)}`;
+const CACHE = fileURLToPath(
+  new URL(`../.cache/${laneDir("e2e-real")}`, import.meta.url),
+);
 
 const VIDEO = readFileSync(
   new URL(

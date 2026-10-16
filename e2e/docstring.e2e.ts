@@ -1,4 +1,3 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
 import { type FakeCall, fakeLog } from "./fake-llm";
 import {
   cardOf,
@@ -10,6 +9,7 @@ import {
   panel,
   REAL,
 } from "./mapa";
+import { expect, type Locator, type Page, test } from "./test";
 
 // Docstring: the model sees the code with the docstring masked; a docstring the
 // answer calls false becomes a suggestion on the docstring's first line. Only the

@@ -2,7 +2,6 @@ import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, type Page, test } from "@playwright/test";
 import {
   box,
   breadcrumb,
@@ -20,6 +19,7 @@ import {
   REAL,
   VIDEO,
 } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // Feature 14, node search: a magnifier at the top right that grows into a field,
 // finds a node by its title or by its technical name, and goes to it at any level.

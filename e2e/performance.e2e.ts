@@ -1,6 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, type Page, test } from "@playwright/test";
 import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 import {
   FRETE_LEVEL,
@@ -11,6 +10,7 @@ import {
   REAL,
   VIDEO,
 } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // Measurements, not checks (no spec thresholds). Run them apart from the suite:
 //   APP8N8_PERF=1 pnpm exec playwright test --project performance

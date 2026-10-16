@@ -2,12 +2,13 @@ import { cpSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, type Page, test } from "@playwright/test";
+import { LANE_PORT, lanePort } from "./lane";
 import { css, generate, MAIN, nodes } from "./mapa";
+import { expect, type Page, test } from "./test";
 
-// The search history, end to end: a keyless server of its own on 4321 (playwright.config.ts),
+// The search history, end to end: a keyless server of its own (playwright.config.ts),
 // a persistent SQLite file. Every test starts by wiping it through the DELETE API.
-const HISTORY = "http://127.0.0.1:4321";
+const HISTORY = `http://127.0.0.1:${lanePort(LANE_PORT.history)}`;
 test.use({ baseURL: HISTORY });
 
 const FIXTURE = fileURLToPath(

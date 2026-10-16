@@ -1,19 +1,25 @@
 import { readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, type Page, test } from "@playwright/test";
 import { E2E_TOKEN } from "../playwright.config";
 import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
+import { LANE_PORT, laneDir, lanePort } from "./lane";
 import { clickCard, generate, panel } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // Feature 08, end to end: the server of 4322 starts with no key and no automatic
 // mode. The settings go in through the dialog, the summary and the suggestions wait
 // for a click, and what is cached shows with no click.
 
-const SETTINGS = "http://127.0.0.1:4322";
+const SETTINGS = `http://127.0.0.1:${lanePort(LANE_PORT.settings)}`;
 const REPO = fileURLToPath(new URL("..", import.meta.url));
-const CACHE = join(REPO, ".cache", "e2e-settings");
-const CONFIG = join(REPO, ".cache", "e2e-settings-config", "config.json");
+const CACHE = join(REPO, ".cache", laneDir("e2e-settings"));
+const CONFIG = join(
+  REPO,
+  ".cache",
+  laneDir("e2e-settings-config"),
+  "config.json",
+);
 const FAKE_KEY = "e2e-fake-key";
 // A function the fake LLM summarizes and its reviewer accepts (fake-llm.ts).
 const CONTAGEM =

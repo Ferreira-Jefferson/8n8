@@ -1,6 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, type Page, test } from "@playwright/test";
 import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 import {
   CACHE,
@@ -18,6 +17,7 @@ import {
   REAL,
   VIDEO,
 } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // Feature 05, titles (VID-14..17): the keyed server (4319) asks the fake LLM
 // for one batch of titles per level and reviews them; the server with no key

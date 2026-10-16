@@ -1,4 +1,3 @@
-import { expect, type Page, test } from "@playwright/test";
 import {
   box,
   clickCard,
@@ -12,6 +11,7 @@ import {
   panel,
   VIDEO,
 } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // The detail panel can be widened or narrowed by dragging the bar on its left
 // edge; the width stays for the next map.

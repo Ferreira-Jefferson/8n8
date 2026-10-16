@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import type { Graph } from "@8n8/model";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { resetFake } from "./fake-llm";
+import { LANE_PORT, laneDir, lanePort } from "./lane";
 
 // Helpers shared by the feature 05 specs (mapa-video, titulos, navegacao,
 // detalhe, sugestoes). Not a spec: Playwright only runs *.e2e.ts.
@@ -10,10 +11,10 @@ import { resetFake } from "./fake-llm";
 /** The server with no key (titles and summaries never come). */
 export const OFFLINE = `http://127.0.0.1:${process.env.E2E_PORT ?? 8148}`;
 /** The server with the real pipeline against the fake LLM (e2e/fake-llm.ts). */
-export const REAL = "http://127.0.0.1:4319";
+export const REAL = `http://127.0.0.1:${lanePort(LANE_PORT.real)}`;
 /** The cache dir of the REAL server, wiped before each test that uses it. */
 export const CACHE = fileURLToPath(
-  new URL("../.cache/e2e-real", import.meta.url),
+  new URL(`../.cache/${laneDir("e2e-real")}`, import.meta.url),
 );
 
 /** The video code (design, "Código do vídeo"). */

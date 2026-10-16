@@ -1,4 +1,3 @@
-import { expect, test } from "@playwright/test";
 import {
   canvas,
   css,
@@ -9,6 +8,7 @@ import {
   OFFLINE,
   VIDEO,
 } from "./mapa";
+import { expect, test } from "./test";
 
 // The 8n8 brand in the app (docs/design/manual-marca.html): name, logo, favicon and
 // the two themes, which follow the system's color scheme.

@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { expect, type Page, test } from "@playwright/test";
 import {
   ACCENT,
   box,
@@ -26,6 +25,7 @@ import {
   SECOND,
   VIDEO,
 } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // Feature 05, the look of the video and the editor (VID-01..05, 08, 09), on
 // the server with no key (8148): cards show provisional names.

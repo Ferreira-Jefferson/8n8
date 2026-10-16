@@ -1,8 +1,8 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, type Page, test } from "@playwright/test";
 import { canvas, css, generate, nodes, OFFLINE } from "./mapa";
+import { expect, type Page, test } from "./test";
 
 // The dependency wires (calls, extends, imports) on the real app, in the awkward
 // shapes: a function that calls itself, calls both ways, a cycle of three, a
