@@ -55,7 +55,7 @@ Durante o trabalho, rode só o teste ligado à mudança. Por exemplo, `pnpm e2e 
 
 ### Nota do Windows: `pnpm e2e` não termina
 
-No Windows, o Playwright encerra os servidores de teste com o comando `taskkill`. Se a pasta `C:\Windows\System32` não está no `PATH` do seu shell, o `taskkill` não é encontrado. Os testes passam, mas o `pnpm e2e` não termina, e a execução seguinte falha com "is already used" nas portas 4317 a 4320.
+No Windows, o Playwright encerra os servidores de teste com o comando `taskkill`. Se a pasta `C:\Windows\System32` não está no `PATH` do seu shell, o `taskkill` não é encontrado. Os testes passam, mas o `pnpm e2e` não termina, e a execução seguinte falha com "is already used" nas portas 8148 e 4318 a 4322.
 
 Inclua `System32` no `PATH`. Num shell Bash, por exemplo:
 

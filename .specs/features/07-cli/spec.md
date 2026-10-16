@@ -19,7 +19,7 @@ Num PowerShell novo, numa pasta qualquer fora do repositório, o usuário roda `
 | Provedor Claude Code | Feature 09. |
 | Extensão do VS Code | Feature 10. |
 | `vscode.lm`, Cursor, Grok, JetBrains, Neovim, MCP | Fora do uso do autor (AD-022). Ficam como pontos de extensão para a comunidade. |
-| Escolher outra porta sozinho quando a 4317 está ocupada | A mensagem de porta em uso e a variável `APP8N8_PORT` já resolvem. |
+| Escolher outra porta sozinho quando a 8148 está ocupada | A mensagem de porta em uso e a variável `APP8N8_PORT` já resolvem. |
 | Proteção de branch, CI obrigatório, CodeQL, Dependabot e `SECURITY.md` | Mexem nas configurações do GitHub, que são externas. Ficam numa feature de segurança do repositório, antes da abertura para a comunidade. Sem a proteção de branch, o `CODEOWNERS` (DIST-24) só aponta o revisor e não bloqueia o merge. |
 | Atualizar o mapa quando os arquivos mudam | O usuário roda o comando de novo (igual à 02). |
 
@@ -41,7 +41,7 @@ Num PowerShell novo, numa pasta qualquer fora do repositório, o usuário roda `
 | `pnpm dev` e `pnpm start` no repositório | Continuam lendo o `.env` da raiz do repositório, pela flag `--env-file-if-exists` do Node no script, sem código próprio para isso | Mantém o fluxo de desenvolvimento como está, sem um segundo caminho de config no código. | y |
 | Forma de instalar | `pnpm pack` gera o pacote, e `npm install -g <arquivo .tgz>` instala | Não precisa de registro. A publicação no npm fica para depois. | y |
 | Node mínimo da CLI | Node 22.13 | Primeira versão em que `node:sqlite` funciona sem flag (changelog oficial do módulo: v22.13.0 e v23.4.0). | y |
-| Porta | 4317, trocada por `APP8N8_PORT` (igual a hoje) | Sem mudança de comportamento. | y |
+| Porta | 8148, trocada por `APP8N8_PORT` (igual a hoje) | Sem mudança de comportamento. | y |
 | Abrir o navegador | Navegador padrão do sistema | O usuário trabalha com o navegador padrão. | y |
 
 **Open questions:** none. Todas foram resolvidas ou registradas acima.

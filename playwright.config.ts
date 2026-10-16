@@ -2,7 +2,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
-const URL = "http://127.0.0.1:4317";
+const URL = "http://127.0.0.1:8148";
 // Every test server runs with this session token, and every page request carries it (DIST-20).
 // Obviously fake and low entropy, so gitleaks does not take it for a secret.
 export const E2E_TOKEN = "e2e-session-token-not-a-secret-0000";
@@ -29,8 +29,15 @@ const SHARED_STATE = [
 // The panel starts minimized (8n8.panelOpen); the specs written before that open it.
 const PANEL_OPEN = {
   cookies: [],
-  origins: [4317, 4319, 4320, 4321, 4322, 4330].map((port) => ({
-    origin: `http://127.0.0.1:${port}`,
+  origins: [
+    ...[8148, 4319, 4320, 4321, 4322, 4330].map(
+      (port) => `http://127.0.0.1:${port}`,
+    ),
+    // The installed CLI prints 8n8.localhost, another origin for the same port.
+    "http://8n8.localhost:8148",
+    "http://8n8.localhost:4330",
+  ].map((origin) => ({
+    origin,
     localStorage: [{ name: "8n8.panelOpen", value: "1" }],
   })),
 };
@@ -157,7 +164,7 @@ export default defineConfig({
     },
     {
       // A keyless server of its own for historico.e2e.ts: that spec wipes and counts the
-      // history, so the maps other specs open on 4317 at the same time stay out of it.
+      // history, so the maps other specs open on 8148 at the same time stay out of it.
       command: "node apps/cli/dist/8n8.mjs --no-open",
       url: "http://127.0.0.1:4321",
       reuseExistingServer: false,

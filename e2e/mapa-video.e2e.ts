@@ -28,7 +28,7 @@ import {
 } from "./mapa";
 
 // Feature 05, the look of the video and the editor (VID-01..05, 08, 09), on
-// the server with no key (4317): cards show provisional names.
+// the server with no key (8148): cards show provisional names.
 
 const FIXTURE = fileURLToPath(
   new URL(
@@ -149,7 +149,7 @@ test.describe("O visual do vídeo", () => {
       await css(cardOf(page, PEDIDO).locator(".fn"), "font-family"),
     ).toMatch(/^"DM Mono"/);
     expect(fontHosts.length).toBeGreaterThan(0);
-    expect(new Set(fontHosts)).toEqual(new Set(["127.0.0.1:4317"]));
+    expect(new Set(fontHosts)).toEqual(new Set(["127.0.0.1:8148"]));
   });
 
   test("VID-03: each card has tag, title and code line in that order, with Petróleo round ports only where a wire is", async ({

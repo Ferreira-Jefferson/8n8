@@ -2,7 +2,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { listenOnLoopback } from "./listen";
-import { openBrowser } from "./open-browser";
+import { openUrl } from "./open-browser";
 import { run } from "./run";
 
 // The CLI run from the repository (pnpm dev): Vite serves the screen, and the PTS rules
@@ -20,5 +20,5 @@ process.exitCode = await run(process.argv.slice(2), {
   out: (line) => console.log(line),
   err: (line) => console.error(line),
   serve: listenOnLoopback,
-  openBrowser,
+  openBrowser: openUrl,
 });

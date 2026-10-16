@@ -88,10 +88,11 @@ npm install -g ./release/8n8-cli-0.0.1.tgz
 O pacote não tem dependências nem scripts de instalação: todo o código vai dentro dele. Depois, use o comando `8n8`:
 
 ```bash
-8n8 .              # abre o mapa da pasta atual no navegador
+8n8 .              # abre o mapa da pasta atual, numa janela própria (Chrome ou Edge)
 8n8 C:\projeto     # ou de qualquer pasta
 8n8                # abre a tela inicial
 8n8 --no-open      # sobe o servidor sem abrir o navegador
+8n8 --no-app       # abre numa aba do navegador padrão, em vez da janela própria
 8n8 --help         # mostra o uso e as variáveis
 ```
 
@@ -173,7 +174,7 @@ pnpm install
 pnpm dev
 ```
 
-O `pnpm dev` recarrega sozinho. Ele sobe o servidor (`pnpm dev:server`, porta 4317) e a tela (`pnpm dev:ui`, com o Vite). Abra o endereço que o Vite mostrar no terminal.
+O `pnpm dev` recarrega sozinho. Ele sobe o servidor (`pnpm dev:server`, porta 8148) e a tela (`pnpm dev:ui`, com o Vite). Abra o endereço que o Vite mostrar no terminal.
 
 Para usar sem recarga, construa a tela e suba tudo em um servidor só:
 
@@ -181,7 +182,7 @@ Para usar sem recarga, construa a tela e suba tudo em um servidor só:
 pnpm start
 ```
 
-Abra o endereço que o terminal mostrar (`http://127.0.0.1:4317/#t=...`). O `#t=` é o token da sessão. A porta muda com a variável `APP8N8_PORT`.
+Abra o endereço que o terminal mostrar (`http://8n8.localhost:8148/#t=...`). O `#t=` é o token da sessão. A porta muda com a variável `APP8N8_PORT`.
 
 ### Estrutura do repositório
 

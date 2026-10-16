@@ -172,10 +172,10 @@ O 8n8 ainda não tem código. O reuso vem do roadmap.
   - `createApp(deps: { extractor: Extractor; explain: (req: ExplainRequest) => Promise<ExplainResponse>; port: number }): Hono`: os testes chamam `app.request()` sem rede;
   - `POST /api/graph` `{ source: string }` → `200 { graph }`;
   - `POST /api/explain` `{ source: string; nodeId: string }` → `200 ExplainResponse`, `502` com `{ status: 'error' }`, `404` para nó desconhecido e `400` para um tipo de nó que não é `function` nem `class`;
-  - `main.ts`: carrega o `.env`, lê o PTS, cria o extrator, cria o cliente só se `OPENROUTER_API_KEY` existe e chama `serve({ fetch, port: 4317, hostname: '127.0.0.1' })`. Em modo `start`, serve `apps/ui/dist` como arquivos estáticos.
+  - `main.ts`: carrega o `.env`, lê o PTS, cria o extrator, cria o cliente só se `OPENROUTER_API_KEY` existe e chama `serve({ fetch, port: 8148, hostname: '127.0.0.1' })`. Em modo `start`, serve `apps/ui/dist` como arquivos estáticos.
 - **Regras**:
   - o corpo de cada requisição é validado com zod;
-  - um middleware recusa todo `Host` diferente de `127.0.0.1:4317` ou `localhost:4317`, contra DNS rebinding;
+  - um middleware recusa todo `Host` diferente de `127.0.0.1:8148` ou `localhost:8148`, contra DNS rebinding;
   - os vizinhos de um nó saem das arestas `calls` do grafo extraído pelo próprio servidor, nunca da web.
 - **Dependencies**: `@8n8/model`, `@8n8/extract-python`, `@8n8/explain`, `hono`, `@hono/node-server`, `zod`.
 - **ACs**: CORE-05 (o grafo não passa pelo explain), CORE-17 (o servidor monta o pedido), CORE-19 (cliente opcional), CORE-20 (502).
@@ -193,7 +193,7 @@ O 8n8 ainda não tem código. O reuso vem do roadmap.
   - `panel/DetailPanel.tsx`: mostra o intervalo de linhas e o `CodeView` do nó (CORE-14). Para `function` e `class`, busca a explicação ao abrir. Mostra o resumo, as entradas, as saídas e as sugestões. Para `no-key`, mostra "Configure OPENROUTER_API_KEY para ver resumos". Para `error`, mostra "Resumo indisponível" com o botão "Tentar de novo" (CORE-16, 19, 20);
   - `panel/CodeView.tsx`: um `<pre>` com o número de cada linha. Um clique numa sugestão marca a linha dela (CORE-24).
 - **Estado**: as explicações ficam num `Map<NodeId, Explanation>` na memória da sessão. O selo aparece depois que o nó tem explicação, seja do LLM ou do cache.
-- **Dependencies**: `@8n8/model` (só tipos), `react`, `react-dom`, `@xyflow/react`, `@dagrejs/dagre`. O Vite faz proxy de `/api` para `127.0.0.1:4317`.
+- **Dependencies**: `@8n8/model` (só tipos), `react`, `react-dom`, `@xyflow/react`, `@dagrejs/dagre`. O Vite faz proxy de `/api` para `127.0.0.1:8148`.
 - **ACs**: CORE-01..03 e CORE-07 (desenho), CORE-08..15, CORE-19, 20, 23, 24 (interface).
 
 ---
@@ -305,7 +305,7 @@ interface CacheEntry {
 | Arquivo de cache corrompido | `get` trata como ausente e o novo resultado sobrescreve o arquivo. | Nada. |
 | Falha ao gravar o cache | Registra no console e retorna o resultado. | Nada. A próxima abertura chama o LLM de novo. |
 | Wasm da gramática ausente | `createPythonExtractor` rejeita, e o `main` termina com uma mensagem clara. | O servidor não sobe. |
-| Porta 4317 ocupada | `EADDRINUSE` → termina com uma mensagem. | O servidor não sobe. |
+| Porta 8148 ocupada | `EADDRINUSE` → termina com uma mensagem. | O servidor não sobe. |
 | `Host` estranho | `403`. | Nada (é proteção). |
 
 ---
@@ -360,7 +360,7 @@ A fixture do vídeo precisa ter:
 | Lint e fronteiras | `@biomejs/biome` 2.5.15 + `dependency-cruiser` 18.6.0 | O Biome cobre o estilo. O dependency-cruiser cobre a direção dos pacotes (AD-005). |
 | Execução do TS | `tsx` 4.23.15 | Os pacotes exportam o fonte, igual ao roadmap. |
 | Versão do prompt | hash do prompt de sistema montado | Mudar o PTS ou o template invalida o cache sem trabalho manual. |
-| Porta | fixa em 4317 | Nenhuma configuração foi pedida. |
+| Porta | fixa em 8148 | Nenhuma configuração foi pedida. |
 
 **Incertos**: as regras do `dependency-cruiser` 18 (sintaxe vista em versões anteriores, não checada nesta) e o peer do `@testing-library/react` 16.3.3 com React 19.3. As duas checagens ficam para a primeira task.
 

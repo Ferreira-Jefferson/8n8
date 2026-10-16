@@ -54,16 +54,16 @@ describe("the extension build (VSC-07)", () => {
       ptsRules: "regras",
       cacheDir: join(out, "cache"),
       historyFile: undefined,
-      port: 4317,
+      port: 8148,
       token,
       settings: { read: async () => ({}), write: async () => {} },
     });
     const graph = async (source: string) => {
       const res = await app.fetch(
-        new Request("http://127.0.0.1:4317/api/graph", {
+        new Request("http://127.0.0.1:8148/api/graph", {
           method: "POST",
           headers: {
-            host: "127.0.0.1:4317",
+            host: "127.0.0.1:8148",
             "x-8n8-token": token,
             "content-type": "application/json",
           },

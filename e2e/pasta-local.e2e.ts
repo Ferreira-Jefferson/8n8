@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import type { ProjectResponse } from "@8n8/model";
 import { expect, type Page, test } from "@playwright/test";
 
-// Feature 02-pasta-local, end to end: real build, real server on 4317 with no key,
+// Feature 02-pasta-local, end to end: real build, real server on 8148 with no key,
 // real disk. The committed projeto-loja fixture is copied to a temp folder, plus
 // what git does not keep: ignored folders, a file over 1 MB and a latin-1 file.
 // Feature 05: one click opens a node, and cards show a tag and a provisional name.
@@ -466,7 +466,7 @@ test.describe("Pasta local", () => {
       .find((a) => a !== undefined && a.family === "IPv4" && !a.internal);
     test.skip(ipv4 === undefined, "sem IPv4 externo");
     const outcome = await new Promise<string>((resolve) => {
-      const socket = connect({ host: ipv4?.address, port: 4317 });
+      const socket = connect({ host: ipv4?.address, port: 8148 });
       socket.on("connect", () => {
         socket.destroy();
         resolve("connected");

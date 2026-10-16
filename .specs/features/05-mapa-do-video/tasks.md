@@ -1303,7 +1303,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 ### T43: E2E do visual e do editor
 
-**What**: Criar `e2e/mapa-video.e2e.ts` com os testes de VID-01, 02, 03, 04, 05, 08 e 09, no servidor sem chave (4317).
+**What**: Criar `e2e/mapa-video.e2e.ts` com os testes de VID-01, 02, 03, 04, 05, 08 e 09, no servidor sem chave (8148).
 **Where**: `e2e/mapa-video.e2e.ts` (novo)
 **Depends on**: None
 **Reuses**: os helpers de `fatia-central.e2e.ts`; o fixture `pedido_video.py`
@@ -1314,7 +1314,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 **Done when**:
 
 - [x] VID-01: `.canvas` tem `background-color` `rgb(18, 17, 16)` e `background-size` `40px 40px`. Um título de cartão tem cor `rgb(245, 242, 236)`, um `.fn` tem `rgb(168, 163, 153)` e um `.open-mark` tem `rgb(212, 255, 63)`.
-- [x] VID-02: `document.fonts.check` é verdadeiro para `"Archivo Black"`, `"Space Grotesk"` e `"DM Mono"`. O `h2` do painel usa Archivo Black, o cartão usa Space Grotesk e o `.fn` usa DM Mono. Todo pedido `.woff2` vai para `127.0.0.1:4317`.
+- [x] VID-02: `document.fonts.check` é verdadeiro para `"Archivo Black"`, `"Space Grotesk"` e `"DM Mono"`. O `h2` do painel usa Archivo Black, o cartão usa Space Grotesk e o `.fn` usa DM Mono. Todo pedido `.woff2` vai para `127.0.0.1:8148`.
 - [x] VID-03: cada cartão tem `.tag`, `.name` e `.fn` nessa ordem. O GATILHO tem só a porta de saída, o último só a de entrada, e as portas são círculos `rgb(212, 255, 63)`.
 - [x] VID-04: o código de etiquetas do design (GATILHO, FUNÇÃO, HTTP, BANCO, DISCO, E-MAIL, EXTERNO, SE, LAÇO, BLOCO, CÓDIGO, RETORNO), mais o projeto `projeto-loja` (PASTA, ARQUIVO), mostra cada uma das 14 etiquetas. Nenhum cartão mostra outra.
 - [x] VID-05: cada `.wire` tem `stroke` `rgb(212, 255, 63)` e `stroke-width` `4px`, com um path curvo (`C`).
@@ -1360,7 +1360,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 ### T45: E2E dos títulos
 
-**What**: Criar `e2e/titulos.e2e.ts` com os testes de VID-14, 15, 16 e 17, no servidor com o LLM falso (4319) e no servidor sem chave (4317).
+**What**: Criar `e2e/titulos.e2e.ts` com os testes de VID-14, 15, 16 e 17, no servidor com o LLM falso (4319) e no servidor sem chave (8148).
 **Where**: `e2e/titulos.e2e.ts` (novo)
 **Depends on**: None
 **Reuses**: `fakeLog`, `resetFake`, a limpeza de cache de `cache.e2e.ts`
@@ -1371,7 +1371,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 **Done when**:
 
 - [x] VID-14: no código do vídeo, um pedido `title` com os 8 nós e um `title-review` acontecem depois de "Gerar mapa", e os cartões mostram "Pedido recebido", "Calcular frete", "Salvar no banco" e "Enviar e-mail". Abrir "Calcular frete" faz mais um pedido `title` com os 5 nós. "Registrar a mensagem no log do sistema" (7 palavras) não aparece, e o cartão mostra "Registrar log".
-- [x] VID-15: no 4317 (sem chave), os cartões mostram "Processar pedido", "Calcular frete", "Salvar" e "Enviar email". Com `def falha_titulo`, o cartão mostra "Falha titulo" e o mapa continua.
+- [x] VID-15: no 8148 (sem chave), os cartões mostram "Processar pedido", "Calcular frete", "Salvar" e "Enviar email". Com `def falha_titulo`, o cartão mostra "Falha titulo" e o mapa continua.
 - [x] VID-16: "Aplicar desconto no total" não aparece, e o cartão mostra "Aplicar desconto".
 - [x] VID-17: gerar o mapa de novo faz 0 pedidos `title`. O arquivo em `.cache/e2e-real/titles/` tem os 6 componentes da impressão digital. Mudar o código de `enviar_email` (linha 13) gera um pedido `title` com esse nó e o GATILHO `processar_pedido`: o código do GATILHO (linhas 6 a 14) contém a linha 13 e, pela VID-17, a impressão digital dele também muda. Os outros 6 nós vêm do cache.
 - [x] Gate passa.
@@ -1386,7 +1386,7 @@ Cada teste novo tem no nome os IDs que cobre, por exemplo `VID-10/11: …`.
 
 ### T46: E2E da navegação
 
-**What**: Criar `e2e/navegacao.e2e.ts` com os testes de VID-18 a 27 e a borda da recursão, no servidor com o LLM falso (4319). Os testes rodaram no servidor sem chave (4317) até a correção do bug do canvas em branco e voltaram ao 4319 depois dela.
+**What**: Criar `e2e/navegacao.e2e.ts` com os testes de VID-18 a 27 e a borda da recursão, no servidor com o LLM falso (4319). Os testes rodaram no servidor sem chave (8148) até a correção do bug do canvas em branco e voltaram ao 4319 depois dela.
 **Where**: `e2e/navegacao.e2e.ts` (novo)
 **Depends on**: None
 **Reuses**: os helpers de T43

@@ -33,14 +33,14 @@ function setup(reply: ExplainResponse<unknown>, part: ExplainPart = "summary") {
     },
     titles: async () => ({ status: "ok", titles: [] }),
     readProject: async () => ({ kind: "not-found" }),
-    port: 4317,
+    port: 8148,
     token: TEST_TOKEN,
   });
   const post = (body: unknown) =>
     app.request(`/api/${part}`, {
       method: "POST",
       headers: {
-        host: "127.0.0.1:4317",
+        host: "127.0.0.1:8148",
         "x-8n8-token": TEST_TOKEN,
         "content-type": "application/json",
       },
@@ -282,7 +282,7 @@ describe("POST /api/summary (the request built on the server)", () => {
           ignored: [],
         },
       }),
-      port: 4317,
+      port: 8148,
       token: TEST_TOKEN,
     });
     const graph = buildProject(files, [pythonPlugin]);
@@ -294,7 +294,7 @@ describe("POST /api/summary (the request built on the server)", () => {
       const res = await app.request("/api/summary", {
         method: "POST",
         headers: {
-          host: "127.0.0.1:4317",
+          host: "127.0.0.1:8148",
           "x-8n8-token": TEST_TOKEN,
           "content-type": "application/json",
         },

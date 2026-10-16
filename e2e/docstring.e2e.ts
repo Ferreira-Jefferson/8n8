@@ -14,7 +14,7 @@ import {
 // Docstring: the model sees the code with the docstring masked; a docstring the
 // answer calls false becomes a suggestion on the docstring's first line. Only the
 // suggestions request gets the docstring block; the summary never sees it (CFG-03). Keyed
-// server (4319) with the fake LLM; the module card case runs with no key (4317).
+// server (4319) with the fake LLM; the module card case runs with no key (8148).
 
 const LIE = '    """Soma os preços dos itens."""';
 const BODY = "    n = len(itens)\n    print(n)\n    return n\n";

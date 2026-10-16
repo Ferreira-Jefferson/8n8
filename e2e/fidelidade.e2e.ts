@@ -11,7 +11,7 @@ import { type FakeCall, fakeLog, resetFake } from "./fake-llm";
 // drafts and reviews (D2).
 
 const REAL = "http://127.0.0.1:4319";
-const OFFLINE = "http://127.0.0.1:4317";
+const OFFLINE = "http://127.0.0.1:8148";
 const CACHE = fileURLToPath(new URL("../.cache/e2e-real", import.meta.url));
 /** Keyed server with no model set (CORE-21). */
 const DEFAULT_MODEL_SERVER = "http://127.0.0.1:4320";

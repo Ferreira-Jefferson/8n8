@@ -45,12 +45,12 @@ function setup(reply: TitlesResponse = { status: "ok", titles: [] }) {
             },
           }
         : { kind: "not-found" },
-    port: 4317,
+    port: 8148,
     token: TEST_TOKEN,
   });
   const post = (
     body: unknown,
-    { host = "127.0.0.1:4317", type = "application/json" } = {},
+    { host = "127.0.0.1:8148", type = "application/json" } = {},
   ) =>
     app.request("/api/titles", {
       method: "POST",
@@ -237,7 +237,7 @@ describe("POST /api/titles (VID-14)", () => {
     const { received, post } = setup();
     const res = await post(
       { source: fixture, nodeIds: ["fn:calcular_frete"] },
-      { host: "evil.example:4317" },
+      { host: "evil.example:8148" },
     );
     expect(res.status).toBe(403);
     expect(received).toEqual([]);

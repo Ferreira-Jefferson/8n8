@@ -511,17 +511,17 @@ T24 → T26
 
 ### T15: Porta configurável (`APP8N8_PORT`)
 
-**What**: Exportar `resolvePort(env)` de `main.ts` (`APP8N8_PORT` inteiro válido ou `4317`) e usá-lo no `serve`, no `createApp({ port })` e na mensagem de início. O E2E sobe um segundo servidor, com chave falsa, na 4319.
+**What**: Exportar `resolvePort(env)` de `main.ts` (`APP8N8_PORT` inteiro válido ou `8148`) e usá-lo no `serve`, no `createApp({ port })` e na mensagem de início. O E2E sobe um segundo servidor, com chave falsa, na 4319.
 **Where**: `packages/server/src/main.ts`
 **Depends on**: T14
 **Reuses**: a constante `PORT` atual vira o padrão
-**Requirement**: base do E2E com LLM falso (o servidor sem chave da feature 01 continua na 4317)
+**Requirement**: base do E2E com LLM falso (o servidor sem chave da feature 01 continua na 8148)
 
 **Tools**: MCP NONE · Skill NONE
 
 **Done when**:
 
-- [x] Sem a variável ou vazia → `4317`; `"4319"` → `4319`; `"abc"` → `4317`.
+- [x] Sem a variável ou vazia → `8148`; `"4319"` → `4319`; `"abc"` → `8148`.
 - [x] A guarda de `Host` usa a porta resolvida (o teste de `host-guard.test.ts` da feature 01 passa sem mudança).
 - [x] Gate parcial da fase 4 passa.
 
@@ -760,7 +760,7 @@ Roteiro, decidido pelo conteúdo do pedido:
 
 ### T24: Playwright com três servidores
 
-**What**: Trocar `webServer` por uma lista: (1) LLM falso `tsx e2e/fake-llm.ts`, url `http://127.0.0.1:4318/__log`; (2) o servidor sem chave da feature 01 (`pnpm start`, 4317), agora com `APP8N8_CACHE_DIR=<repo>/.cache/e2e-offline`; (3) o servidor com o pipeline real, `tsx packages/server/src/main.ts start`, url `http://127.0.0.1:4319`, com `APP8N8_PORT=4319`, `OPENROUTER_API_KEY=e2e-fake-key`, `OPENROUTER_BASE_URL=http://127.0.0.1:4318/v1`, `APP8N8_MODEL=e2e/drafter`, `APP8N8_REVIEW_MODEL=e2e/reviewer` e `APP8N8_CACHE_DIR=<repo>/.cache/e2e-real`. Todos com `reuseExistingServer: false`.
+**What**: Trocar `webServer` por uma lista: (1) LLM falso `tsx e2e/fake-llm.ts`, url `http://127.0.0.1:4318/__log`; (2) o servidor sem chave da feature 01 (`pnpm start`, 8148), agora com `APP8N8_CACHE_DIR=<repo>/.cache/e2e-offline`; (3) o servidor com o pipeline real, `tsx packages/server/src/main.ts start`, url `http://127.0.0.1:4319`, com `APP8N8_PORT=4319`, `OPENROUTER_API_KEY=e2e-fake-key`, `OPENROUTER_BASE_URL=http://127.0.0.1:4318/v1`, `APP8N8_MODEL=e2e/drafter`, `APP8N8_REVIEW_MODEL=e2e/reviewer` e `APP8N8_CACHE_DIR=<repo>/.cache/e2e-real`. Todos com `reuseExistingServer: false`.
 **Where**: `playwright.config.ts`
 **Depends on**: T23
 **Reuses**: a config atual
@@ -786,7 +786,7 @@ Roteiro, decidido pelo conteúdo do pedido:
 
 ### T25: Spec E2E da história P1 (fidelidade)
 
-**What**: Criar `e2e/fidelidade.e2e.ts` contra o servidor 4319 (pipeline real + LLM falso), com `resetFake()` e remoção de `.cache/e2e-real` em cada `beforeEach`. O teste de efeitos sem LLM usa o servidor 4317.
+**What**: Criar `e2e/fidelidade.e2e.ts` contra o servidor 4319 (pipeline real + LLM falso), com `resetFake()` e remoção de `.cache/e2e-real` em cada `beforeEach`. O teste de efeitos sem LLM usa o servidor 8148.
 **Where**: `e2e/fidelidade.e2e.ts`
 **Depends on**: T24
 **Reuses**: `fakeLog`/`resetFake` (T23), os seletores do design, a fixture `pedido_frete.py`
@@ -799,7 +799,7 @@ Roteiro, decidido pelo conteúdo do pedido:
 - [x] FID-02/03/08/09, corte do "5 kg": trecho `def pesar_caixa(caixa):\n    return caixa.peso\n`; abrir `fn:pesar_caixa` mostra "Revisado com cortes"; a lista "Resumo" tem exatamente "Devolve o peso da caixa."; o painel não contém "5 kg"; `fakeLog()` tem 3 `draft` e 3 `review`; o 2º e o 3º `draft` têm uma mensagem `assistant` e um `user` que começa com "Problemas encontrados:" e cita `s2`; nenhum `review` contém "pesa 5 kg".
 - [x] FID-11/12/13/15/06, rascunho fiel: trecho `pedido_frete.py`; abrir `fn:calcular_frete` mostra exatamente "Revisado"; `[data-claim-id="s1"]` tem o botão `L5` e `[data-claim-id="s2"]` o botão `L8–9`; o clique em `L8–9` deixa exatamente as linhas 8 e 9 com `aria-current="true"`; a saída `o1` mostra `L9, L11`; o botão da sugestão é "Guardar a tabela de frete em cache (linha 5, media)"; `fakeLog()` tem 1 `draft` com modelo `e2e/drafter` e 1 `review` com modelo `e2e/reviewer`; o pedido `review` contém `processar_pedido` e não contém `Nó:` nem a primeira linha de `docs/portugues-tecnico-simplificado.md`.
 - [x] FID-14, efeitos: no mesmo teste fiel, a lista "Efeitos externos" tem exatamente `requests.get (HTTP, linha 5)`; `processar_pedido` mostra "Nenhum efeito externo.".
-- [x] FID-14 sem LLM: no servidor 4317 (sem chave), abrir `calcular_frete` mostra "Configure OPENROUTER_API_KEY para ver resumos" e a lista com `requests.get (HTTP, linha 5)`; `fakeLog()` continua vazio.
+- [x] FID-14 sem LLM: no servidor 8148 (sem chave), abrir `calcular_frete` mostra "Configure OPENROUTER_API_KEY para ver resumos" e a lista com `requests.get (HTTP, linha 5)`; `fakeLog()` continua vazio.
 - [x] FID-10/01: trecho `def esperar(fila):\n    return fila.pop()\n`; abrir `fn:esperar` mostra "Não foi possível gerar um resumo fiel." e "Tentar de novo", sem selo; `fakeLog()` tem 3 `draft` e 0 `review`; o clique em "Tentar de novo" leva a 6 `draft` (nada foi para o cache) e a pasta `.cache/e2e-real/nodes` não tem arquivo `.json`.
 - [x] Gate passa: `pnpm e2e`.
 
@@ -882,7 +882,7 @@ Roteiro, decidido pelo conteúdo do pedido:
 | `apps/ui/src/panel/__tests__/DetailPanel.test.tsx` | T20 | `Claim[]`, resumo em `<ol>` | CORE-14, 16, 19, 20, 24, `stale`, `onExplained` |
 | `apps/ui/src/__tests__/App.test.tsx` | T20 (movido de T21) | Fixtures em `Claim[]` | CORE-23 e o resto |
 | `e2e/fatia-central.e2e.ts` | T22 | Contrato e DOM novos | Os 14 testes, com as mesmas contagens de chamadas e linhas |
-| `playwright.config.ts` | T24 | Três servidores, cache isolado | O servidor sem chave da feature 01 continua igual na 4317 |
+| `playwright.config.ts` | T24 | Três servidores, cache isolado | O servidor sem chave da feature 01 continua igual na 8148 |
 
 Sem mudança: `prompt.test.ts`, `model-env.test.ts`, `openrouter.test.ts` e `host-guard.test.ts` só ganham testes ou nada.
 
@@ -1003,6 +1003,6 @@ Só as dependências dentro da mesma fase têm seta; as de fases anteriores são
 ## Open Points for Approval
 
 - A spec ("Validação E2E") e o design (seção "E2E") preveem `/api/explain` interceptado. Estas tasks usam o pipeline real com um LLM falso, por pedido do usuário. As duas linhas devem ser atualizadas na spec e no design.
-- `APP8N8_PORT` (T15) não está no design. Ele é necessário para manter o servidor sem chave da feature 01 na 4317 e subir o servidor com chave na 4319.
+- `APP8N8_PORT` (T15) não está no design. Ele é necessário para manter o servidor sem chave da feature 01 na 8148 e subir o servidor com chave na 4319.
 - O formato `- <id>: <texto>` de `reviewerMessage` (T9) vira contrato com o LLM falso (T23). Se o formato mudar, T23 muda junto.
 - Tools: nenhuma MCP ou skill é necessária além do `tlc-spec-driven`. Confirmar antes do Execute.

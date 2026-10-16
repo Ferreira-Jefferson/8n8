@@ -7,10 +7,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // changeOrigin rewrites Host to 127.0.0.1:4317; the server refuses any other Host.
+      // changeOrigin rewrites Host to 127.0.0.1:8148; the server refuses any other Host.
       // scripts/dev.mjs gives the server and this proxy the same session token (DIST-20).
       "/api": {
-        target: "http://127.0.0.1:4317",
+        target: "http://127.0.0.1:8148",
         changeOrigin: true,
         headers: { "x-8n8-token": process.env.APP8N8_TOKEN ?? "" },
       },

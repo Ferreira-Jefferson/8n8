@@ -1042,7 +1042,7 @@ T48 → T49
 
 ### T34: `createApp` com guarda de `Host`
 
-**What**: Implementar `createApp(deps)` com um middleware que recusa com `403` todo `Host` diferente de `127.0.0.1:4317` e `localhost:4317`, sem CORS.
+**What**: Implementar `createApp(deps)` com um middleware que recusa com `403` todo `Host` diferente de `127.0.0.1:8148` e `localhost:8148`, sem CORS.
 **Where**: `packages/server/src/app.ts`
 **Depends on**: T33
 **Requirement**: AD-007 (base de CORE-17 e CORE-19: a chave não sai do servidor)
@@ -1053,8 +1053,8 @@ T48 → T49
 
 **Done when**:
 
-- [x] Teste: `Host: evil.example:4317` → `403`.
-- [x] Teste: `Host: 127.0.0.1:4317` e `Host: localhost:4317` passam pela guarda (a resposta não é `403`).
+- [x] Teste: `Host: evil.example:8148` → `403`.
+- [x] Teste: `Host: 127.0.0.1:8148` e `Host: localhost:8148` passam pela guarda (a resposta não é `403`).
 - [x] Teste: `Host: localhost:9999` → `403`.
 - [x] Teste: nenhuma resposta traz `Access-Control-Allow-Origin`.
 - [x] Gate passa. Test count: ≥ 4 testes.
@@ -1131,7 +1131,7 @@ T48 → T49
 
 ### T37: Composição em `main.ts`
 
-**What**: Implementar `main.ts`: carrega o `.env` com `process.loadEnvFile()` dentro de `try`, lê o PTS, cria o extrator, cria o cliente só se `OPENROUTER_API_KEY` existe, liga `explainNode` com `resolveModel` e o cache em `<repo>/.cache/explain`, e chama `serve` em `127.0.0.1:4317`. Em modo `start`, serve `apps/ui/dist`. A parte de montagem fica numa função exportada `composeExplain(env, deps)` para teste.
+**What**: Implementar `main.ts`: carrega o `.env` com `process.loadEnvFile()` dentro de `try`, lê o PTS, cria o extrator, cria o cliente só se `OPENROUTER_API_KEY` existe, liga `explainNode` com `resolveModel` e o cache em `<repo>/.cache/explain`, e chama `serve` em `127.0.0.1:8148`. Em modo `start`, serve `apps/ui/dist`. A parte de montagem fica numa função exportada `composeExplain(env, deps)` para teste.
 **Where**: `packages/server/src/main.ts`
 **Depends on**: T36
 **Requirement**: CORE-19, CORE-21
@@ -1146,7 +1146,7 @@ T48 → T49
 - [x] Teste: com a chave, a fábrica é chamada uma vez com ela.
 - [x] Teste (CORE-21): com `APP8N8_MODEL=x/y`, o cliente falso recebe `model: 'x/y'`; sem a variável, recebe o padrão.
 - [x] Teste: o prompt de sistema enviado contém o texto do `docs/portugues-tecnico-simplificado.md` lido do disco.
-- [x] Checagem manual: `pnpm --filter @8n8/server exec tsx src/main.ts` sobe em `127.0.0.1:4317`; com a porta ocupada, termina com uma mensagem clara.
+- [x] Checagem manual: `pnpm --filter @8n8/server exec tsx src/main.ts` sobe em `127.0.0.1:8148`; com a porta ocupada, termina com uma mensagem clara.
 - [x] Gate passa. Test count: ≥ 4 testes novos.
 
 **Tests**: unit
@@ -1162,7 +1162,7 @@ T48 → T49
 
 ### T38: Scaffold da web
 
-**What**: Criar `apps/ui` com package.json, `index.html`, `vite.config.ts` (proxy de `/api` para `127.0.0.1:4317`), vitest.config com `jsdom`, tsconfig e `src/main.tsx` mínimo.
+**What**: Criar `apps/ui` com package.json, `index.html`, `vite.config.ts` (proxy de `/api` para `127.0.0.1:8148`), vitest.config com `jsdom`, tsconfig e `src/main.tsx` mínimo.
 **Where**: `apps/ui/package.json`, `apps/ui/index.html`, `apps/ui/vite.config.ts`, `apps/ui/vitest.config.ts`, `apps/ui/tsconfig.json`, `apps/ui/src/main.tsx`
 **Depends on**: T6, T13
 **Requirement**: base de CORE-01..15, CORE-19, CORE-20, CORE-23, CORE-24
@@ -1481,7 +1481,7 @@ T48 → T49
 
 **Done when**:
 
-- [x] `pnpm start` sobe em `http://127.0.0.1:4317`.
+- [x] `pnpm start` sobe em `http://127.0.0.1:8148`.
 - [x] Sem `.env`: o mapa funciona e o painel mostra "Configure OPENROUTER_API_KEY para ver resumos".
 - [x] Com o `.env` que o orquestrador criou fora do git: o Independent Test passa nos 5 pontos. O ponto 5 é conferido pelo arquivo novo em `.cache/explain/` e por `fromCache: true` na segunda resposta.
 - [x] `git status` não mostra `.env` nem `.cache/`.

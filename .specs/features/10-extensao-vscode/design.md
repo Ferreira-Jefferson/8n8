@@ -52,7 +52,7 @@ graph LR
 
 - `package.json`: manifesto (`main: dist/extension.cjs`, `engines.vscode: ^1.138.0`, comando `8n8.abrirMapa`, menu do Explorer em pastas), scripts `build`, `test`, `test:integration`, `package`.
 - `src/store.ts`: `createVscodeSettingsStore(secrets, memento)`: a chave no `SecretStorage` (`8n8.apiKey`), o resto no `globalState` (`8n8.settings`).
-- `src/bridge.ts`: `createBridge(app, token)`: `handle(message)` valida (VSC-10), monta o `Request` com `host: 127.0.0.1:4317` e `x-8n8-token`, chama `app.fetch` e devolve `{id, status, body}`.
+- `src/bridge.ts`: `createBridge(app, token)`: `handle(message)` valida (VSC-10), monta o `Request` com `host: 127.0.0.1:8148` e `x-8n8-token`, chama `app.fetch` e devolve `{id, status, body}`.
 - `src/webview-html.ts`: `webviewHtml(indexHtml, {baseUri, cspSource, nonce, folder})`: tira `crossorigin`, põe `nonce` nos `<script>`, a `<base href>`, a CSP e as `<meta>` de host e pasta.
 - `src/extension.ts`: `activate` registra o comando; cria o núcleo na primeira vez; cria ou reusa o painel; liga a ponte; devolve uma API de teste (`{ ready, calls }`) para o teste de integração.
 - `src/build.ts`: esbuild (CJS, `external: ["vscode"]`), gramáticas, tela e PTS em `dist/`.

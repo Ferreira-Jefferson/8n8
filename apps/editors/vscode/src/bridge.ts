@@ -1,5 +1,5 @@
 /** The Host the core's guard accepts; createCore gets this port (VSC-11). */
-export const BRIDGE_PORT = 4317;
+export const BRIDGE_PORT = 8148;
 export const BRIDGE_HOST = `127.0.0.1:${BRIDGE_PORT}`;
 
 const METHODS = new Set(["GET", "POST", "PUT", "DELETE"]);

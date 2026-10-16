@@ -26,10 +26,10 @@ function setup(read: ProjectRead) {
       paths.push(path);
       return read;
     },
-    port: 4317,
+    port: 8148,
     token: TEST_TOKEN,
   });
-  const post = (body: unknown, host = "127.0.0.1:4317") =>
+  const post = (body: unknown, host = "127.0.0.1:8148") =>
     app.request("/api/project", {
       method: "POST",
       headers: {
@@ -73,7 +73,7 @@ describe("POST /api/project", () => {
 
   it("refuses a foreign Host with 403 and does not run readProject (PROJ-08)", async () => {
     const { paths, post } = setup({ kind: "ok", root: "/x", response });
-    const res = await post({ path: "." }, "evil.example:4317");
+    const res = await post({ path: "." }, "evil.example:8148");
     expect(res.status).toBe(403);
     expect(paths).toEqual([]);
   });
@@ -121,14 +121,14 @@ function explainSetup(files: SourceFile[], root = WIN_ROOT) {
             },
           }
         : { kind: "not-found" },
-    port: 4317,
+    port: 8148,
     token: TEST_TOKEN,
   });
   const post = (body: unknown) =>
     app.request("/api/summary", {
       method: "POST",
       headers: {
-        host: "127.0.0.1:4317",
+        host: "127.0.0.1:8148",
         "x-8n8-token": TEST_TOKEN,
         "content-type": "application/json",
       },

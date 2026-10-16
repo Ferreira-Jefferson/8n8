@@ -1,8 +1,8 @@
 import { EventEmitter } from "node:events";
 import { describe, expect, it } from "vitest";
-import { openBrowser } from "../open-browser";
+import { appBrowserPaths, openBrowser, openUrl } from "../open-browser";
 
-const URL = "http://127.0.0.1:4317/#t=abc&pasta=C%3A%5Cproj";
+const URL = "http://127.0.0.1:8148/#t=abc&pasta=C%3A%5Cproj";
 
 /** A spawn stand-in that records the call and returns a child that can fail. */
 function recorder() {
@@ -47,4 +47,92 @@ describe("openBrowser (DIST-01)", () => {
       r.child.emit("error", new Error("spawn xdg-open ENOENT")),
     ).not.toThrow();
   });
+});
+
+describe("openUrl: a window of its own for the app", () => {
+  const ENV = {
+    ProgramFiles: "C:\\Program Files",
+    "ProgramFiles(x86)": "C:\\Program Files (x86)",
+    LOCALAPPDATA: "C:\\Users\\u\\AppData\\Local",
+  };
+  const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+  const EDGE =
+    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+
+  it("runs the browser found with --app=<url> as one argument and no shell", () => {
+    const r = recorder();
+    openUrl(URL, true, {
+      spawn: r.spawn,
+      platform: "win32",
+      env: ENV,
+      exists: (path) => path === EDGE,
+    });
+    expect(r.calls).toHaveLength(1);
+    expect(r.calls[0]?.command).toBe(EDGE);
+    expect(r.calls[0]?.args).toEqual([`--app=${URL}`]);
+    expect(r.calls[0]?.options).not.toHaveProperty("shell", true);
+  });
+
+  it("prefers Chrome to Edge when both exist", () => {
+    const r = recorder();
+    openUrl(URL, true, {
+      spawn: r.spawn,
+      platform: "win32",
+      env: ENV,
+      exists: () => true,
+    });
+    expect(r.calls[0]?.command).toBe(CHROME);
+  });
+
+  it("opens the default browser when neither Chrome nor Edge is installed", () => {
+    const r = recorder();
+    openUrl(URL, true, {
+      spawn: r.spawn,
+      platform: "linux",
+      env: {},
+      exists: () => false,
+    });
+    expect(r.calls).toEqual([
+      expect.objectContaining({ command: "xdg-open", args: [URL] }),
+    ]);
+  });
+
+  it("opens the default browser, whatever is installed, when the app window is off", () => {
+    const r = recorder();
+    openUrl(URL, false, {
+      spawn: r.spawn,
+      platform: "win32",
+      env: ENV,
+      exists: () => true,
+    });
+    expect(r.calls).toEqual([
+      expect.objectContaining({
+        command: "rundll32",
+        args: ["url.dll,FileProtocolHandler", URL],
+      }),
+    ]);
+  });
+
+  it("falls back to the default browser when the browser fails to start", () => {
+    const r = recorder();
+    openUrl(URL, true, {
+      spawn: r.spawn,
+      platform: "darwin",
+      env: {},
+      exists: () => true,
+    });
+    expect(r.calls).toHaveLength(1);
+    r.child.emit("error", new Error("spawn ENOENT"));
+    expect(r.calls).toHaveLength(2);
+    expect(r.calls[1]).toMatchObject({ command: "open", args: [URL] });
+  });
+
+  it.each(["win32", "darwin", "linux"] as const)(
+    "lists only absolute paths on %s",
+    (platform) => {
+      const paths = appBrowserPaths(platform, ENV);
+      expect(paths.length).toBeGreaterThan(0);
+      for (const path of paths) expect(path).toMatch(/^([A-Za-z]:\\|\/)/);
+    },
+  );
 });

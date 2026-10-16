@@ -194,7 +194,7 @@ test.afterAll(() => {
 test("DIST-12, DIST-01: the installed 8n8 prints an address that opens the folder's map, with the fragment's token alone", async ({
   page,
 }) => {
-  expect(url).toMatch(/^http:\/\/127\.0\.0\.1:4330\/#t=[0-9a-f]{64}&pasta=/);
+  expect(url).toMatch(/^http:\/\/8n8\.localhost:4330\/#t=[0-9a-f]{64}&pasta=/);
   await page.goto(url);
   await expectLevel(page, [
     "dir:frete",
@@ -253,7 +253,7 @@ test("DIST-06: a second 8n8 on the same port prints the port message and exits 1
 
 test("DIST-22: no run of the installed CLI prints the API key, whole or by its start", () => {
   // The server run, --help, the missing folder and the busy port all printed something.
-  expect(terminal).toContain("8n8 em http://127.0.0.1:4330/");
+  expect(terminal).toContain("8n8 em http://8n8.localhost:4330/");
   expect(terminal).toContain("Pasta não encontrada:");
   expect(terminal).not.toContain("e2e-fake-key");
   expect(terminal).not.toContain("e2e-fa");

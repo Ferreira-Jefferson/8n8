@@ -204,7 +204,7 @@ loja/
   legado/frete_antigo.py  def calcular_frete (mesmo nome)
 ```
 
-**E2E** (`e2e/pasta-local.e2e.ts`, servidor 4317 sem chave). O `beforeAll` copia a fixture para `os.tmpdir()` e acrescenta o que o git não guarda ou não deve guardar: `.venv/lib/x.py`, `dist/y.py`, `grande.py` (1,1 MB) e `latin1.py` (byte `0xE9`). Cada item é um teste:
+**E2E** (`e2e/pasta-local.e2e.ts`, servidor 8148 sem chave). O `beforeAll` copia a fixture para `os.tmpdir()` e acrescenta o que o git não guarda ou não deve guardar: `.venv/lib/x.py`, `dist/y.py`, `grande.py` (1,1 MB) e `latin1.py` (byte `0xE9`). Cada item é um teste:
 
 - PROJ-01/02: o topo tem exatamente `raiz`, `frete`, `legado`, `pedidos`; nenhum nó `.venv` ou `dist` em nenhum nível aberto; abrir `pedidos` mostra `__init__.py`, `itens.py`, `pedidos.py`.
 - PROJ-03: aresta `dir:pedidos → dir:frete` e `dir:. → dir:pedidos` no topo; dentro de `pedidos`, aresta `pedidos.py → itens.py`.
@@ -213,7 +213,7 @@ loja/
 - PROJ-05: um caminho inexistente e o caminho de `main.py` mostram "Pasta não encontrada: <caminho>".
 - PROJ-06: "Arquivos ignorados" lista `grande.py — maior que 1 MB` e `latin1.py — não está em UTF-8`.
 - PROJ-07: a impressão da cópia (caminhos, tamanhos, `mtime` e sha256 de cada arquivo) é igual antes e depois de mapear, navegar e abrir o painel de `calcular_frete`.
-- PROJ-08: uma conexão TCP ao primeiro IPv4 não interno da máquina na porta 4317 é recusada.
+- PROJ-08: uma conexão TCP ao primeiro IPv4 não interno da máquina na porta 8148 é recusada.
 - Explicação de projeto: o pedido observado (sem mock) para `/api/explain` tem `root` e `nodeId` e não tem `source`; o painel mostra `frete/calculo.py`, as linhas do arquivo e "Configure OPENROUTER_API_KEY para ver resumos".
 - Regressão: `e2e/fatia-central.e2e.ts` passa sem mudança (breadcrumb "Trecho").
 

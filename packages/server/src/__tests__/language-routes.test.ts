@@ -74,12 +74,12 @@ function setup(over: Partial<AppDeps> = {}): Setup {
       return { status: "ok", titles: [] };
     },
     readProject: async () => ({ kind: "not-found" }),
-    port: 4317,
+    port: 8148,
     token: TEST_TOKEN,
     ...over,
   });
   const headers = {
-    host: "127.0.0.1:4317",
+    host: "127.0.0.1:8148",
     "x-8n8-token": TEST_TOKEN,
     "content-type": "application/json",
   };

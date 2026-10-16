@@ -40,7 +40,7 @@ import {
   type SettingsStore,
 } from "./settings";
 
-const DEFAULT_PORT = 4317;
+const DEFAULT_PORT = 8148;
 
 export interface ComposeDeps {
   /** The client and config of the current settings, asked on every request (CFG-17). */
@@ -180,7 +180,7 @@ function mergeTitles(
   return { status: "ok", titles };
 }
 
-/** Port from APP8N8_PORT when it is a valid port number, else 4317. */
+/** Port from APP8N8_PORT when it is a valid port number, else 8148. */
 export function resolvePort(env: Record<string, string | undefined>): number {
   const raw = env.APP8N8_PORT ?? "";
   const port = Number(raw);

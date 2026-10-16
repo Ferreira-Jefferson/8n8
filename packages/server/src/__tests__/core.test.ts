@@ -549,7 +549,7 @@ describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
         ptsRules: "regras",
         cacheDir: dir("nope"),
         historyFile: undefined,
-        port: 4317,
+        port: 8148,
         token: TEST_TOKEN,
         settings: noSettings(),
       }),
@@ -604,17 +604,17 @@ describe("the LLM setup of the core (one client per settings, CFG-17)", () => {
 });
 
 describe("resolvePort", () => {
-  it("is 4317 without APP8N8_PORT or when it is empty", () => {
-    expect(resolvePort({})).toBe(4317);
-    expect(resolvePort({ APP8N8_PORT: "" })).toBe(4317);
+  it("is 8148 without APP8N8_PORT or when it is empty", () => {
+    expect(resolvePort({})).toBe(8148);
+    expect(resolvePort({ APP8N8_PORT: "" })).toBe(8148);
   });
 
   it("reads a valid port from APP8N8_PORT", () => {
     expect(resolvePort({ APP8N8_PORT: "4319" })).toBe(4319);
   });
 
-  it("falls back to 4317 for a value that is not a port", () => {
-    expect(resolvePort({ APP8N8_PORT: "abc" })).toBe(4317);
+  it("falls back to 8148 for a value that is not a port", () => {
+    expect(resolvePort({ APP8N8_PORT: "abc" })).toBe(8148);
   });
 });
 
@@ -692,14 +692,14 @@ describe("composeReadProject", () => {
       },
       titles: async () => ({ status: "ok", titles: [] }),
       readProject,
-      port: 4317,
+      port: 8148,
       token: TEST_TOKEN,
     });
     const post = (path: string, body: unknown) =>
       app.request(path, {
         method: "POST",
         headers: {
-          host: "127.0.0.1:4317",
+          host: "127.0.0.1:8148",
           "x-8n8-token": TEST_TOKEN,
           "content-type": "application/json",
         },
@@ -748,14 +748,14 @@ describe("composeReadProject", () => {
       ),
       titles: async () => ({ status: "ok", titles: [] }),
       readProject,
-      port: 4317,
+      port: 8148,
       token: TEST_TOKEN,
     });
     const explain = async (root: string) => {
       const res = await app.request("/api/summary", {
         method: "POST",
         headers: {
-          host: "127.0.0.1:4317",
+          host: "127.0.0.1:8148",
           "x-8n8-token": TEST_TOKEN,
           "content-type": "application/json",
         },
@@ -867,8 +867,8 @@ describe("composeReadProject: the plugin registry", () => {
 
 describe("listenOptions", () => {
   it("listens on loopback only (PROJ-08)", () => {
-    expect(listenOptions(4317)).toEqual({
-      port: 4317,
+    expect(listenOptions(8148)).toEqual({
+      port: 8148,
       hostname: "127.0.0.1",
     });
   });
@@ -883,13 +883,13 @@ describe("createCore (DIST-13)", () => {
       ptsRules: "regras",
       cacheDir: join(dir, "cache"),
       historyFile,
-      port: 4317,
+      port: 8148,
       token: TEST_TOKEN,
       settings: noSettings(),
     });
   const get = (app: ReturnType<typeof core>, path: string) =>
     app.request(path, {
-      headers: { host: "127.0.0.1:4317", "x-8n8-token": TEST_TOKEN },
+      headers: { host: "127.0.0.1:8148", "x-8n8-token": TEST_TOKEN },
     });
 
   it("serves the languages of the built-in plugins from the options alone", async () => {
@@ -904,7 +904,7 @@ describe("createCore (DIST-13)", () => {
       app.request("/api/graph", {
         method: "POST",
         headers: {
-          host: "127.0.0.1:4317",
+          host: "127.0.0.1:8148",
           "x-8n8-token": TEST_TOKEN,
           "content-type": "application/json",
         },

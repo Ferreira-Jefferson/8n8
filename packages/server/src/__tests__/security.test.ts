@@ -11,7 +11,7 @@ import type { History } from "../history";
 import { fakeLang } from "./fake-lang";
 import { TEST_TOKEN } from "./test-token";
 
-const HOST = "127.0.0.1:4317";
+const HOST = "127.0.0.1:8148";
 const emptyGraph: Graph = {
   language: "python",
   empty: true,
@@ -41,7 +41,7 @@ const app = createApp({
     work++;
     return { kind: "not-found" };
   },
-  port: 4317,
+  port: 8148,
   token: TEST_TOKEN,
   history: countingHistory,
   // An attack never reads nor writes the settings (CFG-24).
@@ -103,7 +103,7 @@ describe("every /api route under attack (DIST-21, CFG-24)", () => {
     it("answers 403 to a foreign Host, before any work", async () => {
       work = 0;
       const res = await send(route, {
-        host: "evil.example:4317",
+        host: "evil.example:8148",
         "x-8n8-token": TEST_TOKEN,
         ...JSON_TYPE,
       });
@@ -186,7 +186,7 @@ describe("the API key never reaches a response (DIST-22, CFG-23)", () => {
     const base = {
       ptsRules: "regras",
       historyFile: ":memory:",
-      port: 4317,
+      port: 8148,
       token: TEST_TOKEN,
     };
     fromEnv = createCore({

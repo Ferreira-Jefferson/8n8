@@ -9,7 +9,7 @@ import type {
 import { expect, type Page, test } from "@playwright/test";
 import { OFFLINE } from "./mapa";
 
-// Feature 06-multilinguagem, end to end: real server on 4317 with no key, real disk.
+// Feature 06-multilinguagem, end to end: real server on 8148 with no key, real disk.
 // The language of a snippet comes from the server, a folder of two languages is one
 // graph, and a file of one language that calls a file of the other is wired to it.
 

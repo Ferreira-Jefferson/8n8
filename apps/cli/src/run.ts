@@ -23,19 +23,22 @@ export interface RunDeps {
   err: (line: string) => void;
   /** Listens on loopback; rejects with the listen error (EADDRINUSE). */
   serve: (app: Hono, port: number) => Promise<void>;
-  openBrowser: (url: string) => void;
+  /** `app` asks for a window with no address bar; the host falls back to a tab. */
+  openBrowser: (url: string, app: boolean) => void;
 }
 
-const HELP = `Uso: 8n8 [pasta] [--no-open]
+const HELP = `Uso: 8n8 [pasta] [--no-open] [--no-app]
 
-Abre no navegador o mapa da pasta (ou a tela inicial, sem pasta).
+Abre o mapa da pasta (ou a tela inicial, sem pasta) numa janela própria do
+Chrome ou do Edge, sem barra de endereço. Sem eles, abre no navegador padrão.
 
 Opções:
   --no-open   sobe o servidor sem abrir o navegador
+  --no-app    abre numa aba do navegador padrão, em vez da janela própria
   --help      mostra este texto
 
 Variáveis de ambiente:
-  APP8N8_PORT          porta do servidor (padrão 4317)
+  APP8N8_PORT          porta do servidor (padrão 8148)
   APP8N8_CACHE_DIR     pasta do cache (padrão ~/.8n8/cache)
   APP8N8_HISTORY_DIR   pasta do historico.db (padrão ~/.8n8)
   APP8N8_CONFIG_DIR    pasta do config.json, gravado pela tela (padrão ~/.8n8)
@@ -58,7 +61,7 @@ const isFolder = (path: string) => {
   }
 };
 
-/** `8n8 [pasta] [--no-open] [--help]`; the result is the exit code. */
+/** `8n8 [pasta] [--no-open] [--no-app] [--help]`; the result is the exit code. */
 export async function run(argv: string[], deps: RunDeps): Promise<number> {
   let args: ReturnType<typeof parse>;
   try {
@@ -121,9 +124,9 @@ export async function run(argv: string[], deps: RunDeps): Promise<number> {
     t: token,
     ...(folder === undefined ? {} : { pasta: folder }),
   });
-  const url = `http://127.0.0.1:${port}/#${launch}`;
+  const url = `http://8n8.localhost:${port}/#${launch}`;
   deps.out(`8n8 em ${url}`);
-  if (!args.values["no-open"]) deps.openBrowser(url);
+  if (!args.values["no-open"]) deps.openBrowser(url, !args.values["no-app"]);
   return 0;
 }
 
@@ -134,6 +137,7 @@ function parse(argv: string[]) {
     options: {
       help: { type: "boolean" },
       "no-open": { type: "boolean" },
+      "no-app": { type: "boolean" },
     },
   });
 }

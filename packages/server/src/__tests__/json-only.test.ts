@@ -23,7 +23,7 @@ function setup() {
       calls.readProject++;
       return { kind: "not-found" };
     },
-    port: 4317,
+    port: 8148,
     token: TEST_TOKEN,
   });
   const post = (
@@ -34,7 +34,7 @@ function setup() {
     app.request(path, {
       method: "POST",
       headers: {
-        host: "127.0.0.1:4317",
+        host: "127.0.0.1:8148",
         "x-8n8-token": TEST_TOKEN,
         ...headers,
       },
@@ -65,9 +65,9 @@ describe("API accepts only JSON (AD-016)", () => {
     const { app, calls } = setup();
     for (const path of ["/api/graph", "/api/summary", "/api/project"]) {
       // A byte body gets no default content-type, so the header is really absent.
-      const req = new Request(`http://127.0.0.1:4317${path}`, {
+      const req = new Request(`http://127.0.0.1:8148${path}`, {
         method: "POST",
-        headers: { host: "127.0.0.1:4317", "x-8n8-token": TEST_TOKEN },
+        headers: { host: "127.0.0.1:8148", "x-8n8-token": TEST_TOKEN },
         body: new TextEncoder().encode('{"path":"."}'),
       });
       expect(req.headers.get("content-type")).toBeNull();
@@ -89,9 +89,9 @@ describe("API accepts only JSON (AD-016)", () => {
     };
     for (const path of ["/api/graph", "/api/summary", "/api/project"]) {
       for (const [type, body] of Object.entries(bodies)) {
-        const req = new Request(`http://127.0.0.1:4317${path}`, {
+        const req = new Request(`http://127.0.0.1:8148${path}`, {
           method: "POST",
-          headers: { host: "127.0.0.1:4317", "x-8n8-token": TEST_TOKEN },
+          headers: { host: "127.0.0.1:8148", "x-8n8-token": TEST_TOKEN },
           body: body(),
         });
         expect(req.headers.get("content-type")).toMatch(new RegExp(`^${type}`));
@@ -112,7 +112,7 @@ describe("API accepts only JSON (AD-016)", () => {
   it("does not touch GET / with a valid Host", async () => {
     const { app } = setup();
     const res = await app.request("/", {
-      headers: { host: "127.0.0.1:4317", "x-8n8-token": TEST_TOKEN },
+      headers: { host: "127.0.0.1:8148", "x-8n8-token": TEST_TOKEN },
     });
     expect(res.status).not.toBe(415);
   });

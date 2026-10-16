@@ -38,7 +38,7 @@
 
 | AC | Spec-defined outcome | `file:line` + assertion | Result |
 | -- | -------------------- | ----------------------- | ------ |
-| DIST-01 | Server on `127.0.0.1`, default browser opens the folder map | `apps/cli/src/__tests__/run.test.ts:78` `expect(h.port()).toBe(4317)`; `:80` `url.startsWith("http://127.0.0.1:4317/#")`; `:81` `get("pasta")).toBe(h.project)`; `apps/cli/src/__tests__/open-browser.test.ts:178-179`; `apps/ui/src/__tests__/App.test.tsx:298-299`; `e2e/cli.e2e.ts:197-207` | ✅ PASS |
+| DIST-01 | Server on `127.0.0.1`, default browser opens the folder map | `apps/cli/src/__tests__/run.test.ts:78` `expect(h.port()).toBe(8148)`; `:80` `url.startsWith("http://127.0.0.1:8148/#")`; `:81` `get("pasta")).toBe(h.project)`; `apps/cli/src/__tests__/open-browser.test.ts:178-179`; `apps/ui/src/__tests__/App.test.tsx:298-299`; `e2e/cli.e2e.ts:197-207` | ✅ PASS |
 | DIST-02 | No argument: start screen | `run.test.ts:89` `get("pasta")).toBeNull()`; `:90` token present | ✅ PASS |
 | DIST-03 | Relative path from the terminal folder | `run.test.ts:96` | ✅ PASS |
 | DIST-04 | `C:\proj` and `C:/proj` | `run.test.ts:106-107` (`runIf(win32)`, ran on this host) | ✅ PASS |

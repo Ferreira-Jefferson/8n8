@@ -32,6 +32,7 @@ function harness(env: Record<string, string> = {}) {
   const pts = join(home, "pts.md");
   writeFileSync(pts, "regras");
   const events: string[] = [];
+  const apps: boolean[] = [];
   const out: string[] = [];
   const err: string[] = [];
   let app: Hono | undefined;
@@ -51,13 +52,17 @@ function harness(env: Record<string, string> = {}) {
       port = p;
       events.push("serve");
     },
-    openBrowser: (url) => events.push(`open:${url}`),
+    openBrowser: (url, app) => {
+      events.push(`open:${url}`);
+      apps.push(app);
+    },
   };
   return {
     deps,
     home,
     project,
     events,
+    apps,
     out,
     err,
     app: () => {
@@ -77,9 +82,9 @@ describe("8n8 [pasta] (DIST-01..07)", () => {
   it("serves on the default port and opens the folder's map with the token (DIST-01)", async () => {
     const h = harness();
     expect(await run([h.project], h.deps)).toBe(0);
-    expect(h.port()).toBe(4317);
+    expect(h.port()).toBe(8148);
     const [url] = opened(h.events);
-    expect(url?.startsWith("http://127.0.0.1:4317/#")).toBe(true);
+    expect(url?.startsWith("http://8n8.localhost:8148/#")).toBe(true);
     expect(launch(url ?? "").get("pasta")).toBe(h.project);
     expect(launch(url ?? "").get("t")).toMatch(/^[0-9a-f]{64}$/);
   });
@@ -147,14 +152,23 @@ describe("8n8 [pasta] (DIST-01..07)", () => {
     expect(h.events.indexOf(`out:8n8 em ${url}`)).toBeLessThan(
       h.events.indexOf(`open:${url}`),
     );
-    expect(url).toMatch(/^http:\/\/127\.0\.0\.1:4317\/#t=[0-9a-f]{64}$/);
+    expect(url).toMatch(/^http:\/\/8n8\.localhost:8148\/#t=[0-9a-f]{64}$/);
+  });
+
+  it("opens an app window by default and a tab with --no-app", async () => {
+    const window = harness();
+    expect(await run([], window.deps)).toBe(0);
+    expect(window.apps).toEqual([true]);
+    const tab = harness();
+    expect(await run(["--no-app"], tab.deps)).toBe(0);
+    expect(tab.apps).toEqual([false]);
   });
 
   it("--no-open serves and prints but opens no browser", async () => {
     const h = harness();
     expect(await run(["--no-open"], h.deps)).toBe(0);
     expect(h.events).toContain("serve");
-    expect(h.out[0]).toMatch(/^8n8 em http:\/\/127\.0\.0\.1:4317\/#t=/);
+    expect(h.out[0]).toMatch(/^8n8 em http:\/\/8n8\.localhost:8148\/#t=/);
     expect(opened(h.events)).toEqual([]);
   });
 });
@@ -189,7 +203,7 @@ describe("data folders (DIST-09)", () => {
     app.request("/api/graph", {
       method: "POST",
       headers: {
-        host: "127.0.0.1:4317",
+        host: "127.0.0.1:8148",
         "content-type": "application/json",
         "x-8n8-token": token,
       },
@@ -223,7 +237,7 @@ describe("no LLM config (DIST-11)", () => {
     const res = await h.app().request("/api/summary", {
       method: "POST",
       headers: {
-        host: "127.0.0.1:4317",
+        host: "127.0.0.1:8148",
         "content-type": "application/json",
         "x-8n8-token": token,
       },
@@ -239,7 +253,7 @@ describe("settings in config.json (CFG-19, CFG-25)", () => {
     app.request("/api/settings", {
       method: "PUT",
       headers: {
-        host: "127.0.0.1:4317",
+        host: "127.0.0.1:8148",
         "content-type": "application/json",
         "x-8n8-token": token,
       },
@@ -266,7 +280,7 @@ describe("settings in config.json (CFG-19, CFG-25)", () => {
     again.deps.home = h.home;
     await run([], again.deps);
     const view = await again.app().request("/api/settings", {
-      headers: { host: "127.0.0.1:4317", "x-8n8-token": tokenOf(again) },
+      headers: { host: "127.0.0.1:8148", "x-8n8-token": tokenOf(again) },
     });
     expect(await view.json()).toMatchObject({
       hasKey: true,

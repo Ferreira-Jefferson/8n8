@@ -25,7 +25,7 @@ Error: http://127.0.0.1:4318/__log is already used, make sure that nothing is ru
 ```
 
 ### Causa raiz
-No Windows, o Playwright encerra os webServers com `taskkill /pid N /T /F` (spawnSync, shell: true) e ignora o erro. O `env.PATH` de `~/.claude/settings.json` substitui o PATH inteiro e não tinha `C:\Windows\System32`, então o `taskkill` não é encontrado. O Playwright espera os servidores saírem para sempre, e eles ficam presos nas portas 4317-4320.
+No Windows, o Playwright encerra os webServers com `taskkill /pid N /T /F` (spawnSync, shell: true) e ignora o erro. O `env.PATH` de `~/.claude/settings.json` substitui o PATH inteiro e não tinha `C:\Windows\System32`, então o `taskkill` não é encontrado. O Playwright espera os servidores saírem para sempre, e eles ficam presos nas portas 8148-4320.
 
 ### Solução
 Incluir System32 no fim do `env.PATH` de `~/.claude/settings.json` (`...:/c/Windows/System32:/c/Windows`) e reiniciar o Claude Code. Até reiniciar, rode:

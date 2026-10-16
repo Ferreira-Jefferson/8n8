@@ -8,7 +8,7 @@ import { resetFake } from "./fake-llm";
 // detalhe, sugestoes). Not a spec: Playwright only runs *.e2e.ts.
 
 /** The server with no key (titles and summaries never come). */
-export const OFFLINE = "http://127.0.0.1:4317";
+export const OFFLINE = "http://127.0.0.1:8148";
 /** The server with the real pipeline against the fake LLM (e2e/fake-llm.ts). */
 export const REAL = "http://127.0.0.1:4319";
 /** The cache dir of the REAL server, wiped before each test that uses it. */

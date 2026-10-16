@@ -54,7 +54,7 @@ function record(measure: string, server: string, values: number[], extra = "") {
 }
 
 const serverName = (base: string) =>
-  base === OFFLINE ? "4317 offline" : "4319 fake LLM";
+  base === OFFLINE ? "8148 offline" : "4319 fake LLM";
 
 /**
  * Milliseconds from a click (run in the page) until `ids` are drawn, and until

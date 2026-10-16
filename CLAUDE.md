@@ -25,7 +25,7 @@ As visualizações podem ser descartáveis: uma vista gerada para responder a um
 ## Comandos
 
 - `pnpm install`: instala as dependências.
-- `pnpm dev`: sobe o servidor (`dev:server`, porta 4317) e a tela (`dev:ui`, Vite).
+- `pnpm dev`: sobe o servidor (`dev:server`, porta 8148) e a tela (`dev:ui`, Vite).
 - `pnpm start`: constrói a tela e sobe o servidor.
 - `pnpm test`: testes unitários (Vitest) de todos os pacotes.
 - `pnpm typecheck`: TypeScript nos pacotes e em `e2e`.

@@ -31,7 +31,7 @@ Regras que valem para toda task:
 
 ## Test Coverage Matrix
 
-> Generated from codebase, project guidelines, and spec - confirm before Execute. Guidelines found: `CLAUDE.md` (toda mudança é verificada com teste, typecheck ou app; sem limite de cobertura), as matrizes das features 01 e 04, `playwright.config.ts` e `e2e/fatia-central.e2e.ts` (padrão E2E: `*.e2e.ts`, `workers: 1`, servidor real na 4317 sem chave). Os testes existentes são o piso de estilo e local. A profundidade vem dos strong defaults: 1:1 com as ACs e cada caso de borda do design.
+> Generated from codebase, project guidelines, and spec - confirm before Execute. Guidelines found: `CLAUDE.md` (toda mudança é verificada com teste, typecheck ou app; sem limite de cobertura), as matrizes das features 01 e 04, `playwright.config.ts` e `e2e/fatia-central.e2e.ts` (padrão E2E: `*.e2e.ts`, `workers: 1`, servidor real na 8148 sem chave). Os testes existentes são o piso de estilo e local. A profundidade vem dos strong defaults: 1:1 com as ACs e cada caso de borda do design.
 
 | Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
 | ---------- | ------------------ | -------------------- | ---------------- | ----------- |
@@ -45,7 +45,7 @@ Regras que valem para toda task:
 | `server`: composição (`main.ts`) | integration (cópia da fixture em `os.tmpdir()`) | `composeReadProject` ok e `not-found`; releitura do disco entre o mapa e a explicação; pasta intacta; `listenOptions` (PROJ-08) | `packages/server/src/__tests__/main.test.ts` | `pnpm --filter @8n8/server test` |
 | `web`: lógica pura (`project-level`, `navigation`, `api`, `toFlowEdges`) | unit | Todos os ramos; níveis de topo, pasta, arquivo e trecho; `ancestry`, `jump`; `fetchProject` 200/404/erro; `origin` `{source}` e `{root}` | `apps/ui/src/**/__tests__/*.test.ts` | `pnpm --filter @8n8/ui test` |
 | `web`: componentes (`StepNode`, `Breadcrumb`, `IgnoredFiles`, `DetailPanel`, `App`) | unit (jsdom + Testing Library) | Cada texto exato de C5 (rótulos, mensagens, motivos); cada interação (abrir pasta, salto entre arquivos, painel de pasta e de arquivo); os testes das features 01 e 04 continuam passando com a mesma intenção | `apps/ui/src/**/__tests__/*.test.tsx` | `pnpm --filter @8n8/ui test` |
-| E2E: `e2e/pasta-local.e2e.ts` | e2e (Playwright, servidor real na 4317 sem chave, fixture copiada para `os.tmpdir()`) | Independent Test inteiro e cada item da seção E2E do design, com textos e contagens exatos | `e2e/*.e2e.ts` | `pnpm e2e` |
+| E2E: `e2e/pasta-local.e2e.ts` | e2e (Playwright, servidor real na 8148 sem chave, fixture copiada para `os.tmpdir()`) | Independent Test inteiro e cada item da seção E2E do design, com textos e contagens exatos | `e2e/*.e2e.ts` | `pnpm e2e` |
 | E2E: regressão (`fatia-central.e2e.ts` e specs da feature 04) | e2e | Passam sem mudança | `e2e/*.e2e.ts` | `pnpm e2e` |
 
 ## Gate Check Commands
@@ -586,7 +586,7 @@ T31 → T32
 - [x] `project-route.test.ts` (novo, `readProject` falso): 200 devolve `{ name, graph, files, ignored }` igual ao falso; `readProject` recebe exatamente o `path` digitado.
 - [x] PROJ-05: `not-found` vira `404 { error: "not-found", path: "./nao/existe" }`.
 - [x] `{}`, `{ path: "" }` e `{ path: 42 }` dão 400.
-- [x] PROJ-08: `Host: evil.example:4317` em `/api/project` dá 403 e o falso não roda.
+- [x] PROJ-08: `Host: evil.example:8148` em `/api/project` dá 403 e o falso não roda.
 - [x] `graph-route.test.ts`, `host-guard.test.ts` e `explain-route.test.ts` só ganham o stub `readProject: async () => ({ kind: "not-found" })` no `createApp`; nenhuma asserção muda.
 - [x] Gate passa.
 
@@ -668,7 +668,7 @@ T31 → T32
 - [x] PROJ-05: caminho ausente e caminho de `main.py` dão `not-found`.
 - [x] AD-015: com `createApp` e a composição real, `POST /api/project`, depois uma linha nova em `frete/calculo.py` no disco, depois `POST /api/explain { root, nodeId }`: o `explain` falso recebe o código novo.
 - [x] PROJ-07: antes da edição do passo anterior, caminhos, tamanhos, `mtimeMs` e sha256 da cópia são iguais antes e depois de mapear e explicar.
-- [x] PROJ-08: `listenOptions(4317)` = `{ port: 4317, hostname: "127.0.0.1" }`.
+- [x] PROJ-08: `listenOptions(8148)` = `{ port: 8148, hostname: "127.0.0.1" }`.
 - [x] Os testes atuais de `main.test.ts` passam sem mudança.
 - [x] Build não-web passa (fim das fases 1 a 5).
 
@@ -948,7 +948,7 @@ T31 → T32
 
 ### T31: E2E da pasta local, estrutura e navegação
 
-**What**: Criar `e2e/pasta-local.e2e.ts` contra o servidor da 4317 sem chave. O `beforeAll` copia a fixture `projeto-loja` para `<mkdtemp>/loja` e acrescenta `.venv/lib/x.py`, `dist/y.py`, `grande.py` (1,1 MB de UTF-8 válido) e `latin1.py` (byte `0xE9`). O `afterAll` apaga a cópia. Helper `openFolder(page, path)` preenche "Caminho da pasta" e clica em "Abrir pasta". Seletores no padrão de `fatia-central.e2e.ts`.
+**What**: Criar `e2e/pasta-local.e2e.ts` contra o servidor da 8148 sem chave. O `beforeAll` copia a fixture `projeto-loja` para `<mkdtemp>/loja` e acrescenta `.venv/lib/x.py`, `dist/y.py`, `grande.py` (1,1 MB de UTF-8 válido) e `latin1.py` (byte `0xE9`). O `afterAll` apaga a cópia. Helper `openFolder(page, path)` preenche "Caminho da pasta" e clica em "Abrir pasta". Seletores no padrão de `fatia-central.e2e.ts`.
 **Where**: `e2e/pasta-local.e2e.ts`
 **Depends on**: T20, T30
 **Reuses**: helpers de `e2e/fatia-central.e2e.ts` (`nodes`, `edge`, `breadcrumb`, `nodeById`)
@@ -988,7 +988,7 @@ T31 → T32
 
 - [x] PROJ-06: a seção "Arquivos ignorados" tem exatamente 2 itens, nesta ordem: `grande.py — maior que 1 MB` e `latin1.py — não está em UTF-8`. `x.py` e `y.py` não aparecem.
 - [x] PROJ-07 (só leitura): a impressão da cópia (caminho relativo, tamanho, `mtimeMs` e sha256 de cada arquivo, inclusive em `.venv` e `dist`) é igual antes e depois de mapear, abrir `processar_pedido`, saltar para `calcular_frete` e abrir o painel dele.
-- [x] PROJ-08: uma conexão TCP ao primeiro IPv4 não interno da máquina na porta 4317 é recusada (`ECONNREFUSED`). Sem IPv4 externo, o teste é pulado com o motivo "sem IPv4 externo" no relatório.
+- [x] PROJ-08: uma conexão TCP ao primeiro IPv4 não interno da máquina na porta 8148 é recusada (`ECONNREFUSED`). Sem IPv4 externo, o teste é pulado com o motivo "sem IPv4 externo" no relatório.
 - [x] Explicação de projeto: o pedido observado para `/api/explain` tem `root` igual ao caminho digitado, `nodeId` `file:frete/calculo.py/fn:calcular_frete` e nenhum `source`. O painel mostra `frete/calculo.py`, as linhas da função e "Configure OPENROUTER_API_KEY para ver resumos".
 - [x] Regressão: `e2e/fatia-central.e2e.ts` e os specs da feature 04 passam sem mudança.
 - [x] Build final passa.

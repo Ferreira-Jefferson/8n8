@@ -20,12 +20,12 @@ graph TD
       CORE[createCore: compõe LLM, explain, titles, projeto, histórico] --> APP[createApp: guardas + rotas]
     end
     RUN -->|CoreOptions| CORE
-    RUN -->|serve app.fetch em 127.0.0.1| HTTP[(porta 4317)]
+    RUN -->|serve app.fetch em 127.0.0.1| HTTP[(porta 8148)]
     WEB[apps/ui] -->|fetch /api/* + x-8n8-token| HTTP
     OPEN -->|"#t=token&pasta=..."| WEB
 ```
 
-**Fluxo de `8n8 <pasta>`:** `run` resolve a pasta → confere se ela existe (DIST-05) → gera o token → sobe o servidor → escreve a URL → abre o navegador em `http://127.0.0.1:4317/#t=<token>&pasta=<pasta codificada>`. A tela lê o fragmento, guarda o token, limpa a barra de endereço e abre o mapa da pasta.
+**Fluxo de `8n8 <pasta>`:** `run` resolve a pasta → confere se ela existe (DIST-05) → gera o token → sobe o servidor → escreve a URL → abre o navegador em `http://127.0.0.1:8148/#t=<token>&pasta=<pasta codificada>`. A tela lê o fragmento, guarda o token, limpa a barra de endereço e abre o mapa da pasta.
 
 **Abordagem escolhida (aprovada):** bundle com esbuild + pasta de assets. Um protótipo juntou os dois plugins, o SQLite e o Hono num arquivo só e rodou fora do repositório, sem `node_modules`, no Node 24.14 do sistema e no Node 24.21 do VS Code. Descartadas: publicar `.ts` (o Node não remove tipos dentro de `node_modules`), `tsc` + `dependencies` (viola o DIST-16) e Node SEA (complexo demais para quem já tem Node).
 

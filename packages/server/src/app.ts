@@ -206,7 +206,12 @@ const historyId = (raw: string): number | null =>
 
 /** Local API. Refuses foreign Host headers (DNS rebinding, AD-007) and sets no CORS. */
 export function createApp(deps: AppDeps): Hono {
-  const allowed = new Set([`127.0.0.1:${deps.port}`, `localhost:${deps.port}`]);
+  // 8n8.localhost is the name the CLI shows; browsers resolve *.localhost to loopback only.
+  const allowed = new Set([
+    `127.0.0.1:${deps.port}`,
+    `localhost:${deps.port}`,
+    `8n8.localhost:${deps.port}`,
+  ]);
   const app = new Hono();
 
   app.use("*", async (c, next) => {
