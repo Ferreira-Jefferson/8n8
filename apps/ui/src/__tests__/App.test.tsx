@@ -1336,3 +1336,56 @@ describe("App, the panel starts minimized", () => {
     expect(screen.queryByRole("button", { name: /painel/ })).toBeNull();
   });
 });
+
+describe("App, node search", () => {
+  const FN = "file:frete/calculo.py/fn:calcular_frete";
+
+  const folderOption = () =>
+    screen
+      .getAllByRole("option")
+      .find((o) => o.textContent?.includes("frete/")) as HTMLElement;
+
+  async function searchFor(text: string) {
+    explainMock.mockResolvedValue({ status: "no-key" });
+    projectMock.mockResolvedValue(loja);
+    render(<App />);
+    openFolder();
+    await screen.findByTestId("canvas");
+    fireEvent.click(screen.getByRole("button", { name: "Buscar nó" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Buscar nó" }), {
+      target: { value: text },
+    });
+  }
+
+  it("shows the magnifier on the map, not on the launcher", async () => {
+    render(<App />);
+    expect(screen.queryByRole("button", { name: "Buscar nó" })).toBeNull();
+    cleanup();
+    await searchFor("");
+    expect(screen.getByRole("combobox", { name: "Buscar nó" })).toBeTruthy();
+  });
+
+  it("a node of a deeper level opens the path to it, selects it and asks the canvas to start on it", async () => {
+    await searchFor("calcular_frete");
+    fireEvent.click(screen.getAllByRole("option")[0] as HTMLElement);
+    expect(breadcrumbItems()).toEqual(["loja", "frete", "calculo.py"]);
+    const canvas = currentCanvas();
+    expect(canvas.levelId).toBe("file:frete/calculo.py");
+    expect(canvas.selected).toBe(FN);
+    expect(canvas.focusId).toBe(FN);
+  });
+
+  it("a node of the open level stays there and asks the canvas to center it", async () => {
+    await searchFor("frete");
+    fireEvent.click(folderOption());
+    expect(breadcrumbItems()).toEqual(["loja"]);
+    expect(currentCanvas().selected).toBe("dir:frete");
+    expect(currentCanvas().centerOn).toEqual({ id: "dir:frete", nonce: 1 });
+    fireEvent.click(screen.getByRole("button", { name: "Buscar nó" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Buscar nó" }), {
+      target: { value: "frete" },
+    });
+    fireEvent.click(folderOption());
+    expect(currentCanvas().centerOn).toEqual({ id: "dir:frete", nonce: 2 });
+  });
+});

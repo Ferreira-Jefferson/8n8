@@ -20,7 +20,9 @@ export type NavAction =
   | { type: "goTo"; index: number }
   /** Suggestion card (VID-33). */
   | { type: "select"; id: NodeId }
-  | { type: "jump"; path: NodeId[]; via: NodeId };
+  | { type: "jump"; path: NodeId[]; via: NodeId }
+  /** Search: opens each level of `path` and selects `id`, a node of the last one. */
+  | { type: "reveal"; path: NodeId[]; id: NodeId };
 
 export const initialNav: NavState = { path: [], selected: null };
 
@@ -88,6 +90,11 @@ export function navReducer(state: NavState, action: NavAction): NavState {
         selected: action.via,
       };
     }
+    case "reveal":
+      return {
+        path: action.path.map((id) => ({ id, via: id })),
+        selected: action.id,
+      };
   }
 }
 

@@ -229,6 +229,7 @@ function card(container: HTMLElement, id: NodeId): HTMLElement {
 // it out of whichever test comes first, like src/__tests__/setup.tsx.
 beforeAll(() => {
   render(<FlowCanvas {...props()} />);
+    centerOn: null,
   cleanup();
 }, 30_000);
 

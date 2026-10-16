@@ -47,6 +47,8 @@ import { DetailPanel, type PanelCache } from "./panel/DetailPanel";
 import { externalEffects } from "./panel/effects";
 import { IgnoredFiles } from "./panel/IgnoredFiles";
 import { clampPanel, PanelResizer } from "./panel/PanelResizer";
+import { searchEntries } from "./search/match";
+import { NodeSearch } from "./search/NodeSearch";
 import { SettingsButton, SettingsDialog } from "./settings/SettingsDialog";
 
 type Mapped =
@@ -238,6 +240,10 @@ export function App({ initialFolder = null }: AppProps) {
   );
   const [mark, setMark] = useState<{ line: number; nonce: number }>();
   const [focusId, setFocusId] = useState<NodeId | null>(null);
+  // A search pick on the open level: the canvas centers the node (a new nonce each time).
+  const [center, setCenter] = useState<{ id: NodeId; nonce: number } | null>(
+    null,
+  );
   const [panelWidth, setPanelWidth] = useState(savedPanelWidth);
   const [panelCollapsed, setCollapsed] = useState(savedPanelCollapsed);
   const setPanelCollapsed = (collapsed: boolean) => {
@@ -296,6 +302,7 @@ export function App({ initialFolder = null }: AppProps) {
     explainCache.current = emptyPanelCache();
     setMark(undefined);
     setFocusId(null);
+    setCenter(null);
     dispatch({ type: "reset" });
     setMapVersion((v) => v + 1);
   }
@@ -438,8 +445,38 @@ export function App({ initialFolder = null }: AppProps) {
     [mapped],
   );
 
+  // The search covers the whole graph, not only the open level.
+  const entries = useMemo(
+    () => (graph ? searchEntries(graph, titles) : []),
+    [graph, titles],
+  );
+
   const byId = (id: NodeId | null) =>
     graph?.nodes.find((n) => n.id === id) ?? null;
+
+  /** A search pick: opens the levels down to the node, then centers and selects it. */
+  function goToNode(id: NodeId) {
+    const node = byId(id);
+    if (!graph || !node) return;
+    const listed = (path: NodeId[]) =>
+      projectLevel(graph, path.at(-1) ?? null).nodes.some((n) => n.id === id);
+    let path = node.parentId === null ? [] : ancestry(graph, node.parentId);
+    // A node its parent's level leaves out (a function called, not an entry): open it instead.
+    if (!listed(path) && graph.nodes.some((n) => n.parentId === id)) {
+      path = ancestry(graph, id);
+    }
+    setMark(undefined);
+    if (
+      path.length === nav.path.length &&
+      path.every((p, i) => p === nav.path[i]?.id)
+    ) {
+      setCenter((c) => ({ id, nonce: (c?.nonce ?? 0) + 1 }));
+      dispatch({ type: "select", id });
+      return;
+    }
+    setFocusId(id);
+    dispatch({ type: "reveal", path, id });
+  }
   const selected = byId(nav.selected);
   const panelNode = selected ? byId(panelNodeOf(selected)) : null;
 
@@ -569,6 +606,7 @@ export function App({ initialFolder = null }: AppProps) {
           onToggle={() => setHistoryOpen((o) => !o)}
         />
         <SettingsButton onOpen={openSettings} />
+        <NodeSearch entries={entries} onPick={goToNode} />
         {mapped.kind === "project" && (
           <IgnoredFiles
             ignored={mapped.response.ignored}
@@ -597,6 +635,7 @@ export function App({ initialFolder = null }: AppProps) {
           suggestions={suggestions}
           suggestionCounts={suggestionCounts}
           focusId={focusId}
+          centerOn={center}
           onSelect={(id) => {
             setMark(undefined);
             dispatch({ type: "select", id });

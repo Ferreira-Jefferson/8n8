@@ -258,3 +258,28 @@ describe("panelNodeOf", () => {
     expect(panelNodeOf(node("m/s0", "call"))).toBe("m/s0");
   });
 });
+
+describe("navReducer reveal (search)", () => {
+  it("opens each level of the path and selects the node, with each level as its own via", () => {
+    expect(
+      navReducer(empty, {
+        type: "reveal",
+        path: ["dir:a", "file:a/b.py"],
+        id: "file:a/b.py/fn:f",
+      }),
+    ).toEqual({
+      path: [
+        { id: "dir:a", via: "dir:a" },
+        { id: "file:a/b.py", via: "file:a/b.py" },
+      ],
+      selected: "file:a/b.py/fn:f",
+    });
+  });
+
+  it("goes to the top level for an empty path", () => {
+    const deep: NavState = { path: [{ id: "x", via: "x" }], selected: "x" };
+    expect(navReducer(deep, { type: "reveal", path: [], id: "dir:a" })).toEqual(
+      { path: [], selected: "dir:a" },
+    );
+  });
+});

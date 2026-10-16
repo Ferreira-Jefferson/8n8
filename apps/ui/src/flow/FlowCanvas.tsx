@@ -63,6 +63,8 @@ export interface FlowCanvasProps {
   /** The node to center, after "Voltar" or Esc (VID-27). */
   focusId: NodeId | null;
   /** A click on a leaf (VID-25). */
+  /** A search pick on this level: the card to center, at the current zoom. */
+  centerOn: { id: NodeId; nonce: number } | null;
   onSelect: (id: NodeId) => void;
   /** A click on a node with an inner flow, after the frame grows (VID-18, 23). */
   onOpen: (node: FlowNode) => void;
@@ -209,6 +211,32 @@ function KeepInView({
 }
 
 /** Wires drawn by `WireEdge`; `imports` wires get the dashed `edge-imports` class (VID-05, PROJ-03), `contains` wires the faint `edge-contains` one. */
+/** Centers the card of each new `request`, at the current zoom; a request already there at mount is not served. */
+function CenterOn({
+  request,
+  positions,
+  size,
+}: {
+  request: { id: NodeId; nonce: number } | null;
+  positions: Map<NodeId, Position>;
+  size: Size;
+}) {
+  const { setCenter, getZoom, getNode } = useReactFlow();
+  const handled = useRef(request?.nonce ?? 0);
+  useEffect(() => {
+    if (!request || request.nonce === handled.current) return;
+    const p = positions.get(request.id);
+    if (!p || size.width === 0 || size.height === 0) return;
+    handled.current = request.nonce;
+    const card = getNode(request.id)?.measured;
+    setCenter(p.x + (card?.width ?? 0) / 2, p.y + (card?.height ?? 0) / 2, {
+      zoom: getZoom(),
+      duration: prefersReducedMotion() ? 0 : 300,
+    });
+  }, [request, positions, size, setCenter, getZoom, getNode]);
+  return null;
+}
+
 export function toFlowEdges(
   edges: FlowEdge[],
   times: Schedule,
@@ -250,6 +278,7 @@ export function FlowCanvas({
   onOpen,
   onSuggestion,
   onBack,
+  centerOn,
 }: FlowCanvasProps) {
   const box = useRef<HTMLDivElement>(null);
   const timer = useRef<number | undefined>(undefined);
@@ -564,6 +593,7 @@ export function FlowCanvas({
           className="open-frame"
           style={{
             left: frame.left,
+        <CenterOn request={centerOn} positions={positions} size={size} />
             top: frame.top,
             width: frame.width,
             height: frame.height,

@@ -15,6 +15,7 @@ const AUTO = { APP8N8_AUTO_SUMMARY: "1", APP8N8_AUTO_SUGGESTIONS: "1" };
 // These specs share the fake LLM's request log and the e2e-real cache (4319): they wipe
 // and count them, so they run one at a time. Every other spec runs in parallel.
 const SHARED_STATE = [
+  "**/busca.e2e.ts",
   "**/cache.e2e.ts",
   "**/cli.e2e.ts",
   "**/configuracoes.e2e.ts",
