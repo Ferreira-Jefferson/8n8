@@ -20,8 +20,7 @@ export const ptBR = {
   "settings.model": "Modelo",
   "settings.autoSummary": "Resumo automático",
   "settings.autoSuggestions": "Sugestão automática",
-  "settings.ignoreDependencies":
-    "Ignorar o que está no .gitignore e as pastas de dependência",
+  "settings.ignoreDependencies": "Respeitar o .gitignore",
   "settings.ignoreDependencies.confirm":
     "Listar no mapa o que está no .gitignore? Entram as pastas de dependência (como node_modules) e os arquivos gerados. O mapa pode ficar enorme e lento, e o código de terceiros se mistura com o seu.",
   "settings.ignoreDependencies.yes": "Sim, listar",

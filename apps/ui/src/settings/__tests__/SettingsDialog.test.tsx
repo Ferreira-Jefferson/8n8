@@ -283,9 +283,7 @@ describe("patchOf", () => {
 
 describe("SettingsDialog and the .gitignore", () => {
   const box = () =>
-    screen.getByLabelText(
-      "Ignorar o que está no .gitignore e as pastas de dependência",
-    ) as HTMLInputElement;
+    screen.getByLabelText("Respeitar o .gitignore") as HTMLInputElement;
 
   it("starts on, from the settings", () => {
     open();

@@ -21,8 +21,7 @@ export const en: Record<MessageKey, string> = {
   "settings.model": "Model",
   "settings.autoSummary": "Automatic summary",
   "settings.autoSuggestions": "Automatic suggestion",
-  "settings.ignoreDependencies":
-    "Ignore what is in .gitignore and dependency folders",
+  "settings.ignoreDependencies": "Respect .gitignore",
   "settings.ignoreDependencies.confirm":
     "List what is in .gitignore on the map? Dependency folders (such as node_modules) and generated files come in. The map can get huge and slow, and third-party code mixes with yours.",
   "settings.ignoreDependencies.yes": "Yes, list it",

@@ -149,9 +149,7 @@ test.describe("Configurações e LLM sob demanda", () => {
 
       await page.getByRole("button", { name: "Configurações" }).click();
       const dialog = page.getByRole("dialog", { name: "Configurações" });
-      const box = dialog.getByLabel(
-        "Ignorar o que está no .gitignore e as pastas de dependência",
-      );
+      const box = dialog.getByLabel("Respeitar o .gitignore");
       await expect(box).toBeChecked();
 
       // Cancel: the choice stays.

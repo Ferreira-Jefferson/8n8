@@ -2322,7 +2322,7 @@ body {
 
 .settings-dialog label.check {
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 10px;
 }
