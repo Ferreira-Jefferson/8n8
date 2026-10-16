@@ -5,6 +5,7 @@ import { mistaGraph } from "../../flow/__tests__/mista-graph";
 import {
   highlight,
   matchEntries,
+  mergeResults,
   type SearchEntry,
   searchEntries,
 } from "../match";
@@ -130,5 +131,35 @@ describe("searchEntries", () => {
     // A reviewed title only exists for the levels already opened: the rest keeps the provisional name.
     const other = list.find((e) => e.tech === "processar_pedido()");
     expect(other?.title).toBe("Processar pedido");
+  });
+});
+
+describe("mergeResults", () => {
+  const e = (id: string, title = id): SearchEntry => ({
+    id,
+    title,
+    tech: id,
+    where: "",
+  });
+
+  it("keeps the order of the server and gives the screen's entry, with its title, where both have the node", () => {
+    const merged = mergeResults(
+      [e("b", "Título revisado")],
+      [e("a"), { ...e("b"), ancestry: ["p"] }, e("c")],
+    );
+    expect(merged.map((x) => x.id)).toEqual(["a", "b", "c"]);
+    expect(merged[1]).toMatchObject({
+      title: "Título revisado",
+      ancestry: ["p"],
+    });
+  });
+
+  it("puts first what only the screen found, by a title, and keeps to the limit", () => {
+    const merged = mergeResults(
+      [e("x", "só pelo título")],
+      [e("a"), e("b"), e("c")],
+      3,
+    );
+    expect(merged.map((x) => x.id)).toEqual(["x", "a", "b"]);
   });
 });

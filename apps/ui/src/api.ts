@@ -13,6 +13,7 @@ import type {
   NodeNotes,
   NodeTitle,
   ProjectSkeleton,
+  SearchHit,
   SettingsPatch,
   SettingsResponse,
   StructureResponse,
@@ -116,6 +117,25 @@ export async function fetchProjectFile(
   if (res.status === 409) return { status: "stale" };
   if (!res.ok) throw new Error(`Falha ao ler o arquivo (HTTP ${res.status})`);
   return { status: "ok", detail: (await res.json()) as FileDetail };
+}
+
+/** The nodes of the whole folder whose name holds every word of `query`; `stale` when the folder changed since the build the screen holds (409). */
+export async function fetchSearch(
+  root: string,
+  include: string[],
+  query: string,
+  version: string | undefined,
+): Promise<{ status: "ok"; hits: SearchHit[] } | { status: "stale" }> {
+  const res = await post("/api/project/search", {
+    root,
+    query,
+    ...(include.length > 0 ? { include } : {}),
+    ...(version === undefined ? {} : { version }),
+  });
+  if (res.status === 409) return { status: "stale" };
+  if (!res.ok) throw new Error(`Falha na busca (HTTP ${res.status})`);
+  const body = (await res.json()) as { hits: SearchHit[] };
+  return { status: "ok", hits: body.hits };
 }
 
 /** Opens the system's chooser on this machine; `null` when the person cancels. */

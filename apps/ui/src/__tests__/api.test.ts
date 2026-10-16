@@ -13,6 +13,7 @@ import {
   fetchLanguages,
   fetchProject,
   fetchProjectFile,
+  fetchSearch,
   fetchSettings,
   fetchSuggestions,
   fetchSummary,
@@ -141,6 +142,31 @@ describe("fetchProjectFile", () => {
     await expect(
       fetchProjectFile("C:/loja", [], "a.py", "v1"),
     ).rejects.toThrow();
+  });
+});
+
+describe("fetchSearch", () => {
+  it("posts the folder, the query and the build version, and returns the hits", async () => {
+    const hits = [{ node: { id: "n" }, ancestry: ["dir:a"] }];
+    const fn = fakeFetch(200, { hits });
+    const result = await fetchSearch("C:/loja", [], "frete", "v1");
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/project/search");
+    expect(JSON.parse(init.body as string)).toEqual({
+      root: "C:/loja",
+      query: "frete",
+      version: "v1",
+    });
+    expect(result).toEqual({ status: "ok", hits });
+  });
+
+  it("answers stale on 409 and throws on any other failure", async () => {
+    fakeFetch(409, { error: "stale", version: "v2" });
+    expect(await fetchSearch("C:/loja", [], "x", "v1")).toEqual({
+      status: "stale",
+    });
+    fakeFetch(500, {});
+    await expect(fetchSearch("C:/loja", [], "x", "v1")).rejects.toThrow();
   });
 });
 

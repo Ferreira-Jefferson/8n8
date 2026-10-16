@@ -18,6 +18,8 @@ export interface SearchEntry {
   tech: string;
   /** The right side of a result: file and lines, or the kind for a folder or file. */
   where: string;
+  /** Only on a hit of the server: the parents of a node whose file may not be loaded yet, from the top. */
+  ancestry?: NodeId[];
 }
 
 export interface Part {
@@ -72,6 +74,24 @@ const lines = (n: FlowNode) =>
     ? `${n.range.start}`
     : `${n.range.start}–${n.range.end}`;
 
+/** The entry of one searchable node; `file` is the path of the file it lives in, none for a folder or a file. */
+export function searchEntryOf(
+  node: FlowNode,
+  file: string | undefined,
+  title: string | undefined,
+  t: Translate = defaultT,
+): SearchEntry {
+  const container = node.kind === "folder" || node.kind === "file";
+  return {
+    id: node.id,
+    title: title ?? provisionalLabel(node, t),
+    tech: codeLineOf(node, ""),
+    where: container
+      ? tagLabel(tagOf(node), t)
+      : [file?.split("/").at(-1), lines(node)].filter(Boolean).join(" · "),
+  };
+}
+
 /** An entry for each searchable node of the whole graph, at every level. */
 export function searchEntries(
   graph: Graph,
@@ -88,16 +108,27 @@ export function searchEntries(
   };
   return graph.nodes
     .filter((n) => SEARCHABLE_KINDS.has(n.kind))
-    .map((n) => {
-      const container = n.kind === "folder" || n.kind === "file";
-      const file = container ? undefined : fileOf(n)?.path;
-      return {
-        id: n.id,
-        title: titles.get(n.id) ?? provisionalLabel(n, t),
-        tech: codeLineOf(n, ""),
-        where: container
-          ? tagLabel(tagOf(n), t)
-          : [file?.split("/").at(-1), lines(n)].filter(Boolean).join(" · "),
-      };
-    });
+    .map((n) => searchEntryOf(n, fileOf(n)?.path, titles.get(n.id), t));
+}
+
+/**
+ * The hits of the server, in its order, with the entry of the screen where it has one
+ * (it carries the reviewed title); then, first, the matches only the screen found,
+ * by a title. At most `limit`.
+ */
+export function mergeResults(
+  local: readonly SearchEntry[],
+  remote: readonly SearchEntry[],
+  limit = MAX_RESULTS,
+): SearchEntry[] {
+  const known = new Map(local.map((e) => [e.id, e]));
+  const heard = new Set(remote.map((e) => e.id));
+  const merged = [
+    ...local.filter((e) => !heard.has(e.id)),
+    ...remote.map((e) => ({
+      ...(known.get(e.id) ?? e),
+      ...(e.ancestry ? { ancestry: e.ancestry } : {}),
+    })),
+  ];
+  return merged.slice(0, limit);
 }

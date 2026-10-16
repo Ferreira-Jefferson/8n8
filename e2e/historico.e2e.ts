@@ -179,7 +179,7 @@ test.describe("Histórico", () => {
       root: pasta,
     });
     await expect.poll(() => levelIds(page)).toEqual(before);
-    expect(sent).toEqual([{ path: pasta }]);
+    expect(sent).toEqual([{ path: pasta, lazy: true }]);
 
     rmSync(pasta, { recursive: true, force: true });
     await page.goto("/");

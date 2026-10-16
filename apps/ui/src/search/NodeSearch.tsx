@@ -1,4 +1,4 @@
-import { type NodeId, searchWords } from "@8n8/model";
+import { searchWords } from "@8n8/model";
 import {
   Fragment,
   useCallback,
@@ -9,7 +9,15 @@ import {
   useState,
 } from "react";
 import { useT } from "../i18n";
-import { highlight, matchEntries, type SearchEntry } from "./match";
+import {
+  highlight,
+  matchEntries,
+  mergeResults,
+  type SearchEntry,
+} from "./match";
+
+/** The search waits this long after the last key before it asks the server. */
+const ASK_DELAY_MS = 150;
 
 function Marked({ text, words }: { text: string; words: string[] }) {
   return highlight(text, words).map((part, i) =>
@@ -30,10 +38,14 @@ function Marked({ text, words }: { text: string; words: string[] }) {
  */
 export function NodeSearch({
   entries,
+  remote,
   onPick,
 }: {
+  /** The nodes the screen holds, with their reviewed titles: they answer at once. */
   entries: readonly SearchEntry[];
-  onPick: (id: NodeId) => void;
+  /** The nodes of the whole folder, from the server: they join the answer when they arrive. Keep it stable between renders. */
+  remote?: ((query: string) => Promise<SearchEntry[]>) | undefined;
+  onPick: (entry: SearchEntry) => void;
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -44,11 +56,39 @@ export function NodeSearch({
   const lupa = useRef<HTMLButtonElement>(null);
   const base = useId();
   const optionId = (i: number) => `${base}-${i}`;
-  const results = useMemo(
-    () => (open ? matchEntries(entries, query) : []),
-    [open, entries, query],
-  );
+  const [heard, setHeard] = useState<{
+    query: string;
+    entries: SearchEntry[];
+  } | null>(null);
   const words = searchWords(query);
+  const wordsKey = words.join(" ");
+  // The server is asked after a pause; an answer to an old query is dropped.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: wordsKey stands for the query
+  useEffect(() => {
+    if (!open || !remote || wordsKey === "") return;
+    let live = true;
+    const timer = window.setTimeout(() => {
+      remote(query)
+        .then((list) => {
+          if (live) setHeard({ query: wordsKey, entries: list });
+        })
+        .catch(() => {});
+    }, ASK_DELAY_MS);
+    return () => {
+      live = false;
+      window.clearTimeout(timer);
+    };
+  }, [open, remote, wordsKey]);
+  const results = useMemo(
+    () =>
+      open
+        ? mergeResults(
+            matchEntries(entries, query),
+            heard?.query === wordsKey ? heard.entries : [],
+          )
+        : [],
+    [open, entries, query, heard, wordsKey],
+  );
 
   const close = useCallback(() => {
     setOpen(false);
@@ -72,7 +112,7 @@ export function NodeSearch({
   function pick(entry: SearchEntry | undefined) {
     if (!entry) return;
     close();
-    onPick(entry.id);
+    onPick(entry);
   }
 
   function onKeyDown(e: React.KeyboardEvent) {

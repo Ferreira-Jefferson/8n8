@@ -27,6 +27,7 @@ import {
   fetchLanguages,
   fetchProject,
   fetchProjectFile,
+  fetchSearch,
   fetchSettings,
   fetchSuggestions,
   fetchSummary,
@@ -37,7 +38,7 @@ import { videoGraph } from "../flow/__tests__/video-graph";
 import type { FlowCanvasProps } from "../flow/FlowCanvas";
 import { projectLevel } from "../flow/project-level";
 import { pedidoFreteGraph } from "../panel/__tests__/pedido-frete-graph";
-import { type FullProject, lazySkeleton } from "./lazy-project";
+import { type FullProject, lazySkeleton, searchHits } from "./lazy-project";
 
 vi.mock("../api", () => ({
   fetchGraph: vi.fn(),
@@ -49,6 +50,7 @@ vi.mock("../api", () => ({
   saveSettings: vi.fn(),
   fetchProject: vi.fn(),
   fetchProjectFile: vi.fn(),
+  fetchSearch: vi.fn(),
   fetchTitles: vi.fn(),
   fetchHistory: vi.fn(),
   fetchHistoryEntry: vi.fn(),
@@ -79,6 +81,9 @@ const projectData =
   >();
 const served = new Map<string, FileDetail>();
 const fileMock = vi.mocked(fetchProjectFile);
+const searchMock = vi.mocked(fetchSearch);
+/** The full graph of the folder the test opened: the server's search reads it. */
+let openedProject: FullProject | null = null;
 const titlesMock = vi.mocked(fetchTitles);
 const historyMock = vi.mocked(fetchHistory);
 const historyEntryMock = vi.mocked(fetchHistoryEntry);
@@ -98,10 +103,15 @@ beforeEach(() => {
   projectMock.mockReset();
   projectMock.mockImplementation(async (...args) => {
     const data = await projectData(...args);
-    return "error" in data
-      ? data
-      : lazySkeleton(data, (path) => projectFiles[path] ?? "", served);
+    if ("error" in data) return data;
+    openedProject = data;
+    return lazySkeleton(data, (path) => projectFiles[path] ?? "", served);
   });
+  searchMock.mockReset();
+  searchMock.mockImplementation(async (_root, _include, query) => ({
+    status: "ok",
+    hits: openedProject ? searchHits(openedProject.graph, query) : [],
+  }));
   fileMock.mockReset();
   fileMock.mockImplementation(async (_root, _include, path) => {
     const detail = served.get(path);
@@ -566,8 +576,6 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
 });
 
 describe("App fetches the code of a project by file", () => {
-  const fnId = "file:frete/calculo.py/fn:calcular_frete";
-
   it("asks for the file of a selected file once, with the build version; the panel says the code is loading until it arrives", async () => {
     let arrive: (r: Awaited<ReturnType<typeof fetchProjectFile>>) => void =
       () => {};
@@ -1539,10 +1547,27 @@ describe("App, node search", () => {
     expect(screen.getByRole("combobox", { name: "Buscar nó" })).toBeTruthy();
   });
 
-  it.skip("a node of a deeper level opens the path to it, selects it and asks the canvas to start on it", async () => {
+  it("a node of a deeper level, whose file is not loaded, comes from the server: the pick loads the file, opens the path to the node, selects it and asks the canvas to start on it", async () => {
     await searchFor("calcular_frete");
-    fireEvent.click(screen.getAllByRole("option")[0] as HTMLElement);
-    expect(breadcrumbItems()).toEqual(["loja", "frete", "calculo.py"]);
+    // The screen holds only folders and files: the function comes from the server.
+    const first = await screen.findAllByRole("option");
+    expect(first[0]?.textContent).toContain("calcular_frete()");
+    expect(searchMock).toHaveBeenCalledWith(
+      lojaRoot,
+      [],
+      "calcular_frete",
+      "v1",
+    );
+    fireEvent.click(first[0] as HTMLElement);
+    await waitFor(() =>
+      expect(breadcrumbItems()).toEqual(["loja", "frete", "calculo.py"]),
+    );
+    expect(fileMock).toHaveBeenCalledWith(
+      lojaRoot,
+      [],
+      "frete/calculo.py",
+      "v1",
+    );
     const canvas = currentCanvas();
     expect(canvas.levelId).toBe("file:frete/calculo.py");
     expect(canvas.selected).toBe(FN);

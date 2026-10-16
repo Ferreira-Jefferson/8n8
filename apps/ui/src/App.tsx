@@ -28,6 +28,7 @@ import {
   fetchPick,
   fetchProject,
   fetchProjectFile,
+  fetchSearch,
   fetchSettings,
 } from "./api";
 import { codeLineOf } from "./flow/card";
@@ -54,7 +55,7 @@ import { externalEffects } from "./panel/effects";
 import { IgnoredFiles } from "./panel/IgnoredFiles";
 import { clampPanel, PanelResizer } from "./panel/PanelResizer";
 import { createProjectStore, type ProjectStore } from "./project-store";
-import { searchEntries } from "./search/match";
+import { type SearchEntry, searchEntries, searchEntryOf } from "./search/match";
 import { NodeSearch } from "./search/NodeSearch";
 import { SettingsButton, SettingsDialog } from "./settings/SettingsDialog";
 
@@ -547,21 +548,61 @@ export function App({ initialFolder = null }: AppProps) {
   const byId = (id: NodeId | null) =>
     graph?.nodes.find((n) => n.id === id) ?? null;
 
-  /** A search pick: opens the levels down to the node, then centers and selects it. */
-  function goToNode(id: NodeId) {
-    const node = byId(id);
-    if (!graph || !node) return;
+  // The nodes of files not opened yet come from the server; the file of a hit is the `file` in its ancestry.
+  const remoteSearch = useMemo(() => {
+    if (mapped?.kind !== "project") return undefined;
+    const { root, include, skeleton, store: held } = mapped;
+    const files = new Map(
+      skeleton.graph.nodes.flatMap((n) =>
+        n.kind === "file" && n.path !== undefined ? [[n.id, n.path]] : [],
+      ),
+    );
+    return async (query: string): Promise<SearchEntry[]> => {
+      const found = await fetchSearch(root, include, query, skeleton.version);
+      if (found.status === "stale") {
+        held.reportStale();
+        return [];
+      }
+      return found.hits.map((hit) => {
+        const file = hit.ancestry.flatMap((id) => files.get(id) ?? []).at(-1);
+        return {
+          ...searchEntryOf(hit.node, file, undefined),
+          ancestry: hit.ancestry,
+        };
+      });
+    };
+  }, [mapped]);
+
+  // The latest navigation, for a pick that waits for a file before it moves.
+  const navNow = useRef(nav);
+  navNow.current = nav;
+
+  /** A search pick: loads the file of the node if it is not here, opens the levels down to the node, then centers and selects it. */
+  async function goToNode(entry: SearchEntry) {
+    const { id } = entry;
+    let where = graph;
+    if (store && !byId(id)) {
+      const file = entry.ancestry
+        ?.flatMap((a) => nodesById.get(a) ?? [])
+        .filter((n) => n.kind === "file")
+        .at(-1)?.path;
+      if (file === undefined || !(await store.ensureFile(file))) return;
+      where = store.getGraph();
+    }
+    const node = where?.nodes.find((n) => n.id === id);
+    if (!where || !node) return;
+    const open = navNow.current.path;
     const listed = (path: NodeId[]) =>
-      projectLevel(graph, path.at(-1) ?? null).nodes.some((n) => n.id === id);
-    let path = node.parentId === null ? [] : ancestry(graph, node.parentId);
+      projectLevel(where, path.at(-1) ?? null).nodes.some((n) => n.id === id);
+    let path = node.parentId === null ? [] : ancestry(where, node.parentId);
     // A node its parent's level leaves out (a function called, not an entry): open it instead.
-    if (!listed(path) && graph.nodes.some((n) => n.parentId === id)) {
-      path = ancestry(graph, id);
+    if (!listed(path) && where.nodes.some((n) => n.parentId === id)) {
+      path = ancestry(where, id);
     }
     setMark(undefined);
     if (
-      path.length === nav.path.length &&
-      path.every((p, i) => p === nav.path[i]?.id)
+      path.length === open.length &&
+      path.every((p, i) => p === open[i]?.id)
     ) {
       setCenter((c) => ({ id, nonce: (c?.nonce ?? 0) + 1 }));
       dispatch({ type: "select", id });
@@ -720,7 +761,7 @@ export function App({ initialFolder = null }: AppProps) {
           onToggle={() => setHistoryOpen((o) => !o)}
         />
         <SettingsButton onOpen={openSettings} />
-        <NodeSearch entries={entries} onPick={goToNode} />
+        <NodeSearch entries={entries} remote={remoteSearch} onPick={goToNode} />
         {mapped.kind === "project" && (
           <IgnoredFiles
             ignored={mapped.skeleton.ignored}

@@ -17,6 +17,8 @@ export interface ProjectStore {
   refOf(nodeId: NodeId): string | undefined;
   /** Loads a file once; true when it is in the store, false when it cannot be (stale or failed). */
   ensureFile(path: string): Promise<boolean>;
+  /** Another request found the skeleton old: the folder opens again, once. */
+  reportStale(): void;
   subscribe(listener: () => void): () => void;
 }
 
@@ -41,6 +43,11 @@ export function createProjectStore({
   let sources: ReadonlyMap<string, string> = new Map();
   let merged: Graph | null = null;
   let stale = false;
+  const markStale = () => {
+    if (stale) return;
+    stale = true;
+    onStale();
+  };
 
   function build(): Graph {
     const nodes: FlowNode[] = [...skeleton.graph.nodes];
@@ -66,10 +73,7 @@ export function createProjectStore({
       const loading = fetchFile(path).then(
         (r) => {
           if (r.status === "stale") {
-            if (!stale) {
-              stale = true;
-              onStale();
-            }
+            markStale();
             return false;
           }
           details.set(path, r.detail);
@@ -90,6 +94,7 @@ export function createProjectStore({
       asked.set(path, loading);
       return loading;
     },
+    reportStale: markStale,
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);

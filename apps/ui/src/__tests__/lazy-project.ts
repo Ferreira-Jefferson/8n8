@@ -6,6 +6,10 @@ import {
   type IgnoredFile,
   type NodeId,
   type ProjectSkeleton,
+  SEARCHABLE_KINDS,
+  type SearchHit,
+  searchText,
+  searchWords,
   skeletonGraphOf,
 } from "@8n8/model";
 
@@ -72,4 +76,29 @@ export function lazySkeleton(
     },
     graph: skeletonGraphOf(project.graph),
   };
+}
+
+/** What the server's search answers for a full graph: the searchable nodes that hold every word, with their parents from the top. */
+export function searchHits(graph: Graph, query: string): SearchHit[] {
+  const words = searchWords(query);
+  if (words.length === 0) return [];
+  const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+  return graph.nodes
+    .filter(
+      (n) =>
+        SEARCHABLE_KINDS.has(n.kind) &&
+        words.every((w) => searchText(n).includes(w)),
+    )
+    .slice(0, 50)
+    .map((node) => {
+      const ancestry: NodeId[] = [];
+      for (
+        let at = node.parentId === null ? undefined : byId.get(node.parentId);
+        at;
+        at = at.parentId === null ? undefined : byId.get(at.parentId)
+      ) {
+        ancestry.unshift(at.id);
+      }
+      return { node, ancestry };
+    });
 }
