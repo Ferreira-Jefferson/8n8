@@ -6,3 +6,9 @@ export {
   MIN_SCORE_MARGIN,
   pluginForPath,
 } from "./detect";
+export type {
+  AnalysisRunner,
+  ParallelOptions,
+  SliceHandle,
+} from "./parallel";
+export { analyzeProjectParallel } from "./parallel";

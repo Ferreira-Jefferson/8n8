@@ -30,7 +30,7 @@ const EMPTY: LanguageAnalysis = {
 };
 
 /** Each file goes to the first plugin that serves its extension; the rest are ignored. */
-function groupByPlugin(
+export function groupByPlugin(
   files: SourceFile[],
   plugins: LanguagePlugin[],
 ): Map<LanguagePlugin, SourceFile[]> {
@@ -64,7 +64,7 @@ function throws(run: () => unknown): boolean {
  * throw alone are the failed ones (2.3), and the rest are analyzed together.
  * A failure that no single file explains is the plugin's, and it propagates.
  */
-function analyzeIsolating(
+export function analyzeIsolating(
   plugin: LanguagePlugin,
   files: SourceFile[],
 ): { analysis: LanguageAnalysis; failed: SourceFile[] } {
@@ -86,7 +86,7 @@ function analyzeIsolating(
 }
 
 /** A file the plugin could not read: a `file` node marked with a syntax error, no inner nodes. */
-function failedGraph(plugin: LanguagePlugin, file: SourceFile): Graph {
+export function failedGraph(plugin: LanguagePlugin, file: SourceFile): Graph {
   return {
     language: plugin.id,
     empty: false,
@@ -107,7 +107,10 @@ function failedGraph(plugin: LanguagePlugin, file: SourceFile): Graph {
 }
 
 /** `mixed` when more than one language has files; with none, the only plugin's id. */
-function languageOf(used: LanguagePlugin[], all: LanguagePlugin[]): string {
+export function languageOf(
+  used: LanguagePlugin[],
+  all: LanguagePlugin[],
+): string {
   if (used.length === 1) return used[0]?.id ?? "";
   if (used.length === 0 && all.length === 1) return all[0]?.id ?? "";
   return "mixed";
