@@ -210,7 +210,10 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <dt>contagem</dt><dd>O retângulo verde com um número. Diz quantos nós o nível de dentro mostra. Só pastas, arquivos, funções, classes e código solto têm contagem.</dd>
       <dt>selo de sugestões</dt><dd>O retângulo na cor do texto (Névoa no escuro, Tinta no claro) com um ponto e um número. Diz quantas sugestões caem dentro do nó. Um clique abre o balão.</dd>
       <dt>botão de ver detalhes</dt><dd>O botão com o ícone de painel, no canto inferior direito dos nós que abrem, menos as pastas. Mostra o painel do nó sem entrar nele.</dd>
-      <dt>painel</dt><dd>A coluna à direita com o detalhe do nó selecionado: resumo, código, entrada e saída, efeitos e sugestões.</dd>
+      <dt>painel</dt><dd>A coluna à direita com o detalhe do nó selecionado. Mostra uma parte por vez, em quatro abas.</dd>
+      <dt>aba</dt><dd>Uma das quatro partes do painel: Código, Conversa, Resumo e Sugestões. A aba escolhida fica quando você troca de nó.</dd>
+      <dt>conversa</dt><dd>A aba onde você pergunta sobre o nó aberto e sobre o pai dele. As respostas são curtas.</dd>
+      <dt>sugestão guardada</dt><dd>Uma sugestão que veio da conversa e ficou na lista do nó, sob "Da conversa". O modelo guarda sozinho a que achar, e você guarda qualquer resposta com o ícone de marcador.</dd>
       <dt>balão</dt><dd>A janela pequena que abre sobre o selo de sugestões e lista cada sugestão.</dd>
     </dl>
   </section>
@@ -221,17 +224,17 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     <div class="stage shot">
       <picture>
         <source media="(prefers-color-scheme: light)" srcset="../images/tela-light.png">
-        <img src="../images/tela-dark.png" width="1600" height="900" alt="A tela real do 8n8: o mapa da pasta store com o arquivo orders.py aberto, o logotipo, a trilha, os botões da barra, o botão de arquivos ignorados e o painel do nó Process order à direita">
+        <img src="../images/tela-dark.png" width="1600" height="900" alt="A tela real do 8n8: o mapa da pasta store com o arquivo orders.py aberto, o logotipo, a trilha, os botões da barra, o botão de arquivos ignorados e o painel do nó Process order à direita, na aba Código">
       </picture>
       <svg class="leads" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M89 105 V72"/><path d="M250 105 V72"/><path d="M906 105 V84"/><path d="M978 105 V84"/><path d="M1050 105 V84"/>
-        <path d="M180 608 V578"/><path d="M552 608 V578"/><path d="M737 432 V500"/><path d="M98 855 H78"/><path d="M1544 98 V74"/>
+        <path d="M89 105 V72"/><path d="M250 105 V72"/><path d="M931 105 V84"/><path d="M993 105 V84"/><path d="M1055 105 V84"/>
+        <path d="M180 608 V578"/><path d="M552 608 V578"/><path d="M737 432 V500"/><path d="M98 855 H78"/><path d="M1544 98 V74"/><path d="M1500 148 V128"/>
       </svg>
       <span class="pin" style="left:5.56%;top:13%">1</span>
       <span class="pin" style="left:15.6%;top:13%">2</span>
-      <span class="pin" style="left:56.6%;top:13%">3</span>
-      <span class="pin" style="left:61.1%;top:13%">4</span>
-      <span class="pin" style="left:65.6%;top:13%">5</span>
+      <span class="pin" style="left:58.2%;top:13%">3</span>
+      <span class="pin" style="left:62.1%;top:13%">4</span>
+      <span class="pin" style="left:65.9%;top:13%">5</span>
       <span class="pin" style="left:35%;top:30%">6</span>
       <span class="pin" style="left:11.25%;top:68.9%">7</span>
       <span class="pin" style="left:34.5%;top:68.9%">8</span>
@@ -240,6 +243,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <span class="pin" style="left:69.7%;top:51.1%">11</span>
       <span class="pin" style="left:96.5%;top:12.2%">12</span>
       <span class="pin" style="left:84.5%;top:84.4%">13</span>
+      <span class="pin" style="left:93.75%;top:17.8%">14</span>
     </div>
     <p class="small muted">A imagem é uma captura do app real, gerada por <code>pnpm prints</code>. Ela muda junto com a tela. A pasta de exemplo ganhou um arquivo de mais de 1 MB, para o botão 10 aparecer.</p>
     <ul class="callouts">
@@ -255,7 +259,8 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <li><span class="n">10</span><span><b>Arquivos ignorados.</b> Um triângulo de aviso no canto inferior esquerdo, só num mapa de pasta e só quando o 8n8 pulou algum arquivo. O texto "1 arquivo ignorado" aparece ao passar o mouse.</span></li>
       <li><span class="n">11</span><span><b>Barra do painel.</b> A faixa entre o canvas e o painel. Arraste, ou use as setas com ela em foco, para mudar a largura do painel.</span></li>
       <li><span class="n">12</span><span><b>Minimizar painel.</b> O X no canto do painel. Com o painel minimizado, vira um círculo com ‹ na borda direita, que o abre de novo.</span></li>
-      <li><span class="n">13</span><span><b>Painel de detalhe.</b> O nome do nó, o resumo, o código com as linhas do nó, os efeitos externos e as sugestões. O capítulo <a href="#painel">O painel</a> explica cada estado.</span></li>
+      <li><span class="n">13</span><span><b>Painel de detalhe.</b> O nome do nó e, sob ele, uma parte por vez. Aqui está a aba Código, com as linhas do nó. O capítulo <a href="#painel">O painel</a> explica cada aba e cada estado.</span></li>
+      <li><span class="n">14</span><span><b>Abas do painel.</b> Código, Conversa, Resumo e Sugestões, nesta ordem. A aba aberta tem sublinhado e texto em Petróleo. O painel abre no Código.</span></li>
     </ul>
     <p class="small muted">A contagem de nós vive nos cartões, e não há rodapé no mapa. A linguagem de um trecho aparece no cabeçalho do código, no painel (<code>CÓDIGO · trecho.py, linhas 1 a 5</code>).</p>
 
@@ -553,35 +558,71 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
 
   <section id="painel">
     <h2>O painel</h2>
-    <p>O painel mostra o detalhe do nó selecionado. Ele só existe quando há algo para mostrar: código, resumo ou sugestões. Uma pasta não tem nada disso, então selecionar uma pasta não abre o painel, por nenhum caminho (cartão, hub, trilha ou busca). O painel começa minimizado. O 8n8 guarda se ele está aberto e a largura dele. A largura vai de 320 px a 70% da janela.</p>
-    <h3>As seções, de cima para baixo</h3>
+    <p>O painel mostra o detalhe do nó selecionado. Ele só existe quando há algo para mostrar: código, resumo ou sugestões. Uma pasta não tem nada disso, então selecionar uma pasta não abre o painel, por nenhum caminho (cartão, hub, trilha ou busca). O painel começa minimizado, e o botão <b>Ver detalhes</b> de um cartão abre o painel já no nó dele. O 8n8 guarda se o painel está aberto e a largura dele. A largura vai de 320 px a 70% da janela.</p>
+    <h3>As quatro abas</h3>
+    <p>O painel mostra uma parte do nó por vez. As abas ficam sob o nome do nó, nesta ordem: <b>Código</b>, <b>Conversa</b>, <b>Resumo</b> e <b>Sugestões</b>. O código vem primeiro porque é a única parte que sempre existe: a conversa, o resumo e as sugestões dependem do LLM. O painel abre no Código. A aba escolhida fica quando você troca de nó, para quem lê os resumos um depois do outro. Uma marca de linha (numa frase do resumo, numa sugestão ou numa resposta da conversa) leva de volta ao Código, com a linha marcada.</p>
     <table>
-      <thead><tr><th>Seção</th><th>Quando aparece</th><th>O que mostra</th></tr></thead>
+      <thead><tr><th>Aba</th><th>O que mostra</th></tr></thead>
       <tbody>
-        <tr><td class="k">Nome</td><td>Sempre.</td><td>O título do nó, em Archivo Black.</td></tr>
-        <tr><td class="k">O que faz</td><td>Em todo nó com painel: arquivo, função, classe, código solto e passos.</td><td>O resumo em Português Técnico Simplificado, revisado contra o código. Um passo tem no máximo duas frases, e a linha "2 frases · voz ativa · um termo por conceito" aparece sob o resumo. Arquivo, função, classe e código solto não têm esse limite. O resumo de um arquivo lê o arquivo inteiro, sem as docstrings.</td></tr>
-        <tr><td class="k">Código</td><td>Em todo nó com painel.</td><td>O cabeçalho "CÓDIGO · arquivo, linhas a a b" e as linhas do nó, com os números de linha. Num trecho, o arquivo é <code>trecho.py</code>, <code>trecho.ts</code> ou só "trecho" quando a linguagem não foi detectada.</td></tr>
-        <tr><td class="k">Entrada e saída</td><td>Depois que o resumo chega, e só se ele achou entradas ou saídas.</td><td>O que entra, uma seta, o que sai.</td></tr>
-        <tr><td class="k">Efeitos externos</td><td>Em arquivo, função, classe e código solto.</td><td>As chamadas a rede, banco, disco, e-mail ou outra coisa de fora, com a categoria e a linha. Sem chamadas, "Nenhum efeito externo."</td></tr>
-        <tr><td class="k">Sugestões</td><td>Nos mesmos nós de "O que faz".</td><td>Cada sugestão com comando, linha e severidade.</td></tr>
+        <tr><td class="k">Código</td><td>O cabeçalho "CÓDIGO · arquivo, linhas a a b" e as linhas do nó, com os números de linha. Num trecho, o arquivo é <code>trecho.py</code>, <code>trecho.ts</code> ou só "trecho" quando a linguagem não foi detectada. O painel de um arquivo mostra o arquivo inteiro.</td></tr>
+        <tr><td class="k">Conversa</td><td>As perguntas, as respostas curtas e os dois atalhos. Veja "A conversa", abaixo.</td></tr>
+        <tr><td class="k">Resumo</td><td>"O que faz", a marca "Revisado", as frases, "Entrada e saída" e "Efeitos externos". Um passo tem no máximo duas frases, e a linha "2 frases · voz ativa · um termo por conceito" aparece sob o resumo. Arquivo, função, classe e código solto não têm esse limite. O resumo de um arquivo lê o arquivo inteiro, sem as docstrings.</td></tr>
+        <tr><td class="k">Sugestões</td><td>Um cartão por sugestão, com o comando, a linha, a severidade e o motivo. As que vieram da conversa ficam sob "Da conversa". A aba mostra, num círculo, quantas sugestões o nó tem.</td></tr>
       </tbody>
     </table>
-    <p class="small muted">O painel de um arquivo mostra o código do arquivo inteiro, os efeitos externos de todas as funções dele e os botões de resumo e de sugestões. Uma pasta não tem painel.</p>
+    <p class="small muted">"Entrada e saída" só aparece depois que o resumo chega, e só se ele achou entradas ou saídas. "Efeitos externos" lista as chamadas a rede, banco, disco, e-mail ou outra coisa de fora, com a categoria e a linha; sem chamadas, diz "Nenhum efeito externo." Eles existem em arquivo, função, classe e código solto.</p>
     <h3>Resumo e sugestões, sob demanda</h3>
-    <p>A LLM só trabalha quando você pede. O painel mostra o botão <b>Gerar resumo</b> e o botão <b>Pedir sugestões</b>. Nas Configurações, as opções <b>Resumo automático</b> e <b>Sugestão automática</b> pedem os dois sozinhos ao selecionar um nó.</p>
+    <p>O LLM só trabalha quando você pede. Cada aba tem um só botão: <b>Gerar resumo</b> na aba Resumo, <b>Pedir sugestões</b> na aba Sugestões. O botão roda o atalho na aba Conversa, e o resultado aparece nas duas abas. Nas Configurações, as opções <b>Resumo automático</b> e <b>Sugestão automática</b> pedem os dois sozinhos ao selecionar um nó.</p>
     <table>
       <thead><tr><th>Estado</th><th>O que aparece</th></tr></thead>
       <tbody>
-        <tr><td class="k">esperando</td><td>"Gerando resumo…" ou "Pedindo sugestões…".</td></tr>
+        <tr><td class="k">esperando</td><td>O mesmo botão, desabilitado, com o texto "Gerando resumo…" ou "Pedindo sugestões…".</td></tr>
         <tr><td class="k">revisado</td><td>A marca "Revisado" ou "Revisado com cortes". "Com cortes" quer dizer que frases sem apoio no código foram removidas.</td></tr>
         <tr><td class="k">atualizado</td><td>"Resumo atualizado: o código mudou", "os vizinhos mudaram" ou "o modelo ou o prompt mudou". O resumo guardado não valia mais.</td></tr>
         <tr><td class="k">sem provedor</td><td>"Configure um provedor de LLM em Configurações.", com o botão "Abrir configurações". Com o provedor Claude Code e sem o executável, o aviso diz isso, em Cobre.</td></tr>
-        <tr><td class="k">falhou</td><td>"Resumo indisponível" ou "Sugestões indisponíveis", com "Tentar de novo". "Não foi possível gerar um resumo fiel." quando a revisão cortou tudo.</td></tr>
+        <tr><td class="k">falhou</td><td>A mensagem ("Resumo indisponível", "Sugestões indisponíveis" ou "Não foi possível gerar um resumo fiel.") e, sob ela, o mesmo botão de antes, habilitado de novo. Não aparece outro botão.</td></tr>
         <tr><td class="k">trecho mudou</td><td>'O trecho mudou. Clique em "Gerar mapa" de novo.' O texto no editor não é mais o do mapa.</td></tr>
       </tbody>
     </table>
+    <h3>A conversa</h3>
+    <p>A aba Conversa responde sobre o nó aberto e sobre o pai dele: o <code>if</code> e a função que o contém, a função e o arquivo. O modelo não vê mais nada do projeto. O prompt manda o modelo recusar a pergunta que foge disso, com uma frase dizendo que ele só fala do nó e do pai. A resposta tem no máximo 600 caracteres, vai direto ao ponto e segue o idioma do 8n8, com as regras do Português Técnico Simplificado ou do Simplified Technical English. O 8n8 corta o que passar do limite, numa palavra, com "…".</p>
+    <div class="stage shot">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="../images/conversa-light.png">
+        <img src="../images/conversa-dark.png" width="1600" height="900" alt="O painel na aba Conversa, ainda vazia: as quatro abas, o convite para perguntar, o campo de texto e, na barra de baixo, os atalhos /resumo e /sugestões e o botão de enviar">
+      </picture>
+      <svg class="leads" viewBox="0 0 1600 900" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M1420 148 V128"/><path d="M1205 478 V460"/><path d="M1524 488 V463"/>
+      </svg>
+      <span class="pin" style="left:88.75%;top:17.8%">1</span>
+      <span class="pin" style="left:84.5%;top:35.6%">2</span>
+      <span class="pin" style="left:90.6%;top:44.3%">3</span>
+      <span class="pin" style="left:75.3%;top:54.4%">4</span>
+      <span class="pin" style="left:95.25%;top:55.6%">5</span>
+    </div>
+    <p class="small muted">A imagem é uma captura do app real, sem chave de LLM: a conversa está vazia. Ela é gerada por <code>pnpm prints</code>.</p>
+    <ul class="callouts">
+      <li><span class="n">1</span><span><b>Abas.</b> Conversa com sublinhado e texto em Petróleo: é a aba aberta.</span></li>
+      <li><span class="n">2</span><span><b>Mensagens.</b> Sua pergunta fica à direita, num balão com Petróleo a 22%. A resposta fica à esquerda, num balão com a borda do painel. Uma resposta pode ter marcas como <code>L18</code>: cada uma é um botão que marca essa linha no código, se a linha é do nó. Um resumo ou as sugestões pedidos por atalho aparecem na largura inteira.</span></li>
+      <li><span class="n">3</span><span><b>Campo de texto.</b> Cresce com o texto, até 168 px, e depois rola. Enter envia. O campo e a barra de baixo ficam na mesma caixa, mas separados: o texto nunca passa por baixo do botão.</span></li>
+      <li><span class="n">4</span><span><b>Atalhos.</b> <code>/resumo</code> e <code>/sugestões</code>. Pedem o resumo ou as sugestões do nó. Se já foram gerados, mostram o que já existe, sem chamar o LLM. Também funcionam digitados, com ou sem acento.</span></li>
+      <li><span class="n">5</span><span><b>Enviar.</b> Um quadrado de 34 px com uma seta, em Petróleo, como os outros botões do 8n8. Fica desabilitado com o campo vazio e enquanto o modelo responde.</span></li>
+    </ul>
+    <p>Enquanto o modelo pensa, a conversa mostra "Pensando…". Sem provedor, a resposta é o aviso de sempre, com o botão "Abrir configurações". Uma falha mostra a mensagem e o botão "Tentar de novo", que repete a mesma pergunta. A conversa de cada nó fica na memória da tela, enquanto o mapa está aberto. Ela não é gravada.</p>
+    <h3>Guardar e remover sugestões</h3>
+    <p>Sob cada resposta há um ícone de marcador. Ele aparece quando o mouse passa sobre a resposta e fica sempre visível, em Petróleo, enquanto a resposta está guardada. Um clique liga, outro desliga.</p>
+    <table>
+      <thead><tr><th>Caso</th><th>O que acontece</th></tr></thead>
+      <tbody>
+        <tr><td class="k">o modelo achou uma sugestão</td><td>Ela já entra na lista, com a nota "Salva nas sugestões" sob a resposta. O ícone desliga para tirá-la.</td></tr>
+        <tr><td class="k">a resposta não tem sugestão</td><td>O ícone pede ao servidor que dê à resposta o formato de uma sugestão: comando, motivo, linha e severidade. Se não houver nada concreto, a nota diz "Não achei uma sugestão concreta nessa resposta."</td></tr>
+        <tr><td class="k">o ×, no cartão</td><td>Cada cartão da aba Sugestões tem um × no canto. Ele remove a sugestão da lista, seja ela gerada ou guardada da conversa. O 8n8 lembra a remoção: uma nova geração não a traz de volta. Remover uma sugestão guardada desliga o ícone na conversa.</td></tr>
+        <tr><td class="k">o código do nó mudou</td><td>As sugestões guardadas e as remoções daquele nó caem, porque as linhas passariam a apontar para outro lugar.</td></tr>
+      </tbody>
+    </table>
+    <p class="small muted">Uma sugestão guardada tem de apontar uma linha do nó. O servidor recusa a que não aponta. O selo do cartão no mapa e o círculo da aba somam as sugestões geradas e as guardadas.</p>
     <h3>Das frases ao código</h3>
-    <p>Cada frase do resumo, cada entrada, cada saída e cada sugestão tem um botão com a linha de origem. O clique marca essas linhas no código do painel, em Petróleo. Uma sugestão escolhida no balão do cartão também abre o painel com a linha marcada.</p>
+    <p>Cada frase do resumo, cada entrada, cada saída, cada sugestão e cada marca de linha da conversa tem um botão com a linha de origem. O clique marca essas linhas no código do painel, em Petróleo, e abre a aba Código. Uma sugestão escolhida no balão do cartão também abre o painel com a linha marcada.</p>
   </section>
 
   <section id="pecas">
@@ -623,6 +664,8 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
         <tr><td class="k">Esc numa janela</td><td>Fecha a gaveta, o diálogo, a busca ou o balão. No balão, devolve o foco ao selo.</td></tr>
         <tr><td class="k">Setas e Enter na busca</td><td>Andam pelos resultados e escolhem um.</td></tr>
         <tr><td class="k">Setas na barra do painel</td><td>Mudam a largura em passos de 24 px.</td></tr>
+        <tr><td class="k">Setas nas abas do painel</td><td>Esquerda e direita andam entre Código, Conversa, Resumo e Sugestões, e voltam ao começo no fim.</td></tr>
+        <tr><td class="k">Enter na conversa</td><td>Envia a pergunta. Shift e Enter quebram a linha. O campo cresce até 168 px e depois rola.</td></tr>
         <tr><td class="k">Enter ou espaço num nó</td><td>Seleciona o nó. Depois, as setas movem o cartão.</td></tr>
         <tr><td class="k">Arrastar um cartão</td><td>Muda a posição dele no nível, enquanto o mapa está aberto. As arestas trocam de porta para seguir.</td></tr>
         <tr><td class="k">Arrastar o fundo, roda do mouse</td><td>Movem e aproximam o mapa. O zoom vai até 0,2. O clique duplo não dá zoom.</td></tr>

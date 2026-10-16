@@ -41,13 +41,22 @@ Com a IA, o código muda e cresce rápido demais para ler linha por linha. Eu pe
   <img src="docs/images/fluxo-light.png" alt="Fluxo interno de uma função: três funções, um SE, uma chamada HTTP, o banco e o retorno">
 </picture>
 
+**4. O painel do nó** tem quatro abas: Código, Conversa, Resumo e Sugestões. A imagem mostra a aba Conversa, ainda vazia: sem chave de LLM, ela só tem os dois atalhos.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/conversa-dark.png">
+  <img src="docs/images/conversa-light.png" alt="O mapa com o painel do nó na aba Conversa: as quatro abas, o convite para perguntar, o campo de texto, os atalhos /resumo e /sugestões e o botão de enviar">
+</picture>
+
 O código de exemplo está em [docs/sample-project](docs/sample-project). Para refazer as imagens: `pnpm prints`.
 
 ### O que o mapa oferece
 
 - **Busca de nó:** a lupa expande e procura por título ou por nome técnico.
-- **Card que abre:** o card mostra quantos nós tem dentro. O botão **Ver detalhes** abre o painel do nó sem entrar nele. Num arquivo, você vê o código e pode pedir o resumo e as sugestões do arquivo inteiro sem abrir as funções. Uma pasta não tem o botão nem painel: ela não tem código para mostrar.
-- **Sugestões:** um selo no nó mostra quantas sugestões ele tem. O clique abre um balão com a lista.
+- **Card que abre:** o card mostra quantos nós tem dentro. O botão **Ver detalhes** abre o painel do nó, minimizado ou não, sem entrar nele. Num arquivo, você vê o código e pode pedir o resumo e as sugestões do arquivo inteiro sem abrir as funções. Uma pasta não tem o botão nem painel: ela não tem código para mostrar.
+- **Painel em abas:** Código, Conversa, Resumo e Sugestões, nesta ordem. O código vem primeiro porque é a única parte que sempre existe. O painel abre no Código, e a aba escolhida fica ao trocar de nó. Em cada aba de resumo ou de sugestões há um só botão de gerar: ele fica desabilitado enquanto o texto é gerado e, se falhar, volta com a mensagem de erro.
+- **Conversa:** você pergunta sobre o nó aberto e sobre o pai dele (o `if` e a função que o contém, a função e o arquivo). O modelo não vê mais nada do projeto. A resposta é curta (até 600 caracteres) e segue o idioma do 8n8, com as regras do Português Técnico Simplificado ou do Simplified Technical English. Uma marca como `L18` na resposta é um botão que marca a linha no código. Os atalhos `/resumo` e `/sugestões` mostram o que já foi gerado, sem chamar o LLM de novo.
+- **Sugestões:** um selo no nó mostra quantas sugestões ele tem. O clique abre um balão com a lista. Na aba Sugestões, cada cartão tem um **×** para remover, e a remoção fica guardada. Uma sugestão que o modelo achar na conversa já entra na lista, sob "Da conversa". Você também guarda qualquer resposta com o ícone de marcador, que liga e desliga.
 - **Ramos do `if`:** cada ramo traz o rótulo `true` ou `false`.
 - **Histórico e favoritos:** os mapas gerados ficam no histórico. A estrela guarda um mapa nos favoritos.
 - **Tema e idioma:** o tema claro ou escuro e o idioma (português ou inglês) mudam nas Configurações.
@@ -143,7 +152,7 @@ O jeito mais simples de configurar é pela tela: clique no botão **Configuraç�
 - **Provedor**: `claude-code` (a sua assinatura do Claude Code, sem chave; é o padrão quando o 8n8 acha o Claude Code), `openrouter` (o padrão sem ele), `openai`, `anthropic` (os três pedem uma chave de API) ou `openai-compatible` (Ollama, LM Studio ou um servidor seu, com a URL pela variável de ambiente). Com `claude-code`, a tela diz se achou o Claude Code e tem o botão **Escolher…**, que abre a janela de arquivo do sistema.
 - **Chave de API**: o campo só recebe a chave. Ela nunca volta para a tela: o diálogo diz só "Chave guardada".
 - **Modelo**: escreva o nome exato do modelo, como o provedor o conhece. Vazio usa o padrão do provedor, que aparece como dica no campo.
-- **Resumo automático** e **Sugestão automática**: ligados, o resumo e as sugestões são pedidos ao selecionar um nó. Desligados, o resumo e as sugestões só são pedidos quando você clica em "Gerar resumo" ou "Pedir sugestões". Assim nada é gasto enquanto você só navega. O que já está no cache aparece sem clique.
+- **Resumo automático** e **Sugestão automática**: ligados, o resumo e as sugestões são pedidos ao selecionar um nó. Desligados, o resumo e as sugestões só são pedidos quando você clica em "Gerar resumo" ou "Pedir sugestões" (ou usa `/resumo` e `/sugestões` na conversa). Assim nada é gasto enquanto você só navega. O que já está no cache aparece sem clique.
 
 Trocar o provedor apaga a chave e o modelo guardados, para a chave nunca ir a um serviço que você não escolheu.
 
@@ -206,6 +215,8 @@ Achou uma falha de segurança? Avise em privado, como explica o [SECURITY.md](SE
 
 - **Token por execução.** Cada execução da CLI gera um token novo, que só a aba aberta por ela conhece. Outro programa da máquina não consegue usar a API nem a sua chave de LLM. Sem o token, a API responde 401.
 - **Pasta de dados.** Tudo fica em `~/.8n8` (no Windows, `C:\Users\<nome>\.8n8`): o cache em `cache/`, o histórico em `historico.db` e as configurações em `config.json`, só com permissão do dono. As variáveis `APP8N8_CACHE_DIR`, `APP8N8_HISTORY_DIR` e `APP8N8_CONFIG_DIR` mudam essas pastas.
+- **O que a conversa envia.** Uma pergunta leva ao LLM o código do nó e o do pai dele inteiro (no máximo 8000 caracteres do pai), os nomes dos nós vizinhos e as últimas mensagens da conversa. A conversa fica só na memória da tela: ela não é gravada.
+- **Notas das sugestões.** As sugestões que você guardou da conversa e as que você removeu ficam em `cache/notes/`, uma por nó. Se o código do nó muda, as notas dele caem, porque as linhas passariam a apontar para outro lugar.
 - O histórico guarda só o caminho de cada pasta, nunca o código. Abrir uma pasta pelo histórico lê a pasta de novo. De um trecho colado, o histórico guarda o texto e a linguagem.
 - **Na extensão do VS Code**, não há porta aberta: a página do painel fala com o núcleo por mensagens do próprio VS Code. A chave de API fica no cofre do VS Code (`SecretStorage`). O cache e o histórico ficam na pasta de dados da extensão.
 
@@ -283,7 +294,7 @@ Todos os comandos rodam na raiz do repositório.
 | `packages/project` | Monta o grafo do projeto e detecta a linguagem do trecho. |
 | `packages/links` | Ligações entre linguagens por rota HTTP, processo e nome. |
 | `packages/input` | Leitura de pasta. |
-| `packages/explain` | Resumos e sugestões, com cache. |
+| `packages/explain` | Resumos, sugestões e a conversa do nó, com cache. |
 | `packages/llm` | Provedores de LLM. |
 | `packages/server` | O núcleo: as rotas da API, montadas por `createCore`. |
 | `e2e` | Testes de ponta a ponta com Playwright. |

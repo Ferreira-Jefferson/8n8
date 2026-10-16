@@ -122,7 +122,8 @@ async function telaDoGuia(browser, tema) {
     .first()
     .getByRole("button", { name: "Ver detalhes do nó" })
     .click();
-  await page.getByRole("button", { name: "Expandir painel" }).click();
+  // O botão abre o painel sozinho, no código do nó.
+  await page.getByRole("tab", { name: "Código", selected: true }).waitFor();
   await page.waitForTimeout(1500);
   await shot(page, "tela", tema);
   if (tema === "dark") {
@@ -140,6 +141,20 @@ async function telaDoGuia(browser, tema) {
       11: ".panel-resizer",
       12: ".panel-toggle",
       13: ".detail-panel",
+      14: ".panel-tabs",
+    });
+  }
+  // A mesma tela, na aba Conversa: sem LLM, a conversa está vazia, com os dois atalhos.
+  await page.getByRole("tab", { name: "Conversa" }).click();
+  await page.waitForTimeout(600);
+  await shot(page, "conversa", tema);
+  if (tema === "dark") {
+    await caixas(page, "CONVERSA", {
+      1: ".panel-tabs",
+      2: ".chat-log",
+      3: ".chat-composer textarea",
+      4: ".chat-chip",
+      5: ".chat-send",
     });
   }
   await ctx.close();
