@@ -157,7 +157,7 @@ function stop(child: ChildProcess | undefined): void {
 
 test.beforeAll(async () => {
   tmp = mkdtempSync(join(tmpdir(), "8n8-cli-"));
-  sh("pnpm", ["--filter", "@8n8/cli", "pack", "--pack-destination", tmp]);
+  sh("pnpm", ["--filter", "8n8", "pack", "--pack-destination", tmp]);
   const tgz = readdirSync(tmp).find((f) => f.endsWith(".tgz"));
   if (!tgz) throw new Error("pnpm pack gerou nenhum .tgz");
   prefix = join(tmp, "prefix");

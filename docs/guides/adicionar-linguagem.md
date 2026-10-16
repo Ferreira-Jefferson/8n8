@@ -366,7 +366,7 @@ O código está em `packages/languages/typescript/src/detect.ts`. Cada plugin v�
 - [ ] A suíte `describeLanguagePlugin` passa, com um trecho de erro de sintaxe e um arquivo de erro de sintaxe nas fixtures.
 - [ ] Há testes próprios para funções, classes, chamadas, imports, condições, laços e retornos da linguagem.
 - [ ] `pnpm install` rodou e o plugin aparece no `packages/server/package.json` e em `languagePlugins`.
-- [ ] A gramática está em `dependencies`, é achada com `createRequire(import.meta.url).resolve(...)`, e `pnpm --filter @8n8/cli test` passa.
+- [ ] A gramática está em `dependencies`, é achada com `createRequire(import.meta.url).resolve(...)`, e `pnpm --filter 8n8 test` passa.
 - [ ] `pnpm typecheck`, `pnpm test` e `pnpm check` passam. O `check` confere as fronteiras e o Biome.
 - [ ] O plugin não importa outro plugin nem o LLM.
 - [ ] `ignoredDirs` lista as pastas de dependências e de build da linguagem.
