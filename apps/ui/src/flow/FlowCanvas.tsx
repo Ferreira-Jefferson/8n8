@@ -16,6 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { type Translate, useT } from "../i18n";
 import { panelNodeOf } from "../nav/navigation";
 import { isOpenable } from "./card";
 import { wireLanes } from "./lanes";
@@ -278,9 +279,14 @@ export function toFlowEdges(
   turnY: ReadonlyMap<string, number> = new Map(),
   lanes: ReadonlyMap<string, number> = new Map(),
   sides: ReadonlyMap<string, readonly [Side, Side]> = new Map(),
+  /** The screen-reader name of each wire, in the language of the system; the library's English one without it. */
+  t?: Translate,
 ): WireFlowEdge[] {
   return edges.map((e) => ({
     id: e.id,
+    ...(t
+      ? { ariaLabel: t("flow.edgeAria", { from: e.source, to: e.target }) }
+      : {}),
     source: e.source,
     target: e.target,
     sourceHandle: (sides.get(e.id) ?? FLOW_SIDES)[0],
@@ -317,6 +323,26 @@ export function FlowCanvas({
   onSuggestion,
   onBack,
 }: FlowCanvasProps) {
+  const t = useT();
+  // The library's screen-reader texts, in the language of the system.
+  const ariaLabels = useMemo(
+    () => ({
+      "node.a11yDescription.default": t("flow.nodeHelp"),
+      "node.a11yDescription.keyboardDisabled": t("flow.nodeHelpKeyboard"),
+      "node.a11yDescription.ariaLiveMessage": ({
+        direction,
+        x,
+        y,
+      }: {
+        direction: string;
+        x: number;
+        y: number;
+      }) => t("flow.nodeMoved", { direction, x, y }),
+      "edge.a11yDescription.default": t("flow.edgeHelp"),
+      "handle.ariaLabel": t("flow.handle"),
+    }),
+    [t],
+  );
   const box = useRef<HTMLDivElement>(null);
   const timer = useRef<number | undefined>(undefined);
   const [frame, setFrame] = useState<Rect | null>(null);
@@ -549,7 +575,7 @@ export function FlowCanvas({
     });
     return {
       nodes,
-      edges: toFlowEdges(level.edges, times, reduced, turnY, lanes, sides),
+      edges: toFlowEdges(level.edges, times, reduced, turnY, lanes, sides, t),
       byNode,
       positions,
       padX: bands.gapAbove.length > 1 ? WRAP_PAD : FIT_PAD,
@@ -567,6 +593,7 @@ export function FlowCanvas({
     size,
     levelMoved,
     onBack,
+    t,
   ]);
 
   function open(node: FlowNode, card: Element) {
@@ -640,6 +667,7 @@ export function FlowCanvas({
         zoomOnDoubleClick={false}
         minZoom={0.2}
         proOptions={{ hideAttribution: true }}
+        ariaLabelConfig={ariaLabels}
       >
         <MeasureCanvas level={levelKey} onSize={onSize} />
         <MeasureCards />

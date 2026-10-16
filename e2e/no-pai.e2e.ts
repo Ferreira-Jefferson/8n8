@@ -132,7 +132,7 @@ test.describe("Nó-pai", () => {
     await expect(containsWires(page)).toHaveCount(1);
     await expect(
       canvas(page).getByRole("group", {
-        name: "Edge from file:acesso.py to file:acesso.py/fn:pode_acessar",
+        name: "Aresta de file:acesso.py para file:acesso.py/fn:pode_acessar",
       }),
     ).toHaveCount(1);
   });

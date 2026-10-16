@@ -63,7 +63,7 @@ const wiresFrom = (page: Page, id: string) =>
     (els, from) =>
       els.filter((el) =>
         (el.getAttribute("aria-label") ?? "").startsWith(
-          `Edge from ${from} to `,
+          `Aresta de ${from} para `,
         ),
       ).length,
     id,

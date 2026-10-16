@@ -164,6 +164,16 @@ export const en: Record<MessageKey, string> = {
   "noFiles.none": "No code file found in the folder.",
   "list.and": "and",
   "list.or": "or",
+  "flow.edgeAria": "Edge from {from} to {to}",
+  "flow.nodeHelp":
+    "Press Enter or Space to select a node. Press Delete to remove it and Esc to cancel.",
+  "flow.nodeHelpKeyboard":
+    "Press Enter or Space to select a node. Then use the arrow keys to move the node. Press Delete to remove it and Esc to cancel.",
+  "flow.nodeMoved":
+    "Moved selected node {direction}. New position, x: {x}, y: {y}",
+  "flow.edgeHelp":
+    "Press Enter or Space to select an edge. Then press Delete to remove it or Esc to cancel.",
+  "flow.handle": "Port",
   "edge.true": "true",
   "edge.false": "false",
   "edge.default": "default",

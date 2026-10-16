@@ -163,6 +163,16 @@ export const ptBR = {
   "noFiles.none": "Nenhum arquivo de código encontrado na pasta.",
   "list.and": "e",
   "list.or": "ou",
+  "flow.edgeAria": "Aresta de {from} para {to}",
+  "flow.nodeHelp":
+    "Tecle Enter ou espaço para selecionar um nó. Tecle Delete para removê-lo e Esc para cancelar.",
+  "flow.nodeHelpKeyboard":
+    "Tecle Enter ou espaço para selecionar um nó. Depois use as setas para mover o nó. Tecle Delete para removê-lo e Esc para cancelar.",
+  "flow.nodeMoved":
+    "Nó selecionado movido: {direction}. Nova posição, x: {x}, y: {y}",
+  "flow.edgeHelp":
+    "Tecle Enter ou espaço para selecionar uma aresta. Depois tecle Delete para removê-la ou Esc para cancelar.",
+  "flow.handle": "Porta",
   "edge.true": "true",
   "edge.false": "false",
   "edge.default": "padrão",

@@ -338,8 +338,8 @@ const wirePairs = (page: Page) =>
   edges(page).evaluateAll((els) =>
     els.map((el) =>
       (el.getAttribute("aria-label") ?? "")
-        .replace(/^Edge from /, "")
-        .replace(" to ", "->"),
+        .replace(/^Aresta de /, "")
+        .replace(" para ", "->"),
     ),
   );
 
@@ -547,8 +547,8 @@ test.describe("O movimento", () => {
     const wires = await edges(page).evaluateAll((els) =>
       els.map((el) => ({
         pair: (el.getAttribute("aria-label") ?? "")
-          .replace(/^Edge from /, "")
-          .split(" to "),
+          .replace(/^Aresta de /, "")
+          .split(" para "),
         drawAt: Number(el.querySelector(".wire")?.getAttribute("data-draw-at")),
         pulses: [...el.querySelectorAll("circle.pulse")].map((p) =>
           Number(p.getAttribute("data-pulse-at")),

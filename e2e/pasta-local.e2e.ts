@@ -66,7 +66,7 @@ const edges = (page: Page) =>
 const nodeById = (page: Page, id: string) =>
   canvas(page).locator(`[aria-roledescription="node"][data-id="${id}"]`);
 const edge = (page: Page, from: string, to: string) =>
-  canvas(page).getByRole("group", { name: `Edge from ${from} to ${to}` });
+  canvas(page).getByRole("group", { name: `Aresta de ${from} para ${to}` });
 const breadcrumb = (page: Page) =>
   page.getByRole("navigation", { name: "Caminho de navegação" });
 const panel = (page: Page) =>
