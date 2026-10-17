@@ -261,18 +261,22 @@ describe("findClaude (CC-16, CC-17)", () => {
     ).toBe(native);
   });
 
-  it("on Windows, finds claude.exe in a PATH folder, or the package beside an npm claude.cmd", () => {
-    const sep = process.platform === "win32" ? ";" : ":";
-    const PATH = ["C:\\bin", "C:\\nvm\\v22"].join(sep);
-    const inBin = join("C:\\bin", "claude.exe");
-    expect(
-      locateClaude({ PATH }, { ...base, isFile: (p) => p === inBin }),
-    ).toBe(inBin);
-    const shim = npmIn("C:\\nvm\\v22");
-    expect(
-      locateClaude({ Path: PATH }, { ...base, isFile: (p) => p === shim }),
-    ).toBe(shim);
-  });
+  // The PATH is split by the host's delimiter: with C:\ paths, only on Windows.
+  it.skipIf(process.platform !== "win32")(
+    "on Windows, finds claude.exe in a PATH folder, or the package beside an npm claude.cmd",
+    () => {
+      const sep = ";";
+      const PATH = ["C:\\bin", "C:\\nvm\\v22"].join(sep);
+      const inBin = join("C:\\bin", "claude.exe");
+      expect(
+        locateClaude({ PATH }, { ...base, isFile: (p) => p === inBin }),
+      ).toBe(inBin);
+      const shim = npmIn("C:\\nvm\\v22");
+      expect(
+        locateClaude({ Path: PATH }, { ...base, isFile: (p) => p === shim }),
+      ).toBe(shim);
+    },
+  );
 
   it("prefers the npm install under APPDATA and the native installer to the PATH", () => {
     const sep = process.platform === "win32" ? ";" : ":";
