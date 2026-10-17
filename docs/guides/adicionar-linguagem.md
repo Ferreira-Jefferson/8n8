@@ -54,7 +54,7 @@ interface LanguageAnalysis {
 }
 ```
 
-- `files`: um grafo por arquivo recebido. O **primeiro nó** de cada grafo é o nó `file`. Os outros nós usam o id dele como prefixo.
+- `files`: um grafo por arquivo recebido. O **primeiro nó** de cada grafo é o nó `file`. Os outros nós usam o id dele como prefixo (`file:<caminho>/...`). O servidor recusa o plugin que não segue isso, porque ele acha o arquivo de um nó pelo id. As arestas do grafo de um arquivo saem de nós desse arquivo.
 - `imports`: arestas `imports` entre arquivos da mesma linguagem. Uma aresta por par (origem, destino). O `source` e o `target` são ids de nós `file`. O id da aresta no TypeScript é `imports:<origem>-><destino>`. Toda aresta aqui tem `kind: "imports"`.
 - `offers`: o que o arquivo expõe (uma rota, o próprio caminho, uma função).
 - `requests`: o que o arquivo procura (uma URL chamada, um caminho executado, um nome chamado).
@@ -108,7 +108,9 @@ Duas regras do `openSlice`:
 - O plugin não conhece threads, fatias nem o tamanho do projeto. O core decide tudo isso.
 - Os arquivos da fatia chegam em ordem. O plugin ordena de novo do mesmo jeito que o `analyze`, para o caso de o core entregar fora de ordem.
 
-Projetos com menos de 150 arquivos rodam em uma thread só: acordar as outras custa mais do que ganha.
+Projetos com menos de 150 arquivos rodam na thread do pedido: acordar as outras custa mais do que ganha.
+
+O servidor monta o mapa numa thread de construção, que abre as threads da análise. Cada thread da análise empacota os arquivos que ela analisou (JSON comprimido, busca, vizinhos) e devolve só o pacote. O grafo completo do projeto nunca fica em uma thread só. O plugin não vê nada disso.
 
 ## As regras do grafo
 
