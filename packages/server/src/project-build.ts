@@ -6,7 +6,7 @@ import type {
   SourceFile,
 } from "@8n8/model";
 import { analyzeProject, type ProjectBuild } from "@8n8/project";
-import { compactProject } from "./project-compact";
+import { type CompactInput, compactProject } from "./project-compact";
 import type { StoreParts } from "./project-store";
 
 /** What a build needs: the files the reader gave, and the names that go on the result. */
@@ -42,7 +42,10 @@ export function linkedGraph(
   };
 }
 
-/** The store parts of a project from the analysis of its files: link, pack. `analyze` runs the plugins, in this thread or in workers. */
+/**
+ * The store parts of a project from the analysis of its files: link, pack. `analyze` runs the plugins, in this
+ * thread or in workers; `compact` packs the linked graph (the sync `compactProject` unless the caller says otherwise).
+ */
 export async function buildWith(
   input: BuildInput,
   plugins: LanguagePlugin[],
@@ -50,9 +53,12 @@ export async function buildWith(
     files: SourceFile[],
     plugins: LanguagePlugin[],
   ) => ProjectBuild | Promise<ProjectBuild>,
+  compact: (
+    input: CompactInput,
+  ) => StoreParts | Promise<StoreParts> = compactProject,
 ): Promise<StoreParts> {
   const built = await analyze(input.files, plugins);
-  return compactProject({ ...input, graph: linkedGraph(built, input.name) });
+  return compact({ ...input, graph: linkedGraph(built, input.name) });
 }
 
 /** The plugins run in this thread. */

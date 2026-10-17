@@ -4,27 +4,38 @@ import { createProjectCache, fingerprintOf } from "../project-cache";
 const file = (path: string, source: string) => ({ path, source });
 
 describe("fingerprintOf", () => {
-  it("is the same for the same files and ignored list", () => {
-    const a = fingerprintOf([file("a.py", "x = 1\n")], []);
-    expect(fingerprintOf([file("a.py", "x = 1\n")], [])).toBe(a);
+  it("is the same for the same files and ignored list", async () => {
+    const a = await fingerprintOf([file("a.py", "x = 1\n")], []);
+    expect(await fingerprintOf([file("a.py", "x = 1\n")], [])).toBe(a);
   });
 
-  it("changes with a file's text, a file's path and the ignored list", () => {
-    const base = fingerprintOf([file("a.py", "x = 1\n")], []);
-    expect(fingerprintOf([file("a.py", "x = 2\n")], [])).not.toBe(base);
-    expect(fingerprintOf([file("b.py", "x = 1\n")], [])).not.toBe(base);
+  it("changes with a file's text, a file's path and the ignored list", async () => {
+    const base = await fingerprintOf([file("a.py", "x = 1\n")], []);
+    expect(await fingerprintOf([file("a.py", "x = 2\n")], [])).not.toBe(base);
+    expect(await fingerprintOf([file("b.py", "x = 1\n")], [])).not.toBe(base);
     expect(
-      fingerprintOf(
+      await fingerprintOf(
         [file("a.py", "x = 1\n")],
         [{ path: "g.py", reason: "too-large", addable: true }],
       ),
     ).not.toBe(base);
   });
 
-  it("does not mix where one file ends and the next begins", () => {
-    expect(fingerprintOf([file("a", "bc")], [])).not.toBe(
-      fingerprintOf([file("ab", "c")], []),
+  it("does not mix where one file ends and the next begins", async () => {
+    expect(await fingerprintOf([file("a", "bc")], [])).not.toBe(
+      await fingerprintOf([file("ab", "c")], []),
     );
+  });
+
+  it("is the hash of the paths and texts as one string, and the same for a folder that takes many turns", async () => {
+    const { createHash } = await import("node:crypto");
+    const files = Array.from({ length: 5 }, (_, i) =>
+      file(`f${i}.py`, `${"x".repeat(600_000)}${i}\n`),
+    );
+    const whole = createHash("sha1");
+    for (const f of files) whole.update(`${f.path}\0${f.source}\0`);
+    whole.update("\0ignored\0");
+    expect(await fingerprintOf(files, [])).toBe(whole.digest("hex"));
   });
 });
 

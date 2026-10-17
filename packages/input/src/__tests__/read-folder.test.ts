@@ -459,3 +459,48 @@ describe("readSourceFolder and dependency folders", () => {
     expect(paths.some((p) => p.startsWith(".git/"))).toBe(false);
   });
 });
+
+describe("readSourceFolder reads many files at once and keeps the order", () => {
+  it("gives the files in the order of the sorted names, folders in place, for a folder of 300 files", async () => {
+    const root = await mkdtemp(join(tmpdir(), "input-many-"));
+    made.push(root);
+    const names: string[] = [];
+    for (let d = 0; d < 6; d++) {
+      for (let s = 0; s < 5; s++) {
+        const rel = `d${d}/s${s}`;
+        await mkdir(join(root, rel), { recursive: true });
+        for (let f = 0; f < 10; f++) {
+          names.push(`${rel}/m${f}.py`);
+          await writeFile(join(root, `${rel}/m${f}.py`), `x = ${f}\n`);
+        }
+        await writeFile(join(root, `${rel}.py`), "y = 1\n");
+        names.push(`${rel}.py`);
+      }
+    }
+    await writeFile(join(root, "z.py"), "z = 1\n");
+    names.push("z.py");
+    // The walk goes by sorted names, a folder where its name falls among the files.
+    const expected: string[] = [];
+    const walk = (rel: string) => {
+      const here = new Set<string>();
+      for (const n of names) {
+        if (!n.startsWith(rel === "" ? "" : `${rel}/`)) continue;
+        const rest = n.slice(rel === "" ? 0 : rel.length + 1);
+        here.add(rest.split("/")[0] as string);
+      }
+      for (const entry of [...here].sort()) {
+        const path = rel === "" ? entry : `${rel}/${entry}`;
+        if (names.includes(path)) expected.push(path);
+        else walk(path);
+      }
+    };
+    walk("");
+    const r = await readSourceFolder(root, PY);
+    if (r.kind !== "ok") throw new Error("expected ok");
+    expect(r.files.map((f) => f.path)).toEqual(expected);
+    expect(r.files).toHaveLength(names.length);
+    expect(r.files.find((f) => f.path === "d3/s2/m7.py")?.source).toBe(
+      "x = 7\n",
+    );
+  });
+});

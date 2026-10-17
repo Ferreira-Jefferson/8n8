@@ -1,9 +1,10 @@
-import { parentPort } from "node:worker_threads";
+import { parentPort, workerData } from "node:worker_threads";
 import type { AnalysisSlice, LanguageAnalysis } from "@8n8/model";
 import type { AnalysisReply, AnalysisRequest } from "./analysis-pool";
+import { type BuilderData, serveBuilds } from "./build-worker";
 import { languagePlugins } from "./plugins";
 
-// Entry of a worker thread: runs plugins for the pool (its own bundle, next to the core's).
+// Entry of a worker thread (its own bundle, next to the core's): runs plugins for the pool, or, started with the role "builder", whole builds.
 
 /** Files per message: small enough that the main thread reads each one in a few milliseconds. */
 const BATCH = 20;
@@ -61,13 +62,20 @@ function handle(request: AnalysisRequest & { id: number }): void {
   }
 }
 
-parentPort?.on("message", (request: AnalysisRequest & { id: number }) => {
-  try {
-    handle(request);
-  } catch (error) {
-    reply({
-      id: request.id,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-});
+/** Answers the requests of the pool: one plugin step at a time. */
+function serveAnalysis(): void {
+  parentPort?.on("message", (request: AnalysisRequest & { id: number }) => {
+    try {
+      handle(request);
+    } catch (error) {
+      reply({
+        id: request.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
+}
+
+const builder = workerData as BuilderData | null;
+if (builder?.role === "builder") serveBuilds(builder);
+else serveAnalysis();

@@ -39,14 +39,13 @@ import {
   type TitlesResponse,
   translateSystem,
 } from "@8n8/model";
-import { analyzeProjectParallel } from "@8n8/project";
 import type { Hono } from "hono";
-import { createAnalysisPool } from "./analysis-pool";
 import { createApp, type ProjectRead } from "./app";
 import { type History, openHistory } from "./history";
 import { createPicker } from "./pick-path";
 import { languagePlugins } from "./plugins";
-import { type Build, buildInThread, buildWith } from "./project-build";
+import { type Build, buildInThread } from "./project-build";
+import { createProjectBuilder } from "./project-builder";
 import { createProjectCache, fingerprintOf, versionOf } from "./project-cache";
 import { createProjectStore } from "./project-store";
 import {
@@ -282,25 +281,36 @@ export function resolvePort(env: Record<string, string | undefined>): number {
 
 export { languagePlugins };
 
-/** Under this many files the workers cost more than they save. */
-const MIN_PARALLEL_FILES = 150;
+/** Under this many files the builder thread costs more than it saves. */
+const MIN_BUILDER_FILES = 150;
 
-/** Analysis in worker threads, so the thread that serves the requests never waits for it; in this thread when the host gives no worker. */
-function composeBuild(worker: string | undefined): Build {
+/**
+ * The whole build (analyze, link, pack) in a worker thread, so the thread that serves the requests never
+ * waits for it. In this thread when the host gives no worker, for a small project, and when the worker fails.
+ */
+export function composeBuild(
+  worker: string | undefined,
+  execArgv?: string[],
+): Build {
   if (worker === undefined) return buildInThread;
-  const pool = createAnalysisPool({ worker });
-  return (input, all) =>
-    buildWith(input, all, (files, plugins) =>
-      analyzeProjectParallel(files, plugins, {
-        runner: pool,
-        minFiles: MIN_PARALLEL_FILES,
-        onFallback: (error) =>
-          console.error(
-            "análise: o worker falhou, seguindo em sequência",
-            error,
-          ),
-      }),
-    );
+  const builder = createProjectBuilder({
+    worker,
+    ...(execArgv === undefined ? {} : { execArgv }),
+  });
+  return async (input, plugins) => {
+    if (input.files.length < MIN_BUILDER_FILES) {
+      return buildInThread(input, plugins);
+    }
+    try {
+      return await builder.build(input);
+    } catch (error) {
+      console.error(
+        "construção: o worker falhou, seguindo em sequência",
+        error,
+      );
+      return buildInThread(input, plugins);
+    }
+  };
 }
 
 /** Reads the files of the plugins' extensions and maps them; what the server keeps is a `ProjectStore`, never the whole graph (PROJ-01, PROJ-05, PROJ-06, PROJ-07). */
@@ -334,7 +344,7 @@ export function composeReadProject(
     if (folder.kind === "not-found") return folder;
     const { name, root, files, ignored } = folder;
     const key = [root, [...include].sort().join(","), ignoring].join("|");
-    const fingerprint = versionOf(key, fingerprintOf(files, ignored));
+    const fingerprint = versionOf(key, await fingerprintOf(files, ignored));
     return cache.get(key, fingerprint, async () => {
       const parts = await build(
         { name, files, ignored, version: fingerprint },

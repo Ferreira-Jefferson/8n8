@@ -87,19 +87,24 @@ export async function readSourceFolder(
     return { kind: "not-found" };
   }
 
-  const files: SourceFile[] = [];
-  const ignored: IgnoredFile[] = [];
+  const turn = limited(OPEN_AT_ONCE);
 
+  /** What a folder holds, in the order of its sorted entries: the files it reads while the others are still being read. */
   async function walk(
     abs: string,
     rel: string,
     rules: GitignoreRules[],
-  ): Promise<void> {
-    const entries = await readdir(abs, { withFileTypes: true }).catch(() => []);
+  ): Promise<Found> {
+    const entries = await turn(() =>
+      readdir(abs, { withFileTypes: true }).catch(() => []),
+    );
     entries.sort((a, b) => byCode(a.name, b.name));
     // This folder's .gitignore applies to it and below, after the ones above (CLEAN-01).
-    const own = ignoreDependencies ? await gitignoreOf(abs, rel) : undefined;
+    const own = ignoreDependencies
+      ? await turn(() => gitignoreOf(abs, rel))
+      : undefined;
     const active = own ? [...rules, own] : rules;
+    const jobs: Promise<Found>[] = [];
     for (const entry of entries) {
       const entryAbs = join(abs, entry.name);
       const entryRel = rel === "" ? entry.name : `${rel}/${entry.name}`;
@@ -108,22 +113,57 @@ export async function readSourceFolder(
       if (entry.isSymbolicLink() || entry.isFile()) {
         const name = entry.name.toLowerCase();
         if (!wanted.some((e) => name.endsWith(e))) continue;
-        const read = await readSourceFile(
-          entryAbs,
-          entryRel,
-          added.has(entryRel),
+        jobs.push(
+          turn(() =>
+            readSourceFile(entryAbs, entryRel, added.has(entryRel)),
+          ).then((read) =>
+            read.kind === "ok"
+              ? { files: [read.file], ignored: [] }
+              : { files: [], ignored: [read.ignored] },
+          ),
         );
-        if (read.kind === "ok") files.push(read.file);
-        else ignored.push(read.ignored);
       } else if (isDir && !skipped.has(entry.name)) {
-        await walk(entryAbs, entryRel, active);
+        jobs.push(walk(entryAbs, entryRel, active));
       }
     }
+    const found: Found = { files: [], ignored: [] };
+    for (const part of await Promise.all(jobs)) {
+      for (const file of part.files) found.files.push(file);
+      for (const skip of part.ignored) found.ignored.push(skip);
+    }
+    return found;
   }
 
-  await walk(root, "", []);
+  const { files, ignored } = await walk(root, "", []);
   ignored.sort((a, b) => byCode(a.path, b.path));
   return { kind: "ok", name: folderName(root), root, files, ignored };
+}
+
+/** The files and the ignored files of a folder. */
+interface Found {
+  files: SourceFile[];
+  ignored: IgnoredFile[];
+}
+
+/** How many disk calls are open at once: reading one file after the other waits for the disk 3 000 times. */
+const OPEN_AT_ONCE = 32;
+
+/** Runs the tasks it is given, at most `max` at a time, each as soon as a place is free. */
+function limited(max: number): <T>(task: () => Promise<T>) => Promise<T> {
+  let active = 0;
+  const waiting: (() => void)[] = [];
+  return async (task) => {
+    // A task that leaves hands its place to the next one that waits, so no newcomer takes it first.
+    if (active >= max) await new Promise<void>((go) => waiting.push(go));
+    else active++;
+    try {
+      return await task();
+    } finally {
+      const next = waiting.shift();
+      if (next) next();
+      else active--;
+    }
+  };
 }
 
 /** Whether a folder on the path is one the walk skips: opening it directly would map what the walk never reads. */
