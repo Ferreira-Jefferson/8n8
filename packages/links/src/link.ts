@@ -63,6 +63,33 @@ function isSameSide(ctx: LinkContext, a: string, b: string): boolean {
   return fa.path === fb.path || fa.language === fb.language;
 }
 
+/**
+ * The offers a request can match, in the order of `offers`. A linker with keys looks them up by key instead of
+ * trying every offer; the same offers pass `matches` either way, in the same order.
+ */
+function indexOffers(
+  linker: Linker,
+  offers: Offer[],
+): (request: LinkRequest, ctx: LinkContext) => Iterable<Offer> {
+  const { offerKeys, requestKeys } = linker;
+  if (!offerKeys || !requestKeys) return () => offers;
+  const byKey = new Map<string, number[]>();
+  offers.forEach((offer, i) => {
+    for (const key of new Set(offerKeys(offer))) {
+      const found = byKey.get(key);
+      if (found) found.push(i);
+      else byKey.set(key, [i]);
+    }
+  });
+  return (request, ctx) => {
+    const places = new Set<number>();
+    for (const key of requestKeys(request, ctx)) {
+      for (const i of byKey.get(key) ?? []) places.add(i);
+    }
+    return [...places].sort((a, b) => a - b).map((i) => offers[i] as Offer);
+  };
+}
+
 /** Matches requests to offers across languages and returns the wires, deterministically. */
 export function linkProject(input: LinkInput): LinkResult {
   const ctx = buildContext(input.nodes);
@@ -77,12 +104,13 @@ export function linkProject(input: LinkInput): LinkResult {
     const offers = input.offers
       .filter((o) => o.channel === linker.channel)
       .sort(byOffer);
+    const keyed = indexOffers(linker, offers);
     const linkedHere: string[] = [];
     for (const request of requests) {
       if (request.channel !== linker.channel) continue;
       if (linkedNodes.has(request.nodeId)) continue;
       const candidates: Offer[] = [];
-      for (const offer of offers) {
+      for (const offer of keyed(request, ctx)) {
         if (offer.nodeId === request.nodeId) continue;
         if (
           !linker.sameLanguage &&

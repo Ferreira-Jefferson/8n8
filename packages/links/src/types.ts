@@ -25,6 +25,12 @@ export interface Linker {
   /** Whether a request may link to an offer written in the same language (and file). */
   sameLanguage: boolean;
   matches(request: LinkRequest, offer: Offer, ctx: LinkContext): boolean;
+  /**
+   * Optional, only to go faster, with `requestKeys`: `matches` is true only for a request and an offer that share a key.
+   * Without both, every offer is tried for every request.
+   */
+  offerKeys?(offer: Offer): string[];
+  requestKeys?(request: LinkRequest, ctx: LinkContext): string[];
   /** Text of the wire, e.g. `HTTP POST /api/frete`. */
   label(request: LinkRequest, offer: Offer): string;
   /** Set when the system, not the code, writes the text: the screen says the key in the language of the system. */

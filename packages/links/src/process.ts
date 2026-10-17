@@ -39,6 +39,16 @@ export const processLinker: Linker = {
     const fromDir = dirOf(ctx.fileOf(request.nodeId)?.path ?? "");
     return candidatePaths(request.key, fromDir).has(target);
   },
+  offerKeys(offer) {
+    const target = normalize(offer.key);
+    return target ? [target] : [];
+  },
+  requestKeys: (request, ctx) => [
+    ...candidatePaths(
+      request.key,
+      dirOf(ctx.fileOf(request.nodeId)?.path ?? ""),
+    ),
+  ],
   label: () => "processo",
   labelKey: "process",
 };

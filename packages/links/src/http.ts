@@ -43,6 +43,9 @@ export const httpLinker: Linker = {
   sameLanguage: true,
   matches: (request, offer) =>
     matchRoutes(parseRoute(request.key), parseRoute(offer.key)),
+  // Two routes match only with the same number of segments.
+  offerKeys: (offer) => [String(parseRoute(offer.key).segments.length)],
+  requestKeys: (request) => [String(parseRoute(request.key).segments.length)],
   label(request, offer) {
     const r = parseRoute(request.key);
     const method = r.method === ANY ? parseRoute(offer.key).method : r.method;
