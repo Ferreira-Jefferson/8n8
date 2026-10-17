@@ -93,20 +93,29 @@ Para acoplar outra linguagem, siga o guia [docs/guides/adicionar-linguagem.md](d
 
 ## Instalar
 
-O 8n8 precisa de Node 22.13 ou mais novo e do pnpm. Hoje a instalação parte do repositório. Há duas formas de usar: a CLI e a extensão do VS Code.
+O 8n8 precisa de Node 22.13 ou mais novo. Há duas formas de usar: a CLI e a extensão do VS Code. A CLI está no [npm](https://www.npmjs.com/package/8-n-8). A extensão ainda parte do repositório, e isso pede o pnpm.
 
-Para gerar as duas de uma vez, rode `pnpm build:all`. Ele instala as dependências e cria os pacotes na pasta `release/`.
+Para gerar as duas a partir do repositório de uma vez, rode `pnpm build:all`. Ele instala as dependências e cria os pacotes na pasta `release/`.
 
 ### A CLI
 
 A CLI roda no terminal (PowerShell ou Bash) e abre o mapa de qualquer pasta no navegador.
+
+**Pelo npm (recomendado).** O pacote se chama `8-n-8`, porque o npm recusou `8n8` por ser parecido com outros nomes. O comando que ele instala continua sendo `8n8`.
+
+```bash
+npx 8-n-8 .          # abre o mapa da pasta atual, sem instalar
+npm install -g 8-n-8 # ou instala o comando 8n8
+```
+
+**Pelo repositório.** Útil para testar uma mudança sua:
 
 ```bash
 pnpm install
 pnpm install:cli:global
 ```
 
-O `pnpm install:cli:global` gera o pacote (`release/8n8-0.0.1.tgz`) e o instala com `npm install -g`. O pacote não tem dependências nem scripts de instalação: todo o código vai dentro dele. Depois, use o comando `8n8`:
+O `pnpm install:cli:global` gera o pacote (`release/8-n-8-0.0.1.tgz`) e o instala com `npm install -g`. O pacote não tem dependências nem scripts de instalação: todo o código vai dentro dele. Depois, use o comando `8n8`:
 
 ```bash
 8n8 .              # abre o mapa da pasta atual, numa janela própria (Chrome ou Edge)
@@ -335,7 +344,7 @@ Todos os comandos rodam na raiz do repositório.
 | `pnpm dev:ui` | Inicia só a tela, com o Vite. |
 | `pnpm start` | Constrói a tela e inicia o servidor e a tela juntos, sem recarga. Não abre o navegador. |
 | `pnpm open <pasta>` | Constrói o CLI e abre o mapa da pasta. Uma pasta relativa vale a partir de onde você digitou o comando. |
-| `pnpm build:cli` | Gera o pacote do CLI em `release/8n8-0.0.1.tgz`. |
+| `pnpm build:cli` | Gera o pacote do CLI em `release/8-n-8-0.0.1.tgz`. |
 | `pnpm build:ext` | Gera o pacote da extensão em `release/8n8-vscode-0.0.1.vsix`. |
 | `pnpm build:all` | Instala as dependências e gera o CLI e a extensão. |
 | `pnpm install:cli:global` | Gera o CLI e instala o comando `8n8` no terminal. |

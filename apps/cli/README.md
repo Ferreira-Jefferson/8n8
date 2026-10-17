@@ -9,9 +9,11 @@ Linguagens: Python e TypeScript. Precisa do Node 22.13 ou mais novo.
 ## Uso
 
 ```bash
-npx 8n8 .          # abre o mapa da pasta atual, sem instalar
-npm install -g 8n8 # ou instala o comando 8n8
+npx 8-n-8 .          # abre o mapa da pasta atual, sem instalar
+npm install -g 8-n-8 # ou instala o comando 8n8
 ```
+
+O pacote no npm se chama `8-n-8` (o npm recusou `8n8` por ser parecido com outros nomes). O comando que ele instala continua sendo `8n8`.
 
 ```bash
 8n8 .              # abre o mapa da pasta atual, numa janela própria (Chrome ou Edge)
