@@ -17,7 +17,7 @@
     "build:all": "pnpm install && pnpm build:cli && pnpm build:ext",
     "build:cli": "pnpm --filter 8-n-8 package",
     "build:ext": "pnpm --filter 8n8-vscode package",
-    "install:cli:global": "pnpm build:cli && npm install -g ./release/8-n-8-0.0.1.tgz",
+    "install:cli:global": "pnpm build:cli && npm install -g ./release/8-n-8-0.0.2.tgz",
     "open": "pnpm --filter 8-n-8 build && node scripts/open.mjs",
     "test": "pnpm -r --if-present test",
     "e2e": "pnpm --filter 8-n-8 build && playwright test",
