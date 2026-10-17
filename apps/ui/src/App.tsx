@@ -97,9 +97,11 @@ const noSources: ReadonlyMap<string, string> = new Map();
 
 function originOf(mapped: Mapped): ExplainOrigin {
   if (mapped.kind === "snippet") return { source: mapped.source };
+  // The version names the build on screen: the server explains that build, not what the disk holds now.
+  const version = mapped.skeleton.version;
   return mapped.include.length > 0
-    ? { root: mapped.root, include: mapped.include }
-    : { root: mapped.root };
+    ? { root: mapped.root, include: mapped.include, version }
+    : { root: mapped.root, version };
 }
 
 /** The code, file and explain origin of a node: the snippet, or the node's file in a project (AD-015). */
@@ -250,6 +252,9 @@ export function App({ initialFolder = null }: AppProps) {
   const [text, setText] = useState("");
   const [folder, setFolder] = useState("");
   const [mapped, setMapped] = useState<Mapped | null>(null);
+  // The map on screen, for a late answer of an older map to check against.
+  const mappedRef = useRef<Mapped | null>(null);
+  mappedRef.current = mapped;
   const [mapVersion, setMapVersion] = useState(0);
   const [failed, setFailed] = useState(false);
   const [notFound, setNotFound] = useState<string | null>(null);
@@ -382,7 +387,13 @@ export function App({ initialFolder = null }: AppProps) {
           fetchFile: (file) =>
             fetchProjectFile(path, include, file, result.version),
           // The folder changed since the skeleton: open it again, with no error shown.
-          onStale: () => openFolder(path, include),
+          // A late answer of an older map must not open its folder over the one on screen.
+          onStale: () => {
+            const now = mappedRef.current;
+            if (now?.kind === "project" && now.store === store) {
+              openFolder(path, include);
+            }
+          },
         });
         show({
           kind: "project",

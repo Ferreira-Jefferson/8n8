@@ -44,6 +44,8 @@ export interface ParallelOptions {
   runner: AnalysisRunner;
   /** Below this many files the sequential path is faster than waking the workers. */
   minFiles: number;
+  /** A group the workers could not analyze goes on in sequence, with the same answer: this says why. */
+  onFallback?: (error: unknown) => void;
 }
 
 /** The slices of one plugin, joined in slice order: the whole analysis. */
@@ -114,7 +116,8 @@ export async function analyzeProjectParallel(
           analysis: await runGroup(plugin, group, options.runner),
           failed: [],
         };
-      } catch {
+      } catch (error) {
+        options.onFallback?.(error);
         return analyzeIsolating(plugin, group);
       }
     }),

@@ -183,6 +183,8 @@ export function createAnalysisPool(options: PoolOptions): AnalysisPool {
           }) as Promise<LanguageAnalysis>;
         },
         dispose() {
+          // A worker that is gone took its slice along: do not start one just to drop it.
+          if (!slots[index]) return;
           send(index, { op: "dispose", slice }).catch(() => undefined);
         },
       };

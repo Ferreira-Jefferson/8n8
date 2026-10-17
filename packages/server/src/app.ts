@@ -106,17 +106,19 @@ const filePath = z
   );
 /** Files over 1 MB put on the map (CLEAN-06). */
 const include = z.array(filePath).max(100).optional();
+/** The version of the build the screen holds: the folder is not read again while that build is kept. */
+const buildVersion = z.string().max(100).optional();
 const projectBody = z.object({ path: z.string().min(1), include });
 const projectFileBody = z.object({
   root: z.string().min(1),
   include,
-  version: z.string().max(100).optional(),
+  version: buildVersion,
   path: filePath,
 });
 const projectSearchBody = z.object({
   root: z.string().min(1),
   include,
-  version: z.string().max(100).optional(),
+  version: buildVersion,
   query: z.string().max(200),
   limit: z.number().int().min(1).max(MAX_HITS).optional(),
 });
@@ -131,6 +133,7 @@ const cachedOnly = z.boolean().optional();
 const projectExplainBody = z.object({
   root: z.string().min(1),
   include,
+  version: buildVersion,
   nodeId: z.string(),
   cachedOnly,
 });
@@ -154,6 +157,7 @@ const chatTail = {
 const projectChatBody = z.object({
   root: z.string().min(1),
   include,
+  version: buildVersion,
   ...chatTail,
 });
 const chatBody = z.object({ source: z.string(), ...chatTail });
@@ -164,6 +168,7 @@ const structureTail = {
 const projectStructureBody = z.object({
   root: z.string().min(1),
   include,
+  version: buildVersion,
   ...structureTail,
 });
 const structureBody = z.object({ source: z.string(), ...structureTail });
@@ -178,7 +183,12 @@ const notesAction = z.discriminatedUnion("action", [
   }),
 ]);
 const projectNotesBody = z
-  .object({ root: z.string().min(1), include, nodeId: z.string() })
+  .object({
+    root: z.string().min(1),
+    include,
+    version: buildVersion,
+    nodeId: z.string(),
+  })
   .and(notesAction);
 const notesBody = z
   .object({ source: z.string(), nodeId: z.string() })
@@ -199,6 +209,7 @@ const nodeIds = z.array(z.string()).max(200);
 const projectTitlesBody = z.object({
   root: z.string().min(1),
   include,
+  version: buildVersion,
   nodeIds,
 });
 const titlesBody = z.object({ source: z.string(), nodeIds });
@@ -230,7 +241,13 @@ function nameOfNode(node: FlowNode, locale: Locale): string {
 
 /** Reads `{ source }` or `{ root }`; a missing folder gives `{ notFound }`. The client sends no code (AD-015). */
 async function loadOrigin(
-  body: { source: string } | { root: string; include?: string[] | undefined },
+  body:
+    | { source: string }
+    | {
+        root: string;
+        include?: string[] | undefined;
+        version?: string | undefined;
+      },
   deps: AppDeps,
 ): Promise<Origin | { notFound: string }> {
   // The masked docstring line is part of the code the LLM reads: it speaks the language of the system.
@@ -257,7 +274,7 @@ async function loadOrigin(
       idPrefix: `${plugin.id}|`,
     };
   }
-  const read = await deps.readProject(body.root, body.include);
+  const read = await deps.readProject(body.root, body.include, body.version);
   if (read.kind === "not-found") return { notFound: body.root };
   const { response } = read;
   const graph = response.graph;
@@ -547,7 +564,7 @@ export function createApp(deps: AppDeps): Hono {
     try {
       const origin = await loadOrigin(
         "root" in body
-          ? { root: body.root, include: body.include }
+          ? { root: body.root, include: body.include, version: body.version }
           : { source: body.source },
         deps,
       );
@@ -587,13 +604,17 @@ export function createApp(deps: AppDeps): Hono {
     c: Context,
     body: (
       | { source: string }
-      | { root: string; include?: string[] | undefined }
+      | {
+          root: string;
+          include?: string[] | undefined;
+          version?: string | undefined;
+        }
     ) & { nodeId: string },
   ): Promise<{ context: ChatContext; key: string; code: string } | Response> {
     try {
       const origin = await loadOrigin(
         "root" in body
-          ? { root: body.root, include: body.include }
+          ? { root: body.root, include: body.include, version: body.version }
           : { source: body.source },
         deps,
       );

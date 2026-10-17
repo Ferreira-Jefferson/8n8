@@ -305,6 +305,8 @@ function composeAnalyze(worker: string | undefined): Analyze {
     analyzeProjectParallel(files, all, {
       runner: pool,
       minFiles: MIN_PARALLEL_FILES,
+      onFallback: (error) =>
+        console.error("análise: o worker falhou, seguindo em sequência", error),
     });
 }
 

@@ -499,7 +499,7 @@ test.describe("Pasta local", () => {
     expect(outcome).toBe("ECONNREFUSED");
   });
 
-  test("AD-015: a project node is explained by root and nodeId, and the panel shows its file and lines", async ({
+  test("AD-015: a project node is explained by root, build version and nodeId, and the panel shows its file and lines", async ({
     page,
   }) => {
     const bodies: unknown[] = [];
@@ -522,8 +522,12 @@ test.describe("Pasta local", () => {
     await expect
       .poll(() => bodies)
       .toEqual([
-        { root: LOJA, nodeId: "file:frete/calculo.py" },
-        { root: LOJA, nodeId: FRETE },
+        {
+          root: LOJA,
+          version: expect.any(String),
+          nodeId: "file:frete/calculo.py",
+        },
+        { root: LOJA, version: expect.any(String), nodeId: FRETE },
       ]);
     await expect(
       view.getByText("CÓDIGO · frete/calculo.py, linhas 1 a 4", {

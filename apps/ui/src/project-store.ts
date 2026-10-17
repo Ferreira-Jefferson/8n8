@@ -31,6 +31,9 @@ export interface ProjectStoreOptions {
   onStale: () => void;
 }
 
+/** The pause before the one retry of a file request that failed. */
+const RETRY_MS = 400;
+
 export function createProjectStore({
   skeleton,
   fetchFile,
@@ -70,7 +73,19 @@ export function createProjectStore({
     ensureFile(path) {
       const known = asked.get(path);
       if (known) return known;
-      const loading = fetchFile(path).then(
+      // One more try after a pause: a brief failure should not leave the file loading until the next need.
+      const attempt = () =>
+        fetchFile(path).catch(
+          () =>
+            new Promise<Awaited<ReturnType<typeof fetchFile>>>(
+              (resolve, reject) =>
+                setTimeout(
+                  () => fetchFile(path).then(resolve, reject),
+                  RETRY_MS,
+                ),
+            ),
+        );
+      const loading = attempt().then(
         (r) => {
           if (r.status === "stale") {
             markStale();

@@ -469,7 +469,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
     );
     await waitFor(() =>
       expect(explainMock).toHaveBeenCalledWith(
-        { root: lojaRoot, include: ["a.py", "b.py"] },
+        { root: lojaRoot, include: ["a.py", "b.py"], version: "v1" },
         "file:frete/calculo.py/fn:calcular_frete",
         true,
       ),
@@ -499,7 +499,11 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
         screen.queryByRole("button", { name: "1 arquivo ignorado" }),
       ).toBeNull(),
     );
-    const origin = { root: lojaRoot, include: ["grande.py"] };
+    const origin = {
+      root: lojaRoot,
+      include: ["grande.py"],
+      version: "v1",
+    };
     // A level with functions asks for titles.
     await openEach(["dir:pedidos", "file:pedidos/pedidos.py"]);
     await waitFor(() =>
@@ -567,7 +571,7 @@ describe("App with a local folder (PROJ-02, PROJ-05, PROJ-06)", () => {
       ),
     ).toBeTruthy();
     expect(explainMock).toHaveBeenCalledWith(
-      { root: lojaRoot },
+      { root: lojaRoot, version: "v1" },
       "file:frete/calculo.py/fn:calcular_frete",
       true,
     );

@@ -152,7 +152,7 @@ export async function fetchPick(
  */
 export type ExplainOrigin =
   | { source: string }
-  | { root: string; include?: string[] };
+  | { root: string; include?: string[]; version?: string };
 
 /** One part of a node's explanation; `cachedOnly` asks the cache and never spends the LLM (CFG-05). */
 async function fetchPart<T>(

@@ -137,6 +137,20 @@ function migrateV3(db: DatabaseSync): void {
   db.exec("DROP TABLE search_data");
 }
 
+/** The lines of a text, as a split on `\r?\n` counts them (none for an empty text), without making an array of them. */
+export function lineCount(text: string): number {
+  if (text === "") return 0;
+  let lines = 1;
+  for (
+    let at = text.indexOf("\n");
+    at !== -1;
+    at = text.indexOf("\n", at + 1)
+  ) {
+    lines++;
+  }
+  return lines;
+}
+
 function titleOf(map: MadeMap): string {
   if (map.kind === "project") return map.response.name;
   const first = map.source.split(/\r?\n/).find((l) => l.trim() !== "");
@@ -221,10 +235,7 @@ export function openHistory(path: string): History {
           ? [map.source]
           : map.response.files.map((f) => f.source);
       const graph = map.kind === "snippet" ? map.graph : map.response.graph;
-      const lines = sources.reduce(
-        (n, s) => n + (s === "" ? 0 : s.split(/\r?\n/).length),
-        0,
-      );
+      const lines = sources.reduce((n, s) => n + lineCount(s), 0);
       const bytes = sources.reduce((n, s) => n + Buffer.byteLength(s), 0);
       const key =
         map.kind === "project"
