@@ -23,7 +23,7 @@ const MENTIROSO = `def total_mentiroso(itens):\n${LIE}\n${BODY}`;
 const FIEL = `def total_fiel(itens):\n${LIE}\n${BODY}`;
 const SEM_DOC = `def total_sem_doc(itens):\n${BODY}`;
 const COMMAND =
-  "Atualize a docstring: A docstring fala de soma de preços, mas o código usa `len`";
+  "Atualize a docstring: A docstring fala de soma de preços, mas o código usa len";
 
 /** The suggestions drafts about one node: the request that judges the docstring. */
 const drafts = (log: FakeCall[], marker: string) =>

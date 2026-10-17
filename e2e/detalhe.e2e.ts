@@ -98,7 +98,7 @@ test("VID-28: a step summary keeps 2 sentences and the 3rd never reaches the rev
   await showStep(page, SUM, "Soma o peso dos itens.");
   await expect(summary(panel(page))).toHaveText([
     "Soma o peso dos itens.",
-    "Guarda a soma em `peso`.",
+    "Guarda a soma em peso.",
   ]);
   const sumReviews = reviews(await fakeLog()).filter((c) =>
     c.messages.some((m) => m.content.includes("sum(item")),
@@ -158,7 +158,7 @@ test("VID-29: the step panel follows the video order; the rules line shows on st
   ).toHaveCount(1);
   await openTab(page, "Resumo");
   await expect(summary(view).first()).toHaveText(
-    "A função busca a UF com `requests.get`.",
+    "A função busca a UF com requests.get.",
   );
   await expect(
     view.getByText("2 frases · voz ativa · um termo por conceito"),
@@ -186,7 +186,7 @@ test("VID-30: inputs → outputs in DM Mono; a RETORNO with neither omits the se
     "rgb(61, 191, 168)",
   );
 
-  await showStep(page, PESADA, "Retorna o valor da tabela pesada para a `uf`.");
+  await showStep(page, PESADA, "Retorna o valor da tabela pesada para a uf.");
   await openTab(page, "Código");
   await expect(
     view.getByText("CÓDIGO · trecho.py, linha 21", { exact: true }),
