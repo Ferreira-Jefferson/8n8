@@ -38,15 +38,7 @@ function sliceOf(id: number) {
   return found;
 }
 
-function replyAnalysis(id: number, analysis: LanguageAnalysis): void {
-  const { files, imports, offers, requests } = analysis;
-  for (let i = 0; i < files.length; i += BATCH) {
-    reply({ id, files: files.slice(i, i + BATCH) });
-  }
-  reply({ id, done: { imports, offers, requests } });
-}
-
-/** The same answer as `replyAnalysis`, with each file packed here: the graphs stay in this thread and the blobs move without a copy. */
+/** Answers an analysis with each file packed here: the graphs stay in this thread and the blobs move without a copy. */
 function replyPacked(
   id: number,
   plugin: LanguagePlugin,
@@ -99,8 +91,7 @@ function handle(request: AnalysisRequest & { id: number }): void {
     case "analyze": {
       const { slice, files, plugin: opener } = sliceOf(request.slice);
       const analysis = slice.analyze(request.contributions);
-      if (request.pack === undefined) replyAnalysis(id, analysis);
-      else replyPacked(id, opener, files, analysis, request.pack);
+      replyPacked(id, opener, files, analysis, request.pack);
       break;
     }
     case "dispose":
@@ -111,8 +102,7 @@ function handle(request: AnalysisRequest & { id: number }): void {
     case "run": {
       const found = plugin(request.pluginId);
       const analysis = found.analyze(request.files);
-      if (request.pack === undefined) replyAnalysis(id, analysis);
-      else replyPacked(id, found, request.files, analysis, request.pack);
+      replyPacked(id, found, request.files, analysis, request.pack);
       break;
     }
   }
