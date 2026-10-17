@@ -14,8 +14,10 @@ import { buildGraph } from "./build-graph";
 import { moduleSpecifiers } from "./imports";
 import { collectLinks } from "./links";
 import {
-  buildModuleIndex,
+  contributionOf,
   exportInfo,
+  indexOfContributions,
+  type ModuleContribution,
   type ModuleIndex,
   resolveMember,
   resolveModulePath,
@@ -120,15 +122,16 @@ export function openSlice(files: SourceFile[]): AnalysisSlice {
   }
   return {
     contribute: () =>
-      buildModuleIndex(
-        parsed.map(({ file, tree }) => ({
-          path: file.path,
-          root: tree.rootNode,
-        })),
-      ),
+      parsed.map(({ file, tree }) => ({
+        path: file.path,
+        data: contributionOf(tree.rootNode),
+      })),
     analyze(contributions) {
-      const index: ModuleIndex = new Map(
-        (contributions as ModuleIndex[]).flatMap((c) => [...c]),
+      const index = indexOfContributions(
+        contributions.map(({ path, data }) => ({
+          path,
+          data: data as ModuleContribution,
+        })),
       );
       const result: LanguageAnalysis = {
         files: [],
@@ -158,7 +161,7 @@ export function openSlice(files: SourceFile[]): AnalysisSlice {
 export function analyzeFiles(files: SourceFile[]): LanguageAnalysis {
   const slice = openSlice(files);
   try {
-    return slice.analyze([slice.contribute()]);
+    return slice.analyze(slice.contribute());
   } finally {
     slice.dispose();
   }

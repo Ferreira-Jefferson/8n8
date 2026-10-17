@@ -1,13 +1,16 @@
+import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { SourceFile } from "@8n8/model";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { openAnalysisCache } from "../analysis-cache";
 import { composeBuild } from "../core";
 import { languagePlugins } from "../plugins";
 import { type BuildInput, buildInThread } from "../project-build";
 import { createProjectBuilder, type ProjectBuilder } from "../project-builder";
+import type { StoreParts } from "../project-store";
 import { answers, referenceParts } from "./answers";
 import { MIXED } from "./mixed";
 
@@ -35,6 +38,7 @@ const FILES: SourceFile[] = [
       "export function somar(itens: number[]): number {\n  return 0;\n}\n",
   },
 ];
+const sha1 = (text: string) => createHash("sha1").update(text).digest("hex");
 const input = (files = FILES): BuildInput => ({
   name: "mista",
   files,
@@ -69,6 +73,44 @@ describe("createProjectBuilder", () => {
     const inWorker = await builder.build(input());
     expect(answers(inWorker)).toEqual(answers(inThread));
     expect(inWorker.cross.length).toBeGreaterThan(0);
+  });
+
+  it("keeps the work of each file in the file of the cache, and builds the same answers cold and warm", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "8n8-builder-cache-"));
+    try {
+      const cacheFile = join(dir, "analysis", "cache.db");
+      builder = createProjectBuilder({ worker: WORKER, execArgv, cacheFile });
+      const reference = answers(
+        referenceParts("mista", MIXED, languagePlugins),
+      );
+      const build = () =>
+        builder?.build({
+          name: "mista",
+          files: MIXED,
+          ignored: [],
+          version: "v-test",
+        }) as Promise<StoreParts>;
+      expect(answers(await build())).toEqual(reference);
+      // The thread writes after it answers.
+      const rowCount = () => {
+        const cache = openAnalysisCache(cacheFile);
+        if (!cache) return 0;
+        const found = cache.contributions(
+          MIXED.map((f) => `python|1|${f.path}|${sha1(f.source)}`),
+        );
+        cache.close();
+        return found.filter((text) => text !== undefined).length;
+      };
+      for (let i = 0; i < 100 && rowCount() === 0; i++) {
+        await new Promise((go) => setTimeout(go, 100));
+      }
+      expect(rowCount()).toBeGreaterThan(0);
+      expect(answers(await build())).toEqual(reference);
+    } finally {
+      await builder?.close();
+      builder = undefined;
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("builds again with the same thread, one after the other", async () => {
@@ -152,5 +194,38 @@ describe("composeBuild", () => {
     expect(answers(parts)).toEqual(
       answers(await buildInThread(input(files), languagePlugins)),
     );
+  });
+
+  it("keeps the files of a project of 150 files in the analysis cache, and gives the same answers when it builds again", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "8n8-compose-cache-"));
+    try {
+      const cacheFile = join(dir, "analysis", "cache.db");
+      const build = composeBuild(WORKER, execArgv, cacheFile);
+      const files = many();
+      const reference = answers(
+        await buildInThread(input(files), languagePlugins),
+      );
+      expect(answers(await build(input(files), languagePlugins))).toEqual(
+        reference,
+      );
+      const kept = () => {
+        const cache = openAnalysisCache(cacheFile);
+        const found = (cache?.contributions(
+          files.map((f) => `python|1|${f.path}|${sha1(f.source)}`),
+        ) ?? []) as (string | undefined)[];
+        cache?.close();
+        return found.filter((text) => text !== undefined).length;
+      };
+      // The thread writes after it answers.
+      for (let i = 0; i < 100 && kept() < files.length; i++) {
+        await new Promise((go) => setTimeout(go, 100));
+      }
+      expect(kept()).toBe(files.length);
+      expect(answers(await build(input(files), languagePlugins))).toEqual(
+        reference,
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

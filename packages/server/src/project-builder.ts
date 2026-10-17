@@ -16,6 +16,8 @@ export interface BuilderOptions {
   execArgv?: string[];
   /** The thread goes away after this long without a build, and gives its memory back: a build leaves the heap of a whole graph behind. */
   idleMs?: number;
+  /** The file of the analysis cache, which the builder thread opens; without it, nothing is kept between builds. */
+  cacheFile?: string;
 }
 
 interface Pending {
@@ -53,6 +55,9 @@ export function createProjectBuilder(options: BuilderOptions): ProjectBuilder {
       role: "builder",
       analysisWorker: options.worker,
       ...(options.execArgv === undefined ? {} : { execArgv: options.execArgv }),
+      ...(options.cacheFile === undefined
+        ? {}
+        : { cacheFile: options.cacheFile }),
     };
     const worker = new Worker(options.worker, {
       workerData: data,

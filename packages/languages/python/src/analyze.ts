@@ -10,12 +10,14 @@ import {
   type SourceFile,
 } from "@8n8/model";
 import type { Node, Parser, Tree } from "web-tree-sitter";
-import { allocateTopLevel, buildGraph } from "./build-graph";
+import { buildGraph } from "./build-graph";
 import { markSyntaxErrors } from "./errors";
 import { collectLinks } from "./links";
 import {
   absoluteName,
-  buildModuleIndex,
+  contributionOf,
+  indexOfContributions,
+  type ModuleContribution,
   type ModuleEntry,
   type ModuleIndex,
   packageOf,
@@ -139,16 +141,10 @@ function importsEdges(parsed: Parsed[], index: ModuleIndex): FlowEdge[] {
   return [...edges.values()];
 }
 
-/** What a slice adds to the project context: its module index and its top-level names. */
-interface Contribution {
-  index: ModuleIndex;
-  names: string[];
-}
-
 /**
  * Parses the files of one slice and keeps the trees until `dispose`. Phase 1 gives the
- * slice's part of the project context; phase 2 builds each file under its `file:` prefix
- * (PROJ-02, 03, 04, 09), with the context of every slice. The folders are the project's job.
+ * contribution of each file to the project context; phase 2 builds each file under its `file:` prefix
+ * (PROJ-02, 03, 04, 09), with the contributions of all the files. The folders are the project's job.
  */
 export function openSlice(parser: Parser, files: SourceFile[]): AnalysisSlice {
   const parsed: Parsed[] = [];
@@ -166,21 +162,20 @@ export function openSlice(parser: Parser, files: SourceFile[]): AnalysisSlice {
     throw error;
   }
   return {
-    contribute: (): Contribution => ({
-      index: buildModuleIndex(
-        parsed.map(({ file, tree }) => ({
-          path: file.path,
-          root: tree.rootNode,
-        })),
-      ),
-      names: parsed.flatMap(({ tree }) => [
-        ...allocateTopLevel(tree.rootNode).topLevel.keys(),
-      ]),
-    }),
+    contribute: () =>
+      parsed.map(({ file, tree }) => ({
+        path: file.path,
+        data: contributionOf(file.path, tree.rootNode),
+      })),
     analyze(contributions) {
-      const all = contributions as Contribution[];
-      const index: ModuleIndex = new Map(all.flatMap((c) => [...c.index]));
-      const projectNames = new Set(all.flatMap((c) => c.names));
+      const all = contributions.map(({ path, data }) => ({
+        path,
+        data: data as ModuleContribution,
+      }));
+      const index = indexOfContributions(all);
+      const projectNames = new Set(
+        all.flatMap((c) => c.data.topLevel.map(([name]) => name)),
+      );
       const graphs = parsed.map((p) => ({
         path: p.file.path,
         graph: fileGraph(p, index, projectNames),
@@ -210,7 +205,7 @@ export function analyzeFiles(
 ): LanguageAnalysis {
   const slice = openSlice(parser, files);
   try {
-    return slice.analyze([slice.contribute()]);
+    return slice.analyze(slice.contribute());
   } finally {
     slice.dispose();
   }

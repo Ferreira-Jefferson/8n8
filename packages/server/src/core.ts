@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import {
   buildChatPrompt,
   buildReviewerPrompt,
@@ -291,11 +292,13 @@ const MIN_BUILDER_FILES = 150;
 export function composeBuild(
   worker: string | undefined,
   execArgv?: string[],
+  cacheFile?: string,
 ): Build {
   if (worker === undefined) return buildInThread;
   const builder = createProjectBuilder({
     worker,
     ...(execArgv === undefined ? {} : { execArgv }),
+    ...(cacheFile === undefined ? {} : { cacheFile }),
   });
   return async (input, plugins) => {
     if (input.files.length < MIN_BUILDER_FILES) {
@@ -395,6 +398,21 @@ export interface CoreOptions {
   analysisWorker?: string;
 }
 
+/**
+ * Where the analysis cache lives: `<cache>/analysis`, in the folder of the other caches. The host sets APP8N8_NO_ANALYSIS_CACHE=1
+ * in the environment it passes (`options.env`) to turn it off.
+ */
+export function analysisCacheFile(
+  options: Pick<CoreOptions, "env" | "cacheDir">,
+): string | undefined {
+  if (options.env.APP8N8_NO_ANALYSIS_CACHE === "1") return undefined;
+  return join(
+    options.env.APP8N8_CACHE_DIR || options.cacheDir,
+    "analysis",
+    "cache.db",
+  );
+}
+
 /** The whole app, built from explicit options: the host decides where data lives and opens the port (AD-022). */
 export function createCore(options: CoreOptions): Hono {
   // An unknown provider in the environment fails at startup, naming the known ones.
@@ -418,7 +436,11 @@ export function createCore(options: CoreOptions): Hono {
       readSourceFolder,
       languagePlugins,
       () => settings.ignoreDependencies(),
-      composeBuild(options.analysisWorker),
+      composeBuild(
+        options.analysisWorker,
+        undefined,
+        analysisCacheFile(options),
+      ),
     ),
     pick: createPicker(),
     history:

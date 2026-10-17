@@ -51,23 +51,43 @@ export interface ParsedFile {
   root: Node;
 }
 
-export function buildModuleIndex(files: ParsedFile[]): ModuleIndex {
+/** What one file adds to the project: its top-level names and its import aliases, as plain JSON (the core keeps it on disk). */
+export interface ModuleContribution {
+  topLevel: [string, NodeId][];
+  aliases: [string, string][];
+}
+
+/** The contribution of one file: it depends only on the path and the text. */
+export function contributionOf(path: string, root: Node): ModuleContribution {
+  const aliases: [string, string][] = [];
+  for (const [local, full] of importAliases(root)) {
+    const absolute = absoluteName(path, full);
+    if (absolute !== null) aliases.push([local, absolute]);
+  }
+  return { topLevel: [...allocateTopLevel(root).topLevel], aliases };
+}
+
+/** The index of the contributions, in the order given: a module name that two files share goes to the last one. */
+export function indexOfContributions(
+  contributions: { path: string; data: ModuleContribution }[],
+): ModuleIndex {
   const index: ModuleIndex = new Map();
-  for (const { path, root } of files) {
+  for (const { path, data } of contributions) {
     const name = moduleNameOf(path);
     if (name === null) continue;
-    const aliases = new Map<string, string>();
-    for (const [local, full] of importAliases(root)) {
-      const absolute = absoluteName(path, full);
-      if (absolute !== null) aliases.set(local, absolute);
-    }
     index.set(name, {
       path,
-      topLevel: allocateTopLevel(root).topLevel,
-      aliases,
+      topLevel: new Map(data.topLevel),
+      aliases: new Map(data.aliases),
     });
   }
   return index;
+}
+
+export function buildModuleIndex(files: ParsedFile[]): ModuleIndex {
+  return indexOfContributions(
+    files.map(({ path, root }) => ({ path, data: contributionOf(path, root) })),
+  );
 }
 
 /** Resolves an absolute dotted name whose last segment names a definition. */

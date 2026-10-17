@@ -1,6 +1,7 @@
 import { availableParallelism } from "node:os";
 import { Worker } from "node:worker_threads";
 import type {
+  FileContribution,
   FlowEdge,
   LanguageAnalysis,
   LanguagePlugin,
@@ -23,7 +24,7 @@ export type AnalysisRequest =
   | {
       op: "analyze";
       slice: number;
-      contributions: unknown[];
+      contributions: FileContribution[];
       pack?: PackRequest;
     }
   | { op: "dispose"; slice: number }
@@ -186,9 +187,11 @@ export function createAnalysisPool(options: PoolOptions): AnalysisPool {
     return {
       async contribute() {
         await opened;
-        return send(index, { op: "contribute", slice });
+        return send(index, { op: "contribute", slice }) as Promise<
+          FileContribution[]
+        >;
       },
-      analyze(contributions: unknown[], pack?: PackRequest) {
+      analyze(contributions: FileContribution[], pack?: PackRequest) {
         return send(index, {
           op: "analyze",
           slice,

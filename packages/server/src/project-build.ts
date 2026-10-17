@@ -1,4 +1,10 @@
-import type { IgnoredFile, LanguagePlugin, SourceFile } from "@8n8/model";
+import { createHash } from "node:crypto";
+import type {
+  FileContribution,
+  IgnoredFile,
+  LanguagePlugin,
+  SourceFile,
+} from "@8n8/model";
 import {
   analyzeIsolating,
   failedGraph,
@@ -6,6 +12,7 @@ import {
   splitFiles,
   validateAnalysis,
 } from "@8n8/project";
+import type { AnalysisCache, FileResult } from "./analysis-cache";
 import {
   assemble,
   type GroupResult,
@@ -14,7 +21,7 @@ import {
   packAnalysis,
   packFile,
 } from "./project-pack";
-import type { StoreParts } from "./project-store";
+import { fileOfId, type StoreParts } from "./project-store";
 
 /** What a build needs: the files the reader gave, and the names that go on the result. */
 export interface BuildInput {
@@ -38,8 +45,11 @@ export interface PackRequest {
 
 /** A slice of the files of a language, whose parse trees one worker keeps until `dispose`. */
 export interface PackingSlice {
-  contribute(): Promise<unknown>;
-  analyze(contributions: unknown[], pack: PackRequest): Promise<PackedAnalysis>;
+  contribute(): Promise<FileContribution[]>;
+  analyze(
+    contributions: FileContribution[],
+    pack: PackRequest,
+  ): Promise<PackedAnalysis>;
   dispose(): void;
 }
 
@@ -116,12 +126,160 @@ async function runGroup(
     runner.openPackedSlice(plugin, files),
   );
   try {
-    const contributions = await Promise.all(handles.map((h) => h.contribute()));
+    // The slices are contiguous and sorted, so the flat list is sorted by path.
+    const contributions = (
+      await Promise.all(handles.map((h) => h.contribute()))
+    ).flat();
     return join(
       await Promise.all(handles.map((h) => h.analyze(contributions, pack))),
     );
   } finally {
     for (const handle of handles) handle.dispose();
+  }
+}
+
+const sha1 = (text: string): string =>
+  createHash("sha1").update(text).digest("hex");
+
+/**
+ * The packed files of a slice with what belongs to each: its `imports` wires, offers and requests. The plugin
+ * must give those lists grouped by file, in the order of its files: the cache keeps them by file, and the join
+ * must see them in the same order as without the cache.
+ */
+function resultsOf(
+  packed: PackedAnalysis,
+  paths: ReadonlySet<string>,
+): Map<string, FileResult> {
+  const byPath = new Map<string, FileResult>();
+  for (const file of packed.files) {
+    byPath.set(file.path, { file, imports: [], offers: [], requests: [] });
+  }
+  const owner = (id: string): FileResult => {
+    const found = byPath.get(fileOfId(id, paths));
+    if (found === undefined) throw new Error(`no file of the slice owns ${id}`);
+    return found;
+  };
+  for (const e of packed.imports) owner(e.source).imports.push(e);
+  for (const o of packed.offers) owner(o.nodeId).offers.push(o);
+  for (const r of packed.requests) owner(r.nodeId).requests.push(r);
+  const ordered = <T>(pick: (r: FileResult) => T[], given: T[]): boolean => {
+    const flat = packed.files.flatMap((f) =>
+      pick(byPath.get(f.path) as FileResult),
+    );
+    return flat.length === given.length && flat.every((x, i) => x === given[i]);
+  };
+  if (
+    !ordered((r) => r.imports, packed.imports) ||
+    !ordered((r) => r.offers, packed.offers) ||
+    !ordered((r) => r.requests, packed.requests)
+  ) {
+    throw new Error("wires, offers or requests out of the order of the files");
+  }
+  return byPath;
+}
+
+/**
+ * One language through the workers, keeping each file's work on disk. The files whose contribution is not
+ * cached are parsed (phase 1) and the contribution is kept. A file's result is cached under its contribution key
+ * and the hash of the whole project context (every contribution of the language and every path): the files without
+ * a result are analyzed (phase 2). A file with both cached is never parsed, and when nothing is missing no worker starts.
+ * Answers as `runGroup` does, file by file in the order of `group`.
+ */
+async function runGroupCached(
+  plugin: LanguagePlugin,
+  group: SourceFile[],
+  runner: PackingRunner,
+  pack: PackRequest,
+  paths: ReadonlySet<string>,
+  cache: AnalysisCache,
+): Promise<PackedAnalysis> {
+  const base = `${plugin.id}|${plugin.cacheVersion}`;
+  const keys = group.map((f) => `${base}|${f.path}|${sha1(f.source)}`);
+  const texts = cache.contributions(keys);
+  const indexOf = new Map(group.map((f, i) => [f.path, i]));
+  const opened: PackingSlice[] = [];
+  const open = (indices: number[]): PackingSlice[] => {
+    const slices = splitFiles(
+      indices.map((i) => group[i] as SourceFile),
+      runner.size,
+    ).map((files) => runner.openPackedSlice(plugin, files));
+    opened.push(...slices);
+    return slices;
+  };
+  try {
+    // Phase 1, for the files with no cached contribution.
+    const fresh = texts.flatMap((t, i) => (t === undefined ? [i] : []));
+    const isFresh = new Set(fresh);
+    const parsing = open(fresh);
+    const made = (await Promise.all(parsing.map((h) => h.contribute()))).flat();
+    if (
+      made.length !== fresh.length ||
+      made.some((c, k) => c.path !== group[fresh[k] as number]?.path)
+    ) {
+      throw new Error(
+        "a slice gave contributions for other files than its own",
+      );
+    }
+    made.forEach((c, k) => {
+      const text = JSON.stringify(c.data);
+      if (text === undefined) throw new Error(`no contribution for ${c.path}`);
+      texts[fresh[k] as number] = text;
+      cache.putContribution(keys[fresh[k] as number] as string, text);
+    });
+
+    const context = createHash("sha1").update(`${base}\0`);
+    for (const path of [...paths].sort()) context.update(`${path}\0`);
+    context.update("\0contributions\0");
+    for (const [i, f] of group.entries()) {
+      context.update(`${f.path}\0${texts[i]}\0`);
+    }
+    const contextHash = context.digest("hex");
+
+    // Phase 2, for the files with no cached result: the ones just parsed, and the ones the context changed under.
+    const resultKeys = keys.map((key) => `${key}|${contextHash}`);
+    const results = group.map((f, i) =>
+      isFresh.has(i)
+        ? undefined
+        : cache.result(resultKeys[i] as string, f.source),
+    );
+    const later = results.flatMap((r, i) =>
+      r === undefined && !isFresh.has(i) ? [i] : [],
+    );
+    const slices = [...parsing, ...open(later)];
+    let given: FileContribution[] | undefined;
+    const contributions = () => {
+      given ??= group.map((f, i) => ({
+        path: f.path,
+        data: JSON.parse(texts[i] as string) as unknown,
+      }));
+      return given;
+    };
+    await Promise.all(
+      slices.map(async (slice) => {
+        for (const [path, result] of resultsOf(
+          await slice.analyze(contributions(), pack),
+          paths,
+        )) {
+          const i = indexOf.get(path);
+          if (i === undefined)
+            throw new Error(`a file the slice was not given: ${path}`);
+          results[i] = result;
+          cache.putResult(resultKeys[i] as string, result);
+        }
+      }),
+    );
+    const done = results.map((r, i) => {
+      if (r === undefined) throw new Error(`no result for ${group[i]?.path}`);
+      return r;
+    });
+    return {
+      files: done.map((r) => r.file),
+      imports: done.flatMap((r) => r.imports),
+      offers: done.flatMap((r) => r.offers),
+      requests: done.flatMap((r) => r.requests),
+    };
+  } finally {
+    for (const handle of opened) handle.dispose();
   }
 }
 
@@ -139,6 +297,11 @@ export interface StreamedOptions {
   onFallback?: (error: unknown) => void;
   /** Called when every language is analyzed and packed, before the join: the workers can go. */
   analyzed?: () => Promise<void>;
+  /**
+   * Keeps the work of each file between builds, for a plugin with `openSlice` and `cacheVersion`.
+   * The caller flushes it once it has the answer (a flush writes to disk) and closes it.
+   */
+  cache?: AnalysisCache;
 }
 
 /**
@@ -158,7 +321,19 @@ export async function buildStreamed(
     groups = await Promise.all(
       [...groupByPlugin(input.files, plugins)].map(async ([plugin, group]) => {
         try {
-          const done = await runGroup(plugin, group, runner, pack);
+          const done =
+            options.cache !== undefined &&
+            plugin.openSlice !== undefined &&
+            plugin.cacheVersion !== undefined
+              ? await runGroupCached(
+                  plugin,
+                  group,
+                  runner,
+                  pack,
+                  ctx.paths,
+                  options.cache,
+                )
+              : await runGroup(plugin, group, runner, pack);
           return {
             plugin,
             packed: done.files,

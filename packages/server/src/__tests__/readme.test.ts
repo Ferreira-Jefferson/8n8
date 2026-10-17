@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { IGNORED_DIRS } from "@8n8/input";
 import { describe, expect, it } from "vitest";
+import { MAX_CACHE_BYTES } from "../analysis-cache";
 import { languagePlugins } from "../core";
 
 const readme = readFileSync(
@@ -30,5 +31,14 @@ describe("the README tells what 8n8 reads of a folder (CLEAN-03)", () => {
     expect(readme).toContain(
       "O histórico guarda só o caminho de cada pasta, nunca o código.",
     );
+  });
+
+  it("says what the analysis cache keeps, where, its limit, how to turn it off and how to erase it", () => {
+    expect(readme).toContain("**Cache de análise.**");
+    expect(readme).toContain("dado derivado do seu código");
+    expect(readme).toContain("`cache/analysis/cache.db`");
+    expect(readme).toContain(`${MAX_CACHE_BYTES / 1024 / 1024} MB`);
+    expect(readme).toContain("`APP8N8_NO_ANALYSIS_CACHE=1`");
+    expect(readme).toContain("apague a pasta `cache/analysis`");
   });
 });

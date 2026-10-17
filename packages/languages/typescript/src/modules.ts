@@ -111,18 +111,43 @@ export interface ModuleEntry {
 /** Project modules by path. */
 export type ModuleIndex = Map<string, ModuleEntry>;
 
-export function buildModuleIndex(
-  files: { path: string; root: Node }[],
+/** What one file adds to the project: its top-level names and its exports, as plain JSON (the core keeps it on disk). */
+export interface ModuleContribution {
+  topLevel: [string, NodeId][];
+  names: [string, string][];
+  reexports: ExportInfo["reexports"];
+}
+
+/** The contribution of one file: it depends only on the text. */
+export function contributionOf(root: Node): ModuleContribution {
+  const { names, reexports } = exportInfo(root);
+  return {
+    topLevel: [...allocateTopLevel(root).topLevel],
+    names: [...names],
+    reexports,
+  };
+}
+
+export function indexOfContributions(
+  contributions: { path: string; data: ModuleContribution }[],
 ): ModuleIndex {
   const index: ModuleIndex = new Map();
-  for (const { path, root } of files) {
+  for (const { path, data } of contributions) {
     index.set(path, {
       path,
-      topLevel: allocateTopLevel(root).topLevel,
-      exports: exportInfo(root),
+      topLevel: new Map(data.topLevel),
+      exports: { names: new Map(data.names), reexports: data.reexports },
     });
   }
   return index;
+}
+
+export function buildModuleIndex(
+  files: { path: string; root: Node }[],
+): ModuleIndex {
+  return indexOfContributions(
+    files.map(({ path, root }) => ({ path, data: contributionOf(root) })),
+  );
 }
 
 /** The project node that `entry` exports as `name`, following re-exports. */

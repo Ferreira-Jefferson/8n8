@@ -58,20 +58,41 @@ export interface LanguagePlugin {
   /** Entende um conjunto de arquivos desta linguagem. Os caminhos são POSIX, relativos à raiz do projeto. */
   analyze(files: SourceFile[]): LanguageAnalysis;
   /**
-   * Optional. Lets the core split `analyze` among worker threads. `files` is one contiguous
-   * slice of the project's files of this language, in the order `analyze` sorts them.
-   * Opening all the slices and running both phases below must give the same result as
-   * `analyze` of all the files together. A plugin without it always runs in one piece.
+   * Optional. Lets the core split `analyze` among worker threads, and keep the result of each
+   * file between runs. `files` is a slice of the project's files of this language, sorted by path:
+   * contiguous, or any subset (the core opens a slice only with the files that need work).
+   * Opening slices that cover all the files and running both phases below must give the same
+   * result as `analyze` of all the files together. A plugin without it always runs in one piece.
    */
   openSlice?(files: SourceFile[]): AnalysisSlice;
+  /**
+   * Optional, with `openSlice`. The version of what the plugin makes of a file: change it
+   * whenever the same text can give another contribution or another graph. The core keeps results
+   * on disk under it; a plugin without it is never cached.
+   */
+  cacheVersion?: string;
+}
+
+/**
+ * What ONE file adds to the project-wide context (module index, top-level names). It depends only on the
+ * path and the text of the file, never on other files. `data` is plain JSON (no `Map`, no `undefined`):
+ * the core keeps it on disk and hashes its text, so the same file must always give the same text.
+ */
+export interface FileContribution {
+  path: string;
+  data: unknown;
 }
 
 /** A slice of the files of one language, with its parse trees kept until `dispose`. */
 export interface AnalysisSlice {
-  /** Phase 1: what these files add to the project-wide context (module index, names). Plain data that a structured clone carries. */
-  contribute(): unknown;
-  /** Phase 2: the analysis of these files only, given the contributions of ALL the slices, in slice order. */
-  analyze(contributions: unknown[]): LanguageAnalysis;
+  /** Phase 1: the contribution of each file of this slice, in the order of the files. */
+  contribute(): FileContribution[];
+  /**
+   * Phase 2: the analysis of the files of this slice only, given the contributions of ALL the project's
+   * files of this language, sorted by path. The `imports` wires of a file have its `file` node as `source`;
+   * the offers and requests come grouped by file, in the order of the files.
+   */
+  analyze(contributions: FileContribution[]): LanguageAnalysis;
   /** Frees the parse trees. */
   dispose(): void;
 }

@@ -58,8 +58,12 @@ export interface PackedFile {
   hash: string;
   lines: number;
   bytes: number;
-  /** gzip of the JSON of a `FileRecord`, in a buffer of its own. */
+  /**
+   * gzip of the JSON of a `FileRecord`, in a buffer of its own: two gzip members that read as one text.
+   * The first (`headBytes` long) holds the source; the rest holds what the plugin derived from it.
+   */
   blob: Uint8Array;
+  headBytes: number;
   /** The `file` node as the plugin made it. */
   fileNode: FlowNode;
   /** How many nodes are direct children of the file node, and how many of those the level of the file shows. */
@@ -98,6 +102,11 @@ export function lineCount(text: string): number {
     lines++;
   }
   return lines;
+}
+
+/** The first gzip member of a blob: the start of the JSON of a `FileRecord`, with the source. */
+export function blobHead(source: string): Uint8Array {
+  return gzipSync(`{"source":${JSON.stringify(source)}`, { level: 1 });
 }
 
 /** The folders a path lies in, from the top: the ancestors of its file node. */
@@ -179,18 +188,24 @@ export function packFile(
   }
 
   const children = nodes.filter((c) => c.parentId === head.id);
+  // Level 1: the JSON repeats its keys, so it shrinks a lot even so, and the build waits for it.
+  // The two members are the same text as one `JSON.stringify({ source, nodes, edges, seqs })`; the second
+  // holds no source, so the analysis cache keeps it alone. The copy gives the blob a buffer of its own, which a worker can hand over.
+  const first = blobHead(source);
+  const second = gzipSync(
+    `,"nodes":${JSON.stringify(nodes)},"edges":${JSON.stringify(kept)},"seqs":${JSON.stringify(seqs)}}`,
+    { level: 1 },
+  );
+  const blob = new Uint8Array(first.length + second.length);
+  blob.set(first);
+  blob.set(second, first.length);
   return {
     path,
     hash: createHash("sha1").update(source).digest("hex"),
     lines: lineCount(source),
     bytes: Buffer.byteLength(source),
-    // Level 1: the JSON repeats its keys, so it shrinks a lot even so, and the build waits for it.
-    // The copy gives the blob a buffer of its own, which a worker can hand over.
-    blob: new Uint8Array(
-      gzipSync(JSON.stringify({ source, nodes, edges: kept, seqs }), {
-        level: 1,
-      }),
-    ),
+    blob,
+    headBytes: first.length,
     fileNode: head,
     children: children.length,
     shown: children.filter((c) => shownInFile(nodes, c)).length,

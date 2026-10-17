@@ -1,4 +1,5 @@
 import { parentPort } from "node:worker_threads";
+import { openAnalysisCache } from "./analysis-cache";
 import { createAnalysisPool } from "./analysis-pool";
 import { languagePlugins } from "./plugins";
 import { type BuildInput, buildStreamed } from "./project-build";
@@ -15,6 +16,8 @@ export interface BuilderData {
   analysisWorker: string | URL;
   /** For a worker that runs from source, e.g. `["--import", "tsx"]`. */
   execArgv?: string[];
+  /** The file of the analysis cache; without it, the builder keeps nothing between builds. */
+  cacheFile?: string;
 }
 
 export interface BuilderRequest {
@@ -43,6 +46,11 @@ export function serveBuilds(data: BuilderData): void {
   const reply = (message: BuilderReply, transfer: ArrayBuffer[] = []) =>
     parentPort?.postMessage(message, transfer);
   parentPort?.on("message", async ({ id, input }: BuilderRequest) => {
+    // Opened for each build and closed after it: the file is free for another process between two builds.
+    const cache =
+      data.cacheFile === undefined
+        ? undefined
+        : openAnalysisCache(data.cacheFile);
     try {
       const { files, ...rest } = await buildStreamed(
         input,
@@ -56,6 +64,7 @@ export function serveBuilds(data: BuilderData): void {
             ),
           // The analysis workers hold the parse trees: they go away before the join.
           analyzed: () => pool.close(),
+          ...(cache === undefined ? {} : { cache }),
         },
       );
       for (let i = 0; i < files.length; i += BATCH) {
@@ -66,11 +75,15 @@ export function serveBuilds(data: BuilderData): void {
         );
       }
       reply({ id, parts: { ...rest, files: [] } });
+      // After the answer: the one who asked does not wait for the disk.
+      cache?.flush();
     } catch (error) {
       reply({
         id,
         error: error instanceof Error ? error.message : String(error),
       });
+    } finally {
+      cache?.close();
     }
   });
 }

@@ -71,22 +71,34 @@ O contrato fica em `packages/model/src/plugin.ts`:
 
 ```ts
 openSlice?(files: SourceFile[]): AnalysisSlice;
+cacheVersion?: string;
+
+interface FileContribution {
+  path: string;
+  data: unknown;
+}
 
 interface AnalysisSlice {
-  contribute(): unknown;
-  analyze(contributions: unknown[]): LanguageAnalysis;
+  contribute(): FileContribution[];
+  analyze(contributions: FileContribution[]): LanguageAnalysis;
   dispose(): void;
 }
 ```
 
-O core corta os arquivos da linguagem em fatias seguidas, na ordem do `analyze`, e abre uma fatia em cada thread. Cada fatia faz duas fases:
+O core corta os arquivos da linguagem em fatias e abre uma fatia em cada thread. Os arquivos de uma fatia chegam ordenados por caminho. Cada fatia faz duas fases:
 
-1. `contribute()`: a fatia lê só os seus arquivos e devolve a parte dela do contexto. O retorno é dado simples (objetos, `Map`, `Set`, textos), porque um `structuredClone` leva esse valor de uma thread à outra. Não devolva árvores do parser, funções nem classes.
-2. `analyze(contributions)`: o core entrega as contribuições de TODAS as fatias, na ordem das fatias. A fatia junta o contexto e devolve o `LanguageAnalysis` só dos arquivos dela.
+1. `contribute()`: a fatia lê os seus arquivos e devolve, para CADA arquivo, a parte dele do contexto (`{ path, data }`, na ordem dos arquivos). A contribuição de um arquivo depende só do caminho e do texto dele, nunca dos outros arquivos. O `data` é JSON simples: objetos, listas, textos e números. Não use `Map`, `Set`, `undefined`, árvores do parser, funções nem classes. Uma lista de pares `[nome, valor]` no lugar do `Map` resolve.
+2. `analyze(contributions)`: o core entrega as contribuições de TODOS os arquivos da linguagem, ordenadas por caminho. A fatia junta o contexto e devolve o `LanguageAnalysis` só dos arquivos dela.
 
 `dispose()` libera as árvores do parser. O core chama `dispose` no fim, mesmo com erro.
 
-A regra principal: juntar as fatias, em ordem, tem de dar o mesmo `LanguageAnalysis` que `analyze` dá com todos os arquivos. A suíte de conformidade confere isso quando o plugin declara `openSlice`.
+A regra principal: abrir fatias que cobrem todos os arquivos e juntar o resultado, em ordem, tem de dar o mesmo `LanguageAnalysis` que `analyze` dá com todos os arquivos. A suíte de conformidade confere isso quando o plugin declara `openSlice`. Ela confere também que a contribuição de um arquivo é a mesma sozinha ou junto dos outros, e que uma fatia com só alguns arquivos devolve os grafos desses arquivos.
+
+Mais três regras de `analyze` numa fatia:
+
+- Cada aresta `imports` tem o nó `file` do arquivo de origem como `source`.
+- As listas `offers` e `requests` saem agrupadas por arquivo, na ordem dos arquivos, e cada `nodeId` fica dentro do arquivo que o declara.
+- O resultado de um arquivo depende só do texto dele e das contribuições de todos. O core guarda esse resultado em disco por arquivo (veja abaixo) e o reusa quando nada disso mudou.
 
 O jeito mais simples de cumprir a regra: escreva o `analyze` em cima do `openSlice`, com uma fatia só.
 
@@ -94,7 +106,7 @@ O jeito mais simples de cumprir a regra: escreva o `analyze` em cima do `openSli
 function analyzeFiles(files: SourceFile[]): LanguageAnalysis {
   const slice = openSlice(files);
   try {
-    return slice.analyze([slice.contribute()]);
+    return slice.analyze(slice.contribute());
   } finally {
     slice.dispose();
   }
@@ -109,6 +121,21 @@ Duas regras do `openSlice`:
 - Os arquivos da fatia chegam em ordem. O plugin ordena de novo do mesmo jeito que o `analyze`, para o caso de o core entregar fora de ordem.
 
 Projetos com menos de 150 arquivos rodam na thread do pedido: acordar as outras custa mais do que ganha.
+
+### Cache em disco (opcional)
+
+Abrir de novo uma pasta que já foi analisada não precisa analisar tudo outra vez. O core guarda em disco o que o plugin tirou de cada arquivo, em um banco SQLite na pasta de cache (`<cache>/analysis/cache.db`), e o usa em qualquer processo (CLI ou editor). O guia do editor e o README dizem o que fica guardado e como apagar.
+
+O core só guarda o que um plugin declara com `openSlice` e `cacheVersion`. Um plugin sem `cacheVersion` roda sempre, sem cache. Um plugin sem `openSlice` roda inteiro, também sem cache. Uma linguagem nova não precisa de nada disso para funcionar.
+
+O core usa duas chaves por arquivo:
+
+1. Contribuição: id do plugin, `cacheVersion`, caminho e SHA-1 do texto. Com ela, um arquivo que não mudou não é lido pelo parser.
+2. Resultado: a chave da contribuição mais o hash do contexto do projeto (todas as contribuições da linguagem e todos os caminhos do projeto). Se um arquivo muda sem mudar a contribuição dele (o corpo de uma função), só ele é analisado de novo. Se uma contribuição muda (um nome de topo novo), os arquivos daquela linguagem são analisados de novo. Isso é correto, só mais lento.
+
+`cacheVersion` é um texto que você muda sempre que o mesmo texto de arquivo puder dar outra contribuição ou outro grafo: uma regra nova, um rótulo novo, uma correção. Sem a mudança, os usuários continuam com resultados velhos no disco. O teste `analysis-cache.test.ts` guarda um hash do resultado dos plugins sobre um projeto de exemplo: quando o hash muda, o teste falha e lembra de subir o `cacheVersion`.
+
+O dado guardado tem de ser JSON simples e nunca pode trazer o código-fonte inteiro de um arquivo. O resultado de um arquivo carrega nomes, rótulos, linhas e estrutura; o texto vem da leitura da pasta.
 
 O servidor monta o mapa numa thread de construção, que abre as threads da análise. Cada thread da análise empacota os arquivos que ela analisou (JSON comprimido, busca, vizinhos) e devolve só o pacote. O grafo completo do projeto nunca fica em uma thread só. O plugin não vê nada disso.
 
@@ -422,7 +449,8 @@ O código está em `packages/languages/typescript/src/detect.ts`. Cada plugin v�
 - [ ] A gramática está em `dependencies`, é achada com `createRequire(import.meta.url).resolve(...)`, e `pnpm --filter 8n8 test` passa.
 - [ ] `pnpm typecheck`, `pnpm test` e `pnpm check` passam. O `check` confere as fronteiras e o Biome.
 - [ ] O plugin não importa outro plugin nem o LLM.
-- [ ] Opcional: se o plugin declara `openSlice`, juntar as fatias dá o mesmo resultado que `analyze` (a suíte de conformidade confere).
+- [ ] Opcional: se o plugin declara `openSlice`, juntar as fatias dá o mesmo resultado que `analyze`, e a contribuição de cada arquivo não depende dos outros (a suíte de conformidade confere).
+- [ ] Opcional: com `openSlice`, declarar `cacheVersion` para o core guardar o resultado por arquivo em disco. Suba o valor quando o resultado do plugin mudar.
 - [ ] `ignoredDirs` lista as pastas de dependências e de build da linguagem.
 - [ ] Ofertas e pedidos só cobrem o que o parser enxerga com segurança.
 

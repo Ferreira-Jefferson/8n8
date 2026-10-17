@@ -14,4 +14,5 @@ export const typescriptPlugin: LanguagePlugin = {
   extract: extractSnippet,
   analyze: analyzeFiles,
   openSlice,
+  cacheVersion: "1",
 };

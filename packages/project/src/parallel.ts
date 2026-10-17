@@ -1,4 +1,5 @@
 import type {
+  FileContribution,
   FlowEdge,
   FlowNode,
   Graph,
@@ -22,8 +23,8 @@ import { validateAnalysis } from "./validate";
 
 /** A slice of a plugin's files, kept by one worker thread until `dispose`. */
 export interface SliceHandle {
-  contribute(): Promise<unknown>;
-  analyze(contributions: unknown[]): Promise<LanguageAnalysis>;
+  contribute(): Promise<FileContribution[]>;
+  analyze(contributions: FileContribution[]): Promise<LanguageAnalysis>;
   dispose(): void;
 }
 
@@ -86,7 +87,10 @@ async function runGroup(
     runner.openSlice(plugin, files),
   );
   try {
-    const contributions = await Promise.all(handles.map((h) => h.contribute()));
+    // The slices are contiguous and sorted, so the flat list is sorted by path.
+    const contributions = (
+      await Promise.all(handles.map((h) => h.contribute()))
+    ).flat();
     const parts = await Promise.all(
       handles.map((h) => h.analyze(contributions)),
     );

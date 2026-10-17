@@ -18,6 +18,7 @@ Uma embalagem de editor mora em `apps/editors/<id>` (a CLI e a tela ficam direto
    | `port` | A porta que a guarda de `Host` aceita. Sem servidor, qualquer número fixo serve, desde que a ponte use o mesmo. |
    | `token` | Um token aleatório de 32 bytes, gerado a cada ativação. |
    | `settings` | Um `SettingsStore` com `read` e `write`. |
+   | `env.APP8N8_NO_ANALYSIS_CACHE` | Opcional. Com o valor `1`, o núcleo não usa o cache de análise em disco. O núcleo lê só o `env` que a embalagem passa, nunca o ambiente do processo. |
    | `analysisWorker` | Opcional. O caminho do arquivo `analysis-worker.mjs`, que fica ao lado do `core.mjs`. Com ele, o núcleo monta o mapa da pasta em threads (`worker_threads`): uma thread de construção e as threads da análise, que são abertas a partir desse mesmo arquivo. A thread do pedido só guarda o resultado compacto e fica livre. Sem ele, a construção roda na thread do pedido. O build da embalagem gera esse arquivo a partir de `packages/server/src/analysis-worker.ts`. Não há outro arquivo de worker para embalar. |
 
 2. **Guarda a config** num `SettingsStore`. A chave de API vai para o cofre do editor (no VS Code, o `SecretStorage`). O resto pode ir para o estado do editor. A chave nunca vai para um arquivo de texto quando o editor tem cofre.

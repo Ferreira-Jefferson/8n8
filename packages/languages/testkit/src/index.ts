@@ -1,9 +1,6 @@
-import type { LanguagePlugin, SourceFile } from "@8n8/model";
+import type { FileContribution, LanguagePlugin, SourceFile } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { analysisProblems, graphProblems } from "./check";
-
-// A Node global; this package does not load the Node types.
-declare function structuredClone<T>(value: T): T;
 
 export { analysisProblems, graphProblems, lineCount } from "./check";
 
@@ -95,9 +92,12 @@ export function describeLanguagePlugin(
           ),
         );
         try {
-          // A worker thread sends the contributions through a structured clone.
-          const contributions = structuredClone(
-            slices.map((slice) => slice.contribute()),
+          // The core keeps the contributions as JSON text, and a worker thread sends them through a structured clone.
+          const contributions = JSON.parse(
+            JSON.stringify(slices.flatMap((slice) => slice.contribute())),
+          ) as FileContribution[];
+          expect(contributions.map((c) => c.path)).toEqual(
+            sorted.map((f) => f.path),
           );
           const parts = slices.map((slice) => slice.analyze(contributions));
           expect({
@@ -108,6 +108,37 @@ export function describeLanguagePlugin(
           }).toEqual(plugin.analyze(fixtures.files));
         } finally {
           for (const slice of slices) slice.dispose();
+        }
+      },
+    );
+
+    it.skipIf(plugin.openSlice === undefined)(
+      "the contribution of a file does not depend on the other files, and a slice of some files gives their graphs with the contributions of all",
+      () => {
+        const sorted = [...fixtures.files].sort((a, b) =>
+          a.path < b.path ? -1 : a.path > b.path ? 1 : 0,
+        );
+        const open = (files: typeof sorted) =>
+          (plugin.openSlice as NonNullable<typeof plugin.openSlice>)(files);
+        const whole = open(sorted);
+        const alone = sorted.map((file) => open([file]));
+        try {
+          const all = whole.contribute();
+          expect(alone.flatMap((s) => s.contribute())).toEqual(all);
+          // Every other file, one slice: the same graphs as in the whole analysis.
+          const odd = sorted.filter((_, i) => i % 2 === 1);
+          const some = open(odd);
+          try {
+            const full = plugin.analyze(fixtures.files);
+            expect(some.analyze(all).files).toEqual(
+              full.files.filter((f) => odd.some((o) => o.path === f.path)),
+            );
+          } finally {
+            some.dispose();
+          }
+        } finally {
+          whole.dispose();
+          for (const slice of alone) slice.dispose();
         }
       },
     );

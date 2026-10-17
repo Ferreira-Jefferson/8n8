@@ -68,6 +68,7 @@ export { sliceLines, syntaxErrorLabel } from "./lines";
 export type { ChatMessage, LlmClient } from "./llm";
 export type {
   AnalysisSlice,
+  FileContribution,
   LanguageAnalysis,
   LanguagePlugin,
   LinkChannel,
