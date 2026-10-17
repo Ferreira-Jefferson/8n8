@@ -43,9 +43,13 @@ export interface PoolOptions {
   idleMs?: number;
 }
 
-/** One worker less than the cores, so the main thread keeps a core; at most 8. */
+/**
+ * One worker less than the cores, so the main thread keeps a core; at most 4. Each worker
+ * holds its own parser and trees, about 150 MB more: on a project of 3 000 files, 8 workers
+ * took 8 s and 3 GB, 4 workers 12 s and 2.3 GB.
+ */
 export function defaultPoolSize(): number {
-  return Math.max(1, Math.min(availableParallelism() - 1, 8));
+  return Math.max(1, Math.min(availableParallelism() - 1, 4));
 }
 
 interface Pending {
@@ -67,7 +71,7 @@ interface Slot {
  */
 export function createAnalysisPool(options: PoolOptions): AnalysisPool {
   const size = options.size ?? defaultPoolSize();
-  const idleMs = options.idleMs ?? 60_000;
+  const idleMs = options.idleMs ?? 10_000;
   const slots: (Slot | undefined)[] = Array.from({ length: size });
   let nextId = 0;
   let nextSlice = 0;
