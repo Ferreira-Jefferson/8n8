@@ -108,7 +108,7 @@ describe("history", () => {
     try {
       const h = openHistory(path);
       const m = project("/r/loja", [["a.py", "segredo_do_codigo = 1"]]);
-      if (m.kind === "project") {
+      if (m.kind === "project" && "response" in m) {
         m.response.graph.nodes[0] = { id: "fn:marca_do_grafo" } as never;
       }
       h.save(m);

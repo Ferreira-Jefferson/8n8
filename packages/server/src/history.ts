@@ -4,10 +4,18 @@ import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { gunzipSync } from "node:zlib";
 import type { Graph, HistoryEntry, HistoryItem, ProjectData } from "@8n8/model";
+import { lineCount } from "./project-pack";
+import type { ProjectCounts } from "./project-store";
 
-/** A map as it was made: the history keeps only its path or its text, and the sizes. */
+export { lineCount };
+
+/**
+ * A map as it was made: the history keeps only its path or its text, and the sizes. A project comes
+ * with its sizes already counted (the builder counts them), or with the whole response to count here.
+ */
 export type MadeMap =
   | { kind: "snippet"; source: string; graph: Graph }
+  | { kind: "project"; root: string; name: string; counts: ProjectCounts }
   | { kind: "project"; root: string; response: ProjectData };
 
 export interface History {
@@ -137,22 +145,27 @@ function migrateV3(db: DatabaseSync): void {
   db.exec("DROP TABLE search_data");
 }
 
-/** The lines of a text, as a split on `\r?\n` counts them (none for an empty text), without making an array of them. */
-export function lineCount(text: string): number {
-  if (text === "") return 0;
-  let lines = 1;
-  for (
-    let at = text.indexOf("\n");
-    at !== -1;
-    at = text.indexOf("\n", at + 1)
-  ) {
-    lines++;
-  }
-  return lines;
+/** The sizes of what was read: lines and bytes of all the code, source files, nodes and wires. */
+function countsOf(map: MadeMap): ProjectCounts {
+  if (map.kind === "project" && "counts" in map) return map.counts;
+  const sources =
+    map.kind === "snippet"
+      ? [map.source]
+      : map.response.files.map((f) => f.source);
+  const graph = map.kind === "snippet" ? map.graph : map.response.graph;
+  return {
+    lines: sources.reduce((n, s) => n + lineCount(s), 0),
+    bytes: sources.reduce((n, s) => n + Buffer.byteLength(s), 0),
+    files: sources.length,
+    nodes: graph.nodes.length,
+    edges: graph.edges.length,
+  };
 }
 
 function titleOf(map: MadeMap): string {
-  if (map.kind === "project") return map.response.name;
+  if (map.kind === "project") {
+    return "counts" in map ? map.name : map.response.name;
+  }
   const first = map.source.split(/\r?\n/).find((l) => l.trim() !== "");
   return first ? first.trim().slice(0, 60) : "Trecho";
 }
@@ -230,13 +243,7 @@ export function openHistory(path: string): History {
 
   return {
     save(map) {
-      const sources =
-        map.kind === "snippet"
-          ? [map.source]
-          : map.response.files.map((f) => f.source);
-      const graph = map.kind === "snippet" ? map.graph : map.response.graph;
-      const lines = sources.reduce((n, s) => n + lineCount(s), 0);
-      const bytes = sources.reduce((n, s) => n + Buffer.byteLength(s), 0);
+      const counts = countsOf(map);
       const key =
         map.kind === "project"
           ? keyOf("project", map.root)
@@ -253,11 +260,11 @@ export function openHistory(path: string): History {
           key,
           now,
           now,
-          lines,
-          bytes,
-          sources.length,
-          graph.nodes.length,
-          graph.edges.length,
+          counts.lines,
+          counts.bytes,
+          counts.files,
+          counts.nodes,
+          counts.edges,
         );
         prune.run(KEEP);
         db.exec("COMMIT");

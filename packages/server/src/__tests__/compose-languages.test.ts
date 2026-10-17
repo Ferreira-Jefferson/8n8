@@ -13,11 +13,12 @@ import type {
   SourceFile,
   TitleRequest,
 } from "@8n8/model";
-import { buildProject } from "@8n8/project";
+import { analyzeProject, buildProject } from "@8n8/project";
 import { afterAll, describe, expect, it } from "vitest";
-import { composeExplain, composeReadProject, composeTitles } from "../core";
+import { composeExplain, composeTitles } from "../core";
 import { fakeLang } from "./fake-lang";
 import { llmOf } from "./llm-of";
+import { linkedGraph } from "./reference-compact";
 
 const cacheDir = mkdtempSync(join(tmpdir(), "8n8-langs-"));
 afterAll(() => rmSync(cacheDir, { recursive: true, force: true }));
@@ -293,17 +294,15 @@ const offerOf = (path: string): Offer => ({
   line: 1,
 });
 
-function readerOf(files: SourceFile[], using: LanguagePlugin[]) {
-  return composeReadProject(
-    async () => ({ kind: "ok", name: "mix", root: "/mix", files, ignored: [] }),
-    using,
-  )("/mix");
+/** The whole graph of the project, as the build links it before packing it. */
+function graphOfFiles(files: SourceFile[], using: LanguagePlugin[]): Graph {
+  return linkedGraph(analyzeProject(files, using), "mix");
 }
 
 const callerFile = { path: "x.a", source: "call()\n" };
 const handlerFile = { path: "y.b", source: "handler()\n" };
 
-describe("composeReadProject links the languages (D3, D4)", () => {
+describe("the build links the languages (D3, D4)", () => {
   const caller = linkable("a", ".a", "call", (f) => ({
     requests: f.path === "x.a" ? [requestOf(f.path)] : [],
   }));
@@ -312,9 +311,7 @@ describe("composeReadProject links the languages (D3, D4)", () => {
   }));
 
   it("a request in one language meets the route another one offers", async () => {
-    const read = await readerOf([callerFile, handlerFile], [caller, handler]);
-    if (read.kind !== "ok") throw new Error("expected ok");
-    const { graph } = read.response;
+    const graph = graphOfFiles([callerFile, handlerFile], [caller, handler]);
     expect(graph.language).toBe("mixed");
     expect(graph.edges).toEqual([
       {
@@ -346,15 +343,11 @@ describe("composeReadProject links the languages (D3, D4)", () => {
         },
       ],
     }));
-    const read = await readerOf(
+    const graph = graphOfFiles(
       [callerFile, handlerFile],
       [withImport, handler],
     );
-    if (read.kind !== "ok") throw new Error("expected ok");
-    expect(read.response.graph.edges.map((e) => e.kind)).toEqual([
-      "imports",
-      "calls",
-    ]);
+    expect(graph.edges.map((e) => e.kind)).toEqual(["imports", "calls"]);
   });
 
   it("an id that the graph already has is not added twice", async () => {
@@ -370,18 +363,16 @@ describe("composeReadProject links the languages (D3, D4)", () => {
         },
       ],
     }));
-    const read = await readerOf([callerFile, handlerFile], [dup, handler]);
-    if (read.kind !== "ok") throw new Error("expected ok");
-    expect(read.response.graph.edges.map((e) => e.id)).toEqual([linkId]);
+    const graph = graphOfFiles([callerFile, handlerFile], [dup, handler]);
+    expect(graph.edges.map((e) => e.id)).toEqual([linkId]);
   });
 
   it("an ambiguous request links nothing", async () => {
-    const read = await readerOf(
+    const graph = graphOfFiles(
       [callerFile, handlerFile, { path: "z.b", source: "handler()\n" }],
       [caller, handler],
     );
-    if (read.kind !== "ok") throw new Error("expected ok");
-    expect(read.response.graph.edges).toEqual([]);
+    expect(graph.edges).toEqual([]);
   });
 
   it("a one-language project is byte for byte what buildProject gives", async () => {
@@ -389,9 +380,8 @@ describe("composeReadProject links the languages (D3, D4)", () => {
       { path: "a.py", source: "import requests\n\ndef f():\n    return g()\n" },
       { path: "b.py", source: "def g():\n    requests.get('x')\n" },
     ];
-    const read = await readerOf(files, [pythonPlugin]);
-    if (read.kind !== "ok") throw new Error("expected ok");
-    expect(JSON.stringify(read.response.graph)).toBe(
+    const graph = graphOfFiles(files, [pythonPlugin]);
+    expect(JSON.stringify(graph)).toBe(
       JSON.stringify({
         ...buildProject(files, [pythonPlugin]),
         project: { name: "mix" },

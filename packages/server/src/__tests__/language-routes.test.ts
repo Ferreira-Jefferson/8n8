@@ -11,6 +11,7 @@ import { describe, expect, it, vi } from "vitest";
 import { type AppDeps, createApp, type ProjectRead } from "../app";
 import { openHistory } from "../history";
 import { fakeLang } from "./fake-lang";
+import { readOf } from "./read-of";
 import { TEST_TOKEN } from "./test-token";
 
 const fn = (
@@ -285,16 +286,12 @@ describe("a project request follows the language of each file (5.4, 6.3)", () =>
     file("c.zzz"),
     fn("file:c.zzz/fn:f", "file:c.zzz"),
   ]);
-  const read: ProjectRead = {
-    kind: "ok",
-    root: "/p",
-    response: {
-      name: "p",
-      graph: mixed,
-      files: [...files, { path: "c.zzz", source: "x\n\n\n" }],
-      ignored: [],
-    },
-  };
+  const read: ProjectRead = readOf("/p", {
+    name: "p",
+    graph: mixed,
+    files: [...files, { path: "c.zzz", source: "x\n\n\n" }],
+    ignored: [],
+  });
 
   it("explain: each node gets the plugin of its file", async () => {
     const s = setup({ readProject: async () => read });

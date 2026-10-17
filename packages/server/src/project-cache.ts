@@ -1,13 +1,27 @@
 import { createHash } from "node:crypto";
 import type { IgnoredFile, SourceFile } from "@8n8/model";
 
+/** The thread gives way after hashing this many characters, so hashing a big folder never holds it for long. */
+const HASHED_AT_A_TIME = 1 << 20;
+
 /** The same files and the same ignored list give the same project: a hash tells them apart. */
-export function fingerprintOf(
+export async function fingerprintOf(
   files: readonly SourceFile[],
   ignored: readonly IgnoredFile[],
-): string {
+): Promise<string> {
   const hash = createHash("sha1");
-  for (const { path, source } of files) hash.update(`${path}\0${source}\0`);
+  let hashed = 0;
+  for (const { path, source } of files) {
+    hash.update(path);
+    hash.update("\0");
+    hash.update(source);
+    hash.update("\0");
+    hashed += source.length;
+    if (hashed >= HASHED_AT_A_TIME) {
+      hashed = 0;
+      await new Promise((go) => setImmediate(go));
+    }
+  }
   hash.update("\0ignored\0");
   for (const { path, reason, addable } of ignored) {
     hash.update(`${path}\0${reason}\0${addable ?? ""}\0`);

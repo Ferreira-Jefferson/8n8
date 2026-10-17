@@ -59,7 +59,7 @@ function join(parts: LanguageAnalysis[]): LanguageAnalysis {
 }
 
 /** `count` contiguous slices of `files`, balanced by source size; none is empty. */
-function split(files: SourceFile[], count: number): SourceFile[][] {
+export function split(files: SourceFile[], count: number): SourceFile[][] {
   const total = files.reduce((sum, f) => sum + f.source.length + 1, 0);
   const slices: SourceFile[][] = Array.from({ length: count }, () => []);
   let before = 0;

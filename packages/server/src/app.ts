@@ -19,8 +19,8 @@ import {
   type ExplainRequest,
   type ExplainResponse,
   type FileDetail,
+  type FlowEdge,
   type FlowNode,
-  type Graph,
   type GraphResponse,
   type LanguagePlugin,
   type LanguagesResponse,
@@ -41,17 +41,14 @@ import { z } from "zod";
 import { maskDocstring } from "./docstring";
 import type { History, MadeMap } from "./history";
 import type { PickPath } from "./pick-path";
-import {
-  callMapsOf,
-  indexOf,
-  type ProjectIndex,
-  type ProjectRead,
-} from "./project-index";
-import { detailOf, MAX_HITS, searchOf, skeletonOf } from "./project-views";
+import type { ProjectRead } from "./project-store";
 import { InvalidSettings, type SettingsService } from "./settings";
 import { sameToken } from "./token";
 
 export type { ProjectRead };
+
+/** Most hits a search answers. */
+export const MAX_HITS = 50;
 
 export interface AppDeps {
   /** The registered languages, in a stable order: a snippet is read by the best score, a file by its extension. */
@@ -216,7 +213,8 @@ const titlesBody = z.object({ source: z.string(), nodeIds });
 
 /** The graph a request talks about, re-extracted on the server (AD-015). */
 interface Origin {
-  graph: Graph;
+  /** The node with this id; a project unpacks the file the id belongs to. */
+  nodeOf: (id: string) => FlowNode | undefined;
   /** The code of `node`, with its docstring masked when it has one. */
   codeOf: (node: FlowNode) => Pick<ExplainRequest, "code" | "docstring">;
   /** The names of what `node` calls and what calls it. */
@@ -257,10 +255,19 @@ async function loadOrigin(
     const { plugin } = detectLanguage(source, deps.plugins);
     const graph = plugin.extract(source);
     const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+    const { callsOut, callsIn } = callMapsOf(graph.edges);
     return {
-      graph,
+      nodeOf: (id) => byId.get(id),
       neighbours: (node, nameOf) =>
-        neighboursOf({ byId, ...callMapsOf(graph.edges) }, node, nameOf),
+        neighboursOf(
+          {
+            nodeOf: (id) => byId.get(id),
+            callsOut: (id) => callsOut.get(id) ?? [],
+            callsIn: (id) => callsIn.get(id) ?? [],
+          },
+          node,
+          nameOf,
+        ),
       codeOf: (node) =>
         maskDocstring(
           node.range,
@@ -276,10 +283,8 @@ async function loadOrigin(
   }
   const read = await deps.readProject(body.root, body.include, body.version);
   if (read.kind === "not-found") return { notFound: body.root };
-  const { response } = read;
-  const graph = response.graph;
-  const index = indexOf(read);
-  const filePath = (node: FlowNode) => index.filePathOf(node.id);
+  const { project } = read;
+  const filePath = (node: FlowNode) => project.filePathOf(node.id);
   // A file is read by its extension, so every node has the plugin of its file.
   const pluginOf = (node: FlowNode) => {
     const plugin = pluginForPath(filePath(node), deps.plugins);
@@ -287,17 +292,26 @@ async function loadOrigin(
     return plugin;
   };
   return {
-    graph,
-    neighbours: (node, nameOf) => neighboursOf(index, node, nameOf),
+    nodeOf: project.nodeOf,
+    neighbours: (node, nameOf) =>
+      neighboursOf(
+        {
+          nodeOf: project.nodeOf,
+          callsOut: (id) => project.callsOf(id).out,
+          callsIn: (id) => project.callsOf(id).in,
+        },
+        node,
+        nameOf,
+      ),
     codeOf: (node) => {
       const path = filePath(node);
       // A file hides the docstrings of every node in it, like each node hides its own.
       const docstrings =
-        node.kind === "file" ? index.docstrings.get(path) : node.docstring;
+        node.kind === "file" ? project.docstringsOf(path) : node.docstring;
       return maskDocstring(
         node.range,
         docstrings,
-        (index.sources.get(path) ?? "").split(/\r?\n/),
+        (project.sourceOf(path) ?? "").split(/\r?\n/),
         pluginOf(node).commentPrefix,
         locale,
       );
@@ -314,21 +328,45 @@ async function loadOrigin(
 
 /** calls: targets of the outgoing `calls` wires plus `node.target`, once each; calledBy: sources of the incoming `calls` wires. */
 function neighboursOf(
-  index: Pick<ProjectIndex, "byId" | "callsOut" | "callsIn">,
+  index: {
+    nodeOf: (id: string) => FlowNode | undefined;
+    callsOut: (id: string) => readonly string[];
+    callsIn: (id: string) => readonly string[];
+  },
   node: FlowNode,
   nameOf: (other: FlowNode) => string,
 ): { calls: string[]; calledBy: string[] } {
   const names = (ids: readonly string[]) =>
     ids.flatMap((id) => {
-      const other = index.byId.get(id);
+      const other = index.nodeOf(id);
       return other ? [nameOf(other)] : [];
     });
-  const out = [...(index.callsOut.get(node.id) ?? [])];
+  const out = [...index.callsOut(node.id)];
   if (node.target) out.push(node.target);
   return {
     calls: names([...new Set(out)]),
-    calledBy: names(index.callsIn.get(node.id) ?? []),
+    calledBy: names(index.callsIn(node.id)),
   };
+}
+
+/** The `calls` edges of a snippet by source and by target, in the order of the graph. */
+function callMapsOf(edges: readonly FlowEdge[]): {
+  callsOut: Map<string, string[]>;
+  callsIn: Map<string, string[]>;
+} {
+  const callsOut = new Map<string, string[]>();
+  const callsIn = new Map<string, string[]>();
+  const push = (map: Map<string, string[]>, key: string, value: string) => {
+    const list = map.get(key);
+    if (list) list.push(value);
+    else map.set(key, [value]);
+  };
+  for (const e of edges) {
+    if (e.kind !== "calls") continue;
+    push(callsOut, e.source, e.target);
+    push(callsIn, e.target, e.source);
+  }
+  return { callsOut, callsIn };
 }
 
 /** A parser or plugin that throws is an answer, not a crash: 500 with a JSON body the screen can show. */
@@ -338,7 +376,7 @@ function extractFailed(c: Context, err: unknown): Response {
   return c.json({ error: "extract-failed", message }, 500);
 }
 
-/** Saves a map after the response is sent; a failing save is logged, never raised (best effort). */
+/** Saves a map after the response is sent; a failing save is logged, never raised (best effort). The sizes of a project are counted already, so the save holds no project. */
 function saveLater(history: History | undefined, map: MadeMap): void {
   if (!history) return;
   setImmediate(() => {
@@ -442,15 +480,19 @@ export function createApp(deps: AppDeps): Hono {
         404,
       );
     }
-    if (!read.response.graph.empty) {
+    const { project } = read;
+    if (!project.empty) {
       saveLater(deps.history, {
         kind: "project",
         root: read.root,
-        response: read.response,
+        name: project.name,
+        counts: project.counts,
       });
     }
-    // Only the top of the map: the inside of a file comes by POST /api/project/file.
-    return c.json(skeletonOf(read));
+    // Only the top of the map, already as JSON: the inside of a file comes by POST /api/project/file.
+    return c.body(project.skeleton, 200, {
+      "Content-Type": "application/json",
+    });
   });
 
   app.use(
@@ -472,11 +514,11 @@ export function createApp(deps: AppDeps): Hono {
     if (read.kind === "not-found") {
       return c.json({ error: "not-found", path: root }, 404);
     }
-    const built = read.response.version;
-    if (version !== undefined && built !== undefined && version !== built) {
+    const built = read.project.version;
+    if (version !== undefined && version !== built) {
       return c.json({ error: "stale", version: built }, 409);
     }
-    const detail = detailOf(read, path);
+    const detail = read.project.detailOf(path);
     if (!detail) return c.json({ error: "not-found", path }, 404);
     return c.json(detail satisfies FileDetail);
   });
@@ -492,11 +534,11 @@ export function createApp(deps: AppDeps): Hono {
     if (read.kind === "not-found") {
       return c.json({ error: "not-found", path: root }, 404);
     }
-    const built = read.response.version;
-    if (version !== undefined && built !== undefined && version !== built) {
+    const built = read.project.version;
+    if (version !== undefined && version !== built) {
       return c.json({ error: "stale", version: built }, 409);
     }
-    return c.json({ hits: searchOf(read, query, limit) });
+    return c.json({ hits: read.project.search(query, limit ?? MAX_HITS) });
   });
 
   // The server runs on the person's machine, so the chooser opens on their screen.
@@ -571,8 +613,8 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
-      const node = graph.nodes.find((n) => n.id === body.nodeId);
+      const { nodeOf, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
+      const node = nodeOf(body.nodeId);
       if (!node) return c.json({ error: "unknown node" }, 404);
       if (node.kind === "folder") {
         return c.json({ error: "node has no explanation" }, 400);
@@ -621,13 +663,13 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
-      const node = graph.nodes.find((n) => n.id === body.nodeId);
+      const { nodeOf, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
+      const node = nodeOf(body.nodeId);
       if (!node) return c.json({ error: "unknown node" }, 404);
       if (node.kind === "folder") {
         return c.json({ error: "node has no explanation" }, 400);
       }
-      const parent = graph.nodes.find((n) => n.id === node.parentId);
+      const parent = node.parentId === null ? undefined : nodeOf(node.parentId);
       const { code } = codeOf(node);
       return {
         key: `${idPrefix}${node.id}`,
@@ -807,11 +849,10 @@ export function createApp(deps: AppDeps): Hono {
       if ("notFound" in origin) {
         return c.json({ error: "not-found", path: origin.notFound }, 404);
       }
-      const { graph, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
-      const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+      const { nodeOf, codeOf, nameOf, neighbours, pluginOf, idPrefix } = origin;
       // Each id once, in the order received; unknown, folder and file ids are dropped.
       items = [...new Set(body.nodeIds)].flatMap((id) => {
-        const node = byId.get(id);
+        const node = nodeOf(id);
         if (!node || node.kind === "folder" || node.kind === "file") return [];
         return [
           {
