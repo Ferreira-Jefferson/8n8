@@ -117,6 +117,8 @@ O `pnpm install:cli:global` gera o pacote (`release/8n8-0.0.1.tgz`) e o instala 
 8n8 --help         # mostra o uso e as variáveis
 ```
 
+Na primeira abertura de uma pasta grande, o 8n8 cria um cache de análise no disco, com trechos do seu código. Ele vem ligado e dá para desligar: veja [Cache de análise em disco](#cache-de-análise-em-disco).
+
 ### A extensão do VS Code
 
 A extensão abre o mesmo mapa num painel ao lado do código. Ela precisa do VS Code 1.138 ou mais novo. Como ela ainda não está no Marketplace, você gera o arquivo de instalação (`.vsix`) e instala a partir dele.
@@ -239,8 +241,46 @@ Achou uma falha de segurança? Avise em privado, como explica o [SECURITY.md](SE
 - **O que a conversa envia.** Uma pergunta leva ao LLM o código do nó e o do pai dele inteiro (no máximo 8000 caracteres do pai), os nomes dos nós vizinhos e as últimas mensagens da conversa. A conversa fica só na memória da tela: ela não é gravada.
 - **Notas das sugestões.** As sugestões que você guardou da conversa e as que você removeu ficam em `cache/notes/`, uma por nó. Se o código do nó muda, as notas dele caem, porque as linhas passariam a apontar para outro lugar.
 - O histórico guarda só o caminho de cada pasta, nunca o código. Abrir uma pasta pelo histórico lê a pasta de novo. De um trecho colado, o histórico guarda o texto e a linguagem.
-- **Cache de análise.** Para abrir de novo uma pasta sem analisar tudo, o 8n8 guarda em disco o que o parser tirou de cada arquivo. Isto é dado derivado do seu código: nomes de funções, classes e variáveis, linhas dos comentários de documentação, a estrutura do fluxo e os rótulos dos nós. Os rótulos levam trechos do código: condições (`if`), valores de `return`, cabeçalhos de laço, chamadas, rotas e URLs. Se um segredo estiver escrito num desses trechos, ele vai para o banco, e o banco não é cifrado nem apagado quando você apaga o projeto. O texto inteiro de um arquivo nunca entra nesse cache: o 8n8 o lê da pasta a cada abertura. Se você guarda segredos no código, desligue o cache. O cache fica ligado por padrão, em `cache/analysis/cache.db` (um banco SQLite, só com permissão do dono, onde o sistema permite). O CLI e a extensão do VS Code usam o mesmo arquivo quando apontam para a mesma pasta de cache. Ele só atua em pasta com 150 arquivos ou mais e quando há worker (no CLI e na extensão; não no `pnpm dev:server`). O SQLite cria também os arquivos `cache.db-wal` e `cache.db-shm` ao lado do banco. O limite é de 500 MB: acima disso, os dados menos usados saem na próxima abertura. Para desligar, defina `APP8N8_NO_ANALYSIS_CACHE=1` no ambiente. Para apagar, feche o 8n8 e apague a pasta `cache/analysis` (a extensão guarda a dela na pasta de dados da extensão). O 8n8 refaz o cache sozinho quando ele falta ou está danificado.
+- **Cache de análise.** Ligado por padrão. Para abrir de novo uma pasta grande sem analisar tudo, o 8n8 guarda em disco dado derivado do seu código, **inclusive trechos dele** (condições, valores de `return`, rotas, URLs). O banco não é cifrado. Leia a seção [Cache de análise em disco](#cache-de-análise-em-disco) abaixo. Para desligar, defina `APP8N8_NO_ANALYSIS_CACHE=1`.
 - **Na extensão do VS Code**, não há porta aberta: a página do painel fala com o núcleo por mensagens do próprio VS Code. A chave de API fica no cofre do VS Code (`SecretStorage`). O cache e o histórico ficam na pasta de dados da extensão.
+
+### Cache de análise em disco
+
+**Ele vem ligado por padrão.** Serve para abrir de novo uma pasta grande sem analisar todos os arquivos. Numa pasta de 3 mil arquivos, a reabertura cai de 15 a 30 segundos para cerca de 3.
+
+**O que ele guarda.** Dado derivado do seu código:
+
+- nomes de funções, classes e variáveis;
+- a estrutura do fluxo (como os nós se ligam);
+- as linhas dos comentários de documentação;
+- os rótulos dos nós. Eles levam **trechos reais do código**: condições (`if`), valores de `return`, cabeçalhos de laço, chamadas, rotas e URLs.
+
+**O que ele não guarda.** O texto inteiro de um arquivo (o 8n8 o lê da pasta a cada abertura), a chave de API e a conversa.
+
+**Os riscos, em palavras simples.**
+
+- Se um segredo estiver escrito num desses trechos (por exemplo, `if token == "abc123"`), ele vai para o banco.
+- O banco não é cifrado.
+- Ele continua no disco depois que você apaga o projeto.
+- Qualquer programa que rode com o seu usuário pode lê-lo. No Windows, a permissão "só o dono" não vale.
+- Ele pode entrar em backup ou em sincronização da sua pasta de usuário.
+
+**Onde fica.** Em `cache/analysis/cache.db`, um banco SQLite dentro da pasta de dados do 8n8 (veja "Pasta de dados", acima). O SQLite cria também os arquivos `cache.db-wal` e `cache.db-shm` ao lado dele. O CLI e a extensão do VS Code usam o mesmo arquivo quando apontam para a mesma pasta de cache. A extensão guarda o dela na pasta de dados da extensão.
+
+**Quando ele atua.** Só em pasta com 150 arquivos ou mais, e quando há worker (no CLI e na extensão; não no `pnpm dev:server`). O limite é de 500 MB: acima disso, os dados menos usados saem na próxima abertura. O 8n8 refaz o cache sozinho quando ele falta ou está danificado.
+
+**Para desligar,** defina `APP8N8_NO_ANALYSIS_CACHE=1` no ambiente que inicia o 8n8:
+
+```bash
+APP8N8_NO_ANALYSIS_CACHE=1 8n8 .          # Bash
+$env:APP8N8_NO_ANALYSIS_CACHE = "1"; 8n8 .   # PowerShell
+```
+
+Na extensão do VS Code, defina a variável no ambiente que abre o VS Code.
+
+**Para apagar,** feche o 8n8 e apague a pasta `cache/analysis`.
+
+**Quando desligar.** Se você guarda segredos dentro do código, usa uma máquina compartilhada ou trabalha com código sob confidencialidade, desligue o cache.
 
 ## O que o 8n8 lê de uma pasta
 

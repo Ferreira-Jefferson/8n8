@@ -41,4 +41,15 @@ describe("the README tells what 8n8 reads of a folder (CLEAN-03)", () => {
     expect(readme).toContain("`APP8N8_NO_ANALYSIS_CACHE=1`");
     expect(readme).toContain("apague a pasta `cache/analysis`");
   });
+
+  it("says plainly that the analysis cache is on by default and what it costs", () => {
+    expect(readme).toContain("### Cache de análise em disco");
+    expect(readme).toContain("**Ele vem ligado por padrão.**");
+    expect(readme).toContain("**trechos reais do código**");
+    expect(readme).toContain("O banco não é cifrado.");
+    expect(readme).toContain(
+      "Ele continua no disco depois que você apaga o projeto.",
+    );
+    expect(readme).toContain("(#cache-de-análise-em-disco)");
+  });
 });
