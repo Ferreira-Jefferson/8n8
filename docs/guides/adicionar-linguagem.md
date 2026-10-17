@@ -98,7 +98,7 @@ Mais três regras de `analyze` numa fatia:
 
 - Cada aresta `imports` tem o nó `file` do arquivo de origem como `source`.
 - As listas `offers` e `requests` saem agrupadas por arquivo, na ordem dos arquivos, e cada `nodeId` fica dentro do arquivo que o declara.
-- O resultado de um arquivo depende só do texto dele e das contribuições de todos. O core guarda esse resultado em disco por arquivo (veja abaixo) e o reusa quando nada disso mudou.
+- O resultado de um arquivo depende só do texto dele, das contribuições de todos e dos caminhos de todos os arquivos do projeto (criar ou apagar qualquer arquivo reanalisa a linguagem inteira). O core guarda esse resultado em disco por arquivo (veja abaixo) e o reusa quando nada disso mudou.
 
 O jeito mais simples de cumprir a regra: escreva o `analyze` em cima do `openSlice`, com uma fatia só.
 

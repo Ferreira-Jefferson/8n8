@@ -183,6 +183,27 @@ describe("composeBuild", () => {
     }
   });
 
+  it("does not build again in its own thread when the worker ran and answered with an error", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "8n8-builder-"));
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const failing = join(dir, "failing.mjs");
+      writeFileSync(
+        failing,
+        "import { parentPort } from 'node:worker_threads';\nparentPort.on('message', (m) => parentPort.postMessage({ id: m.id, error: 'plugin broke a rule' }));\n",
+      );
+      const build = composeBuild(failing);
+      await expect(build(input(many()), languagePlugins)).rejects.toThrow(
+        "plugin broke a rule",
+      );
+      // No fallback: building again would only repeat the error, after blocking this thread.
+      expect(error).not.toHaveBeenCalled();
+    } finally {
+      error.mockRestore();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("builds a project of 150 files in the worker", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     const build = composeBuild(WORKER, execArgv);

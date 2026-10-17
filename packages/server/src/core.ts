@@ -46,7 +46,7 @@ import { type History, openHistory } from "./history";
 import { createPicker } from "./pick-path";
 import { languagePlugins } from "./plugins";
 import { type Build, buildInThread } from "./project-build";
-import { createProjectBuilder } from "./project-builder";
+import { BuilderLost, createProjectBuilder } from "./project-builder";
 import { createProjectCache, fingerprintOf, versionOf } from "./project-cache";
 import { createProjectStore } from "./project-store";
 import {
@@ -307,6 +307,8 @@ export function composeBuild(
     try {
       return await builder.build(input);
     } catch (error) {
+      // A build that ran and found an error would find it again here, after blocking this thread.
+      if (!(error instanceof BuilderLost)) throw error;
       console.error(
         "construção: o worker falhou, seguindo em sequência",
         error,

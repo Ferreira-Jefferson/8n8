@@ -99,7 +99,9 @@ const noFailed: ReadonlySet<string> = new Set();
 /** The end-to-end tests shrink the loaded-nodes limit with `window.__8n8MaxNodes`; the product never sets it. */
 function testLimit(): { maxNodes?: number } {
   const limit = (window as { __8n8MaxNodes?: unknown }).__8n8MaxNodes;
-  return typeof limit === "number" ? { maxNodes: limit } : {};
+  return typeof limit === "number" && Number.isFinite(limit) && limit > 0
+    ? { maxNodes: limit }
+    : {};
 }
 
 function originOf(mapped: Mapped): ExplainOrigin {

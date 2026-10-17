@@ -440,6 +440,36 @@ describe("what the cache keeps", () => {
     );
   });
 
+  it("does keep pieces of the code in the labels: a literal in a condition or a return reaches the file (the README says so)", async () => {
+    const literal = "SENTINELA-DE-LITERAL-555";
+    const files = MIXED.map((f) =>
+      f.path === "app/modelos/pedido.py"
+        ? {
+            ...f,
+            source: `${f.source}\n\ndef checa(token):\n    if token == "${literal}":\n        return "${literal}-volta"\n    return None\n`,
+          }
+        : f,
+    );
+    await built(files);
+    opened.pop()?.close();
+    const everything = rows() as unknown as {
+      head: Uint8Array;
+      tail: Uint8Array | null;
+    }[];
+    const unpacked = (bytes: Uint8Array | null) => {
+      if (bytes === null) return "";
+      try {
+        return gunzipSync(bytes).toString("utf8");
+      } catch {
+        return Buffer.from(bytes).toString("utf8");
+      }
+    };
+    // If this stops holding, the README may say less: keep the two together.
+    expect(everything.some((r) => unpacked(r.tail).includes(literal))).toBe(
+      true,
+    );
+  });
+
   it("is a file only the user can read, where the system has such a thing", () => {
     open();
     expect(readFileSync(file).length).toBeGreaterThan(0);

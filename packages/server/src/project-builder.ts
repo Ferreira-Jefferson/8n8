@@ -20,6 +20,12 @@ export interface BuilderOptions {
   cacheFile?: string;
 }
 
+/**
+ * The builder thread is gone or was closed, so the build did not run. The caller may build in its own thread.
+ * A build that ran and found an error (a plugin broke a rule) is a plain `Error`: building again would only repeat it.
+ */
+export class BuilderLost extends Error {}
+
 interface Pending {
   resolve: (parts: StoreParts) => void;
   reject: (error: Error) => void;
@@ -76,17 +82,24 @@ export function createProjectBuilder(options: BuilderOptions): ProjectBuilder {
       if (slot.pending.size === 0) {
         worker.unref();
         clearTimeout(idleTimer);
-        idleTimer = setTimeout(() => stop(new Error("builder closed")), idleMs);
+        idleTimer = setTimeout(
+          () => stop(new BuilderLost("builder closed")),
+          idleMs,
+        );
         idleTimer.unref();
       }
       if ("error" in reply) pending.reject(new Error(reply.error));
       else pending.resolve({ ...reply.parts, files: pending.files });
     });
     const lost = (error: Error) => {
-      if (current === slot) stop(error);
+      if (current === slot) {
+        stop(
+          error instanceof BuilderLost ? error : new BuilderLost(error.message),
+        );
+      }
     };
     worker.on("error", lost);
-    worker.on("exit", () => lost(new Error("build worker stopped")));
+    worker.on("exit", () => lost(new BuilderLost("build worker stopped")));
     current = slot;
     return slot;
   }
@@ -102,7 +115,7 @@ export function createProjectBuilder(options: BuilderOptions): ProjectBuilder {
         slot.worker.ref();
         slot.worker.postMessage({ id, input });
       } catch (error) {
-        reject(error as Error);
+        reject(new BuilderLost((error as Error).message));
       }
     });
   }
@@ -111,7 +124,7 @@ export function createProjectBuilder(options: BuilderOptions): ProjectBuilder {
     build(input) {
       const asked = epoch;
       const run = queue.then(() => {
-        if (asked !== epoch) throw new Error("builder closed");
+        if (asked !== epoch) throw new BuilderLost("builder closed");
         return send(input);
       });
       queue = run.catch(() => undefined);
@@ -119,7 +132,7 @@ export function createProjectBuilder(options: BuilderOptions): ProjectBuilder {
     },
     close() {
       epoch++;
-      stop(new Error("builder closed"));
+      stop(new BuilderLost("builder closed"));
       return Promise.resolve();
     },
   };

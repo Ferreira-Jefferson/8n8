@@ -277,7 +277,8 @@ export function DetailPanel({
             file={filePath ?? snippetFile}
           />
         ) : onRetry ? (
-          <div role="alert" className="code-failed">
+          // The canvas announces the same failure as an alert: the panel only shows it, so a screen reader hears it once.
+          <div role="status" className="code-failed">
             <p>{t("flow.loadFailed")}</p>
             <button type="button" className="btn-ghost" onClick={onRetry}>
               {t("flow.retry")}

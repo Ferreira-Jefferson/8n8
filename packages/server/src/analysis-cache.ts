@@ -13,6 +13,12 @@ import { blobHead, type PackedFile } from "./project-pack";
 /** Change it when the format of a row, or of what is cached, changes: every old row goes away. */
 export const ANALYSIS_CACHE_VERSION = 1;
 
+/** The version goes in every key too, so a process of an older version, still holding the file open, cannot write rows a newer one would read. */
+const keyOf = (key: string): string => `${ANALYSIS_CACHE_VERSION}|${key}`;
+
+/** A row that inflates past this is not one of ours: it reads as no row. The biggest file of a big project is under 1 MB. */
+const MAX_ROW_BYTES = 64 * 1024 * 1024;
+
 /** The size the cache is cut back to when it opens over this (least recently used rows go first). */
 export const MAX_CACHE_BYTES = 500 * 1024 * 1024;
 
@@ -165,17 +171,19 @@ export function openAnalysisCache(
   return {
     contributions: (keys) =>
       keys.map((key) => {
-        const row = get(key, KIND_CONTRIBUTION);
+        const row = get(keyOf(key), KIND_CONTRIBUTION);
         return row === undefined
           ? undefined
           : Buffer.from(row.head).toString("utf8");
       }),
     result(key, source) {
-      const row = get(key, KIND_RESULT);
+      const row = get(keyOf(key), KIND_RESULT);
       if (row?.tail == null) return undefined;
       try {
         const meta = JSON.parse(
-          gunzipSync(row.head).toString("utf8"),
+          gunzipSync(row.head, { maxOutputLength: MAX_ROW_BYTES }).toString(
+            "utf8",
+          ),
         ) as ResultMeta;
         const first = blobHead(source);
         const blob = new Uint8Array(first.length + row.tail.length);
@@ -192,7 +200,7 @@ export function openAnalysisCache(
     },
     putContribution(key, text) {
       queue.push({
-        key,
+        key: keyOf(key),
         kind: KIND_CONTRIBUTION,
         make: () => ({ head: Buffer.from(text, "utf8"), tail: null }),
       });
@@ -203,7 +211,7 @@ export function openAnalysisCache(
       // The copy stays here when the blob moves to another thread.
       const tail = blob.slice(file.headBytes);
       queue.push({
-        key,
+        key: keyOf(key),
         kind: KIND_RESULT,
         make: () => ({
           head: new Uint8Array(gzipSync(JSON.stringify(meta), { level: 1 })),
