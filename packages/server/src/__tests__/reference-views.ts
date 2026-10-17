@@ -1,3 +1,4 @@
+// The views of a project as they were when the server kept the whole graph: the reference the packed store must answer like.
 import {
   type FileDetail,
   type FlowNode,
@@ -9,7 +10,7 @@ import {
   searchWords,
   skeletonGraphOf,
 } from "@8n8/model";
-import { indexOf, type ProjectRead } from "./project-index";
+import { indexOf, type ProjectRead } from "./reference-index";
 
 type Found = Extract<ProjectRead, { kind: "ok" }>;
 

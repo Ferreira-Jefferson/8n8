@@ -9,6 +9,7 @@ import type {
 import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
+import { readOf } from "./read-of";
 import { TEST_TOKEN } from "./test-token";
 
 const videoFixture = readFileSync(
@@ -277,16 +278,13 @@ describe("POST /api/summary (the request built on the server)", () => {
         return okReply;
       },
       titles: async () => ({ status: "ok", titles: [] }),
-      readProject: async (path) => ({
-        kind: "ok",
-        root: path,
-        response: {
+      readProject: async (path) =>
+        readOf(path, {
           name: "p",
           graph: buildProject(files, [pythonPlugin]),
           files,
           ignored: [],
-        },
-      }),
+        }),
       port: 8148,
       token: TEST_TOKEN,
     });

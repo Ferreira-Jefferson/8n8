@@ -21,12 +21,7 @@ import {
 import { type ReadFilter, readSourceFolder } from "@8n8/input";
 import { pythonPlugin } from "@8n8/lang-python";
 import { typescriptPlugin } from "@8n8/lang-typescript";
-import type {
-  ExplainRequest,
-  LanguagePlugin,
-  ProjectData,
-  TitleRequest,
-} from "@8n8/model";
+import type { ExplainRequest, LanguagePlugin, TitleRequest } from "@8n8/model";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../app";
 import {
@@ -679,11 +674,13 @@ describe("composeReadProject", () => {
     const read = await readProject(loja);
     rmSync(join(loja, ".."), { recursive: true, force: true });
     if (read.kind !== "ok") throw new Error("expected ok");
-    const response: ProjectData = read.response;
-    expect(response.name).toBe("loja");
-    expect(response.graph.project).toEqual({ name: "loja" });
-    expect(response.files).toHaveLength(8);
-    expect(response.ignored).toEqual([
+    const { project } = read;
+    expect(project.name).toBe("loja");
+    expect(JSON.parse(project.skeleton).graph.project).toEqual({
+      name: "loja",
+    });
+    expect(project.paths).toHaveLength(8);
+    expect(project.ignored).toEqual([
       { path: "grande.py", reason: "too-large", addable: true },
       { path: "latin1.py", reason: "not-utf8" },
     ]);
@@ -701,7 +698,7 @@ describe("composeReadProject", () => {
     );
     const first = await counting(loja);
     if (first.kind !== "ok") throw new Error("expected ok");
-    const { version } = first.response;
+    const { version } = first.project;
     expect(version).toMatch(/^[0-9a-f]{40}$/);
     const held = await counting(loja, [], version);
     expect(held).toBe(first);
@@ -719,9 +716,9 @@ describe("composeReadProject", () => {
     const a = await readProject(one);
     const b = await readProject(two);
     if (a.kind !== "ok" || b.kind !== "ok") throw new Error("expected ok");
-    expect(a.response.version).not.toBe(b.response.version);
-    expect(await readProject(one, [], a.response.version)).toBe(a);
-    expect(await readProject(two, [], b.response.version)).toBe(b);
+    expect(a.project.version).not.toBe(b.project.version);
+    expect(await readProject(one, [], a.project.version)).toBe(a);
+    expect(await readProject(two, [], b.project.version)).toBe(b);
     rmSync(join(one, ".."), { recursive: true, force: true });
     rmSync(join(two, ".."), { recursive: true, force: true });
   });
@@ -738,7 +735,7 @@ describe("composeReadProject", () => {
     const file = await readProject(join(loja, "main.py"));
     rmSync(join(loja, ".."), { recursive: true, force: true });
     if (file.kind !== "ok") throw new Error("expected ok");
-    expect(file.response.files.map((f) => f.path)).toEqual(["main.py"]);
+    expect(file.project.paths).toEqual(["main.py"]);
   });
 
   it("explain re-reads the disk: a new line in calculo.py reaches the explain call (AD-015)", async () => {
@@ -944,9 +941,10 @@ describe("composeReadProject: the plugin registry", () => {
     const read = await readProject("/mista");
     if (read.kind !== "ok") throw new Error("expected ok");
 
-    expect(read.response.graph.project).toEqual({ name: "mista" });
-    expect(read.response.graph.language).toBe("python");
-    expect(read.response.graph.nodes.map((n) => n.id)).toEqual([
+    const { graph } = JSON.parse(read.project.skeleton);
+    expect(graph.project).toEqual({ name: "mista" });
+    expect(graph.language).toBe("python");
+    expect(read.project.detailOf("a.py")?.nodes.map((n) => n.id)).toEqual([
       "file:a.py",
       "file:a.py/fn:f",
       "file:a.py/fn:f/s0",

@@ -1,8 +1,9 @@
 import type { ProjectData } from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
-import type { ProjectRead } from "../project-index";
+import type { ProjectRead } from "../project-store";
 import { fakeLang } from "./fake-lang";
+import { readOf } from "./read-of";
 import { TEST_TOKEN } from "./test-token";
 
 const response: ProjectData = {
@@ -12,7 +13,7 @@ const response: ProjectData = {
   ignored: [],
   version: "v1",
 };
-const built: ProjectRead = { kind: "ok", root: "/tmp/loja", response };
+const built: ProjectRead = readOf("/tmp/loja", response);
 
 function setup(read: ProjectRead) {
   const calls: unknown[][] = [];

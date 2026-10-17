@@ -22,7 +22,6 @@ import {
   titleNodes,
 } from "@8n8/explain";
 import { type FolderRead, type ReadFilter, readSourceFolder } from "@8n8/input";
-import { linkProject } from "@8n8/links";
 import { resolveLlmConfig } from "@8n8/llm";
 import {
   type ChatRequest,
@@ -33,7 +32,6 @@ import {
   type ExplainResponse,
   type LanguagePlugin,
   type Locale,
-  type SourceFile,
   type StructureRequest,
   type StructureResponse,
   type TitleItem,
@@ -41,18 +39,16 @@ import {
   type TitlesResponse,
   translateSystem,
 } from "@8n8/model";
-import {
-  analyzeProject,
-  analyzeProjectParallel,
-  type ProjectBuild,
-} from "@8n8/project";
+import { analyzeProjectParallel } from "@8n8/project";
 import type { Hono } from "hono";
 import { createAnalysisPool } from "./analysis-pool";
 import { createApp, type ProjectRead } from "./app";
 import { type History, openHistory } from "./history";
 import { createPicker } from "./pick-path";
 import { languagePlugins } from "./plugins";
+import { type Build, buildInThread, buildWith } from "./project-build";
 import { createProjectCache, fingerprintOf, versionOf } from "./project-cache";
+import { createProjectStore } from "./project-store";
 import {
   createSettingsService,
   type LlmSetup,
@@ -286,36 +282,33 @@ export function resolvePort(env: Record<string, string | undefined>): number {
 
 export { languagePlugins };
 
-/** Builds the project graph from the files; the sequential `analyzeProject`, or the same result through worker threads. */
-export type Analyze = (
-  files: SourceFile[],
-  plugins: LanguagePlugin[],
-) => Promise<ProjectBuild>;
-
 /** Under this many files the workers cost more than they save. */
 const MIN_PARALLEL_FILES = 150;
 
 /** Analysis in worker threads, so the thread that serves the requests never waits for it; in this thread when the host gives no worker. */
-function composeAnalyze(worker: string | undefined): Analyze {
-  if (worker === undefined) {
-    return async (files, all) => analyzeProject(files, all);
-  }
+function composeBuild(worker: string | undefined): Build {
+  if (worker === undefined) return buildInThread;
   const pool = createAnalysisPool({ worker });
-  return (files, all) =>
-    analyzeProjectParallel(files, all, {
-      runner: pool,
-      minFiles: MIN_PARALLEL_FILES,
-      onFallback: (error) =>
-        console.error("análise: o worker falhou, seguindo em sequência", error),
-    });
+  return (input, all) =>
+    buildWith(input, all, (files, plugins) =>
+      analyzeProjectParallel(files, plugins, {
+        runner: pool,
+        minFiles: MIN_PARALLEL_FILES,
+        onFallback: (error) =>
+          console.error(
+            "análise: o worker falhou, seguindo em sequência",
+            error,
+          ),
+      }),
+    );
 }
 
-/** Reads the files of the plugins' extensions and maps them: the project sets `graph.project` (PROJ-01, PROJ-05, PROJ-06, PROJ-07). */
+/** Reads the files of the plugins' extensions and maps them; what the server keeps is a `ProjectStore`, never the whole graph (PROJ-01, PROJ-05, PROJ-06, PROJ-07). */
 export function composeReadProject(
   read: (path: string, filter: ReadFilter) => Promise<FolderRead>,
   plugins: LanguagePlugin[],
   ignoreDependencies: () => Promise<boolean> = async () => true,
-  analyze: Analyze = async (files, all) => analyzeProject(files, all),
+  build: Build = buildInThread,
 ): (
   path: string,
   include?: string[],
@@ -343,24 +336,11 @@ export function composeReadProject(
     const key = [root, [...include].sort().join(","), ignoring].join("|");
     const fingerprint = versionOf(key, fingerprintOf(files, ignored));
     return cache.get(key, fingerprint, async () => {
-      const { graph: built, offers, requests } = await analyze(files, plugins);
-      // Wires between languages (D3, D4); the nodes stay as the plugins made them.
-      const { edges: links } = linkProject({
-        offers,
-        requests,
-        nodes: built.nodes,
-      });
-      const known = new Set(built.edges.map((e) => e.id));
-      const graph = {
-        ...built,
-        edges: [...built.edges, ...links.filter((e) => !known.has(e.id))],
-        project: { name },
-      };
-      return {
-        kind: "ok",
-        root,
-        response: { name, graph, files, ignored, version: fingerprint },
-      };
+      const parts = await build(
+        { name, files, ignored, version: fingerprint },
+        plugins,
+      );
+      return { kind: "ok", root, project: createProjectStore(parts) };
     });
   };
 }
@@ -428,7 +408,7 @@ export function createCore(options: CoreOptions): Hono {
       readSourceFolder,
       languagePlugins,
       () => settings.ignoreDependencies(),
-      composeAnalyze(options.analysisWorker),
+      composeBuild(options.analysisWorker),
     ),
     pick: createPicker(),
     history:

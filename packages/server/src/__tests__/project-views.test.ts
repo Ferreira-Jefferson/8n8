@@ -6,10 +6,10 @@ import type {
   SearchHit,
 } from "@8n8/model";
 import { describe, expect, it } from "vitest";
-import { createApp } from "../app";
-import type { ProjectRead } from "../project-index";
-import { detailOf, searchOf, skeletonOf } from "../project-views";
+import { createApp, MAX_HITS } from "../app";
 import { fakeLang } from "./fake-lang";
+import { readOf, storeOf } from "./read-of";
+import type { ProjectRead } from "./reference-index";
 import { TEST_TOKEN } from "./test-token";
 
 const node = (
@@ -82,6 +82,17 @@ const built = (): Extract<ProjectRead, { kind: "ok" }> => ({
   },
 });
 
+// The views of the packed store, asked the way the old ones were.
+const skeletonOf = (read: Extract<ProjectRead, { kind: "ok" }>) =>
+  JSON.parse(storeOf(read.response).skeleton) as ProjectSkeleton;
+const detailOf = (read: Extract<ProjectRead, { kind: "ok" }>, path: string) =>
+  storeOf(read.response).detailOf(path);
+const searchOf = (
+  read: Extract<ProjectRead, { kind: "ok" }>,
+  query: string,
+  limit = MAX_HITS,
+) => storeOf(read.response).search(query, limit);
+
 describe("skeletonOf", () => {
   it("answers the counts of the full graph and the version of the build", () => {
     const skeleton = skeletonOf(built());
@@ -96,11 +107,6 @@ describe("skeletonOf", () => {
       "file:app/a.py",
       "file:b.py",
     ]);
-  });
-
-  it("is made once for the same read", () => {
-    const read = built();
-    expect(skeletonOf(read)).toBe(skeletonOf(read));
   });
 });
 
@@ -155,7 +161,7 @@ describe("POST /api/project, /file and /search", () => {
     plugins: [fakeLang(() => read.response.graph)],
     explain: async () => ({ status: "no-key" }),
     titles: async () => ({ status: "ok", titles: [] }),
-    readProject: async () => read,
+    readProject: async () => readOf(read.root, read.response),
     port: 8148,
     token: TEST_TOKEN,
   });

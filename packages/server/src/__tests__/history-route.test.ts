@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 import { type History, openHistory } from "../history";
 import { fakeLang } from "./fake-lang";
+import { readOf } from "./read-of";
 import { TEST_TOKEN } from "./test-token";
 
 const graph: Graph = {
@@ -24,7 +25,7 @@ function setup(history: History, g: Graph = graph, read?: ProjectRead) {
     plugins: [fakeLang(() => g)],
     explain: async () => ({ status: "no-key" }),
     titles: async () => ({ status: "ok", titles: [] }),
-    readProject: async () => read ?? { kind: "ok", root: "/r/loja", response },
+    readProject: async () => read ?? readOf("/r/loja", response),
     port: 8148,
     token: TEST_TOKEN,
     history,

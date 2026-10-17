@@ -7,6 +7,7 @@ import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp, type ProjectRead } from "../app";
 import { fakeLang } from "./fake-lang";
+import { readOf } from "./read-of";
 import { TEST_TOKEN } from "./test-token";
 
 const response: ProjectData = {
@@ -44,7 +45,7 @@ function setup(read: ProjectRead) {
 
 describe("POST /api/project", () => {
   it("returns the skeleton of what readProject read, with no source, called with the typed path (PROJ-06)", async () => {
-    const { paths, post } = setup({ kind: "ok", root: "/tmp/loja", response });
+    const { paths, post } = setup(readOf("/tmp/loja", response));
     const res = await post({ path: "./minha pasta/loja" });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
@@ -89,7 +90,7 @@ describe("POST /api/project", () => {
   });
 
   it("refuses a foreign Host with 403 and does not run readProject (PROJ-08)", async () => {
-    const { paths, post } = setup({ kind: "ok", root: "/x", response });
+    const { paths, post } = setup(readOf("/x", response));
     const res = await post({ path: "." }, "evil.example:8148");
     expect(res.status).toBe(403);
     expect(paths).toEqual([]);
@@ -127,16 +128,12 @@ function explainSetup(files: SourceFile[], root = WIN_ROOT) {
     titles: async () => ({ status: "ok", titles: [] }),
     readProject: async (path) =>
       path === root
-        ? {
-            kind: "ok",
-            root,
-            response: {
-              name: "loja",
-              graph: buildProject(files, [pythonPlugin]),
-              files,
-              ignored: [],
-            },
-          }
+        ? readOf(root, {
+            name: "loja",
+            graph: buildProject(files, [pythonPlugin]),
+            files,
+            ignored: [],
+          })
         : { kind: "not-found" },
     port: 8148,
     token: TEST_TOKEN,

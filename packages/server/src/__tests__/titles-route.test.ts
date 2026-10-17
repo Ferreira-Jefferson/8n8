@@ -4,6 +4,7 @@ import type { SourceFile, TitleRequest, TitlesResponse } from "@8n8/model";
 import { buildProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../app";
+import { readOf } from "./read-of";
 import { TEST_TOKEN } from "./test-token";
 
 const fixture = readFileSync(
@@ -34,16 +35,12 @@ function setup(reply: TitlesResponse = { status: "ok", titles: [] }) {
     },
     readProject: async (path) =>
       path === WIN_ROOT
-        ? {
-            kind: "ok",
-            root: WIN_ROOT,
-            response: {
-              name: "loja",
-              graph: buildProject(FILES, [pythonPlugin]),
-              files: FILES,
-              ignored: [],
-            },
-          }
+        ? readOf(WIN_ROOT, {
+            name: "loja",
+            graph: buildProject(FILES, [pythonPlugin]),
+            files: FILES,
+            ignored: [],
+          })
         : { kind: "not-found" },
     port: 8148,
     token: TEST_TOKEN,
