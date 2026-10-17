@@ -1,10 +1,10 @@
 import type { ProjectData } from "@8n8/model";
-import { compactProject } from "../project-compact";
 import {
   createProjectStore,
   type ProjectRead,
   type ProjectStore,
 } from "../project-store";
+import { compactProject } from "./reference-compact";
 
 /** The store a build of this whole graph would give, packed the way the server packs it. */
 export function storeOf(response: ProjectData): ProjectStore {

@@ -4,7 +4,7 @@ import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { gunzipSync } from "node:zlib";
 import type { Graph, HistoryEntry, HistoryItem, ProjectData } from "@8n8/model";
-import { lineCount } from "./project-compact";
+import { lineCount } from "./project-pack";
 import type { ProjectCounts } from "./project-store";
 
 export { lineCount };

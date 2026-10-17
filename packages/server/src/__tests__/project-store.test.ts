@@ -1,23 +1,17 @@
 import { gunzipSync } from "node:zlib";
-import type {
-  FlowEdge,
-  FlowNode,
-  Graph,
-  ProjectData,
-  SourceFile,
-} from "@8n8/model";
+import type { FlowEdge, FlowNode, Graph, ProjectData } from "@8n8/model";
 import { analyzeProject } from "@8n8/project";
 import { describe, expect, it } from "vitest";
 import { MAX_HITS } from "../app";
 import { languagePlugins } from "../plugins";
-import { linkedGraph } from "../project-build";
-import { compactProject } from "../project-compact";
 import {
   createProjectStore,
   type FileRecord,
   fileOfId,
 } from "../project-store";
+import { MIXED } from "./mixed";
 import { storeOf } from "./read-of";
+import { compactProject, linkedGraph } from "./reference-compact";
 import { indexOf } from "./reference-index";
 import { detailOf, searchOf, skeletonOf } from "./reference-views";
 
@@ -229,122 +223,6 @@ describe("createProjectStore", () => {
     );
   });
 });
-
-/** A project with Python and TypeScript that call each other through a route, a process and a name. */
-const MIXED: SourceFile[] = [
-  {
-    path: "app/cliente.py",
-    source: [
-      "import requests",
-      "import subprocess",
-      "from app.modelos.pedido import Pedido",
-      "",
-      "def pedir_frete(peso):",
-      '    return requests.post("http://localhost:3000/api/frete", json={"peso": peso})',
-      "",
-      "def rodar_ferramenta():",
-      '    subprocess.run(["node", "tools/ferramenta.ts"])',
-      "",
-      "def fechar_conta(itens):",
-      "    p = Pedido()",
-      "    p.total()",
-      "    return somarTotal(itens)",
-      "",
-    ].join("\n"),
-  },
-  {
-    path: "app/modelos/base.py",
-    source: [
-      "class Base:",
-      "    def salvar(self):",
-      "        return True",
-      "",
-      "def helper():",
-      "    return 1",
-      "",
-    ].join("\n"),
-  },
-  {
-    path: "app/modelos/pedido.py",
-    source: [
-      "from app.modelos.base import Base, helper",
-      "",
-      "class Pedido(Base):",
-      "    def total(self):",
-      "        for i in range(3):",
-      "            helper()",
-      "        return self.salvar()",
-      "",
-      "def usar():",
-      "    return Pedido().total()",
-      "",
-      "CONFIG = {'a': 1}",
-      "",
-    ].join("\n"),
-  },
-  {
-    path: "api/servidor.ts",
-    source: [
-      'import { Hono } from "hono";',
-      'import { calcular } from "./rotas/frete";',
-      "",
-      "const app = new Hono();",
-      "",
-      'app.post("/api/frete", (c) => c.json({ valor: calcular(10) }));',
-      "",
-    ].join("\n"),
-  },
-  {
-    path: "api/rotas/frete.ts",
-    source: [
-      'import { Base } from "../util";',
-      "",
-      "export class Frete extends Base {",
-      "  valor(): number {",
-      "    return this.dobro(2);",
-      "  }",
-      "}",
-      "",
-      "export function calcular(peso: number): number {",
-      "  return new Frete().valor() + peso;",
-      "}",
-      "",
-    ].join("\n"),
-  },
-  {
-    path: "api/util.ts",
-    source: [
-      "export class Base {",
-      "  dobro(n: number): number {",
-      "    return n * 2;",
-      "  }",
-      "}",
-      "",
-      "export function ajuda(): number {",
-      "  return new Base().dobro(1);",
-      "}",
-      "",
-    ].join("\n"),
-  },
-  {
-    path: "tools/ferramenta.ts",
-    source: [
-      'import { ajuda } from "../api/util";',
-      "",
-      "export function limpar(): void {",
-      "  ajuda();",
-      '  console.log("limpo");',
-      "}",
-      "",
-    ].join("\n"),
-  },
-  {
-    path: "lib.ts",
-    source:
-      "export function somarTotal(itens: number[]): number {\n  return itens.reduce((a, b) => a + b, 0);\n}\n",
-  },
-  { path: "vazio.py", source: "" },
-];
 
 const mixed = (): ProjectData => ({
   name: "mista",

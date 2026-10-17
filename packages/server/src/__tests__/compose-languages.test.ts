@@ -16,9 +16,9 @@ import type {
 import { analyzeProject, buildProject } from "@8n8/project";
 import { afterAll, describe, expect, it } from "vitest";
 import { composeExplain, composeTitles } from "../core";
-import { linkedGraph } from "../project-build";
 import { fakeLang } from "./fake-lang";
 import { llmOf } from "./llm-of";
+import { linkedGraph } from "./reference-compact";
 
 const cacheDir = mkdtempSync(join(tmpdir(), "8n8-langs-"));
 afterAll(() => rmSync(cacheDir, { recursive: true, force: true }));

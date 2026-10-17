@@ -63,8 +63,12 @@ export interface FileUnit {
   hash: string;
   /** gzip of the JSON of a `FileRecord`. */
   blob: Uint8Array;
+  /** Where the edges of this file begin among the edges of the whole graph: the `seqs` of the record count from it. */
+  seqBase: number;
   /** JSON of the file of each node whose `target` lies in another file; absent when none does. */
   refs?: string;
+  /** JSON of `{ edges, seqs }`: edges with both ends in the file that were made after the file's own, with their places in the whole graph (wires between languages). */
+  extra?: string;
 }
 
 /** What is inside a packed file. */
@@ -74,7 +78,7 @@ export interface FileRecord {
   nodes: FlowNode[];
   /** Only the edges with both ends in the file, in the order of the graph. */
   edges: FlowEdge[];
-  /** For each of `edges`, its place in the edges of the whole graph. */
+  /** For each of `edges`, its place among the edges of its file's graph: the place in the whole graph is `seqBase` more. */
   seqs: number[];
 }
 
@@ -85,7 +89,7 @@ export interface CrossCall {
   target: NodeId;
 }
 
-/** Everything a store needs, made by `compactProject`: plain data and buffers that cross a thread without cost. */
+/** Everything a store needs, made by `assemble`: plain data and buffers that cross a thread without cost. */
 export interface StoreParts {
   name: string;
   version: string;
@@ -130,18 +134,30 @@ function push<K, V>(map: Map<K, V[]>, key: K, value: V): void {
   else map.set(key, [value]);
 }
 
-function open(blob: Uint8Array): OpenFile {
-  const record = JSON.parse(gunzipSync(blob).toString("utf8")) as FileRecord;
+function open(unit: FileUnit): OpenFile {
+  const record = JSON.parse(
+    gunzipSync(unit.blob).toString("utf8"),
+  ) as FileRecord;
+  const edges = record.edges;
+  const seqs = record.seqs.map((seq) => seq + unit.seqBase);
+  if (unit.extra !== undefined) {
+    const extra = JSON.parse(unit.extra) as Pick<FileRecord, "edges" | "seqs">;
+    for (const e of extra.edges) edges.push(e);
+    for (const seq of extra.seqs) seqs.push(seq);
+  }
   const callsOut = new Map<NodeId, { seq: number; id: NodeId }[]>();
   const callsIn = new Map<NodeId, { seq: number; id: NodeId }[]>();
-  record.edges.forEach((e, i) => {
+  edges.forEach((e, i) => {
     if (e.kind !== "calls") return;
-    const seq = record.seqs[i] as number;
+    const seq = seqs[i] as number;
     push(callsOut, e.source, { seq, id: e.target });
     push(callsIn, e.target, { seq, id: e.source });
   });
   return {
-    ...record,
+    source: record.source,
+    nodes: record.nodes,
+    edges,
+    seqs,
     byId: new Map(record.nodes.map((n) => [n.id, n])),
     callsOut,
     callsIn,
@@ -183,7 +199,7 @@ export function createProjectStore(
     }
     const unit = units.get(path);
     if (!unit) return undefined;
-    const made = open(unit.blob);
+    const made = open(unit);
     opened.set(path, made);
     for (const oldest of opened.keys()) {
       if (opened.size <= openFiles) break;

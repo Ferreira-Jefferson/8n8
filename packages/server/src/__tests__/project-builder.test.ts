@@ -8,7 +8,8 @@ import { composeBuild } from "../core";
 import { languagePlugins } from "../plugins";
 import { type BuildInput, buildInThread } from "../project-build";
 import { createProjectBuilder, type ProjectBuilder } from "../project-builder";
-import { createProjectStore } from "../project-store";
+import { answers, referenceParts } from "./answers";
+import { MIXED } from "./mixed";
 
 // Starting a worker thread that reads TypeScript through tsx takes seconds on a busy machine.
 vi.setConfig({ testTimeout: 30_000 });
@@ -47,23 +48,21 @@ afterEach(async () => {
   builder = undefined;
 });
 
-/** What a store answers, for comparing two stores of the same project. */
-function answers(parts: Awaited<ReturnType<typeof buildInThread>>) {
-  const store = createProjectStore(parts);
-  return {
-    skeleton: store.skeleton,
-    counts: store.counts,
-    details: store.paths.map((p) => store.detailOf(p)),
-    search: store.search("a", 50),
-    calls: store.paths.flatMap((p) =>
-      (store.detailOf(p)?.nodes ?? []).map((n) => store.callsOf(n.id)),
-    ),
-    hashes: parts.files.map((f) => [f.path, f.hash]),
-    cross: parts.cross,
-  };
-}
-
 describe("createProjectBuilder", () => {
+  it("builds in a worker thread what the plain packing of the whole graph gives, for Python and TypeScript linked to each other", async () => {
+    builder = createProjectBuilder({ worker: WORKER, execArgv });
+    const built = await builder.build({
+      name: "mista",
+      files: MIXED,
+      ignored: [],
+      version: "v-test",
+    });
+    expect(answers(built)).toEqual(
+      answers(referenceParts("mista", MIXED, languagePlugins)),
+    );
+    expect(built.cross.length).toBeGreaterThan(0);
+  });
+
   it("builds in a worker thread what the thread of the request would build", async () => {
     builder = createProjectBuilder({ worker: WORKER, execArgv });
     const inThread = await buildInThread(input(), languagePlugins);
