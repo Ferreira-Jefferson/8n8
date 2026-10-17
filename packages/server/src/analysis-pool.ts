@@ -3,20 +3,18 @@ import { Worker } from "node:worker_threads";
 import type {
   FileContribution,
   FlowEdge,
-  LanguageAnalysis,
   LanguagePlugin,
   LinkRequest,
   Offer,
   SourceFile,
 } from "@8n8/model";
-import type { AnalysisRunner, SliceHandle } from "@8n8/project";
 import type { PackingRunner, PackingSlice, PackRequest } from "./project-build";
 import type { PackedAnalysis, PackedFile } from "./project-pack";
 
 /**
  * What the main thread asks of a worker. `slice` names a slice that the worker keeps between
  * requests (its parse trees live there); `run` is a whole group, with nothing kept.
- * With `pack`, an analysis comes back as packed files, not as graphs.
+ * An analysis comes back as packed files: a graph never crosses a thread.
  */
 export type AnalysisRequest =
   | { op: "open"; slice: number; pluginId: string; files: SourceFile[] }
@@ -25,20 +23,20 @@ export type AnalysisRequest =
       op: "analyze";
       slice: number;
       contributions: FileContribution[];
-      pack?: PackRequest;
+      pack: PackRequest;
     }
   | { op: "dispose"; slice: number }
-  | { op: "run"; pluginId: string; files: SourceFile[]; pack?: PackRequest };
+  | { op: "run"; pluginId: string; files: SourceFile[]; pack: PackRequest };
 
 /** An analysis comes back as some `files` messages, then one `done`; any other request, as one `result`. */
 export type AnalysisReply = { id: number } & (
-  | { files: LanguageAnalysis["files"] | PackedFile[] }
+  | { files: PackedFile[] }
   | { done: { imports: FlowEdge[]; offers: Offer[]; requests: LinkRequest[] } }
   | { result: unknown }
   | { error: string }
 );
 
-export interface AnalysisPool extends AnalysisRunner, PackingRunner {
+export interface AnalysisPool extends PackingRunner {
   close(): Promise<void>;
 }
 
@@ -65,7 +63,7 @@ interface Pending {
   resolve: (value: unknown) => void;
   reject: (error: Error) => void;
   /** The `files` messages of an analysis, until its `done`. */
-  files: (LanguageAnalysis["files"][number] | PackedFile)[];
+  files: PackedFile[];
 }
 
 /** A worker and the requests it has not answered yet. */
@@ -158,21 +156,12 @@ export function createAnalysisPool(options: PoolOptions): AnalysisPool {
   }
 
   /** A whole group in one worker. */
-  function run(
-    plugin: LanguagePlugin,
-    files: SourceFile[],
-    pack?: PackRequest,
-  ) {
+  function run(plugin: LanguagePlugin, files: SourceFile[], pack: PackRequest) {
     const index = nextWorker++ % size;
-    return send(index, {
-      op: "run",
-      pluginId: plugin.id,
-      files,
-      ...(pack === undefined ? {} : { pack }),
-    });
+    return send(index, { op: "run", pluginId: plugin.id, files, pack });
   }
 
-  /** A slice kept by one worker; its analysis comes as graphs, or, with `pack`, as packed files. */
+  /** A slice kept by one worker; its analysis comes as packed files. */
   function open(plugin: LanguagePlugin, files: SourceFile[]) {
     const index = nextWorker++ % size;
     const slice = nextSlice++;
@@ -191,13 +180,8 @@ export function createAnalysisPool(options: PoolOptions): AnalysisPool {
           FileContribution[]
         >;
       },
-      analyze(contributions: FileContribution[], pack?: PackRequest) {
-        return send(index, {
-          op: "analyze",
-          slice,
-          contributions,
-          ...(pack === undefined ? {} : { pack }),
-        });
+      analyze(contributions: FileContribution[], pack: PackRequest) {
+        return send(index, { op: "analyze", slice, contributions, pack });
       },
       dispose() {
         // A worker that is gone took its slice along: do not start one just to drop it.
@@ -210,16 +194,6 @@ export function createAnalysisPool(options: PoolOptions): AnalysisPool {
   return {
     size,
     close,
-    analyze: (plugin, files) => run(plugin, files) as Promise<LanguageAnalysis>,
-    openSlice(plugin, files): SliceHandle {
-      const slice = open(plugin, files);
-      return {
-        contribute: slice.contribute,
-        analyze: (contributions) =>
-          slice.analyze(contributions) as Promise<LanguageAnalysis>,
-        dispose: slice.dispose,
-      };
-    },
     runPacked: (plugin, files, pack) =>
       run(plugin, files, pack) as Promise<PackedAnalysis>,
     openPackedSlice(plugin, files): PackingSlice {

@@ -14,12 +14,7 @@ export {
   pluginForPath,
 } from "./detect";
 export { dirOf, layoutProject } from "./layout";
-export type {
-  AnalysisRunner,
-  ParallelOptions,
-  SliceHandle,
-} from "./parallel";
-export { analyzeProjectParallel, split as splitFiles } from "./parallel";
+export { split as splitFiles } from "./parallel";
 export {
   failAnalysis,
   validateAnalysis,
