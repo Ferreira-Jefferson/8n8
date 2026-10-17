@@ -379,6 +379,24 @@ beforeAll(() => {
 const node = (id: NodeId) =>
   videoGraph.nodes.find((n) => n.id === id) as FlowNode;
 
+describe("FlowCanvas, a file that failed to load", () => {
+  it("shows the message and a retry button, and the button calls onRetry", () => {
+    const onRetry = vi.fn();
+    render(<FlowCanvas {...props({ onRetry })} />);
+    expect(screen.queryByText("Carregando o arquivo…")).toBeNull();
+    expect(
+      screen.getByText("Não foi possível carregar o arquivo."),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows nothing of it without onRetry", () => {
+    render(<FlowCanvas {...props()} />);
+    expect(screen.queryByRole("button", { name: "Tentar de novo" })).toBeNull();
+  });
+});
+
 describe("FlowCanvas, one click (VID-18, VID-23, VID-25)", () => {
   it("expands a node that opens and calls onOpen only after the 1100 ms transition", () => {
     vi.useFakeTimers();

@@ -652,6 +652,41 @@ describe("App fetches the code of a project by file", () => {
     ).toBe(true);
   });
 
+  it("shows the failure of a file level without loading, and the retry asks the file again", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      fileMock.mockRejectedValue(new Error("network"));
+      explainMock.mockResolvedValue({ status: "no-key" });
+      projectData.mockResolvedValue(loja);
+      render(<App />);
+      openFolder();
+      await screen.findByTestId("canvas");
+      await openEach(["dir:frete", "file:frete/calculo.py"]);
+      await waitFor(() => expect(currentCanvas().loading).toBe(true));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      await waitFor(() => expect(currentCanvas().onRetry).toBeDefined());
+      expect(currentCanvas().loading).toBe(false);
+      expect(fileMock).toHaveBeenCalledTimes(2);
+
+      fileMock.mockResolvedValue({
+        status: "ok",
+        detail: served.get("frete/calculo.py") as FileDetail,
+      });
+      await act(async () => currentCanvas().onRetry?.());
+      await waitFor(() => expect(currentCanvas().onRetry).toBeUndefined());
+      expect(fileMock).toHaveBeenCalledTimes(3);
+      expect(
+        currentCanvas().graph.nodes.some(
+          (n) => n.parentId === "file:frete/calculo.py",
+        ),
+      ).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("keeps the dragged cards of the map when a file loads: the canvas owner is the map, not its growing graph", async () => {
     explainMock.mockResolvedValue({ status: "no-key" });
     projectData.mockResolvedValue(loja);

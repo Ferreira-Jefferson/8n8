@@ -217,6 +217,28 @@ describe("DetailPanel", () => {
     ).toBeTruthy();
   });
 
+  it("shows the failure and a retry button instead of loading when the file failed; the button calls onRetry", () => {
+    fetchMock.mockResolvedValue({ status: "no-key" });
+    const onRetry = vi.fn();
+    render(
+      <DetailPanel
+        origin={{ root: "C:/loja" }}
+        filePath="src/frete.ts"
+        node={httpNode}
+        effects={[]}
+        auto={AUTO}
+        onSuggestions={() => {}}
+        onRetry={onRetry}
+      />,
+    );
+    expect(screen.queryByText("Carregando o código…")).toBeNull();
+    expect(
+      screen.getByText("Não foi possível carregar o arquivo."),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Tentar de novo" }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
   it("says Claude Code was not found when the provider is claude-code and it is missing (CC-17)", async () => {
     fetchMock.mockResolvedValue({ status: "no-key" });
     render(

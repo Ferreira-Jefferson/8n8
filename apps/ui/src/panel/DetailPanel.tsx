@@ -40,6 +40,8 @@ import { RichInline } from "./Rich";
 export interface DetailPanelProps {
   /** Text the node's lines come from: the snippet, or the node's whole file in a project; absent while the file is on its way. */
   source?: string | undefined;
+  /** The node's file failed to load: the code area says so and offers this button, instead of loading. */
+  onRetry?: (() => void) | undefined;
   /** Where the server reads the code to explain (AD-015). */
   origin: ExplainOrigin;
   /** The node's file in a project. */
@@ -115,6 +117,7 @@ function codeHeading(file: string, node: FlowNode, t: Translate): string {
 /** The node's title, summary, code, input and output, effects and suggestions, in the video's order (VID-28, 29, 30, 33; CORE-14, 16, 19, 20, 24; FID-09..14; CACHE-04; CFG-06..11). */
 export function DetailPanel({
   source,
+  onRetry,
   origin,
   filePath,
   snippetFile,
@@ -266,15 +269,22 @@ export function DetailPanel({
         <h3 className="eyebrow">
           {codeHeading(filePath ?? snippetFile ?? t("snippet.file"), node, t)}
         </h3>
-        {source === undefined ? (
-          <p role="status">{t("panel.codeLoading")}</p>
-        ) : (
+        {source !== undefined ? (
           <CodeView
             code={nodeCode(source, node)}
             start={node.range.start}
             highlightedLines={highlighted}
             file={filePath ?? snippetFile}
           />
+        ) : onRetry ? (
+          <div role="alert" className="code-failed">
+            <p>{t("flow.loadFailed")}</p>
+            <button type="button" className="btn-ghost" onClick={onRetry}>
+              {t("flow.retry")}
+            </button>
+          </div>
+        ) : (
+          <p role="status">{t("panel.codeLoading")}</p>
         )}
       </section>
       <section

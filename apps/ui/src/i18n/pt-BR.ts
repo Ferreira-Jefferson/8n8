@@ -189,6 +189,8 @@ export const ptBR = {
   "list.or": "ou",
   "flow.edgeAria": "Aresta de {from} para {to}",
   "flow.loading": "Carregando o arquivo…",
+  "flow.loadFailed": "Não foi possível carregar o arquivo.",
+  "flow.retry": "Tentar de novo",
   "flow.nodeHelp":
     "Tecle Enter ou espaço para selecionar um nó. Tecle Esc para cancelar.",
   "flow.nodeHelpKeyboard":

@@ -2543,3 +2543,29 @@ body {
   color: var(--second);
   pointer-events: none;
 }
+
+.canvas-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.canvas-error p {
+  margin: 0;
+}
+
+.canvas-error .btn-ghost {
+  pointer-events: auto;
+}
+
+.code-failed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.code-failed p {
+  margin: 0;
+}

@@ -94,6 +94,13 @@ function emptyOf(mapped: Mapped): boolean {
 const EMPTY_GRAPH: Graph = { language: "", empty: true, nodes: [], edges: [] };
 const noSubscribe = () => () => {};
 const noSources: ReadonlyMap<string, string> = new Map();
+const noFailed: ReadonlySet<string> = new Set();
+
+/** The end-to-end tests shrink the loaded-nodes limit with `window.__8n8MaxNodes`; the product never sets it. */
+function testLimit(): { maxNodes?: number } {
+  const limit = (window as { __8n8MaxNodes?: unknown }).__8n8MaxNodes;
+  return typeof limit === "number" ? { maxNodes: limit } : {};
+}
 
 function originOf(mapped: Mapped): ExplainOrigin {
   if (mapped.kind === "snippet") return { source: mapped.source };
@@ -386,6 +393,7 @@ export function App({ initialFolder = null }: AppProps) {
           skeleton: result,
           fetchFile: (file) =>
             fetchProjectFile(path, include, file, result.version),
+          ...testLimit(),
           // The folder changed since the skeleton: open it again, with no error shown.
           // A late answer of an older map must not open its folder over the one on screen.
           onStale: () => {
@@ -530,16 +538,34 @@ export function App({ initialFolder = null }: AppProps) {
     return [...new Set(reached ? [...paths, reached] : paths)];
   }, [graph, store, nodesById, levelId, nav.selected]);
   const wantedKey = wantedFiles.join("\n");
-  // biome-ignore lint/correctness/useExhaustiveDependencies: wantedKey stands for wantedFiles
+  // The files of the levels on the way down stay too: going back must not wait for them again.
+  const keptFiles = useMemo(() => {
+    if (!graph?.project) return [];
+    const trail = nav.path.flatMap((step) => {
+      const path = fileNodeOf(graph, step.id, nodesById)?.path;
+      return path === undefined ? [] : [path];
+    });
+    return [...new Set([...wantedFiles, ...trail])];
+  }, [graph, nodesById, nav.path, wantedFiles]);
+  const keptKey = keptFiles.join("\n");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keptKey and wantedKey stand for the lists
   useEffect(() => {
+    // The store drops the least recent files when it loads: what is on screen is never dropped.
+    store?.keep(keptFiles);
     for (const path of wantedFiles) store?.ensureFile(path);
-  }, [store, wantedKey]);
+  }, [store, keptKey, wantedKey]);
+  const failedFiles = useSyncExternalStore(
+    store?.subscribe ?? noSubscribe,
+    store ? store.getFailed : () => noFailed,
+  );
   // The open level is a file whose nodes have not come yet: the canvas shows its hub and says it loads.
   const levelFile =
     graph?.project && levelId !== null
       ? fileNodeOf(graph, levelId, nodesById)?.path
       : undefined;
-  const levelLoading = levelFile !== undefined && !sources.has(levelFile);
+  const levelFailed = levelFile !== undefined && failedFiles.has(levelFile);
+  const levelLoading =
+    levelFile !== undefined && !sources.has(levelFile) && !levelFailed;
   const lookup = useMemo<Lookup>(
     () => ({ graph: graph ?? EMPTY_GRAPH, byId: nodesById, sources }),
     [graph, nodesById, sources],
@@ -641,6 +667,14 @@ export function App({ initialFolder = null }: AppProps) {
   const selected = byId(nav.selected);
   const shown = selected ? byId(panelNodeOf(selected)) : null;
   const panelNode = shown && hasPanel(shown) ? shown : null;
+  const panelFile =
+    store && graph && panelNode
+      ? fileNodeOf(graph, panelNode.id, nodesById)?.path
+      : undefined;
+  const panelRetry =
+    panelFile !== undefined && failedFiles.has(panelFile)
+      ? () => store?.ensureFile(panelFile)
+      : undefined;
 
   if (view !== "map" || !mapped || !graph) {
     const messages = (
@@ -783,6 +817,11 @@ export function App({ initialFolder = null }: AppProps) {
           graph={graph}
           mapKey={mapped}
           loading={levelLoading}
+          onRetry={
+            levelFailed && levelFile !== undefined
+              ? () => store?.ensureFile(levelFile)
+              : undefined
+          }
           levelId={levelId}
           depth={nav.path.length}
           selected={nav.selected}
@@ -868,6 +907,7 @@ export function App({ initialFolder = null }: AppProps) {
       {panelNode && !panelCollapsed && (
         <DetailPanel
           {...panelInput(mapped, panelNode, lookup)}
+          onRetry={panelRetry}
           snippetFile={snippetFileName(
             mapped.kind === "snippet" ? mapped.language : undefined,
             languages,

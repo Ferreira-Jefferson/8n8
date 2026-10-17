@@ -59,6 +59,8 @@ export interface FlowCanvasProps {
   mapKey?: unknown;
   /** The open level is a file whose inside is still on its way: only the hub shows, with a loading text. */
   loading?: boolean;
+  /** The file of the open level failed to load: the canvas says so and offers this button, instead of loading. */
+  onRetry?: (() => void) | undefined;
   levelId: NodeId | null;
   /** How many levels are open; with `levelId` it keys the canvas, so a recursion animates again. */
   depth: number;
@@ -340,6 +342,7 @@ export function FlowCanvas({
   graph,
   mapKey = graph,
   loading = false,
+  onRetry,
   levelId,
   depth,
   selected,
@@ -757,6 +760,14 @@ export function FlowCanvas({
         <p className="canvas-loading" role="status">
           {t("flow.loading")}
         </p>
+      )}
+      {onRetry && (
+        <div className="canvas-loading canvas-error" role="alert">
+          <p>{t("flow.loadFailed")}</p>
+          <button type="button" className="btn-ghost" onClick={onRetry}>
+            {t("flow.retry")}
+          </button>
+        </div>
       )}
       {frame && (
         <div
