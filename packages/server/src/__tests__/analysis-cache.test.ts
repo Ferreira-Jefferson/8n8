@@ -537,7 +537,7 @@ describe("the version of a plugin is the guard of its rows", () => {
         ["python", "2"],
         ["typescript", "2"],
       ],
-      hash: "00b3deb75d157e1b3239fc60f85f99fc21881a6b",
+      hash: "7cf6aba496161943236fa67fe71530ffdf338809",
     });
   });
 });

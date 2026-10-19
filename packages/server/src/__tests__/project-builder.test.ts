@@ -96,7 +96,7 @@ describe("createProjectBuilder", () => {
         const cache = openAnalysisCache(cacheFile);
         if (!cache) return 0;
         const found = cache.contributions(
-          MIXED.map((f) => `python|1|${f.path}|${sha1(f.source)}`),
+          MIXED.map((f) => `python|2|${f.path}|${sha1(f.source)}`),
         );
         cache.close();
         return found.filter((text) => text !== undefined).length;
@@ -232,7 +232,7 @@ describe("composeBuild", () => {
       const kept = () => {
         const cache = openAnalysisCache(cacheFile);
         const found = (cache?.contributions(
-          files.map((f) => `python|1|${f.path}|${sha1(f.source)}`),
+          files.map((f) => `python|2|${f.path}|${sha1(f.source)}`),
         ) ?? []) as (string | undefined)[];
         cache?.close();
         return found.filter((text) => text !== undefined).length;
