@@ -517,6 +517,35 @@ describe("analyze: offers", () => {
         ),
       ).toEqual([]);
     });
+
+    it("does not offer a call on a client of axios, got or ky, or one whose last argument is data", () => {
+      expect(
+        byChannel(
+          offers(
+            [
+              "import axios from 'axios';",
+              "import got from 'got';",
+              "import ky from 'ky';",
+              "const api = axios.create({ baseURL: 'https://backend.example.com' });",
+              "const server = got.extend({ prefixUrl: 'https://x.com' });",
+              "const routes = ky.create({ prefixUrl: 'https://x.com' });",
+              "const body = { name: 'a' };",
+              "api.post('/users', u);",
+              "server.get('/a', h);",
+              "routes.put('/b', h);",
+              "app.post('/c', { name: 'a' });",
+              "app.post('/d', 'text');",
+              "app.post('/e', body);",
+              "app.post('/f', [1]);",
+              "app.post('/g', asyncHandler(h));",
+              "app.post('/h', handlers.save);",
+              "app.post('/i', function (req, res) {});",
+            ].join("\n"),
+          ),
+          "http",
+        ).map(([, key]) => key),
+      ).toEqual(["POST /g", "POST /h", "POST /i"]);
+    });
   });
 
   describe("process", () => {

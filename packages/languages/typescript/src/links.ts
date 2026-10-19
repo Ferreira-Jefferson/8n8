@@ -57,6 +57,32 @@ const AMBIENT = new Set([
 /** `app`, `router`, `server`, `fastify`, `api`, `routes`, or `userRouter`, `mainApp`. */
 const ROUTER =
   /^(?:app|router|server|fastify|api|routes?)$|(?:Router|App|Routes|Server|Api)$/;
+/** `axios.create(...)`, `got.extend(...)`, `ky.create(...)`: a client of these libraries, never a router. */
+const CLIENT_FACTORIES = new Map([
+  ["axios", new Set(["create"])],
+  ["got", new Set(["extend"])],
+  ["ky", new Set(["create", "extend"])],
+]);
+/** What a route handler can be: a function, a name, a member or a call that gives one. */
+const HANDLERS = new Set([
+  "arrow_function",
+  "function_expression",
+  "function",
+  "identifier",
+  "member_expression",
+  "call_expression",
+]);
+/** A value that is data: a name bound to one is not a handler. */
+const DATA = new Set([
+  "object",
+  "array",
+  "string",
+  "template_string",
+  "number",
+  "true",
+  "false",
+  "null",
+]);
 /** A token that names a file: `a.py`, `./b.ts`, `scripts/run.sh`. */
 const PATH_TOKEN = /^[\w@./\\-]*[\w-]\.[A-Za-z][A-Za-z0-9]*$/;
 
@@ -196,6 +222,30 @@ export function collectLinks(
     return bound.has(head) ? null : head;
   };
 
+  /** Names bound to a client (`const api = axios.create(...)`), and names bound to data. */
+  const clients = new Set<string>();
+  const dataNames = new Set<string>();
+  for (const declarator of root.descendantsOfType("variable_declarator")) {
+    const name = declarator.childForFieldName("name");
+    const value = declarator.childForFieldName("value");
+    if (name?.type !== "identifier" || !value) continue;
+    if (DATA.has(value.type)) dataNames.add(name.text);
+    const factory =
+      value.type === "call_expression"
+        ? value.childForFieldName("function")
+        : null;
+    const [head = "", method = "", ...more] =
+      (factory ? dottedName(factory)?.split(".") : undefined) ?? [];
+    const lib = head === "" ? null : libOf(head);
+    if (more.length === 0 && CLIENT_FACTORIES.get(lib ?? "")?.has(method)) {
+      clients.add(name.text);
+    }
+  }
+  const isHandler = (node: Node | undefined): boolean =>
+    node !== undefined &&
+    HANDLERS.has(node.type) &&
+    !(node.type === "identifier" && dataNames.has(node.text));
+
   const offers: Offer[] = [];
   const requests: LinkRequest[] = [];
   const seenNames = new Set<string>();
@@ -219,9 +269,11 @@ export function collectLinks(
       if (
         ROUTE_VERBS.has(verb) &&
         receiverName !== null &&
+        !clients.has(receiverName) &&
         ROUTER.test(receiverName.split(".").pop() ?? "") &&
         route?.startsWith("/") &&
-        args.length >= 2
+        args.length >= 2 &&
+        isHandler(args[args.length - 1])
       ) {
         const handler = args[args.length - 1];
         const handlerId =
