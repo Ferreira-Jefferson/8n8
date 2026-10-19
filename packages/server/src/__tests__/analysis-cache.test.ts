@@ -532,7 +532,7 @@ describe("the version of a plugin is the guard of its rows", () => {
     }).toEqual({
       versions: [
         ["python", "1"],
-        ["typescript", "1"],
+        ["typescript", "3"],
       ],
       hash: "00b3deb75d157e1b3239fc60f85f99fc21881a6b",
     });

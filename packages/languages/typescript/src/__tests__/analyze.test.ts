@@ -111,6 +111,20 @@ describe("analyze: one graph per file", () => {
     });
   });
 
+  it("keeps the functions after a broken one, and marks the error on the file node", () => {
+    const { files } = analyze({
+      "broken.ts":
+        "export function ok() {\n  return 1;\n}\nexport function bad( {\n  return 2\n}\nexport function after() {\n  return ok();\n}\n",
+    });
+    const nodes = files[0]?.graph.nodes ?? [];
+
+    expect(nodes.filter((n) => n.kind === "function").map((n) => n.id)).toEqual(
+      ["file:broken.ts/fn:ok", "file:broken.ts/fn:after"],
+    );
+    expect(nodes[0]?.syntaxError).toEqual({ line: 4 });
+    expect(nodes.filter((n) => n.syntaxError)).toHaveLength(1);
+  });
+
   it("analyzes no files", () => {
     expect(analyze({})).toEqual({
       files: [],

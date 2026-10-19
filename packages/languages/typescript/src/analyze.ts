@@ -1,4 +1,4 @@
-import { lastLine, markSyntaxErrors } from "@8n8/lang-treesitter";
+import { lastLine, markErrorLines } from "@8n8/lang-treesitter";
 import {
   type AnalysisSlice,
   type FlowEdge,
@@ -22,11 +22,13 @@ import {
   resolveMember,
   resolveModulePath,
 } from "./modules";
-import { parsers } from "./parse";
+import { parseRecovering, parsers } from "./parse";
 
 interface Parsed {
   file: SourceFile;
   tree: Tree;
+  /** The syntax error lines (see `parseRecovering`). */
+  errors: number[];
 }
 
 function byCode(a: string, b: string): number {
@@ -42,7 +44,7 @@ function baseName(path: string): string {
 }
 
 /** The file node followed by its inner nodes; syntax errors marked per file. */
-function fileGraph({ file, tree }: Parsed, index: ModuleIndex): Graph {
+function fileGraph({ file, tree, errors }: Parsed, index: ModuleIndex): Graph {
   const id = fileId(file.path);
   const graph = buildGraph(tree, {
     prefix: id,
@@ -61,9 +63,9 @@ function fileGraph({ file, tree }: Parsed, index: ModuleIndex): Graph {
     openable: true,
     path: file.path,
   };
-  const marked = markSyntaxErrors(
-    tree,
+  const marked = markErrorLines(
     { ...graph, nodes: [head, ...graph.nodes] },
+    errors,
     `${id}/mod`,
   );
   const [fileNode, ...inner] = marked.nodes;
@@ -112,9 +114,9 @@ export function openSlice(files: SourceFile[]): AnalysisSlice {
       const parser = file.path.endsWith(".tsx")
         ? parsers.tsx
         : parsers.typescript;
-      const tree = parser.parse(file.source);
-      if (!tree) throw new Error(`tree-sitter could not parse ${file.path}`);
-      parsed.push({ file, tree });
+      const read = parseRecovering(parser, file.source);
+      if (!read) throw new Error(`tree-sitter could not parse ${file.path}`);
+      parsed.push({ file, ...read });
     }
   } catch (error) {
     dispose();
