@@ -12,6 +12,7 @@ import {
 import type { Node, Parser, Tree } from "web-tree-sitter";
 import { buildGraph } from "./build-graph";
 import { markSyntaxErrors } from "./errors";
+import { starModules } from "./imports";
 import { collectLinks } from "./links";
 import {
   absoluteName,
@@ -22,6 +23,8 @@ import {
   type ModuleIndex,
   packageOf,
   resolveName,
+  type StarImports,
+  starImports,
 } from "./modules";
 
 interface Parsed {
@@ -46,10 +49,12 @@ function fileGraph(
   { file, tree }: Parsed,
   index: ModuleIndex,
   projectNames: Set<string>,
+  stars: StarImports,
 ): Graph {
   const id = fileId(file.path);
   const graph = buildGraph(tree, {
     prefix: id,
+    starAliases: stars.aliases,
     resolveImport: (full) => resolveName(index, file.path, full),
     projectNames,
   });
@@ -185,15 +190,19 @@ export function openSlice(parser: Parser, files: SourceFile[]): AnalysisSlice {
       const projectNames = new Set(
         all.flatMap((c) => c.data.topLevel.map(([name]) => name)),
       );
-      const graphs = parsed.map((p) => ({
+      const stars = parsed.map((p) =>
+        starImports(index, p.file.path, starModules(p.tree.rootNode)),
+      );
+      const graphs = parsed.map((p, i) => ({
         path: p.file.path,
-        graph: fileGraph(p, index, projectNames),
+        graph: fileGraph(p, index, projectNames, stars[i] as StarImports),
       }));
       const links = parsed.map((p, i) =>
         collectLinks(
           p.file.path,
           p.tree.rootNode,
           graphs[i]?.graph.nodes ?? [],
+          stars[i],
         ),
       );
       return {

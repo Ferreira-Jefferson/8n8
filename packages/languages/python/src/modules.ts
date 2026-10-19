@@ -1,7 +1,7 @@
 import { childId, fileId, type NodeId } from "@8n8/model";
 import type { Node } from "web-tree-sitter";
 import { allocateTopLevel } from "./build-graph";
-import { importAliases } from "./imports";
+import { allNames, importAliases, starModules } from "./imports";
 
 /** Dotted module name of a POSIX `.py` path; null for the root `__init__.py`. */
 export function moduleNameOf(path: string): string | null {
@@ -41,6 +41,10 @@ export interface ModuleEntry {
   topLevel: Map<string, NodeId>;
   /** Local import name to its absolute full name. */
   aliases: Map<string, string>;
+  /** Modules of its `from x import *`, as written. */
+  stars: string[];
+  /** The names of its `__all__`, or null without a plain one. */
+  all: string[] | null;
 }
 
 /** Project modules by dotted name. */
@@ -55,6 +59,8 @@ export interface ParsedFile {
 export interface ModuleContribution {
   topLevel: [string, NodeId][];
   aliases: [string, string][];
+  stars: string[];
+  all: string[] | null;
 }
 
 /** The contribution of one file: it depends only on the path and the text. */
@@ -64,7 +70,12 @@ export function contributionOf(path: string, root: Node): ModuleContribution {
     const absolute = absoluteName(path, full);
     if (absolute !== null) aliases.push([local, absolute]);
   }
-  return { topLevel: [...allocateTopLevel(root).topLevel], aliases };
+  return {
+    topLevel: [...allocateTopLevel(root).topLevel],
+    aliases,
+    stars: starModules(root),
+    all: allNames(root),
+  };
 }
 
 /** The index of the contributions, in the order given: a module name that two files share goes to the last one. */
@@ -79,6 +90,8 @@ export function indexOfContributions(
       path,
       topLevel: new Map(data.topLevel),
       aliases: new Map(data.aliases),
+      stars: data.stars,
+      all: data.all,
     });
   }
   return index;
@@ -130,6 +143,69 @@ function resolveFrom(
     if (found !== null) return found;
   }
   return null;
+}
+
+/** The project module a dotted name refers to, seen from `callerPath`, with its absolute name. */
+function moduleEntry(
+  index: ModuleIndex,
+  callerPath: string,
+  dotted: string,
+): [string, ModuleEntry] | null {
+  // `from . import *` names the package itself.
+  const name = absoluteName(callerPath, dotted)?.replace(/\.$/, "");
+  if (name === undefined) return null;
+  const pkg = packageOf(callerPath);
+  for (const candidate of pkg === "" ? [name] : [name, `${pkg}.${name}`]) {
+    const entry = index.get(candidate);
+    if (entry !== undefined) return [candidate, entry];
+  }
+  return null;
+}
+
+export interface StarImports {
+  /** Local name to the absolute full name it comes from. */
+  aliases: Map<string, string>;
+  /** Whether a `*` may bring names the index does not know: a relative module that is not in it. */
+  open: boolean;
+}
+
+/**
+ * The names that the `from x import *` of a file bring from project modules: the `__all__` of the module, or its
+ * public top-level and imported names, and those of its own `*` imports. A later `*` wins, as in Python.
+ */
+export function starImports(
+  index: ModuleIndex,
+  callerPath: string,
+  stars: string[],
+  seen: Set<string> = new Set(),
+): StarImports {
+  const aliases = new Map<string, string>();
+  let open = false;
+  for (const star of stars) {
+    const found = moduleEntry(index, callerPath, star);
+    if (found === null) {
+      open ||= star.startsWith(".");
+      continue;
+    }
+    const [name, entry] = found;
+    if (seen.has(name)) continue;
+    seen.add(name);
+    const nested = starImports(index, entry.path, entry.stars, seen);
+    open ||= nested.open;
+    const own = (n: string) => entry.topLevel.has(n) || entry.aliases.has(n);
+    const names =
+      entry.all ??
+      [
+        ...entry.topLevel.keys(),
+        ...entry.aliases.keys(),
+        ...nested.aliases.keys(),
+      ].filter((n) => !n.startsWith("_"));
+    for (const n of names) {
+      const full = own(n) ? `${name}.${n}` : nested.aliases.get(n);
+      if (full !== undefined) aliases.set(n, full);
+    }
+  }
+  return { aliases, open };
 }
 
 /**

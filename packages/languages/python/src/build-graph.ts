@@ -282,11 +282,13 @@ export interface BuildOptions
   extends Pick<CallContext, "resolveImport" | "projectNames"> {
   /** Parent of the top-level nodes, also prefixed to their ids (AD-013). */
   prefix?: NodeId;
+  /** Names that `from x import *` bring from the project, to their full names; the file's own imports win. */
+  starAliases?: Map<string, string>;
 }
 
 /** Builds the graph of a parsed snippet (CORE-01, 03, 07, 08). */
 export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
-  const { prefix, ...resolvers } = options;
+  const { prefix, starAliases, ...resolvers } = options;
   const scoped = (id: NodeId) =>
     prefix === undefined ? id : childId(prefix, id);
   const parentId = prefix ?? null;
@@ -299,7 +301,10 @@ export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
         [...top.topLevel].map(([name, id]) => [name, scoped(id)]),
       ),
       methods: new Map(),
-      aliases: importAliases(tree.rootNode),
+      aliases: new Map([
+        ...(starAliases ?? []),
+        ...importAliases(tree.rootNode),
+      ]),
       bound: boundNames(tree.rootNode),
       ...resolvers,
     },

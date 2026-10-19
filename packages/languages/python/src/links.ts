@@ -8,6 +8,7 @@ import type { Node } from "web-tree-sitter";
 import { boundNames } from "./bound";
 import { dottedName } from "./calls";
 import { importAliases } from "./imports";
+import type { StarImports } from "./modules";
 
 /** What a file offers and asks for, for the project to match (D4). */
 export interface FileLinks {
@@ -281,8 +282,9 @@ function requestsOf(
   path: string,
   root: Node,
   nodes: FlowNode[],
+  stars: StarImports,
 ): LinkRequest[] {
-  const aliases = importAliases(root);
+  const aliases = new Map([...stars.aliases, ...importAliases(root)]);
   const bound = boundNames(root);
   const requests: LinkRequest[] = [];
   const calls = root
@@ -314,8 +316,10 @@ function requestsOf(
       for (const path of new Set(paths)) add("process", path);
     }
     const fn = call.childForFieldName("function");
+    // A `*` from the project that the index does not know may bring the name.
     if (
       fn?.type === "identifier" &&
+      !stars.open &&
       !bound.has(fn.text) &&
       !aliases.has(fn.text) &&
       !BUILTINS.has(fn.text)
@@ -396,9 +400,10 @@ export function collectLinks(
   path: string,
   root: Node,
   nodes: FlowNode[],
+  stars: StarImports = { aliases: new Map(), open: false },
 ): FileLinks {
   return {
     offers: offersOf(path, root, nodes),
-    requests: requestsOf(path, root, nodes),
+    requests: requestsOf(path, root, nodes, stars),
   };
 }
