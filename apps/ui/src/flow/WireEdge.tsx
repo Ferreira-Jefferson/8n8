@@ -1,4 +1,4 @@
-import type { EdgeLabelKey, ToCheck } from "@8n8/model";
+import type { EdgeLabelKey, LinkCount, ToCheck } from "@8n8/model";
 import {
   type Edge,
   EdgeLabelRenderer,
@@ -6,7 +6,7 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { type MessageKey, useT } from "../i18n";
+import { type MessageKey, plural, useT } from "../i18n";
 import { NODE_HEIGHT } from "./layout";
 import { Side } from "./sides";
 
@@ -38,8 +38,10 @@ export interface WireInfo {
   reach: "inside" | "across" | "language";
   from: string;
   to: string;
-  /** The code does not prove the target: what to check, and where. */
+  /** The code does not prove the target: what to check, and where (the first link to check of a joined wire). */
   toCheck?: ToCheck | undefined;
+  /** A wire that joins links: how many the code proves and how many are to check. */
+  links?: LinkCount | undefined;
 }
 
 /** The pointer rests this long on a dependency wire before its tag shows. */
@@ -262,6 +264,9 @@ export function WireEdge({
   const showLabel = hasLabel && !data?.dep;
   const info = data?.info;
   const toCheck = info?.toCheck;
+  const links = info?.links;
+  /** Proven links on the same wire as the one to check. */
+  const alsoProven = toCheck ? (links?.proven ?? 0) : 0;
   /** The middle of a wire to check, where its mark sits; null where the browser cannot measure a path. */
   const wire = useRef<SVGPathElement>(null);
   const [middle, setMiddle] = useState<{ x: number; y: number } | null>(null);
@@ -347,6 +352,16 @@ export function WireEdge({
                 {shown}
               </div>
             )}
+            {links && links.proven + links.toCheck > 1 && (
+              <div
+                className="wire-tag-links"
+                data-links={`${links.proven}+${links.toCheck}`}
+              >
+                {plural(t, "link", links.proven + links.toCheck)}
+                {links.toCheck > 0 &&
+                  ` · ${t("edge.links.toCheck", { n: links.toCheck })}`}
+              </div>
+            )}
             <dl>
               <dt>{t("edge.tag.from")}</dt>
               <dd>{info.from}</dd>
@@ -354,12 +369,25 @@ export function WireEdge({
               <dd>{info.to}</dd>
             </dl>
             {toCheck && (
-              <div className="wire-tag-check" data-to-check={toCheck.code}>
-                <div className="wire-tag-kind">{t("edge.toCheck")}</div>
-                <p>{t("edge.toCheck.why")}</p>
+              <div className="wire-tag-check" data-to-check={toCheck.reason}>
+                <div className="wire-tag-kind">
+                  {t("edge.toCheck")} ·{" "}
+                  {t(`edge.toCheck.reason.${toCheck.reason}` as MessageKey, {
+                    n: toCheck.targets ?? 0,
+                  })}
+                </div>
+                <p>
+                  {t(`edge.toCheck.why.${toCheck.reason}` as MessageKey)}
+                  {alsoProven > 0 &&
+                    ` ${plural(t, "edge.toCheck.alsoProven", alsoProven)}`}
+                </p>
                 <dl>
-                  <dt>{t("edge.toCheck.code")}</dt>
-                  <dd>{toCheck.code}</dd>
+                  {toCheck.code !== undefined && (
+                    <>
+                      <dt>{t("edge.toCheck.code")}</dt>
+                      <dd>{toCheck.code}</dd>
+                    </>
+                  )}
                   <dt>{t("edge.toCheck.at")}</dt>
                   <dd>
                     {toCheck.path}:{toCheck.line}

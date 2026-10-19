@@ -162,7 +162,7 @@ describe("http channel through linkProject", () => {
       requests: [req],
     });
     expect(out.edges.map((e) => e.toCheck)).toEqual([
-      { code: "config.baseUrl", path: "b.ts", line: 7 },
+      { reason: "dynamic-base", code: "config.baseUrl", path: "b.ts", line: 7 },
     ]);
   });
 
@@ -179,6 +179,10 @@ describe("http channel through linkProject", () => {
         requests,
       });
       expect(out.edges.map((e) => e.toCheck?.code)).toEqual(["base"]);
+      // The joined wire says it holds a proven link too.
+      expect(out.edges.map((e) => e.links)).toEqual([
+        { proven: 1, toCheck: 1 },
+      ]);
     }
   });
 
@@ -202,8 +206,8 @@ describe("http channel through linkProject", () => {
     expect(out.unlinked).toEqual([req]);
   });
 
-  it("sends a request with two offers to ambiguous", () => {
-    const req = request("http", "GET /users/42", "a.py", "c");
+  it("sends a request with two offers to ambiguous, and draws a wire to check to each", () => {
+    const req = request("http", "GET /users/:id", "a.py", "c", 5);
     const out = linkProject({
       nodes,
       offers: [
@@ -212,7 +216,17 @@ describe("http channel through linkProject", () => {
       ],
       requests: [req],
     });
-    expect(out.edges).toEqual([]);
+    const toCheck = {
+      reason: "ambiguous",
+      targets: 2,
+      path: "a.py",
+      line: 5,
+    };
+    expect(out.edges.map((e) => [e.target, e.toCheck])).toEqual([
+      [nodeId("b.ts", "h"), toCheck],
+      [nodeId("c.ts", "h"), toCheck],
+    ]);
+    expect(out.unlinked).toEqual([]);
     expect(out.ambiguous).toEqual([
       {
         request: req,
@@ -222,5 +236,17 @@ describe("http channel through linkProject", () => {
         ],
       },
     ]);
+  });
+
+  it("draws at most three wires for an ambiguous request, and says how many targets match", () => {
+    const files = ["b.ts", "c.ts", "d.py", "e.ts"];
+    const out = linkProject({
+      nodes: [...nodes, fileNode("e.ts"), innerNode("e.ts", "h")],
+      offers: files.map((f) => offer("http", "GET /ping", f, "h")),
+      requests: [request("http", "GET /ping", "a.py", "c")],
+    });
+    expect(out.edges).toHaveLength(3);
+    expect(out.edges.every((e) => e.toCheck?.targets === 4)).toBe(true);
+    expect(out.ambiguous[0]?.candidates).toHaveLength(4);
   });
 });

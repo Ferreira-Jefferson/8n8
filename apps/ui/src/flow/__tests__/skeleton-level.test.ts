@@ -54,4 +54,38 @@ describe("the skeleton of a mixed Python and TypeScript project", () => {
       );
     }
   });
+
+  it("joins a proven link and one to check the same way from either graph, and counts both", () => {
+    const toCheck = {
+      reason: "dynamic-base" as const,
+      code: "config.baseUrl",
+      path: "app/cliente.py",
+      line: 9,
+    };
+    const graph: Graph = {
+      ...mistaGraph,
+      edges: [
+        ...mistaGraph.edges,
+        {
+          id: "link:http:file:app/cliente.py/fn:fechar_conta/s2->file:api/servidor.ts/mod/s1",
+          kind: "calls",
+          source: "file:app/cliente.py/fn:fechar_conta/s2",
+          target: "file:api/servidor.ts/mod/s1",
+          label: "HTTP POST /api/frete",
+          toCheck,
+        },
+      ],
+    };
+    const lean = skeletonGraphOf(graph);
+    for (const id of folderLevels(graph)) {
+      expect(projectLevel(lean, id).edges).toEqual(
+        projectLevel(graph, id).edges,
+      );
+    }
+    const wire = projectLevel(graph, null).edges.find(
+      (e) => e.kind === "calls" && e.toCheck,
+    );
+    expect(wire?.links).toEqual({ proven: 1, toCheck: 1 });
+    expect(wire?.toCheck).toEqual(toCheck);
+  });
 });

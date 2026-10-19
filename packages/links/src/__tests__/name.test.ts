@@ -107,7 +107,7 @@ describe("name channel through linkProject", () => {
     expect(out.ambiguous).toEqual([]);
   });
 
-  it("links only when exactly one offer matches", () => {
+  it("draws a wire to check to each offer when more than one matches", () => {
     const req = request("name", "calcular", "a.py", "c");
     const out = linkProject({
       nodes,
@@ -117,7 +117,10 @@ describe("name channel through linkProject", () => {
       ],
       requests: [req],
     });
-    expect(out.edges).toEqual([]);
+    expect(out.edges.map((e) => [e.target, e.toCheck?.reason])).toEqual([
+      [nodeId("b.ts", "f"), "ambiguous"],
+      [nodeId("c.ts", "f"), "ambiguous"],
+    ]);
     expect(out.unlinked).toEqual([]);
     expect(out.ambiguous).toEqual([
       {

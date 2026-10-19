@@ -1,5 +1,12 @@
 import { shownInFile } from "./commands";
-import type { FlowEdge, FlowNode, Graph, NodeId } from "./graph";
+import {
+  type FlowEdge,
+  type FlowNode,
+  type Graph,
+  joinWire,
+  linksOf,
+  type NodeId,
+} from "./graph";
 
 /**
  * The top of a project graph: the `folder` and `file` nodes and the wires between
@@ -74,10 +81,10 @@ export function skeletonGraphOf(graph: Graph): Graph {
     const id = `${e.kind}:${from}->${to}`;
     const known = edges.get(id);
     if (known) {
-      // One wire still to check keeps the joined wire "to check".
-      if (e.toCheck && !known.toCheck) known.toCheck = e.toCheck;
+      joinWire(known, e);
       continue;
     }
+    const links = linksOf(e);
     edges.set(id, {
       id,
       kind: e.kind,
@@ -86,6 +93,7 @@ export function skeletonGraphOf(graph: Graph): Graph {
       ...(e.label === undefined ? {} : { label: e.label }),
       ...(e.labelKey === undefined ? {} : { labelKey: e.labelKey }),
       ...(e.toCheck === undefined ? {} : { toCheck: e.toCheck }),
+      ...(links === undefined ? {} : { links }),
     });
   }
 

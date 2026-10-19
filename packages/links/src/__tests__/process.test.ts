@@ -157,7 +157,7 @@ describe("process channel through linkProject", () => {
     expect(out.unlinked).toEqual([req]);
   });
 
-  it("sends to ambiguous when the root and the folder reach different files", () => {
+  it("sends to ambiguous when the root and the folder reach different files, with a wire to check to each", () => {
     const nodes2 = [
       ...nodes,
       fileNode("scripts/a.py"),
@@ -174,7 +174,10 @@ describe("process channel through linkProject", () => {
       ],
       requests: [req],
     });
-    expect(out.edges).toEqual([]);
+    expect(out.edges.map((e) => e.toCheck?.reason)).toEqual([
+      "ambiguous",
+      "ambiguous",
+    ]);
     expect(out.ambiguous).toHaveLength(1);
     expect(out.ambiguous[0]?.candidates.map((c) => c.key)).toEqual([
       "b.ts",

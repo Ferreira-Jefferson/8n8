@@ -1025,6 +1025,12 @@ body {
   white-space: nowrap;
 }
 
+/* How many links a joined wire holds, and how many of them are to check. */
+.wire-tag-links {
+  margin-top: 2px;
+  color: var(--accent);
+}
+
 .wire-tag-check {
   margin-top: 8px;
   padding-top: 8px;

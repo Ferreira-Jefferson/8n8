@@ -367,12 +367,17 @@ describe("the build links the languages (D3, D4)", () => {
     expect(graph.edges.map((e) => e.id)).toEqual([linkId]);
   });
 
-  it("an ambiguous request links nothing", async () => {
+  it("an ambiguous request links to each target, to check", async () => {
     const graph = graphOfFiles(
       [callerFile, handlerFile, { path: "z.b", source: "handler()\n" }],
       [caller, handler],
     );
-    expect(graph.edges).toEqual([]);
+    expect(
+      graph.edges.map((e) => [e.target, e.toCheck?.reason, e.toCheck?.targets]),
+    ).toEqual([
+      ["file:y.b/fn:handler", "ambiguous", 2],
+      ["file:z.b/fn:handler", "ambiguous", 2],
+    ]);
   });
 
   it("a one-language project is byte for byte what buildProject gives", async () => {

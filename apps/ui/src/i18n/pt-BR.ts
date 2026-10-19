@@ -215,8 +215,24 @@ export const ptBR = {
   "edge.tag.from": "De",
   "edge.tag.to": "Para",
   "edge.toCheck": "a conferir",
-  "edge.toCheck.why":
+  "edge.toCheck.reason.dynamic-base": "URL de execução",
+  "edge.toCheck.reason.param-route": "rota com parâmetro",
+  "edge.toCheck.reason.ambiguous": "ambígua ({n} destinos)",
+  "edge.toCheck.reason.name-only": "só pelo nome",
+  "edge.toCheck.why.dynamic-base":
     "A URL começa com um valor que só existe em execução. O código não prova o destino.",
+  "edge.toCheck.why.param-route":
+    "Um trecho fixo da URL só casa com um parâmetro da rota. O código não prova o destino.",
+  "edge.toCheck.why.ambiguous":
+    "Mais de um destino casa com a chamada. A linha vai para cada um deles.",
+  "edge.toCheck.why.name-only":
+    "As duas pontas só têm o mesmo nome, em linguagens diferentes. O código não prova a chamada.",
+  "edge.toCheck.alsoProven.one": "Esta linha tem também {n} ligação provada.",
+  "edge.toCheck.alsoProven.other":
+    "Esta linha tem também {n} ligações provadas.",
+  "edge.links.toCheck": "{n} a conferir",
+  "link.one": "{n} ligação",
+  "link.other": "{n} ligações",
   "edge.toCheck.code": "Valor",
   "edge.toCheck.at": "Chamada",
   "severity.alta": "alta",

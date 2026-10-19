@@ -54,6 +54,6 @@ export interface LinkResult {
   edges: FlowEdge[];
   /** No offer matches: the request stays as an `external` node. */
   unlinked: LinkRequest[];
-  /** More than one offer matches: nothing is linked. */
+  /** More than one offer matches: the request links to each of the first ones, "to check". */
   ambiguous: AmbiguousRequest[];
 }

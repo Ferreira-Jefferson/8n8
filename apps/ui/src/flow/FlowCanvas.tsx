@@ -325,6 +325,7 @@ export function toFlowEdges(
               from: names.get(e.source) ?? e.source,
               to: names.get(e.target) ?? e.target,
               ...(e.toCheck ? { toCheck: e.toCheck } : {}),
+              ...(e.links ? { links: e.links } : {}),
             },
           }
         : {}),

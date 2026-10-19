@@ -178,7 +178,7 @@ describe("buildInThread answers like the plain packing of the whole graph", () =
     ]);
   });
 
-  it("an ambiguous request links nothing, and an id the graph already has is not added twice", async () => {
+  it("an ambiguous request links to each target, and an id the graph already has is not added twice", async () => {
     const caller = plugin("a", ".a", ["call"], (fs) => ({
       requests: fs.map((f) => request(f.path)),
     }));
@@ -189,7 +189,10 @@ describe("buildInThread answers like the plain packing of the whole graph", () =
       caller,
       handler,
     ]);
-    expect(ambiguous.cross).toEqual([]);
+    expect(ambiguous.cross.map((c) => c.target)).toEqual([
+      "file:y.b/fn:handler",
+      "file:z.b/fn:handler",
+    ]);
 
     const linkId = "link:http:file:x.a/fn:call->file:y.b/fn:handler";
     const dup = plugin("a", ".a", ["call"], (fs) => ({
@@ -337,6 +340,36 @@ describe("a link the code does not prove", () => {
     const { graph } = JSON.parse(built.skeleton) as { graph: Graph };
     expect(
       graph.edges.filter((e) => e.kind === "calls").map((e) => e.toCheck),
-    ).toEqual([{ code: "config.baseUrl", path: "web/api.ts", line: 2 }]);
+    ).toEqual([
+      {
+        reason: "dynamic-base",
+        code: "config.baseUrl",
+        path: "web/api.ts",
+        line: 2,
+      },
+    ]);
+  });
+
+  it("counts on the joined wire of two files the proven link and the one to check, as the screen does", async () => {
+    const built = await sameAsReference(
+      [
+        {
+          path: "servidor.ts",
+          source:
+            'const app = new Hono();\napp.post("/api/frete", (c) => c);\n',
+        },
+        {
+          path: "web/api.ts",
+          source:
+            // biome-ignore lint/suspicious/noTemplateCurlyInString: the text of a TypeScript file, with its own template.
+            "export function enviar() {\n  fetch(`${config.baseUrl}/api/frete`, { method: 'POST' });\n}\nexport function pedir() {\n  fetch('/api/frete', { method: 'POST' });\n}\n",
+        },
+      ],
+      languagePlugins,
+    );
+    const { graph } = JSON.parse(built.skeleton) as { graph: Graph };
+    const wire = graph.edges.find((e) => e.kind === "calls");
+    expect(wire?.links).toEqual({ proven: 1, toCheck: 1 });
+    expect(wire?.toCheck?.reason).toBe("dynamic-base");
   });
 });
