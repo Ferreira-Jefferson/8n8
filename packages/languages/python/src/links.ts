@@ -7,8 +7,7 @@ import {
 import type { Node } from "web-tree-sitter";
 import { boundNames } from "./bound";
 import { dottedName } from "./calls";
-import { importAliases } from "./imports";
-import type { StarImports } from "./modules";
+import { importAliases, type StarImports } from "./imports";
 
 /** What a file offers and asks for, for the project to match (D4). */
 export interface FileLinks {

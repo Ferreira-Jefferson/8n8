@@ -1,7 +1,12 @@
 import { childId, fileId, type NodeId } from "@8n8/model";
 import type { Node } from "web-tree-sitter";
 import { allocateTopLevel, classMethodsOf } from "./build-graph";
-import { allNames, importAliases, starModules } from "./imports";
+import {
+  allNames,
+  importAliases,
+  type StarImports,
+  starModules,
+} from "./imports";
 import { type RouterFacts, routerFactsOf } from "./links";
 
 /** Dotted module name of a POSIX `.py` path; null for the root `__init__.py`. */
@@ -199,13 +204,6 @@ export function canonicalName(
     }
   }
   return full;
-}
-
-export interface StarImports {
-  /** Local name to the absolute full name it comes from. */
-  aliases: Map<string, string>;
-  /** Whether a `*` may bring names the index does not know: a relative module that is not in it. */
-  open: boolean;
 }
 
 /**

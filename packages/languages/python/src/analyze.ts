@@ -12,7 +12,7 @@ import {
 import type { Node, Parser, Tree } from "web-tree-sitter";
 import { buildGraph } from "./build-graph";
 import { markSyntaxErrors } from "./errors";
-import { starModules } from "./imports";
+import { type StarImports, starModules } from "./imports";
 import { collectLinks, fullName, routePrefixes } from "./links";
 import {
   absoluteName,
@@ -25,7 +25,6 @@ import {
   moduleNameOf,
   packageOf,
   resolveName,
-  type StarImports,
   starImports,
 } from "./modules";
 

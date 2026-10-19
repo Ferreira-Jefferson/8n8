@@ -26,6 +26,14 @@ export function importAliases(root: Node): Map<string, string> {
   return aliases;
 }
 
+/** What the `from x import *` of a file bring from the project. */
+export interface StarImports {
+  /** Local name to the absolute full name it comes from. */
+  aliases: Map<string, string>;
+  /** Whether a `*` may bring names the index does not know: a relative module that is not in it. */
+  open: boolean;
+}
+
 /** The modules of each `from x import *`, as written (`utils`, `.sibling`). */
 export function starModules(root: Node): string[] {
   return root
