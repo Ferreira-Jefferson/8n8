@@ -331,6 +331,7 @@ export function composeReadProject(
 ) => Promise<ProjectRead> {
   const filter: ReadFilter = {
     extensions: plugins.flatMap((p) => p.extensions),
+    names: plugins.flatMap((p) => p.manifests ?? []),
     ignoredDirs: plugins.flatMap((p) => p.ignoredDirs),
   };
   // Reading is cheap and analyzing is not: a folder whose files did not change is not analyzed again.

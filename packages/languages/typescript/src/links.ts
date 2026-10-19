@@ -689,7 +689,7 @@ export function collectLinks(
     if (project === null || !binding || binding.kind === "namespace") return {};
     const file = resolveModulePath(path, binding.module, project.index);
     if (file === null) return {};
-    const local = project.index
+    const local = project.index.modules
       .get(file)
       ?.exports.names.get(binding.imported ?? "default");
     const facts = project.facts.get(file);

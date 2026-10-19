@@ -21,6 +21,8 @@ const OUTPUT_DIRS: ReadonlySet<string> = new Set(["build", "dist"]);
 /** What to read: the files of these extensions (with the dot, any case), skipping these folders besides `IGNORED_DIRS`. */
 export interface ReadFilter {
   extensions: string[];
+  /** Files read by their exact name too, as `package.json` (the plugins' manifests). */
+  names?: string[];
   ignoredDirs: string[];
   /** Files over 1 MB the person put on the map, relative POSIX paths (CLEAN-06). */
   include?: string[];
@@ -50,6 +52,7 @@ export async function readSourceFolder(
   path: string,
   {
     extensions,
+    names = [],
     ignoredDirs,
     include = [],
     ignoreDependencies = true,
@@ -112,7 +115,11 @@ export async function readSourceFolder(
       if (gitignored(active, entryRel, isDir)) continue;
       if (entry.isSymbolicLink() || entry.isFile()) {
         const name = entry.name.toLowerCase();
-        if (!wanted.some((e) => name.endsWith(e))) continue;
+        if (
+          !wanted.some((e) => name.endsWith(e)) &&
+          !names.includes(entry.name)
+        )
+          continue;
         jobs.push(
           turn(() =>
             readSourceFile(entryAbs, entryRel, added.has(entryRel)),

@@ -1,4 +1,4 @@
-import { lastLine, markSyntaxErrors } from "@8n8/lang-treesitter";
+import { lastLine, markErrorLines } from "@8n8/lang-treesitter";
 import {
   type AnalysisSlice,
   type FlowEdge,
@@ -14,22 +14,27 @@ import { buildGraph } from "./build-graph";
 import { moduleSpecifiers } from "./imports";
 import { collectLinks, type HttpFacts, httpFactsOf } from "./links";
 import {
+  type Contribution,
   contributionOf,
   exportInfo,
   indexOfContributions,
-  type ModuleContribution,
+  isManifest,
   type ModuleIndex,
+  manifestContribution,
+  methodsOf,
   resolveMember,
   resolveModulePath,
 } from "./modules";
-import { parsers } from "./parse";
+import { parseRecovering, parsers } from "./parse";
 
-/** What one file adds to the project: its module entry and its HTTP facts. */
-type Contribution = ModuleContribution & { http: HttpFacts };
+/** What a code file adds besides its module entry: its HTTP facts. A manifest has none. */
+type WithHttp = { http?: HttpFacts };
 
 interface Parsed {
   file: SourceFile;
   tree: Tree;
+  /** The syntax error lines (see `parseRecovering`). */
+  errors: number[];
 }
 
 function byCode(a: string, b: string): number {
@@ -45,12 +50,15 @@ function baseName(path: string): string {
 }
 
 /** The file node followed by its inner nodes; syntax errors marked per file. */
-function fileGraph({ file, tree }: Parsed, index: ModuleIndex): Graph {
+function fileGraph({ file, tree, errors }: Parsed, index: ModuleIndex): Graph {
   const id = fileId(file.path);
   const graph = buildGraph(tree, {
     prefix: id,
-    resolveImport: (binding, member) =>
-      member === null ? null : resolveMember(index, file.path, binding, member),
+    resolveImport: (binding, path) =>
+      resolveMember(index, file.path, binding, path),
+    methodsOf: (classId) => methodsOf(index, classId),
+    projectModule: (specifier) =>
+      resolveModulePath(file.path, specifier, index) !== null,
   });
   const head: FlowNode = {
     id,
@@ -64,9 +72,9 @@ function fileGraph({ file, tree }: Parsed, index: ModuleIndex): Graph {
     openable: true,
     path: file.path,
   };
-  const marked = markSyntaxErrors(
-    tree,
+  const marked = markErrorLines(
     { ...graph, nodes: [head, ...graph.nodes] },
+    errors,
     `${id}/mod`,
   );
   const [fileNode, ...inner] = marked.nodes;
@@ -106,32 +114,42 @@ function importsEdges(parsed: Parsed[], index: ModuleIndex): FlowEdge[] {
  * each file offers and requests to other languages, with the index of every slice.
  */
 export function openSlice(files: SourceFile[]): AnalysisSlice {
+  const sorted = [...files].sort((a, b) => byCode(a.path, b.path));
   const parsed: Parsed[] = [];
   const dispose = () => {
     for (const { tree } of parsed) tree.delete();
   };
   try {
-    for (const file of [...files].sort((a, b) => byCode(a.path, b.path))) {
+    for (const file of sorted) {
+      // A package.json or a tsconfig.json only gives context: no tree, no graph.
+      if (isManifest(file.path)) continue;
       const parser = file.path.endsWith(".tsx")
         ? parsers.tsx
         : parsers.typescript;
-      const tree = parser.parse(file.source);
-      if (!tree) throw new Error(`tree-sitter could not parse ${file.path}`);
-      parsed.push({ file, tree });
+      const read = parseRecovering(parser, file.source);
+      if (!read) throw new Error(`tree-sitter could not parse ${file.path}`);
+      parsed.push({ file, ...read });
     }
   } catch (error) {
     dispose();
     throw error;
   }
+  const trees = new Map(parsed.map((p) => [p.file.path, p.tree]));
   return {
     contribute: () =>
-      parsed.map(({ file, tree }) => ({
-        path: file.path,
-        data: {
-          ...contributionOf(tree.rootNode),
-          http: httpFactsOf(tree.rootNode),
-        } satisfies Contribution,
-      })),
+      sorted.map((file) => {
+        const tree = trees.get(file.path);
+        return {
+          path: file.path,
+          data:
+            tree === undefined
+              ? manifestContribution(file.path, file.source)
+              : {
+                  ...contributionOf(tree.rootNode),
+                  http: httpFactsOf(tree.rootNode),
+                },
+        };
+      }),
     analyze(contributions) {
       const index = indexOfContributions(
         contributions.map(({ path, data }) => ({
@@ -142,10 +160,10 @@ export function openSlice(files: SourceFile[]): AnalysisSlice {
       const http = {
         index,
         facts: new Map(
-          contributions.map(({ path, data }) => [
-            path,
-            (data as Contribution).http,
-          ]),
+          contributions.flatMap(({ path, data }) => {
+            const facts = (data as WithHttp).http;
+            return facts ? [[path, facts] as const] : [];
+          }),
         ),
       };
       const result: LanguageAnalysis = {

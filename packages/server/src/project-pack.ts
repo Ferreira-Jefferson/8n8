@@ -24,6 +24,7 @@ import {
   failAnalysis,
   languageOf,
   layoutProject,
+  manifestPlugin,
   pluginForPath,
   validateFileGraph,
   validateLinks,
@@ -281,7 +282,13 @@ interface Wire {
  * The same files and plugins give the same parts, in a worker thread or in the main one.
  */
 export function assemble(input: AssembleInput): StoreParts {
-  const { groups, files } = input;
+  const { groups } = input;
+  // A manifest (package.json) was context for its plugin: it is no file of the map.
+  const files = input.files.filter(
+    (f) =>
+      pluginForPath(f.path, input.plugins) !== undefined ||
+      manifestPlugin(f.path, input.plugins) === undefined,
+  );
   const paths = new Set(files.map((f) => f.path));
   const everyPacked = groups.flatMap((g) => [...g.packed, ...g.failed]);
   const byPath = new Map(everyPacked.map((f) => [f.path, f]));

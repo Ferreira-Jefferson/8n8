@@ -12,7 +12,12 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { folderName, IGNORED_DIRS, readSourceFolder } from "../read-folder";
+import {
+  folderName,
+  IGNORED_DIRS,
+  type ReadFilter,
+  readSourceFolder,
+} from "../read-folder";
 
 /** What the Python plugin asks for. */
 const PY = {
@@ -194,7 +199,7 @@ describe("readSourceFolder: several languages", () => {
     return root;
   }
 
-  async function paths(root: string, filter: typeof PY): Promise<string[]> {
+  async function paths(root: string, filter: ReadFilter): Promise<string[]> {
     const r = await readSourceFolder(root, filter);
     if (r.kind !== "ok") throw new Error("expected ok");
     return r.files.map((f) => f.path);
@@ -251,6 +256,19 @@ describe("readSourceFolder: several languages", () => {
     });
 
     expect(found).toEqual(["UPPER.PY", "a.py", "web/app.ts"]);
+  });
+
+  it("reads the files of an exact name too, but no other file that ends like it", async () => {
+    const root = await makeMixed();
+    await writeFile(join(root, "web", "package.json"), "{}\n");
+    await writeFile(join(root, "web", "my-package.json"), "{}\n");
+
+    expect(await paths(root, { ...TS, names: ["package.json"] })).toEqual([
+      ".venv/lib.ts",
+      "web/Tela.TSX",
+      "web/app.ts",
+      "web/package.json",
+    ]);
   });
 
   it("reads nothing for an empty list of extensions", async () => {

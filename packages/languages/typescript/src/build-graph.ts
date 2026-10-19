@@ -12,8 +12,9 @@ import type { Node, Tree } from "web-tree-sitter";
 import { boundNames } from "./bound";
 import {
   type CallContext,
+  classNamed,
+  classOfValue,
   dottedName,
-  memberOf as importedMember,
 } from "./calls";
 import { importBindings } from "./imports";
 import { blockOf, buildSteps, isIgnored } from "./steps";
@@ -275,18 +276,17 @@ function buildFunction(
   );
 }
 
-function buildClass(
-  def: Definition,
+/** The methods of a class in code order, with their ids under `id`; the last one with a name wins. */
+function methodIds(
+  classNode: Node,
   id: NodeId,
-  parentId: NodeId | null,
-  scope: Scope,
-): Chunk {
-  const body = def.node.childForFieldName("body")?.namedChildren ?? [];
+): { ids: NodeId[]; methods: Map<string, NodeId>; names: Map<NodeId, string> } {
   const methodId = idAllocator();
   const ids: NodeId[] = [];
   const methods = new Map<string, NodeId>();
-  const names = new Map(scope.names);
-  for (const member of body) {
+  const names = new Map<NodeId, string>();
+  for (const member of classNode.childForFieldName("body")?.namedChildren ??
+    []) {
     const method = memberOf(member);
     if (method === null) continue;
     const mid = childId(id, methodId("function", method.name));
@@ -294,7 +294,78 @@ function buildClass(
     methods.set(method.name, mid);
     names.set(mid, method.name);
   }
-  const inner: Scope = { call: { ...scope.call, methods }, names };
+  return { ids, methods, names };
+}
+
+/** The class named by a type annotation: `Repo`, `Repo<T>`, `ns.Repo`. */
+function annotatedClass(
+  annotation: Node | null,
+  ctx: CallContext,
+): NodeId | null {
+  let type = annotation?.namedChildren[0] ?? null;
+  if (type?.type === "generic_type") type = type.namedChildren[0] ?? null;
+  return type?.type === "type_identifier" ||
+    type?.type === "nested_type_identifier"
+    ? classNamed(type.text, ctx)
+    : null;
+}
+
+/**
+ * The fields of a class that hold an instance of a known class:
+ * `private repo: Repo`, `repo = new Repo()`, and the parameter properties
+ * of the constructor (`constructor(private repo: Repo)`).
+ */
+function fieldClasses(body: Node[], ctx: CallContext): Map<string, NodeId> {
+  const fields = new Map<string, NodeId>();
+  const add = (name: string | undefined, cls: NodeId | null) => {
+    if (name !== undefined && cls !== null) fields.set(name, cls);
+  };
+  for (const member of body) {
+    if (member.type === "public_field_definition") {
+      add(
+        member.childForFieldName("name")?.text,
+        annotatedClass(member.childForFieldName("type"), ctx) ??
+          classOfValue(member.childForFieldName("value"), ctx),
+      );
+    } else if (
+      member.type === "method_definition" &&
+      nameOf(member) === "constructor"
+    ) {
+      for (const param of member.childForFieldName("parameters")
+        ?.namedChildren ?? []) {
+        const property = param.children.some(
+          (c) => c.type === "accessibility_modifier" || c.type === "readonly",
+        );
+        if (!property) continue;
+        add(
+          param.childForFieldName("pattern")?.text,
+          annotatedClass(param.childForFieldName("type"), ctx),
+        );
+      }
+    }
+  }
+  return fields;
+}
+
+function buildClass(
+  def: Definition,
+  id: NodeId,
+  parentId: NodeId | null,
+  scope: Scope,
+): Chunk {
+  const body = def.node.childForFieldName("body")?.namedChildren ?? [];
+  const own = methodIds(def.node, id);
+  const { ids } = own;
+  const names = new Map([...scope.names, ...own.names]);
+  const methods = scope.call.methodsOf?.(id) ?? own.methods;
+  const inner: Scope = {
+    call: {
+      ...scope.call,
+      methods,
+      fields: fieldClasses(body, scope.call),
+    },
+    names,
+  };
 
   const children = layout(
     body,
@@ -334,11 +405,6 @@ function callsEdges(nodes: FlowNode[]): FlowEdge[] {
   return [...edges.values()];
 }
 
-/** Whether the id names a class: its last segment is `cls:X`. */
-function isClassId(id: NodeId): boolean {
-  return (id.split("/").pop() ?? "").startsWith("cls:");
-}
-
 /** The expression after `extends` in a class, or null. `implements` does not count. */
 function baseOf(classNode: Node): Node | null {
   const heritage = classNode.namedChildren.find(
@@ -350,17 +416,10 @@ function baseOf(classNode: Node): Node | null {
   return clause?.childForFieldName("value") ?? null;
 }
 
-/** The class a base name refers to: this snippet's, or a project class by import. */
-function baseTarget(name: string, ctx: CallContext): NodeId | null {
-  const local = ctx.topLevel.get(name);
-  if (local !== undefined) return local;
-  const [head = name, ...rest] = name.split(".");
-  const binding = ctx.aliases.get(head);
-  if (binding === undefined) return null;
-  const member = importedMember(binding, rest);
-  return member === null
-    ? null
-    : (ctx.resolveImport?.(binding, member) ?? null);
+/** The dotted name after `extends`, or null. */
+function baseName(classNode: Node): string | null {
+  const base = baseOf(classNode);
+  return base === null ? null : dottedName(base);
 }
 
 /**
@@ -379,10 +438,9 @@ function extendsEdges(
     const def = definitionOf(statement);
     if (def === null) continue;
     const source = ids[index++] ?? "";
-    const base = def.kind === "class" ? baseOf(def.node) : null;
-    const name = base === null ? null : dottedName(base);
-    const target = name === null ? null : baseTarget(name, ctx);
-    if (target === null || target === source || !isClassId(target)) continue;
+    const name = def.kind === "class" ? baseName(def.node) : null;
+    const target = name === null ? null : classNamed(name, ctx);
+    if (target === null || target === source) continue;
     const id = `extends:${source}->${target}`;
     if (!edges.has(id)) edges.set(id, { id, kind: "extends", source, target });
   }
@@ -396,6 +454,8 @@ export interface TopLevel {
   topLevel: Map<string, NodeId>;
   /** Id to name, and to the kind of node. */
   names: Map<NodeId, string>;
+  /** Each class by id: its own methods (name to the id under the class) and the dotted name it extends. */
+  classes: Map<NodeId, { methods: Map<string, NodeId>; base: string | null }>;
 }
 
 /** Allocates `fn:x`, `fn:x#2`, `cls:X` for the top-level definitions of `root`. */
@@ -404,6 +464,7 @@ export function allocateTopLevel(root: Node): TopLevel {
   const ids: NodeId[] = [];
   const topLevel = new Map<string, NodeId>();
   const names = new Map<NodeId, string>();
+  const classes: TopLevel["classes"] = new Map();
   for (const statement of root.namedChildren) {
     if (isIgnored(statement)) continue;
     const def = definitionOf(statement);
@@ -412,34 +473,70 @@ export function allocateTopLevel(root: Node): TopLevel {
     ids.push(id);
     topLevel.set(def.name, id);
     names.set(id, def.name);
+    if (def.kind === "class") {
+      classes.set(id, {
+        methods: methodIds(def.node, id).methods,
+        base: baseName(def.node),
+      });
+    }
   }
-  return { ids, topLevel, names };
+  return { ids, topLevel, names, classes };
 }
 
 export interface BuildOptions {
   /** Parent of the top-level nodes, also prefixed to their ids. */
   prefix?: NodeId;
   resolveImport?: CallContext["resolveImport"];
+  /** The methods of a project class of another file. */
+  methodsOf?: CallContext["methodsOf"];
+  projectModule?: CallContext["projectModule"];
 }
 
 /** Builds the graph of a parsed snippet or file. */
 export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
-  const { prefix, resolveImport } = options;
+  const { prefix, resolveImport, projectModule } = options;
   const scoped = (id: NodeId) =>
     prefix === undefined ? id : childId(prefix, id);
   const parentId = prefix ?? null;
   const statements = tree.rootNode.namedChildren;
   const top = allocateTopLevel(tree.rootNode);
   const ids = top.ids.map(scoped);
+  const classes = new Map(
+    [...top.classes].map(([id, c]) => [scoped(id), c] as const),
+  );
+  const known = new Map<NodeId, Map<string, NodeId>>();
+  /** A class of this file: its methods under the ones it inherits. Another class: the project's answer. */
+  const methodsOf = (
+    classId: NodeId,
+    seen = new Set<NodeId>(),
+  ): Map<string, NodeId> | undefined => {
+    const cls = classes.get(classId);
+    if (cls === undefined) return options.methodsOf?.(classId);
+    const cached = known.get(classId);
+    if (cached !== undefined) return cached;
+    if (seen.has(classId)) return new Map();
+    seen.add(classId);
+    const base = cls.base === null ? null : classNamed(cls.base, scope.call);
+    const methods = new Map([
+      ...((base === null ? undefined : methodsOf(base, seen)) ?? []),
+      ...[...cls.methods].map(([name, id]) => [name, scoped(id)] as const),
+    ]);
+    known.set(classId, methods);
+    return methods;
+  };
   const scope: Scope = {
     call: {
       topLevel: new Map(
         [...top.topLevel].map(([name, id]) => [name, scoped(id)]),
       ),
       methods: new Map(),
+      fields: new Map(),
       aliases: importBindings(tree.rootNode),
       bound: boundNames(tree.rootNode),
+      methodsOf,
+      instances: new Map(),
       ...(resolveImport === undefined ? {} : { resolveImport }),
+      ...(projectModule === undefined ? {} : { projectModule }),
     },
     names: new Map([...top.names].map(([id, name]) => [scoped(id), name])),
   };

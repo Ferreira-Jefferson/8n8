@@ -111,6 +111,20 @@ describe("analyze: one graph per file", () => {
     });
   });
 
+  it("keeps the functions after a broken one, and marks the error on the file node", () => {
+    const { files } = analyze({
+      "broken.ts":
+        "export function ok() {\n  return 1;\n}\nexport function bad( {\n  return 2\n}\nexport function after() {\n  return ok();\n}\n",
+    });
+    const nodes = files[0]?.graph.nodes ?? [];
+
+    expect(nodes.filter((n) => n.kind === "function").map((n) => n.id)).toEqual(
+      ["file:broken.ts/fn:ok", "file:broken.ts/fn:after"],
+    );
+    expect(nodes[0]?.syntaxError).toEqual({ line: 4 });
+    expect(nodes.filter((n) => n.syntaxError)).toHaveLength(1);
+  });
+
   it("analyzes no files", () => {
     expect(analyze({})).toEqual({
       files: [],
@@ -436,7 +450,8 @@ describe("analyze: requests", () => {
         ["GET /api/users", "file:a.ts/mod/s0"],
         ["POST /x", "file:a.ts/mod/s1"],
         ["DELETE /api/y", "file:a.ts/mod/s2"],
-        ["POST /api/z", "file:a.ts/mod/s3"],
+        // A call to a name of the project is plain code: the two lines share one step.
+        ["POST /api/z", "file:a.ts/mod/s2"],
       ]);
       expect(result.offers.filter((o) => o.channel === "http")).toEqual([]);
     });
@@ -920,8 +935,8 @@ describe("analyze: calls across files", () => {
     ).toBe("file:a.ts/fn:hidden");
   });
 
-  it("leaves a call external when the file or the name is not in the project", () => {
-    const external = (header: string, call: string) => {
+  it("leaves a call to a package external, and a project call it cannot resolve as code", () => {
+    const step = (header: string, call: string) => {
       const { files } = analyze({
         "main.ts": `${header}\nfunction g() {\n  ${call};\n}\n`,
         "a.ts": "export function run() {}\n",
@@ -929,24 +944,17 @@ describe("analyze: calls across files", () => {
       return files[1]?.graph.nodes.find((n) => n.id === "file:main.ts/fn:g/s0");
     };
 
-    expect(external('import { nada } from "./a";', "nada()")).toMatchObject({
-      kind: "external",
-      callee: "nada",
-    });
-    expect(
-      external('import { run } from "./nao-existe";', "run()"),
-    ).toMatchObject({
+    expect(step('import { run } from "pacote";', "run()")).toMatchObject({
       kind: "external",
     });
-    expect(external('import { run } from "pacote";', "run()")).toMatchObject({
-      kind: "external",
-    });
-    expect(external('import * as a from "./a";', "a.x.y()")).toMatchObject({
-      kind: "external",
-    });
-    expect(external('import a from "./a";', "a.run()")).toMatchObject({
-      kind: "external",
-    });
+    for (const [header, call] of [
+      ['import { nada } from "./a";', "nada()"],
+      ['import { run } from "./nao-existe";', "run()"],
+      ['import * as a from "./a";', "a.x.y()"],
+      ['import a from "./a";', "a.run()"],
+    ] as const) {
+      expect(step(header, call)).toMatchObject({ kind: "code" });
+    }
   });
 });
 

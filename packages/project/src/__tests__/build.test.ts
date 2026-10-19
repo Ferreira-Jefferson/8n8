@@ -246,6 +246,44 @@ describe("buildProject: choosing the plugin", () => {
     ]);
   });
 
+  it("gives a plugin its manifests among its files, in path order, and only when it has files", () => {
+    const tsCalls: SourceFile[][] = [];
+    const reader = {
+      ...fakePlugin("typescript", [".ts"], {
+        calls: tsCalls,
+        // A manifest gives no graph.
+        tweak: (analysis) => ({
+          ...analysis,
+          files: analysis.files.filter((f) => !f.path.endsWith("m.json")),
+        }),
+      }),
+      manifests: ["m.json"],
+    };
+    const graph = buildProject(
+      [
+        { path: "z.py", source: "" },
+        { path: "web/m.json", source: "{}" },
+        { path: "web/b.ts", source: "" },
+        { path: "a/m.json", source: "{}" },
+      ],
+      [fakePlugin("python", [".py"]), reader],
+    );
+
+    expect(tsCalls.map((c) => c.map((f) => f.path))).toEqual([
+      ["a/m.json", "web/b.ts", "web/m.json"],
+    ]);
+    expect(graph.nodes.some((n) => n.id.endsWith("m.json"))).toBe(false);
+
+    const pyOnly = buildProject(
+      [
+        { path: "z.py", source: "" },
+        { path: "m.json", source: "{}" },
+      ],
+      [fakePlugin("python", [".py"]), reader],
+    );
+    expect(pyOnly.language).toBe("python");
+  });
+
   it("matches the extension without regard to case", () => {
     const graph = buildProject(
       [{ path: "LOJA/MAIN.PY", source: "def f\n" }],

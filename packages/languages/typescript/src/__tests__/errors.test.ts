@@ -67,6 +67,31 @@ describe("syntax errors", () => {
     expect(node(graph, "fn:Tela/s0").kind).toBe("return");
   });
 
+  it("keeps the declarations after a broken one, with the error on its line", () => {
+    const graph = extract(
+      "export function ok() {\n  return 1;\n}\nexport function bad( {\n  return 2\n}\nexport function after() {\n  return ok();\n}\n",
+    );
+
+    expect(graph.nodes.filter((n) => n.parentId === null)).toEqual([
+      expect.objectContaining({ id: "fn:ok", range: { start: 1, end: 3 } }),
+      expect.objectContaining({ id: "mod", syntaxError: { line: 4 } }),
+      expect.objectContaining({ id: "fn:after", range: { start: 7, end: 9 } }),
+    ]);
+    expect(node(graph, "fn:after/s0")).toMatchObject({ target: "fn:ok" });
+    expect(node(graph, "fn:after").syntaxError).toBeUndefined();
+  });
+
+  it("keeps the line numbers after a broken part with accented text", () => {
+    const graph = extract(
+      'const ação = "é";\nfunction quebrada( {\n  return "ç";\n}\nclass Depois {\n  m() {}\n}\n',
+    );
+
+    expect(node(graph, "cls:Depois").range).toEqual({ start: 5, end: 7 });
+    expect(graph.nodes.find((n) => n.syntaxError)?.syntaxError).toEqual({
+      line: 2,
+    });
+  });
+
   it("still reports an error when TSX does not read it clean either", () => {
     const graph = extract(
       "export function Tela() {\n  const a = ;\n  return <div/>;\n}\n",

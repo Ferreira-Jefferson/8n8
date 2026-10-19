@@ -49,6 +49,11 @@ export interface LanguagePlugin {
   label: string;
   /** Com o ponto, minúsculas. Ex.: `[".py"]`. */
   extensions: string[];
+  /**
+   * Opcional. Nomes exatos de arquivos que o plugin também recebe entre os seus, só como contexto.
+   * Ex.: `package.json`. O plugin dá a contribuição deles, mas nenhum grafo, e eles não entram no mapa.
+   */
+  manifests?: string[];
   /** Pastas que só existem nesta linguagem e que a leitura da pasta pula. Ex.: `.venv`. */
   ignoredDirs: string[];
   /** Começo de um comentário de linha. Ex.: `#`, `//`. */

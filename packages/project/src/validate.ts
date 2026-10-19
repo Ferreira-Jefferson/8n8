@@ -10,7 +10,7 @@ import {
   type Offer,
   type SourceFile,
 } from "@8n8/model";
-import { dirOf, lastLine } from "./layout";
+import { baseName, dirOf, lastLine } from "./layout";
 
 /** The parent a file node must have: its folder, or none for a file in the root. */
 function expectedParent(path: string): NodeId | null {
@@ -40,7 +40,8 @@ export function validateAnalysis(
     }
   }
   for (const f of files) {
-    if (!seen.has(f.path))
+    // A manifest (package.json) is context only: it has no graph.
+    if (!seen.has(f.path) && !plugin.manifests?.includes(baseName(f.path)))
       failAnalysis(plugin, f.path, "no graph for this file");
   }
 
