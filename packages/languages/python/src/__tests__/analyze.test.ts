@@ -149,7 +149,7 @@ describe("analyzeFiles: determinism and edge cases", () => {
     expect(projectOf(lojaFiles().reverse())).toEqual(first);
   });
 
-  it("marks a syntax error only on the nodes of its file", () => {
+  it("marks a syntax error only on the nodes of its file, and on its file node", () => {
     const graph = projectOf([
       { path: "a.py", source: "def f():\n    x = 1\n" },
       { path: "b.py", source: "def g():\n    x = (1 +\n" },
@@ -159,7 +159,25 @@ describe("analyzeFiles: determinism and edge cases", () => {
       graph.nodes
         .filter((n) => n.syntaxError !== undefined)
         .map((n) => [n.id, n.syntaxError]),
-    ).toEqual([["file:b.py/fn:g", { line: 2 }]]);
+    ).toEqual([
+      ["file:b.py", { line: 2 }],
+      ["file:b.py/fn:g", { line: 2 }],
+    ]);
+  });
+
+  it("warns the file node of the first error inside its nodes", () => {
+    const graph = projectOf([
+      {
+        path: "broken.py",
+        source:
+          "def ok():\n    return 1\n\ndef bad(:\n    return 2\n\ndef after():\n    return ok(\n",
+      },
+    ]);
+    const marks = new Map(graph.nodes.map((n) => [n.id, n.syntaxError]));
+
+    expect(marks.get("file:broken.py")).toEqual({ line: 4 });
+    expect(marks.get("file:broken.py/fn:bad")).toEqual({ line: 4 });
+    expect(marks.get("file:broken.py/fn:ok")).toBeUndefined();
   });
 
   it("marks the file node when the error sits outside its inner nodes", () => {

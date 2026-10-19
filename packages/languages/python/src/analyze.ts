@@ -12,16 +12,20 @@ import {
 import type { Node, Parser, Tree } from "web-tree-sitter";
 import { buildGraph } from "./build-graph";
 import { markSyntaxErrors } from "./errors";
-import { collectLinks } from "./links";
+import { type StarImports, starModules } from "./imports";
+import { collectLinks, fullName, routePrefixes } from "./links";
 import {
   absoluteName,
+  canonicalName,
   contributionOf,
   indexOfContributions,
   type ModuleContribution,
   type ModuleEntry,
   type ModuleIndex,
+  moduleNameOf,
   packageOf,
   resolveName,
+  starImports,
 } from "./modules";
 
 interface Parsed {
@@ -46,11 +50,15 @@ function fileGraph(
   { file, tree }: Parsed,
   index: ModuleIndex,
   projectNames: Set<string>,
+  stars: StarImports,
 ): Graph {
   const id = fileId(file.path);
   const graph = buildGraph(tree, {
     prefix: id,
+    starAliases: stars.aliases,
     resolveImport: (full) => resolveName(index, file.path, full),
+    isProjectName: (full) =>
+      deepestModule(index, file.path, full) !== undefined,
     projectNames,
   });
   const head: FlowNode = {
@@ -70,12 +78,21 @@ function fileGraph(
     nodes: [head, ...graph.nodes],
   });
   const [fileNode, ...inner] = marked.nodes;
+  // The file card also warns of an error inside one of its nodes: the first one, in code order.
+  const firstError = inner
+    .map((n) => n.syntaxError?.line)
+    .filter((line) => line !== undefined)
+    .sort((a, b) => a - b)[0];
+  const syntaxError =
+    fileNode?.syntaxError ??
+    (firstError === undefined ? undefined : { line: firstError });
   return {
     ...marked,
     nodes: [
       {
         ...(fileNode ?? head),
         range: { start: 1, end: lastLine(file.source) },
+        ...(syntaxError ? { syntaxError } : {}),
       },
       ...inner,
     ],
@@ -176,17 +193,45 @@ export function openSlice(parser: Parser, files: SourceFile[]): AnalysisSlice {
       const projectNames = new Set(
         all.flatMap((c) => c.data.topLevel.map(([name]) => name)),
       );
-      const graphs = parsed.map((p) => ({
+      const stars = parsed.map((p) =>
+        starImports(index, p.file.path, starModules(p.tree.rootNode)),
+      );
+      const graphs = parsed.map((p, i) => ({
         path: p.file.path,
-        graph: fileGraph(p, index, projectNames),
+        graph: fileGraph(p, index, projectNames, stars[i] as StarImports),
       }));
-      const links = parsed.map((p, i) =>
-        collectLinks(
-          p.file.path,
+      const canonical = (path: string, full: string) =>
+        canonicalName(index, path, full);
+      const prefixes = routePrefixes(
+        all.map(({ path, data }) => ({
+          routers: data.routes.routers.map(([name, prefix]) => [
+            canonical(path, name),
+            prefix,
+          ]),
+          mounts: data.routes.mounts.map(
+            ([child, parent, prefix, replaces]) => [
+              canonical(path, child),
+              canonical(path, parent),
+              prefix,
+              replaces,
+            ],
+          ),
+        })),
+      );
+      const aliasesOf = new Map(all.map((c) => [c.path, c.data.aliases]));
+      const links = parsed.map((p, i) => {
+        const path = p.file.path;
+        const aliases = new Map(aliasesOf.get(path) ?? []);
+        const module = moduleNameOf(path) ?? "";
+        return collectLinks(
+          path,
           p.tree.rootNode,
           graphs[i]?.graph.nodes ?? [],
-        ),
-      );
+          stars[i],
+          (receiver) =>
+            prefixes(canonical(path, fullName(module, aliases, receiver))),
+        );
+      });
       return {
         files: graphs,
         imports: importsEdges(parsed, index),

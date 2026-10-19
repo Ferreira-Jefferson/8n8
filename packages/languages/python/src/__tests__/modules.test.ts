@@ -86,12 +86,19 @@ describe("resolveName", () => {
     );
   });
 
-  it("leaves a method of a class unresolved", async () => {
+  it("resolves a method of a class, also through a re-export, and leaves an unknown method unresolved", async () => {
     const index = await indexOf({
-      "mod.py": "class Classe:\n    def metodo(self):\n        pass\n",
+      "pkg/mod.py": "class Classe:\n    def metodo(self):\n        pass\n",
+      "pkg/__init__.py": "from .mod import Classe\n",
     });
 
-    expect(resolveName(index, "main.py", "mod.Classe.metodo")).toBeNull();
+    expect(resolveName(index, "main.py", "pkg.mod.Classe.metodo")).toBe(
+      "file:pkg/mod.py/cls:Classe/fn:metodo",
+    );
+    expect(resolveName(index, "main.py", "pkg.Classe.metodo")).toBe(
+      "file:pkg/mod.py/cls:Classe/fn:metodo",
+    );
+    expect(resolveName(index, "main.py", "pkg.mod.Classe.outro")).toBeNull();
   });
 
   it("leaves a module outside the index unresolved", async () => {

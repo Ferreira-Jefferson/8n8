@@ -13,6 +13,10 @@ export interface CallContext {
   resolveImport?: (fullName: string) => NodeId | null;
   /** Top-level names defined anywhere in the project (PROJ-09). */
   projectNames?: Set<string>;
+  /** Methods of each top-level class of the snippet, by class name, to their node ids. */
+  classMethods?: Map<string, Map<string, NodeId>>;
+  /** Whether an imported full name points into a project module: a miss there is not an external call. */
+  isProjectName?: (fullName: string) => boolean;
   /**
    * Names the file binds (see `boundNames`). A call whose first segment is
    * not here is classified with `classifyUnknown` (VID-13). When absent,
@@ -52,6 +56,72 @@ function chainedMethod(fn: Node | null): CallResolution | null {
   return { kind: "external", callee: fn.text, category };
 }
 
+/** Nodes that open a scope of names. */
+const SCOPES = new Set([
+  "module",
+  "function_definition",
+  "class_definition",
+  "lambda",
+]);
+
+/** Per tree and scope: each name to its assignments, as [start, class called or null], in code order. */
+const assignmentsCache = new WeakMap<
+  object,
+  Map<number, Map<string, [number, string | null][]>>
+>();
+
+function assignmentsOf(scope: Node): Map<string, [number, string | null][]> {
+  const byScope = assignmentsCache.get(scope.tree) ?? new Map();
+  assignmentsCache.set(scope.tree, byScope);
+  const cached = byScope.get(scope.id);
+  if (cached) return cached;
+  const names = new Map<string, [number, string | null][]>();
+  const visit = (node: Node) => {
+    for (const child of node.namedChildren) {
+      if (SCOPES.has(child.type)) continue;
+      const left =
+        child.type === "assignment" && child.childForFieldName("left");
+      if (left && left.type === "identifier") {
+        const right = child.childForFieldName("right");
+        const fn =
+          right?.type === "call" && right.childForFieldName("function");
+        const list = names.get(left.text) ?? [];
+        list.push([child.startIndex, fn ? dottedName(fn) : null]);
+        names.set(left.text, list);
+      }
+      visit(child);
+    }
+  };
+  visit(scope);
+  byScope.set(scope.id, names);
+  return names;
+}
+
+/** The class `name` was made from before `call`, in the same scope: `u = User(...)` gives `User`; null otherwise. */
+function instanceClass(call: Node, name: string): string | null {
+  let scope = call.parent;
+  while (scope && !SCOPES.has(scope.type)) scope = scope.parent;
+  if (!scope) return null;
+  const before = (assignmentsOf(scope).get(name) ?? []).filter(
+    ([start]) => start < call.startIndex,
+  );
+  return before[before.length - 1]?.[1] ?? null;
+}
+
+/** The method `method` of the class named `cls`: a class of the snippet, or of the project by import. */
+function classMethod(
+  cls: string,
+  method: string,
+  ctx: CallContext,
+): NodeId | null {
+  const local = ctx.classMethods?.get(cls)?.get(method);
+  if (local !== undefined) return local;
+  const [head = cls, ...rest] = cls.split(".");
+  const imported = ctx.aliases.get(head);
+  if (imported === undefined) return null;
+  return ctx.resolveImport?.([imported, ...rest, method].join(".")) ?? null;
+}
+
 function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
   const fn = call.childForFieldName("function");
   const name = fn ? dottedName(fn) : null;
@@ -64,12 +134,23 @@ function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
     const method = ctx.methods.get(rest[0] ?? "");
     if (method !== undefined) return { kind: "call", target: method };
   }
+  // `Repo.create()` on a class of the snippet, or `u.greet()` after `u = User(...)`.
+  const member = rest.length === 1 ? rest[0] : undefined;
+  if (member !== undefined && head !== "self") {
+    const cls = ctx.classMethods?.has(head) ? head : instanceClass(call, head);
+    const target = cls === null ? null : classMethod(cls, member, ctx);
+    if (target !== null) return { kind: "call", target, label: name };
+  }
 
   const imported = ctx.aliases.get(head);
   const callee = imported === undefined ? name : [imported, ...rest].join(".");
   if (imported !== undefined) {
     const target = ctx.resolveImport?.(callee) ?? null;
     if (target !== null) return { kind: "call", target, label: name };
+    // A name of the project that does not resolve stays a plain step, not an external call.
+    const project =
+      callee.startsWith(".") || (ctx.isProjectName?.(callee) ?? false);
+    if (project && classify(callee) === "EXTERNO") return null;
   }
   // The receiver of a chained method, as `foo()` in `foo().append(x)`, keeps
   // only the table (design A2), so the chain stays judged by `chainedMethod`.

@@ -86,26 +86,88 @@ describe("requests: http", () => {
     ]);
   });
 
-  it("skips a URL that is not a plain literal, not a URL, or a call that is not an HTTP verb", () => {
+  it("skips a URL with no text, not a URL, or a call that is not an HTTP verb", () => {
     const { requests } = linksOf(
       [
         "import requests",
         "",
         "def f(url):",
         "    requests.get(url)",
-        '    requests.get(f"https://x.com/{url}")',
+        '    requests.get(f"{url}")',
         '    requests.get(b"https://x.com/a")',
         '    requests.get("sem-url")',
         "    requests.get()",
         '    requests.Session("https://x.com/a")',
         '    requests.get.cache.clear("https://x.com/a")',
-        '    requests.get(timeout=3, url="https://x.com/a")',
         '    other.get("https://x.com/a")',
         "",
       ].join("\n"),
     );
 
     expect(only(requests, "http")).toEqual([]);
+  });
+
+  it("reads f-strings, `+` chains and `url=`: a hole in the middle is `:param`", () => {
+    const { requests } = linksOf(
+      [
+        "import requests",
+        "",
+        "def f(item_id):",
+        '    requests.get(f"/api/items/{item_id}")',
+        '    requests.get("/api/items/" + str(item_id) + "/tags")',
+        '    requests.get(url="/prices")',
+        '    requests.get(timeout=3, url="https://x.com/a")',
+        '    requests.get("/a" "/b")',
+        "",
+      ].join("\n"),
+    );
+    const { requests: raw } = pythonPlugin.analyze([
+      { path: "app.py", source: "import requests\nrequests.get(f'/x/{y}')\n" },
+    ]);
+
+    expect(only(requests, "http").map((r) => r[1])).toEqual([
+      "GET /api/items/:param",
+      "GET /api/items/:param/tags",
+      "GET /prices",
+      "GET /a",
+      "GET /a/b",
+    ]);
+    expect(raw[0]?.dynamicBase).toBeUndefined();
+  });
+
+  it("keeps a URL that starts with a run-time value, with the code of that value as `dynamicBase`", () => {
+    const { requests } = pythonPlugin.analyze([
+      {
+        path: "app.py",
+        source: [
+          "import requests",
+          "from config import settings",
+          'BASE = "http://localhost:8000"',
+          "",
+          "def f(host):",
+          '    requests.get(f"{BASE}/prices")',
+          '    requests.get(BASE + "/prices")',
+          '    requests.post(settings.API_URL + "/orders/" + str(1))',
+          '    requests.get(f"https://{host}/prices")',
+          '    requests.get(url=f"{ settings.API_URL }/prices")',
+          '    requests.get("https://other.example.com/prices")',
+          "",
+        ].join("\n"),
+      },
+    ]);
+
+    expect(
+      requests
+        .filter((r) => r.channel === "http")
+        .map((r) => [r.key, r.dynamicBase ?? null]),
+    ).toEqual([
+      ["GET /prices", "BASE"],
+      ["GET /prices", "BASE"],
+      ["POST /orders/:param", "settings.API_URL"],
+      ["GET /prices", "host"],
+      ["GET /prices", "settings.API_URL"],
+      ["GET /prices", null],
+    ]);
   });
 
   it("accepts an f-string with no field and a keyword before the URL", () => {
@@ -347,6 +409,136 @@ describe("offers", () => {
 
     expect(only(offers, "http")).toEqual([
       ["http", "GET /ok", "file:app.py/fn:a", 8],
+    ]);
+  });
+});
+
+describe("offers: router prefixes", () => {
+  /** The HTTP offers of a project, as `key nodeId`. */
+  function routesOf(files: { path: string; source: string }[]): string[] {
+    return pythonPlugin
+      .analyze(files)
+      .offers.filter((o) => o.channel === "http")
+      .map((o) => `${o.key} ${o.nodeId}`);
+  }
+
+  it("adds the prefix of an APIRouter and of the include_router that mounts it", () => {
+    expect(
+      routesOf([
+        {
+          path: "api.py",
+          source: [
+            "from fastapi import APIRouter, FastAPI",
+            "",
+            'router = APIRouter(prefix="/items")',
+            "app = FastAPI()",
+            "",
+            '@router.get("/{id}")',
+            "def read(id):",
+            "    return id",
+            "",
+            '@router.post("")',
+            "def create():",
+            "    return 1",
+            "",
+            '@app.get("/ping")',
+            "def ping():",
+            "    return 1",
+            "",
+            'app.include_router(router, prefix="/api")',
+            "",
+          ].join("\n"),
+        },
+      ]),
+    ).toEqual([
+      "GET /api/items/{id} file:api.py/fn:read",
+      "POST /api/items file:api.py/fn:create",
+      "GET /ping file:api.py/fn:ping",
+    ]);
+  });
+
+  it("follows a router mounted from another file, once per mount", () => {
+    expect(
+      routesOf([
+        {
+          path: "app/routes.py",
+          source: [
+            "from fastapi import APIRouter",
+            "",
+            'router = APIRouter(prefix="/items")',
+            "",
+            '@router.get("/{id}")',
+            "def read(id):",
+            "    return id",
+            "",
+          ].join("\n"),
+        },
+        {
+          path: "app/main.py",
+          source: [
+            "from fastapi import FastAPI",
+            "from .routes import router",
+            "",
+            "app = FastAPI()",
+            'app.include_router(router, prefix="/api")',
+            'app.include_router(router, prefix="/v2")',
+            "",
+          ].join("\n"),
+        },
+      ]),
+    ).toEqual([
+      "GET /api/items/{id} file:app/routes.py/fn:read",
+      "GET /v2/items/{id} file:app/routes.py/fn:read",
+    ]);
+  });
+
+  it("takes the url_prefix of a Blueprint, which register_blueprint replaces when it gives one", () => {
+    const blueprint = (register: string) => [
+      {
+        path: "orders.py",
+        source: [
+          "from flask import Blueprint",
+          "",
+          'bp = Blueprint("orders", __name__, url_prefix="/orders")',
+          "",
+          '@bp.route("/<int:oid>", methods=["GET", "DELETE"])',
+          "def order(oid):",
+          "    return str(oid)",
+          "",
+          '@bp.get("/")',
+          "def list_orders():",
+          "    return []",
+          "",
+        ].join("\n"),
+      },
+      {
+        path: "app.py",
+        source: [
+          "from flask import Flask",
+          "from orders import bp",
+          "",
+          "def create_app():",
+          "    app = Flask(__name__)",
+          `    ${register}`,
+          "    return app",
+          "",
+        ].join("\n"),
+      },
+    ];
+
+    expect(routesOf(blueprint("app.register_blueprint(bp)"))).toEqual([
+      "GET /orders/<int:oid> file:orders.py/fn:order",
+      "DELETE /orders/<int:oid> file:orders.py/fn:order",
+      "GET /orders/ file:orders.py/fn:list_orders",
+    ]);
+    expect(
+      routesOf(
+        blueprint('app.register_blueprint(bp, url_prefix="/api/pedidos")'),
+      ),
+    ).toEqual([
+      "GET /api/pedidos/<int:oid> file:orders.py/fn:order",
+      "DELETE /api/pedidos/<int:oid> file:orders.py/fn:order",
+      "GET /api/pedidos/ file:orders.py/fn:list_orders",
     ]);
   });
 });
