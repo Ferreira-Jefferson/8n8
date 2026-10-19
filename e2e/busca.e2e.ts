@@ -296,7 +296,7 @@ test.describe("Busca de nó", () => {
 
     await field(page).fill("SourceFile");
     await expect(options(page).locator("b")).toHaveText([
-      "ReadSourceFile",
+      "readSourceFile",
       "SourceFile",
     ]);
 

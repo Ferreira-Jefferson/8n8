@@ -113,6 +113,7 @@ test.describe("Ligações do Python", () => {
       );
 
     expect(wire("cliente.py", "api.py")?.toCheck).toEqual({
+      reason: "dynamic-base",
       code: "BASE",
       path: "cliente.py",
       line: 7,
@@ -133,7 +134,9 @@ test.describe("Ligações do Python", () => {
     );
     await page.mouse.move(point.x, point.y);
     const check = page.locator(".wire-tag .wire-tag-check");
-    await expect(check.locator(".wire-tag-kind")).toHaveText("a conferir");
+    await expect(check.locator(".wire-tag-kind")).toHaveText(
+      "a conferir · URL de execução",
+    );
     await expect(check).toContainText("BASE");
     await expect(check).toContainText("cliente.py:7");
   });
