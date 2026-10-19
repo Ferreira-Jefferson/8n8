@@ -249,4 +249,40 @@ describe("http channel through linkProject", () => {
     expect(out.edges.every((e) => e.toCheck?.targets === 4)).toBe(true);
     expect(out.ambiguous[0]?.candidates).toHaveLength(4);
   });
+
+  it("marks a literal path that meets only a parameter of the route as to check: /metrics and /{slug}", () => {
+    const out = linkProject({
+      nodes,
+      offers: [offer("http", "GET /{slug}", "d.py", "h")],
+      requests: [request("http", "GET /metrics", "b.ts", "h", 3)],
+    });
+    expect(out.edges.map((e) => e.toCheck)).toEqual([
+      { reason: "param-route", path: "b.ts", line: 3 },
+    ]);
+  });
+
+  it("prefers the literal route to one with a parameter, and links it proven", () => {
+    const out = linkProject({
+      nodes,
+      offers: [
+        offer("http", "GET /users/{uid}", "d.py", "h"),
+        offer("http", "GET /users/me", "a.py", "c"),
+      ],
+      requests: [request("http", "GET /users/me", "b.ts", "h")],
+    });
+    expect(out.ambiguous).toEqual([]);
+    expect(out.edges.map((e) => [e.target, e.toCheck])).toEqual([
+      [nodeId("a.py", "c"), undefined],
+    ]);
+  });
+
+  it("keeps a parameter of the request against a parameter of the route proven: /users/:param and /users/{id}", () => {
+    const out = linkProject({
+      nodes,
+      offers: [offer("http", "GET /users/{id}", "d.py", "h")],
+      requests: [request("http", "GET /users/:param", "b.ts", "h")],
+    });
+    expect(out.edges).toHaveLength(1);
+    expect(out.edges[0]?.toCheck).toBeUndefined();
+  });
 });

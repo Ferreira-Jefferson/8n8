@@ -5,6 +5,7 @@ import type {
   LinkChannel,
   LinkRequest,
   Offer,
+  ToCheckReason,
 } from "@8n8/model";
 
 /** Where a node lives: its file path (POSIX, relative to the root) and its language. */
@@ -31,6 +32,10 @@ export interface Linker {
    */
   offerKeys?(offer: Offer): string[];
   requestKeys?(request: LinkRequest, ctx: LinkContext): string[];
+  /** Optional: keeps only the best of the offers a request matches (the most specific route), in their order. */
+  narrow?(request: LinkRequest, offers: Offer[]): Offer[];
+  /** Optional: why the code does not prove the link of a request to the one offer it matches; undefined when it does. */
+  doubt?(request: LinkRequest, offer: Offer): ToCheckReason | undefined;
   /** Text of the wire, e.g. `HTTP POST /api/frete`. */
   label(request: LinkRequest, offer: Offer): string;
   /** Set when the system, not the code, writes the text: the screen says the key in the language of the system. */

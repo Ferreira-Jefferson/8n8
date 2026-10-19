@@ -101,7 +101,7 @@ export const MAX_AMBIGUOUS_WIRES = 3;
 
 /**
  * Turns the offers a request matches into wires, in `edges`; false when it matches none.
- * One offer: one wire, to check when the base of its URL is known only at run time.
+ * One offer: one wire, to check when the base of its URL is known only at run time or when the linker doubts it.
  * More than one: the request goes to `ambiguous`, with a wire to check to each of the first ones.
  */
 export function settle(
@@ -112,9 +112,10 @@ export function settle(
   edges: Map<string, FlowEdge>,
   ambiguous: AmbiguousRequest[],
 ): boolean {
+  const narrowed = linker.narrow ? linker.narrow(request, matched) : matched;
   // One offer per target node, the first one.
-  const candidates = matched.filter(
-    (o, i) => matched.findIndex((c) => c.nodeId === o.nodeId) === i,
+  const candidates = narrowed.filter(
+    (o, i) => narrowed.findIndex((c) => c.nodeId === o.nodeId) === i,
   );
   if (candidates.length === 0) return false;
   const where = {
@@ -123,12 +124,15 @@ export function settle(
   };
   if (candidates.length > 1) ambiguous.push({ request, candidates });
   for (const offer of candidates.slice(0, MAX_AMBIGUOUS_WIRES)) {
+    const reason = linker.doubt?.(request, offer);
     const toCheck: ToCheck | undefined =
       candidates.length > 1
         ? { reason: "ambiguous", targets: candidates.length, ...where }
         : request.dynamicBase !== undefined
           ? { reason: "dynamic-base", code: request.dynamicBase, ...where }
-          : undefined;
+          : reason
+            ? { reason, ...where }
+            : undefined;
     const id = `link:${request.channel}:${request.nodeId}->${offer.nodeId}`;
     const wire: FlowEdge = {
       id,

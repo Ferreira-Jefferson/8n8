@@ -38,6 +38,20 @@ function matchRoutes(a: Route, b: Route): boolean {
   );
 }
 
+/** How many segments of a request are literal and meet the same literal in the route. */
+function literalHits(request: Route, offer: Route): number {
+  return request.segments.filter(
+    (s, i) => !PARAM.test(s) && s === offer.segments[i],
+  ).length;
+}
+
+/** Whether a literal segment of a request meets only a parameter of the route: `/metrics` and `/{slug}`. */
+function onParam(request: Route, offer: Route): boolean {
+  return request.segments.some(
+    (s, i) => !PARAM.test(s) && PARAM.test(offer.segments[i] as string),
+  );
+}
+
 export const httpLinker: Linker = {
   channel: "http",
   sameLanguage: true,
@@ -46,6 +60,17 @@ export const httpLinker: Linker = {
   // Two routes match only with the same number of segments.
   offerKeys: (offer) => [String(parseRoute(offer.key).segments.length)],
   requestKeys: (request) => [String(parseRoute(request.key).segments.length)],
+  // A literal route that matches beats one that matches by a parameter: `/users/me` over `/users/{id}`.
+  narrow(request, offers) {
+    const r = parseRoute(request.key);
+    const hits = offers.map((o) => literalHits(r, parseRoute(o.key)));
+    const best = Math.max(...hits);
+    return offers.filter((_, i) => hits[i] === best);
+  },
+  doubt: (request, offer) =>
+    onParam(parseRoute(request.key), parseRoute(offer.key))
+      ? "param-route"
+      : undefined,
   label(request, offer) {
     const r = parseRoute(request.key);
     const method = r.method === ANY ? parseRoute(offer.key).method : r.method;
