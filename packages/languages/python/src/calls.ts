@@ -26,7 +26,21 @@ export interface CallContext {
 
 export type CallResolution =
   | { kind: "call"; target: NodeId; label?: string }
-  | { kind: "external"; callee: string; category: ExternalCategory };
+  | { kind: "external"; callee: string; category: ExternalCategory }
+  /** A call whose target only exists when the code runs: `handlers[k]()`, `getattr(o, n)()`. */
+  | { kind: "dynamic"; callee: string };
+
+/** Nodes whose body runs later, not where they are written: a lambda, a nested `def`, a class. */
+const DEFERRED = new Set(["lambda", "function_definition", "class_definition"]);
+
+/** Whether `call` sits in a function or class written inside `statement` (the statement itself included). */
+function isDeferred(call: Node, statement: Node): boolean {
+  for (let n: Node | null = call; n !== null; n = n.parent) {
+    if (DEFERRED.has(n.type)) return true;
+    if (n.id === statement.id) return false;
+  }
+  return false;
+}
 
 /** `a`, `a.b`, `a.b.c`...; null when the expression is not a plain dotted name. */
 export function dottedName(node: Node): string | null {
@@ -55,7 +69,12 @@ function chainedMethod(fn: Node | null): CallResolution | null {
 function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
   const fn = call.childForFieldName("function");
   const name = fn ? dottedName(fn) : null;
-  if (name === null) return chainedMethod(fn);
+  if (name === null) {
+    if (fn?.type === "subscript" || fn?.type === "call") {
+      return { kind: "dynamic", callee: fn.text };
+    }
+    return chainedMethod(fn);
+  }
 
   const local = ctx.topLevel.get(name);
   if (local !== undefined) return { kind: "call", target: local };
@@ -94,23 +113,51 @@ function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
   return { kind: "external", callee, category };
 }
 
+/** Whether the result of `call` is called right away, as `make()` in `make()()`. */
+function isCalled(call: Node): boolean {
+  return (
+    call.parent?.type === "call" &&
+    call.parent.childForFieldName("function")?.id === call.id
+  );
+}
+
+/** The calls of a statement in code order. */
+function callsOf(statement: Node): Node[] {
+  return statement
+    .descendantsOfType("call")
+    .sort((a, b) => a.startIndex - b.startIndex);
+}
+
 /**
- * Decides whether a statement is a `call` step, an `external` step or
- * neither. A call to the snippet wins; otherwise the first external call in
- * code order counts.
+ * Decides whether a statement is a `call` step, an `external` step, a
+ * `dynamic` step or neither. A call to the snippet wins; otherwise the first
+ * external call in code order counts, then the first dynamic one. A call
+ * inside a lambda or a nested `def` does not run here and does not count.
  */
 export function resolveCall(
   statement: Node,
   ctx: CallContext,
 ): CallResolution | null {
-  const calls = statement
-    .descendantsOfType("call")
-    .sort((a, b) => a.startIndex - b.startIndex);
   let external: CallResolution | null = null;
-  for (const call of calls) {
+  let dynamic: CallResolution | null = null;
+  for (const call of callsOf(statement)) {
+    if (isDeferred(call, statement)) continue;
     const resolved = resolveOne(call, ctx);
     if (resolved?.kind === "call") return resolved;
-    external ??= resolved;
+    if (resolved?.kind === "dynamic") dynamic ??= resolved;
+    // `getattr(o, n)` in `getattr(o, n)()` only finds the target of the dynamic call.
+    else if (!isCalled(call)) external ??= resolved;
   }
-  return external;
+  return external ?? dynamic;
+}
+
+/** The snippet's functions called inside a lambda or a nested `def` of `statement`: a dependency, not a step. */
+export function deferredTargets(statement: Node, ctx: CallContext): NodeId[] {
+  const targets: NodeId[] = [];
+  for (const call of callsOf(statement)) {
+    if (!isDeferred(call, statement)) continue;
+    const resolved = resolveOne(call, ctx);
+    if (resolved?.kind === "call") targets.push(resolved.target);
+  }
+  return targets;
 }

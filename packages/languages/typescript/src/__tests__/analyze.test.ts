@@ -553,7 +553,7 @@ describe("analyze: offers", () => {
       {
         channel: "http",
         key: "POST /api/pedidos",
-        nodeId: "file:server.ts/mod/s2",
+        nodeId: "file:server.ts/mod/s1",
         line: 12,
       },
     ]);
@@ -567,13 +567,13 @@ describe("analyze: offers", () => {
       {
         channel: "name",
         key: "notificar",
-        nodeId: "file:server.ts/mod/s2",
+        nodeId: "file:server.ts/mod/s1",
         line: 13,
       },
       {
         channel: "process",
         key: "relatorio.py",
-        nodeId: "file:server.ts/mod/s3",
+        nodeId: "file:server.ts/mod/s2",
         line: 17,
       },
       {

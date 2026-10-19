@@ -8,7 +8,7 @@ import {
   type NodeId,
 } from "@8n8/model";
 import type { Node } from "web-tree-sitter";
-import { type CallContext, resolveCall } from "./calls";
+import { type CallContext, deferredTargets, resolveCall } from "./calls";
 import { isRequireDeclaration } from "./imports";
 
 /**
@@ -344,7 +344,15 @@ function sequence(
       continue;
     }
     flush();
-    if (resolved.kind === "call") {
+    if (resolved.kind === "dynamic") {
+      place({
+        kind: "code",
+        label: "Código",
+        range: lineRange(statement),
+        openable: false,
+        callee: resolved.callee,
+      });
+    } else if (resolved.kind === "call") {
       place({
         kind: "call",
         label:
@@ -368,11 +376,33 @@ function sequence(
   return pending;
 }
 
-/** Appends the steps of `body` as children of `parentId`. */
+/**
+ * Appends the steps of `body` as children of `parentId`, the function, class
+ * or module that owns them. A function called only inside a callback is not a
+ * step, but `parentId` still depends on it: a `calls` wire, unless a step
+ * already calls it.
+ */
 export function buildSteps(
   body: Node[],
   parentId: NodeId,
   ctx: StepContext,
 ): void {
+  const first = ctx.nodes.length;
   sequence(body, parentId, parentId, ctx);
+  const stepped = new Set(
+    ctx.nodes.slice(first).flatMap((n) => (n.target ? [n.target] : [])),
+  );
+  for (const statement of body) {
+    if (isIgnored(statement)) continue;
+    for (const target of deferredTargets(statement, ctx.call)) {
+      if (stepped.has(target)) continue;
+      stepped.add(target);
+      ctx.edges.push({
+        id: `calls:${parentId}->${target}`,
+        kind: "calls",
+        source: parentId,
+        target,
+      });
+    }
+  }
 }

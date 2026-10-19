@@ -252,9 +252,69 @@ describe("external calls", () => {
     });
   });
 
-  it("does not make a step of `super()`, a dynamic import or a computed call", () => {
-    expect(step("const m = await import('./x');")?.kind).toBe("code");
-    expect(step("const o = {}; o['k']();")?.kind).toBe("code");
+  it("does not make a step of `super()` or a dynamic import", () => {
+    expect(step("const m = await import('./x');")).toMatchObject({
+      kind: "code",
+    });
+    expect(step("const m = await import('./x');")?.callee).toBeUndefined();
+  });
+
+  it("marks a computed call, a called result and a module from `import()` as a dynamic code step", () => {
+    const source = [
+      "async function f(o, make) {",
+      "  o['k']();",
+      "  make()();",
+      "  const mod = await import('./x');",
+      "  mod.add(1);",
+      "}",
+      "",
+    ].join("\n");
+    const graph = extract(source);
+    expectWellFormed(graph, lines(source));
+
+    expect(
+      graph.nodes
+        .filter((n) => n.parentId === "fn:f")
+        .map((n) => [n.kind, n.callee]),
+    ).toEqual([
+      ["code", "o['k']"],
+      ["code", "make()"],
+      ["code", undefined],
+      ["code", "mod.add"],
+    ]);
+  });
+
+  it("makes no step of a call inside a callback or an object's function, but keeps the calls wire", () => {
+    const source = [
+      "function go(x) { return x; }",
+      "function f() {",
+      "  const h = { a: () => console.log('a'), b() { go(1); } };",
+      "  [1, 2].map((x) => go(x));",
+      "  setTimeout(function () { go(2); }, 10);",
+      "}",
+      "",
+    ].join("\n");
+    const graph = extract(source);
+    expectWellFormed(graph, lines(source));
+
+    expect(
+      graph.nodes
+        .filter((n) => n.parentId === "fn:f")
+        .map((n) => [n.kind, n.label, n.target]),
+    ).toEqual([
+      ["code", "Código", undefined],
+      ["external", "setTimeout", undefined],
+    ]);
+    expect(wires(graph, "calls")).toEqual(["fn:f -> fn:go"]);
+  });
+
+  it("does not take a client factory of an HTTP library as HTTP", () => {
+    expect(
+      step("const api = axios.create();", 'import axios from "axios";'),
+    ).toMatchObject({ kind: "external", category: "EXTERNO" });
+    expect(
+      step("const a = new http.Agent();", 'import http from "node:http";'),
+    ).toMatchObject({ kind: "external", category: "EXTERNO" });
   });
 
   it("chooses the first external call when no call goes to the snippet", () => {

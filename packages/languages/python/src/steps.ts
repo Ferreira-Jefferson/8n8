@@ -8,7 +8,7 @@ import {
   type NodeId,
 } from "@8n8/model";
 import type { Node } from "web-tree-sitter";
-import { type CallContext, resolveCall } from "./calls";
+import { type CallContext, deferredTargets, resolveCall } from "./calls";
 
 /**
  * Statements that never become steps and never create the module node.
@@ -237,7 +237,15 @@ function sequence(
       continue;
     }
     flush();
-    if (resolved.kind === "call") {
+    if (resolved.kind === "dynamic") {
+      place({
+        kind: "code",
+        label: "Código",
+        range: lineRange(statement),
+        openable: false,
+        callee: resolved.callee,
+      });
+    } else if (resolved.kind === "call") {
       place({
         kind: "call",
         label:
@@ -261,11 +269,43 @@ function sequence(
   return pending;
 }
 
-/** Appends the steps of `body` as children of `parentId` (CORE-08, 11-13). */
+/** A string alone as the first statement: the docstring, which documents and does not run. */
+function isDocstring(statement: Node | undefined): boolean {
+  return (
+    statement?.type === "expression_statement" &&
+    statement.namedChildCount === 1 &&
+    statement.namedChildren[0]?.type === "string"
+  );
+}
+
+/**
+ * Appends the steps of `body` as children of `parentId`, the function, class
+ * or module that owns them (CORE-08, 11-13). The docstring is not a step. A
+ * function called only inside a lambda or a nested `def` is not a step, but
+ * `parentId` still depends on it: a `calls` wire, unless a step already calls it.
+ */
 export function buildSteps(
   body: Node[],
   parentId: NodeId,
   ctx: StepContext,
 ): void {
-  sequence(body, parentId, parentId, ctx);
+  const statements = body.filter((s) => !IGNORED.has(s.type));
+  if (isDocstring(statements[0])) statements.shift();
+  const first = ctx.nodes.length;
+  sequence(statements, parentId, parentId, ctx);
+  const stepped = new Set(
+    ctx.nodes.slice(first).flatMap((n) => (n.target ? [n.target] : [])),
+  );
+  for (const statement of statements) {
+    for (const target of deferredTargets(statement, ctx.call)) {
+      if (stepped.has(target)) continue;
+      stepped.add(target);
+      ctx.edges.push({
+        id: `calls:${parentId}->${target}`,
+        kind: "calls",
+        source: parentId,
+        target,
+      });
+    }
+  }
 }

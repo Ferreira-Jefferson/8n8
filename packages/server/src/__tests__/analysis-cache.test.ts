@@ -194,7 +194,10 @@ describe("the analysis cache gives the answers of a build without it", () => {
   it("a version of a plugin makes other rows", async () => {
     await built(MIXED);
     const [py, ts] = languagePlugins as [LanguagePlugin, LanguagePlugin];
-    const next = await built(MIXED, [{ ...py, cacheVersion: "2" }, ts]);
+    const next = await built(MIXED, [
+      { ...py, cacheVersion: `${py.cacheVersion}.next` },
+      ts,
+    ]);
     expect(next.parsed).toEqual([...PYTHON].sort());
   });
 });
@@ -531,10 +534,10 @@ describe("the version of a plugin is the guard of its rows", () => {
       hash,
     }).toEqual({
       versions: [
-        ["python", "1"],
-        ["typescript", "1"],
+        ["python", "2"],
+        ["typescript", "3"],
       ],
-      hash: "00b3deb75d157e1b3239fc60f85f99fc21881a6b",
+      hash: "f5ca2536bc8622ea47c1609dd0e4d4e43ae7553e",
     });
   });
 });

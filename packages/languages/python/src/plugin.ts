@@ -36,7 +36,7 @@ export const pythonPlugin: LanguagePlugin = {
   },
   analyze: (files) => analyzeFiles(parser, files),
   openSlice: (files) => openSlice(parser, files),
-  cacheVersion: "1",
+  cacheVersion: "2",
 };
 
 /** Thin wrapper over the plugin, kept while the server still builds an `Extractor` (step 6 removes it). */
