@@ -404,7 +404,7 @@ export function routerFactsOf(
   return { routers, mounts };
 }
 
-/** The full prefixes of each router, through the routers that mount it; `canonical` names a router as the project does. */
+/** The full prefixes of each router, through the routers that mount it; `facts` use one full name per router. */
 export function routePrefixes(
   facts: RouterFacts[],
 ): (router: string) => string[] {
