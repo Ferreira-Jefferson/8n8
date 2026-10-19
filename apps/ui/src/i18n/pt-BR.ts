@@ -196,6 +196,7 @@ export const ptBR = {
   "flow.loading": "Carregando o arquivo…",
   "flow.loadFailed": "Não foi possível carregar o arquivo.",
   "flow.retry": "Tentar de novo",
+  "flow.drawFailed": "Não deu para desenhar este nível.",
   "flow.nodeHelp":
     "Tecle Enter ou espaço para selecionar um nó. Tecle Esc para cancelar.",
   "flow.nodeHelpKeyboard":

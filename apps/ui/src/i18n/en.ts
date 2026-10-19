@@ -196,6 +196,7 @@ export const en: Record<MessageKey, string> = {
   "flow.loading": "Loading the file…",
   "flow.loadFailed": "Could not load the file.",
   "flow.retry": "Try again",
+  "flow.drawFailed": "This level could not be drawn.",
   "flow.nodeHelp":
     "Press Enter or Space to select a node. Press Esc to cancel.",
   "flow.nodeHelpKeyboard":
