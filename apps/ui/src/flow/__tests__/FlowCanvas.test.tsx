@@ -17,7 +17,12 @@ import {
   vi,
 } from "vitest";
 import { codeLineOf } from "../card";
-import { FlowCanvas, type FlowCanvasProps, toFlowEdges } from "../FlowCanvas";
+import {
+  FlowCanvas,
+  type FlowCanvasProps,
+  nodeLanguages,
+  toFlowEdges,
+} from "../FlowCanvas";
 import type { Schedule } from "../motion";
 import { ROOT_HUB } from "../project-level";
 import { Side } from "../sides";
@@ -37,6 +42,29 @@ describe("toFlowEdges, the hover tag", () => {
     ["file:a.py", "a.py"],
     ["file:b.ts", "b.ts"],
   ]);
+  const node = (
+    id: string,
+    kind: FlowNode["kind"],
+    parentId: string | null,
+    path?: string,
+  ): FlowNode => ({
+    id,
+    kind,
+    label: id,
+    parentId,
+    range: { start: 1, end: 1 },
+    openable: true,
+    ...(path === undefined ? {} : { path }),
+  });
+  const files: FlowNode[] = [
+    node("dir:.", "folder", null, ""),
+    node("dir:py", "folder", "dir:.", "py"),
+    node("dir:web", "folder", "dir:.", "web"),
+    node("file:a.py", "file", "dir:py", "py/a.py"),
+    node("file:b.ts", "file", "dir:web", "web/b.ts"),
+    node("file:c.ts", "file", "dir:web", "web/c.ts"),
+    node("file:c.ts/fn:f", "function", "file:c.ts"),
+  ];
   const infoOf = (e: FlowEdge, reach: "inside" | "across") =>
     toFlowEdges(
       [e],
@@ -48,6 +76,7 @@ describe("toFlowEdges, the hover tag", () => {
       undefined,
       reach,
       names,
+      nodeLanguages(files),
     )[0]?.data?.info;
 
   it("names both ends by the label of their nodes, and falls back to the id", () => {
@@ -65,17 +94,35 @@ describe("toFlowEdges, the hover tag", () => {
     });
   });
 
-  it("says across languages for a labeled wire between files, and across files for one with no label", () => {
-    const base: FlowEdge = {
+  it("says across languages only when the files of the two ends have different languages", () => {
+    const wire = (source: string, target: string): FlowEdge => ({
       id: "x",
       kind: "calls",
-      source: "file:a.py",
-      target: "file:b.ts",
-    };
-    expect(infoOf({ ...base, label: "HTTP GET /a" }, "across")?.reach).toBe(
+      source,
+      target,
+      label: "HTTP GET /a",
+    });
+    expect(infoOf(wire("file:a.py", "file:b.ts"), "across")?.reach).toBe(
       "language",
     );
-    expect(infoOf(base, "across")?.reach).toBe("across");
+    expect(infoOf(wire("dir:py", "dir:web"), "across")?.reach).toBe("language");
+    // A link from TypeScript to TypeScript is a wire across files, label or not.
+    expect(infoOf(wire("file:c.ts/fn:f", "file:b.ts"), "across")?.reach).toBe(
+      "across",
+    );
+    // A folder with files of two languages says nothing of its language.
+    expect(infoOf(wire("dir:.", "file:b.ts"), "across")?.reach).toBe("across");
+  });
+
+  it("gives each node the language of its file, and a folder the one language of its files", () => {
+    expect(Object.fromEntries(nodeLanguages(files))).toEqual({
+      "dir:py": ".py",
+      "dir:web": ".ts",
+      "file:a.py": ".py",
+      "file:b.ts": ".ts",
+      "file:c.ts": ".ts",
+      "file:c.ts/fn:f": ".ts",
+    });
   });
 
   it("keeps a label inside one file as inside", () => {
