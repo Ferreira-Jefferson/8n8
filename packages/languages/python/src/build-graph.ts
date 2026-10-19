@@ -279,9 +279,12 @@ export function allocateTopLevel(root: Node): TopLevel {
 }
 
 /** The methods of each top-level class, by name, with ids as `buildClass` gives them (`cls:X/fn:m`); the last `def` wins. */
-export function classMethodsOf(root: Node): Map<string, Map<string, NodeId>> {
-  const top = allocateTopLevel(root);
+export function classMethodsOf(
+  root: Node,
+  top: TopLevel = allocateTopLevel(root),
+): Map<string, Map<string, NodeId>> {
   const classes = new Map<string, Map<string, NodeId>>();
+  if (!top.ids.some(isClassId)) return classes;
   let index = 0;
   for (const statement of root.namedChildren) {
     if (IGNORED.has(statement.type)) continue;
@@ -330,7 +333,7 @@ export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
       ),
       methods: new Map(),
       classMethods: new Map(
-        [...classMethodsOf(tree.rootNode)].map(([name, methods]) => [
+        [...classMethodsOf(tree.rootNode, top)].map(([name, methods]) => [
           name,
           new Map([...methods].map(([m, id]) => [m, scoped(id)])),
         ]),

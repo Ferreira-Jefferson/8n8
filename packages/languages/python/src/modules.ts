@@ -75,13 +75,14 @@ export function contributionOf(path: string, root: Node): ModuleContribution {
     const absolute = absoluteName(path, full);
     if (absolute !== null) aliases.push([local, absolute]);
   }
+  const top = allocateTopLevel(root);
   return {
-    topLevel: [...allocateTopLevel(root).topLevel],
+    topLevel: [...top.topLevel],
     aliases,
     stars: starModules(root),
     all: allNames(root),
     routes: routerFactsOf(moduleNameOf(path) ?? "", root, new Map(aliases)),
-    classes: [...classMethodsOf(root)].map(([name, methods]) => [
+    classes: [...classMethodsOf(root, top)].map(([name, methods]) => [
       name,
       [...methods],
     ]),

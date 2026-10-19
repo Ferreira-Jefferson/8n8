@@ -374,6 +374,10 @@ export function routerFactsOf(
 ): RouterFacts {
   const routers: [string, string][] = [];
   const mounts: [string, string, string, boolean][] = [];
+  // Most files have no router: a look at the text spares walking the tree.
+  if (!/APIRouter|FastAPI|Blueprint|Flask/.test(root.text)) {
+    return { routers, mounts };
+  }
   for (const assignment of root.descendantsOfType("assignment")) {
     const left = assignment.childForFieldName("left");
     const right = assignment.childForFieldName("right");

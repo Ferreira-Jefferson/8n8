@@ -38,9 +38,9 @@ export function starModules(root: Node): string[] {
 export function allNames(root: Node): string[] | null {
   let names: string[] | null = null;
   for (const statement of root.namedChildren) {
+    if (statement.type !== "expression_statement") continue;
     const assignment = statement.namedChildren[0];
     if (
-      statement.type !== "expression_statement" ||
       assignment?.type !== "assignment" ||
       assignment.childForFieldName("left")?.text !== "__all__"
     ) {
