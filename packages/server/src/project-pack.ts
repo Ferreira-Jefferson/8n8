@@ -8,9 +8,11 @@ import {
   folderId,
   type Graph,
   type IgnoredFile,
+  joinWire,
   type LanguageAnalysis,
   type LanguagePlugin,
   type LinkRequest,
+  linksOf,
   type NodeId,
   type Offer,
   SEARCHABLE_KINDS,
@@ -403,10 +405,10 @@ export function assemble(input: AssembleInput): StoreParts {
     const id = `${e.kind}:${from}->${to}`;
     const known = skeletonEdges.get(id);
     if (known) {
-      // One wire still to check keeps the joined wire "to check", as `skeletonGraphOf` does.
-      if (e.toCheck && !known.toCheck) known.toCheck = e.toCheck;
+      joinWire(known, e);
       continue;
     }
+    const links = linksOf(e);
     skeletonEdges.set(id, {
       id,
       kind: e.kind,
@@ -415,6 +417,7 @@ export function assemble(input: AssembleInput): StoreParts {
       ...(e.label === undefined ? {} : { label: e.label }),
       ...(e.labelKey === undefined ? {} : { labelKey: e.labelKey }),
       ...(e.toCheck === undefined ? {} : { toCheck: e.toCheck }),
+      ...(links === undefined ? {} : { links }),
     });
   }
 

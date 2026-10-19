@@ -84,17 +84,62 @@ export interface FlowEdge {
   label?: string;
   /** Set when the system wrote the label: the screen shows its own words for the key, never `label`. */
   labelKey?: EdgeLabelKey;
-  /** Set when the code does not prove the target: the URL starts with a value known only at run time. */
+  /** Set when the code does not prove the target; on a joined wire, the first of its links to check. */
   toCheck?: ToCheck;
+  /** Only on a wire that joins wires: how many of the links it holds the code proves, and how many are to check. */
+  links?: LinkCount;
 }
 
-/** What to check on a wire the code does not prove: the code of the value, and where the call is. */
+/**
+ * Why the code does not prove the target of a link.
+ * `dynamic-base`: the URL starts with a value known only at run time.
+ * `param-route`: a literal segment of the URL matches only a parameter of the route (`/metrics` and `/{slug}`).
+ * `ambiguous`: more than one target matches; the link goes to each of them.
+ * `name-only`: the link stands on a shared name only, between languages.
+ */
+export type ToCheckReason =
+  | "dynamic-base"
+  | "param-route"
+  | "ambiguous"
+  | "name-only";
+
+/** What to check on a wire the code does not prove: why, and where the call is. */
 export interface ToCheck {
-  /** The code the value comes from, as written: `config.baseUrl`, `process.env.API_URL`. */
-  code: string;
+  reason: ToCheckReason;
+  /** Only with `dynamic-base`: the code the value comes from, as written (`config.baseUrl`, `process.env.API_URL`). */
+  code?: string;
+  /** Only with `ambiguous`: how many targets match. */
+  targets?: number;
   /** The file of the call, relative to the root. */
   path: string;
   line: number;
+}
+
+export interface LinkCount {
+  proven: number;
+  toCheck: number;
+}
+
+/** The links a wire holds: its `links`, or one for a wire of the links package (`link:` id); undefined for any other wire. */
+export function linksOf(edge: FlowEdge): LinkCount | undefined {
+  if (edge.links) return edge.links;
+  if (!edge.id.startsWith("link:")) return undefined;
+  return edge.toCheck ? { proven: 0, toCheck: 1 } : { proven: 1, toCheck: 0 };
+}
+
+/**
+ * Joins `edge` into `joined`, a wire that stands for it and for others: adds up their links, and keeps the
+ * first link to check, so a link to check never hides a proven one, nor the other way round.
+ */
+export function joinWire(joined: FlowEdge, edge: FlowEdge): void {
+  const a = linksOf(joined);
+  const b = linksOf(edge);
+  if (b) {
+    joined.links = a
+      ? { proven: a.proven + b.proven, toCheck: a.toCheck + b.toCheck }
+      : b;
+  }
+  if (edge.toCheck && !joined.toCheck) joined.toCheck = edge.toCheck;
 }
 
 export interface Graph {

@@ -318,7 +318,12 @@ describe("WireEdge, a dependency wire", () => {
     }
   });
 
-  const toCheck = { code: "config.baseUrl", path: "web/api.ts", line: 12 };
+  const toCheck = {
+    reason: "dynamic-base" as const,
+    code: "config.baseUrl",
+    path: "web/api.ts",
+    line: 12,
+  };
 
   it("tells in the tag of a wire to check the code of the value and the place of the call", () => {
     vi.useFakeTimers();
@@ -333,12 +338,69 @@ describe("WireEdge, a dependency wire", () => {
       });
       const check = container.querySelector(".wire-tag-check");
       expect(check?.querySelector(".wire-tag-kind")?.textContent).toBe(
-        "a conferir",
+        "a conferir · URL de execução",
       );
       expect(check?.textContent).toContain("config.baseUrl");
       expect(check?.textContent).toContain("web/api.ts:12");
+      expect(container.querySelector(".wire-tag-links")).toBeNull();
     } finally {
       vi.useRealTimers();
+    }
+  });
+
+  /** The text of the tag of a wire, once the pointer has rested on it. */
+  const tagOf = (wireInfo: WireInfo) => {
+    vi.useFakeTimers();
+    try {
+      const { container } = renderWire(
+        { ...dep, info: wireInfo },
+        "HTTP GET /a",
+      );
+      fireEvent.mouseEnter(container.querySelector("path.wire-hit") as Element);
+      act(() => {
+        vi.advanceTimersByTime(TAG_DELAY_MS);
+      });
+      return container;
+    } finally {
+      vi.useRealTimers();
+    }
+  };
+
+  it("says how many links a joined wire holds and how many are to check, and that the others are proven", () => {
+    const tag = tagOf({ ...info, toCheck, links: { proven: 1, toCheck: 1 } });
+    expect(tag.querySelector(".wire-tag-links")?.textContent).toBe(
+      "2 ligações · 1 a conferir",
+    );
+    expect(tag.querySelector(".wire-tag-check p")?.textContent).toContain(
+      "Esta linha tem também 1 ligação provada.",
+    );
+  });
+
+  it("says the count of a joined wire with only proven links, and shows no check", () => {
+    const tag = tagOf({ ...info, links: { proven: 3, toCheck: 0 } });
+    expect(tag.querySelector(".wire-tag-links")?.textContent).toBe(
+      "3 ligações",
+    );
+    expect(tag.querySelector(".wire-tag-check")).toBeNull();
+  });
+
+  it("names each reason in clear words, with no value line when there is no code", () => {
+    const where = { path: "web/b.ts", line: 4 };
+    const cases = [
+      [{ reason: "param-route", ...where }, "a conferir · rota com parâmetro"],
+      [
+        { reason: "ambiguous", targets: 2, ...where },
+        "a conferir · ambígua (2 destinos)",
+      ],
+      [{ reason: "name-only", ...where }, "a conferir · só pelo nome"],
+    ] as const;
+    for (const [check, kind] of cases) {
+      const tag = tagOf({ ...info, toCheck: check });
+      const box = tag.querySelector(".wire-tag-check");
+      expect(box?.querySelector(".wire-tag-kind")?.textContent).toBe(kind);
+      expect(box?.querySelectorAll("dt")).toHaveLength(1);
+      expect(box?.textContent).toContain("web/b.ts:4");
+      cleanup();
     }
   });
 

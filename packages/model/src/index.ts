@@ -59,10 +59,13 @@ export type {
   FlowNode,
   Graph,
   LineRange,
+  LinkCount,
   NodeId,
   NodeKind,
   ToCheck,
+  ToCheckReason,
 } from "./graph";
+export { joinWire, linksOf } from "./graph";
 export type { HistoryEntry, HistoryItem } from "./history";
 export { childId, fileId, folderId, topLevelId } from "./ids";
 export { sliceLines, syntaxErrorLabel } from "./lines";

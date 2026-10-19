@@ -280,6 +280,38 @@ function CenterOn({
   return null;
 }
 
+/**
+ * The language of each node, as the extension of a file (`.py`): of the file it lives in, or of every file a
+ * folder holds. A folder with files of more than one language, and a node in no file, have none.
+ */
+export function nodeLanguages(nodes: readonly FlowNode[]): Map<NodeId, string> {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const up = (n: FlowNode) =>
+    n.parentId === null ? undefined : byId.get(n.parentId);
+  const found = new Map<NodeId, string | null>();
+  for (const n of nodes) {
+    let f: FlowNode | undefined = n;
+    while (f && f.kind !== "file") f = up(f);
+    if (!f) continue;
+    const path = f.path ?? "";
+    const name = path.slice(path.lastIndexOf("/") + 1);
+    const dot = name.lastIndexOf(".");
+    const language = dot <= 0 ? "" : name.slice(dot).toLowerCase();
+    found.set(n.id, language);
+    if (n !== f) continue;
+    for (let d = up(f); d; d = up(d)) {
+      const known = found.get(d.id);
+      found.set(
+        d.id,
+        known === undefined || known === language ? language : null,
+      );
+    }
+  }
+  const out = new Map<NodeId, string>();
+  for (const [id, language] of found) if (language) out.set(id, language);
+  return out;
+}
+
 /** Wires drawn by `WireEdge`; the dependency wires (calls, extends, imports) get an `edge-<kind>` class and a `reach-` one, `contains` wires the faint `edge-contains` one (VID-05, PROJ-03). */
 export function toFlowEdges(
   edges: FlowEdge[],
@@ -294,7 +326,14 @@ export function toFlowEdges(
   reach: Reach = "inside",
   /** The name of each node the wires join, for the hover tag. */
   names: ReadonlyMap<string, string> = new Map(),
+  /** The language of each node (`nodeLanguages`): a wire between two languages says so in its tag. */
+  languages: ReadonlyMap<string, string> = new Map(),
 ): WireFlowEdge[] {
+  const crosses = (e: FlowEdge) => {
+    const a = languages.get(e.source);
+    const b = languages.get(e.target);
+    return a !== undefined && b !== undefined && a !== b;
+  };
   return edges.map((e) => ({
     id: e.id,
     ...(t
@@ -318,13 +357,11 @@ export function toFlowEdges(
         ? {
             info: {
               kind: e.kind as WireInfo["kind"],
-              reach:
-                reach === "across" && e.label !== undefined
-                  ? "language"
-                  : reach,
+              reach: reach === "across" && crosses(e) ? "language" : reach,
               from: names.get(e.source) ?? e.source,
               to: names.get(e.target) ?? e.target,
               ...(e.toCheck ? { toCheck: e.toCheck } : {}),
+              ...(e.links ? { links: e.links } : {}),
             },
           }
         : {}),
@@ -633,6 +670,7 @@ export function FlowCanvas({
         t,
         level.reach,
         new Map(graph.nodes.map((n) => [n.id, n.label])),
+        nodeLanguages(graph.nodes),
       ),
       byNode,
       positions,

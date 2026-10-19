@@ -446,11 +446,18 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     </div>
     <p class="small muted">Captura do app real: o mapa da pasta de exemplo, com o mouse sobre a ligação HTTP entre <code>orders.py</code> e <code>server.ts</code>.</p>
     <dl class="terms box">
-      <dt>Tipo e alcance</dt><dd>A primeira linha, em caixa alta: <b>Chama</b>, <b>Herda</b> ou <b>Importa</b>, mais o alcance (<b>no mesmo arquivo</b>, <b>entre arquivos</b> ou <b>entre linguagens</b>).</dd>
-      <dt>Canal</dt><dd>Só existe numa ligação entre linguagens, como <code>HTTP POST /api/approval</code>, <code>processo</code> ou <code>nome</code>.</dd>
+      <dt>Tipo e alcance</dt><dd>A primeira linha, em caixa alta: <b>Chama</b>, <b>Herda</b> ou <b>Importa</b>, mais o alcance (<b>no mesmo arquivo</b>, <b>entre arquivos</b> ou <b>entre linguagens</b>). O alcance <b>entre linguagens</b> vem da linguagem dos arquivos das duas pontas: uma ligação de <code>web.ts</code> para <code>server.ts</code> é <b>entre arquivos</b>. Uma pasta tem a linguagem dos seus arquivos só quando todos são da mesma.</dd>
+      <dt>Canal</dt><dd>Só existe numa ligação, como <code>HTTP POST /api/approval</code>, <code>processo</code> ou <code>nome</code>.</dd>
+      <dt>Ligações</dt><dd>Só existe numa linha que junta mais de uma ligação, como a linha entre dois arquivos que se chamam por duas funções. Diz quantas ligações a linha junta e quantas são a conferir: <b>2 ligações · 1 a conferir</b>.</dd>
       <dt>De e Para</dt><dd>Os dois nós que a aresta liga, só pelo nome. Entre arquivos, o nome do arquivo. Dentro de um arquivo, o nome da função.</dd>
       <dt>Cor</dt><dd>Cobre na borda e no tipo quando a ligação cruza de uma linguagem para outra. Verde nos demais casos.</dd>
-      <dt>A conferir</dt><dd>Só existe numa ligação HTTP que o código não prova, como <code>fetch(`${config.baseUrl}/api/frete`)</code>: o começo da URL só existe em execução e pode apontar para outro serviço. A etiqueta diz o <b>Valor</b> (o código de onde vem a URL, como <code>config.baseUrl</code>) e a <b>Chamada</b> (arquivo e linha, como <code>web.ts:3</code>). A aresta leva também uma marca <b>a conferir</b> à vista, no meio da linha, com borda tracejada cinza. Uma URL literal, como <code>fetch("/api/frete")</code>, é uma ligação provada e não leva marca.</dd>
+      <dt>A conferir</dt><dd>Só existe numa ligação que o código não prova. O título diz o motivo:
+        <b>URL de execução</b> (<code>fetch(`${config.baseUrl}/api/frete`)</code>: o começo da URL só existe em execução e pode apontar para outro serviço);
+        <b>rota com parâmetro</b> (<code>fetch("/metrics")</code> só casa com <code>@app.get("/{slug}")</code>, porque um trecho fixo da URL cai num parâmetro da rota);
+        <b>ambígua (N destinos)</b> (mais de um destino casa com a chamada, e a linha vai para cada um, até três);
+        <b>só pelo nome</b> (uma chamada de Python e uma função de TypeScript têm o mesmo nome, e nada mais as liga).
+        Uma rota literal que casa ganha de uma rota com parâmetro: <code>fetch("/users/me")</code> liga a <code>/users/me</code>, provada, e não a <code>/users/{id}</code>. Um parâmetro da chamada contra um parâmetro da rota (<code>/users/${id}</code> e <code>/users/:id</code>) é provado.
+        A etiqueta diz o <b>Valor</b> (só na URL de execução: o código de onde vem a URL, como <code>config.baseUrl</code>) e a <b>Chamada</b> (arquivo e linha, como <code>web.ts:3</code>). Numa linha que junta ligações, ela mostra a primeira a conferir e diz quantas provadas a linha tem também. A aresta leva uma marca <b>a conferir</b> à vista, no meio da linha, com borda tracejada cinza, quando pelo menos uma das suas ligações é a conferir. Uma URL literal, como <code>fetch("/api/frete")</code> contra <code>/api/frete</code>, é uma ligação provada e não leva marca.</dd>
     </dl>
     <ul class="findings">
       <li><span class="n">1</span><span><b>Só sobre a linha.</b> A linha fina tem uma faixa invisível de 22 px de largura para o mouse acertar. Sobre a faixa, a linha engrossa.</span></li>

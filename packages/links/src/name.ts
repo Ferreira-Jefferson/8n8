@@ -8,4 +8,6 @@ export const nameLinker: Linker = {
   requestKeys: (request) => [request.key],
   label: () => "nome",
   labelKey: "name",
+  // A shared name between languages is a guess: the code does not prove the call.
+  doubt: () => "name-only",
 };

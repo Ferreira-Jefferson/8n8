@@ -1,4 +1,10 @@
-import type { FlowEdge, LinkRequest, Offer } from "@8n8/model";
+import {
+  type FlowEdge,
+  joinWire,
+  type LinkRequest,
+  type Offer,
+  type ToCheck,
+} from "@8n8/model";
 import { httpLinker } from "./http";
 import { nameLinker } from "./name";
 import { processLinker } from "./process";
@@ -90,6 +96,61 @@ function indexOffers(
   };
 }
 
+/** An ambiguous request draws a wire to check to its first targets, at most this many. */
+export const MAX_AMBIGUOUS_WIRES = 3;
+
+/**
+ * Turns the offers a request matches into wires, in `edges`; false when it matches none.
+ * One offer: one wire, to check when the base of its URL is known only at run time or when the linker doubts it.
+ * More than one: the request goes to `ambiguous`, with a wire to check to each of the first ones.
+ */
+export function settle(
+  linker: Linker,
+  request: LinkRequest,
+  matched: Offer[],
+  ctx: LinkContext,
+  edges: Map<string, FlowEdge>,
+  ambiguous: AmbiguousRequest[],
+): boolean {
+  const narrowed = linker.narrow ? linker.narrow(request, matched) : matched;
+  // One offer per target node, the first one.
+  const candidates = narrowed.filter(
+    (o, i) => narrowed.findIndex((c) => c.nodeId === o.nodeId) === i,
+  );
+  if (candidates.length === 0) return false;
+  const where = {
+    path: ctx.fileOf(request.nodeId)?.path ?? "",
+    line: request.line,
+  };
+  if (candidates.length > 1) ambiguous.push({ request, candidates });
+  for (const offer of candidates.slice(0, MAX_AMBIGUOUS_WIRES)) {
+    const reason = linker.doubt?.(request, offer);
+    const toCheck: ToCheck | undefined =
+      candidates.length > 1
+        ? { reason: "ambiguous", targets: candidates.length, ...where }
+        : request.dynamicBase !== undefined
+          ? { reason: "dynamic-base", code: request.dynamicBase, ...where }
+          : reason
+            ? { reason, ...where }
+            : undefined;
+    const id = `link:${request.channel}:${request.nodeId}->${offer.nodeId}`;
+    const wire: FlowEdge = {
+      id,
+      kind: "calls",
+      source: request.nodeId,
+      target: offer.nodeId,
+      label: linker.label(request, offer),
+      ...(linker.labelKey ? { labelKey: linker.labelKey } : {}),
+      ...(toCheck ? { toCheck } : {}),
+    };
+    // Two calls of one node join on one wire, which counts the links of both.
+    const known = edges.get(id);
+    if (known) joinWire(known, wire);
+    else edges.set(id, wire);
+  }
+  return true;
+}
+
 /** Matches requests to offers across languages and returns the wires, deterministically. */
 export function linkProject(input: LinkInput): LinkResult {
   const ctx = buildContext(input.nodes);
@@ -119,35 +180,11 @@ export function linkProject(input: LinkInput): LinkResult {
           continue;
         }
         if (!linker.matches(request, offer, ctx)) continue;
-        if (candidates.some((c) => c.nodeId === offer.nodeId)) continue;
         candidates.push(offer);
       }
-      const [only, ...rest] = candidates;
-      if (!only) unlinked.push(request);
-      else if (rest.length > 0) ambiguous.push({ request, candidates });
-      else {
-        const id = `link:${request.channel}:${request.nodeId}->${only.nodeId}`;
-        // Two calls of one node join on one wire: one that still needs checking keeps the wire "to check".
-        const toCheck =
-          edges.get(id)?.toCheck ??
-          (request.dynamicBase === undefined
-            ? undefined
-            : {
-                code: request.dynamicBase,
-                path: ctx.fileOf(request.nodeId)?.path ?? "",
-                line: request.line,
-              });
-        edges.set(id, {
-          id,
-          kind: "calls",
-          source: request.nodeId,
-          target: only.nodeId,
-          label: linker.label(request, only),
-          ...(linker.labelKey ? { labelKey: linker.labelKey } : {}),
-          ...(toCheck ? { toCheck } : {}),
-        });
+      if (settle(linker, request, candidates, ctx, edges, ambiguous)) {
         linkedHere.push(request.nodeId);
-      }
+      } else unlinked.push(request);
     }
     // Marked after the channel, so two requests of one node in the same channel both go through.
     for (const id of linkedHere) linkedNodes.add(id);

@@ -54,7 +54,7 @@ describe("name channel through linkProject", () => {
     innerNode("d.py", "f"),
   ];
 
-  it("links a name to a function of another language", () => {
+  it("links a name to a function of another language, to check: a shared name only is a guess", () => {
     const out = linkProject({
       nodes,
       offers: [offer("name", "calcular", "b.ts", "f")],
@@ -68,6 +68,7 @@ describe("name channel through linkProject", () => {
         target: nodeId("b.ts", "f"),
         label: "nome",
         labelKey: "name",
+        toCheck: { reason: "name-only", path: "a.py", line: 1 },
       },
     ]);
   });
@@ -107,7 +108,7 @@ describe("name channel through linkProject", () => {
     expect(out.ambiguous).toEqual([]);
   });
 
-  it("links only when exactly one offer matches", () => {
+  it("draws a wire to check to each offer when more than one matches", () => {
     const req = request("name", "calcular", "a.py", "c");
     const out = linkProject({
       nodes,
@@ -117,7 +118,10 @@ describe("name channel through linkProject", () => {
       ],
       requests: [req],
     });
-    expect(out.edges).toEqual([]);
+    expect(out.edges.map((e) => [e.target, e.toCheck?.reason])).toEqual([
+      [nodeId("b.ts", "f"), "ambiguous"],
+      [nodeId("c.ts", "f"), "ambiguous"],
+    ]);
     expect(out.unlinked).toEqual([]);
     expect(out.ambiguous).toEqual([
       {

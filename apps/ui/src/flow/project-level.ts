@@ -1,5 +1,5 @@
 import type { EdgeKind, FlowEdge, FlowNode, Graph, NodeId } from "@8n8/model";
-import { shownInFile } from "@8n8/model";
+import { joinWire, linksOf, shownInFile } from "@8n8/model";
 import { mainFlowRows } from "./main-flow";
 
 export interface Level {
@@ -251,9 +251,9 @@ function lifted(
     const id = `${kind}:${source}->${target}`;
     const known = out.get(id);
     if (known) {
-      // One wire still to check keeps the lifted wire "to check".
-      if (e.toCheck && !known.toCheck) known.toCheck = e.toCheck;
+      joinWire(known, e);
     } else {
+      const links = linksOf(e);
       out.set(id, {
         id,
         kind,
@@ -262,6 +262,7 @@ function lifted(
         ...(e.label === undefined ? {} : { label: e.label }),
         ...(e.labelKey === undefined ? {} : { labelKey: e.labelKey }),
         ...(e.toCheck === undefined ? {} : { toCheck: e.toCheck }),
+        ...(links === undefined ? {} : { links }),
       });
     }
   }

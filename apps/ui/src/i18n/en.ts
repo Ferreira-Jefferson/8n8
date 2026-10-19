@@ -215,8 +215,23 @@ export const en: Record<MessageKey, string> = {
   "edge.tag.from": "From",
   "edge.tag.to": "To",
   "edge.toCheck": "to check",
-  "edge.toCheck.why":
+  "edge.toCheck.reason.dynamic-base": "run-time URL",
+  "edge.toCheck.reason.param-route": "route with a parameter",
+  "edge.toCheck.reason.ambiguous": "ambiguous ({n} targets)",
+  "edge.toCheck.reason.name-only": "by name only",
+  "edge.toCheck.why.dynamic-base":
     "The URL starts with a value known only at run time. The code does not prove the target.",
+  "edge.toCheck.why.param-route":
+    "A fixed part of the URL matches only a parameter of the route. The code does not prove the target.",
+  "edge.toCheck.why.ambiguous":
+    "More than one target matches the call. The wire goes to each of them.",
+  "edge.toCheck.why.name-only":
+    "The two ends only share a name, in different languages. The code does not prove the call.",
+  "edge.toCheck.alsoProven.one": "This wire also holds {n} proven link.",
+  "edge.toCheck.alsoProven.other": "This wire also holds {n} proven links.",
+  "edge.links.toCheck": "{n} to check",
+  "link.one": "{n} link",
+  "link.other": "{n} links",
   "edge.toCheck.code": "Value",
   "edge.toCheck.at": "Call",
   "severity.alta": "high",

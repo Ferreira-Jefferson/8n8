@@ -93,18 +93,39 @@ describe("skeletonGraphOf", () => {
     ]);
   });
 
-  it("keeps a joined wire to check when any of its wires is to check", () => {
-    const toCheck = { code: "config.baseUrl", path: "a.py", line: 4 };
+  it("keeps a joined wire to check when any of its wires is to check, and counts the proven links and the ones to check", () => {
+    const toCheck = {
+      reason: "dynamic-base" as const,
+      code: "config.baseUrl",
+      path: "a.py",
+      line: 4,
+    };
+    const link = (from: string, to: string, extra: Partial<FlowEdge> = {}) => ({
+      ...edge("calls", from, to, extra),
+      id: `link:http:${from}->${to}`,
+    });
     const joined = skeletonGraphOf({
       ...graph,
       edges: [
         edge("calls", "file:a.py/fn:g", "file:b.ts/fn:h"),
-        edge("calls", "file:a.py/fn:f", "file:b.ts/fn:k", { toCheck }),
+        link("file:a.py/fn:g", "file:b.ts/fn:k", { label: "HTTP GET /a" }),
+        link("file:a.py/fn:f", "file:b.ts/fn:k", { toCheck }),
       ],
     });
     expect(joined.edges).toEqual([
-      edge("calls", "file:a.py", "file:b.ts", { toCheck }),
+      edge("calls", "file:a.py", "file:b.ts", {
+        toCheck,
+        links: { proven: 1, toCheck: 1 },
+      }),
     ]);
+  });
+
+  it("does not count a call that is no link", () => {
+    const joined = skeletonGraphOf({
+      ...graph,
+      edges: [edge("calls", "file:a.py/fn:g", "file:b.ts/fn:h")],
+    });
+    expect(joined.edges[0]?.links).toBeUndefined();
   });
 
   it("drops a wire inside one file and a wire with an end in no file", () => {

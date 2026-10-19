@@ -1,5 +1,6 @@
 import type { FlowEdge, LinkRequest, Offer } from "@8n8/model";
 import { httpLinker } from "../http";
+import { settle } from "../link";
 import { nameLinker } from "../name";
 import { processLinker } from "../process";
 import type {
@@ -63,7 +64,10 @@ function isSameSide(ctx: LinkContext, a: string, b: string): boolean {
   return fa.path === fb.path || fa.language === fb.language;
 }
 
-/** The linker as it was before the offers were indexed by key: tries every offer for every request. The tests compare the real one with it. */
+/**
+ * The linker as it was before the offers were indexed by key: tries every offer for every request. The tests compare the real one with it.
+ * Both turn the offers a request matches into wires the same way (`settle`).
+ */
 export function linkProjectReference(input: LinkInput): LinkResult {
   const ctx = buildContext(input.nodes);
   const requests = [...input.requests].sort(byRequest);
@@ -91,24 +95,11 @@ export function linkProjectReference(input: LinkInput): LinkResult {
           continue;
         }
         if (!linker.matches(request, offer, ctx)) continue;
-        if (candidates.some((c) => c.nodeId === offer.nodeId)) continue;
         candidates.push(offer);
       }
-      const [only, ...rest] = candidates;
-      if (!only) unlinked.push(request);
-      else if (rest.length > 0) ambiguous.push({ request, candidates });
-      else {
-        const id = `link:${request.channel}:${request.nodeId}->${only.nodeId}`;
-        edges.set(id, {
-          id,
-          kind: "calls",
-          source: request.nodeId,
-          target: only.nodeId,
-          label: linker.label(request, only),
-          ...(linker.labelKey ? { labelKey: linker.labelKey } : {}),
-        });
+      if (settle(linker, request, candidates, ctx, edges, ambiguous)) {
         linkedHere.push(request.nodeId);
-      }
+      } else unlinked.push(request);
     }
     // Marked after the channel, so two requests of one node in the same channel both go through.
     for (const id of linkedHere) linkedNodes.add(id);
