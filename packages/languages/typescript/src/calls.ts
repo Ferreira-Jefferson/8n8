@@ -6,15 +6,23 @@ import type { Binding } from "./imports";
 export interface CallContext {
   /** Top-level function and class names to their node ids. */
   topLevel: Map<string, NodeId>;
-  /** Methods of the enclosing class to their node ids; empty outside a class. */
+  /** Methods of the enclosing class (inherited ones included) to their node ids; empty outside a class. */
   methods: Map<string, NodeId>;
+  /** Fields of the enclosing class that hold an instance of a known class (`repo` of `private repo: Repo`) to the class id. */
+  fields: Map<string, NodeId>;
   /** Local import names to what they were imported as. */
   aliases: Map<string, Binding>;
   /**
-   * Project node behind an import: the binding and the member read from it
-   * (`null` when the call does not name one), or null.
+   * Project node behind an import: the binding and the names read through
+   * it (see `importPath`), or null.
    */
-  resolveImport?: (binding: Binding, member: string | null) => NodeId | null;
+  resolveImport?: (binding: Binding, path: string[]) => NodeId | null;
+  /** The methods of a class of the snippet or the project, by name; undefined for anything else. */
+  methodsOf?: (classId: NodeId) => Map<string, NodeId> | undefined;
+  /** Whether a package specifier names code of the project (a workspace package, a `paths` alias). A relative one always does. */
+  projectModule?: (specifier: string) => boolean;
+  /** The `new C()` value of a name, by the block that declares it: filled as calls ask for it. */
+  instances?: Map<number, Map<string, Node | null>>;
   /**
    * Names the file binds (see `boundNames`). A call whose first segment is
    * not here, and is not imported, is classified with `classifyUnknown`.
@@ -54,12 +62,125 @@ function chainedMethod(fn: Node | null): CallResolution | null {
   return { kind: "external", callee: fn.text, category };
 }
 
-/** The member a call reads from the module behind `binding`, or null. */
-export function memberOf(binding: Binding, rest: string[]): string | null {
-  if (binding.kind === "named")
-    return rest.length === 0 ? binding.imported : null;
-  if (binding.kind === "default") return rest.length === 0 ? "default" : null;
-  return rest.length === 1 ? (rest[0] ?? null) : null;
+/** The names a call reads from the module behind `binding`: `Repo.create` of `import { Repo }` is `Repo`, `create`. */
+export function importPath(binding: Binding, rest: string[]): string[] {
+  if (binding.kind === "named") return [binding.imported ?? "", ...rest];
+  if (binding.kind === "default") return ["default", ...rest];
+  return rest;
+}
+
+/** Whether the id names a class: its last segment is `cls:X`. */
+export function isClassId(id: NodeId): boolean {
+  return (id.split("/").pop() ?? "").startsWith("cls:");
+}
+
+/** The class a dotted name refers to: the snippet's, or a project class by import; null otherwise. */
+export function classNamed(name: string, ctx: CallContext): NodeId | null {
+  const [head = name, ...rest] = name.split(".");
+  const binding = ctx.aliases.get(head);
+  const target =
+    rest.length === 0 && ctx.topLevel.has(name)
+      ? (ctx.topLevel.get(name) ?? null)
+      : binding === undefined
+        ? null
+        : (ctx.resolveImport?.(binding, importPath(binding, rest)) ?? null);
+  return target !== null && isClassId(target) ? target : null;
+}
+
+/** The class of `new C()`, or null for any other value. */
+export function classOfValue(
+  value: Node | null,
+  ctx: CallContext,
+): NodeId | null {
+  if (value?.type !== "new_expression") return null;
+  const ctor = value.childForFieldName("constructor");
+  const name = ctor ? dottedName(ctor) : null;
+  return name === null ? null : classNamed(name, ctx);
+}
+
+const SCOPES = new Set(["statement_block", "program"]);
+
+/** The value each name of a block is declared with (null for a declaration with another value). */
+function declaredIn(block: Node, ctx: CallContext): Map<string, Node | null> {
+  const cached = ctx.instances?.get(block.id);
+  if (cached !== undefined) return cached;
+  const out = new Map<string, Node | null>();
+  for (const child of block.namedChildren) {
+    const statement =
+      child.type === "export_statement"
+        ? child.childForFieldName("declaration")
+        : child;
+    if (
+      statement?.type !== "lexical_declaration" &&
+      statement?.type !== "variable_declaration"
+    )
+      continue;
+    for (const d of statement.namedChildren) {
+      const name = d.childForFieldName("name");
+      if (d.type === "variable_declarator" && name?.type === "identifier") {
+        const value = d.childForFieldName("value");
+        out.set(name.text, value?.type === "new_expression" ? value : null);
+      }
+    }
+  }
+  ctx.instances?.set(block.id, out);
+  return out;
+}
+
+/**
+ * The class of `name` at `from`: the nearest declaration of the name in the
+ * blocks around, when it is `name = new C()`. A parameter of the same name in
+ * between hides it.
+ */
+function instanceClass(
+  from: Node,
+  name: string,
+  ctx: CallContext,
+): NodeId | null {
+  for (let node = from.parent; node !== null; node = node.parent) {
+    const params = node.childForFieldName("parameters");
+    if (
+      node.childForFieldName("parameter")?.text === name ||
+      (params?.type === "formal_parameters" &&
+        params.descendantsOfType("identifier").some((p) => p.text === name))
+    )
+      return null;
+    if (!SCOPES.has(node.type)) continue;
+    const declared = declaredIn(node, ctx);
+    if (declared.has(name))
+      return classOfValue(declared.get(name) ?? null, ctx);
+  }
+  return null;
+}
+
+/** The method `x.m` names when `x` is a class (`Repo.create`) or an instance of one (`u.greet`, `this.repo.find`). */
+function methodCall(
+  call: Node,
+  head: string,
+  rest: string[],
+  ctx: CallContext,
+): NodeId | null {
+  if (ctx.methodsOf === undefined) return null;
+  let cls: NodeId | null = null;
+  let method: string | undefined;
+  if (head === "this" && rest.length === 2) {
+    cls = ctx.fields.get(rest[0] ?? "") ?? null;
+    method = rest[1];
+  } else if (head !== "this" && rest.length === 1) {
+    method = rest[0];
+    const top = ctx.topLevel.get(head);
+    cls =
+      top !== undefined
+        ? isClassId(top)
+          ? top
+          : null
+        : ctx.aliases.has(head) || !ctx.bound.has(head)
+          ? null
+          : instanceClass(call, head, ctx);
+  }
+  return cls === null || method === undefined
+    ? null
+    : (ctx.methodsOf(cls)?.get(method) ?? null);
 }
 
 /** `import fs from "node:fs"` + `fs.readFile` is `fs.readFile`; `import x from "./x"` keeps `x`. */
@@ -85,16 +206,19 @@ function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
   const [head = name, ...rest] = name.split(".");
   if (head === "this" && rest.length === 1) {
     const method = ctx.methods.get(rest[0] ?? "");
-    if (method !== undefined) return { kind: "call", target: method };
+    // The name, for an inherited method that is not among the names of the file.
+    if (method !== undefined)
+      return { kind: "call", target: method, label: rest[0] ?? name };
   }
+  const method = methodCall(call, head, rest, ctx);
+  if (method !== null) return { kind: "call", target: method, label: name };
 
   const binding = ctx.aliases.get(head);
   let callee = name;
   if (binding !== undefined) {
     callee = displayName(binding, head, rest);
-    const member = memberOf(binding, rest);
     const target =
-      member === null ? null : (ctx.resolveImport?.(binding, member) ?? null);
+      ctx.resolveImport?.(binding, importPath(binding, rest)) ?? null;
     if (target !== null) return { kind: "call", target, label: name };
   }
   // The receiver of a chained method, as `foo()` in `foo().push(x)`, keeps
@@ -107,7 +231,12 @@ function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
     return { kind: "external", callee, category: classifyUnknown(callee) };
   }
   const category = classify(callee, binding?.module);
-  if (binding === undefined && category === "EXTERNO") return null;
+  // A call into the project's own code that did not resolve is no external call.
+  const project =
+    binding !== undefined &&
+    (binding.module.startsWith(".") ||
+      ctx.projectModule?.(binding.module) === true);
+  if ((binding === undefined || project) && category === "EXTERNO") return null;
   return { kind: "external", callee, category };
 }
 

@@ -9,6 +9,7 @@ import {
   analyzeIsolating,
   failedGraph,
   groupByPlugin,
+  manifestPlugin,
   splitFiles,
   validateAnalysis,
 } from "@8n8/project";
@@ -237,13 +238,17 @@ async function runGroupCached(
 
     // Phase 2, for the files with no cached result: the ones just parsed, and the ones the context changed under.
     const resultKeys = keys.map((key) => `${key}|${contextHash}`);
+    // A manifest (package.json) gives a contribution and no result.
+    const manifest = group.map(
+      (f) => manifestPlugin(f.path, [plugin]) !== undefined,
+    );
     const results = group.map((f, i) =>
-      isFresh.has(i)
+      isFresh.has(i) || manifest[i]
         ? undefined
         : cache.result(resultKeys[i] as string, f.source),
     );
     const later = results.flatMap((r, i) =>
-      r === undefined && !isFresh.has(i) ? [i] : [],
+      r === undefined && !isFresh.has(i) && !manifest[i] ? [i] : [],
     );
     const slices = [...parsing, ...open(later)];
     let given: FileContribution[] | undefined;
@@ -268,9 +273,10 @@ async function runGroupCached(
         }
       }),
     );
-    const done = results.map((r, i) => {
+    const done = results.flatMap((r, i) => {
+      if (manifest[i]) return [];
       if (r === undefined) throw new Error(`no result for ${group[i]?.path}`);
-      return r;
+      return [r];
     });
     return {
       files: done.map((r) => r.file),

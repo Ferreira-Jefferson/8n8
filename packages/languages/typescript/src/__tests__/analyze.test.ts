@@ -707,8 +707,8 @@ describe("analyze: calls across files", () => {
     ).toBe("file:a.ts/fn:hidden");
   });
 
-  it("leaves a call external when the file or the name is not in the project", () => {
-    const external = (header: string, call: string) => {
+  it("leaves a call to a package external, and a project call it cannot resolve as code", () => {
+    const step = (header: string, call: string) => {
       const { files } = analyze({
         "main.ts": `${header}\nfunction g() {\n  ${call};\n}\n`,
         "a.ts": "export function run() {}\n",
@@ -716,24 +716,17 @@ describe("analyze: calls across files", () => {
       return files[1]?.graph.nodes.find((n) => n.id === "file:main.ts/fn:g/s0");
     };
 
-    expect(external('import { nada } from "./a";', "nada()")).toMatchObject({
-      kind: "external",
-      callee: "nada",
-    });
-    expect(
-      external('import { run } from "./nao-existe";', "run()"),
-    ).toMatchObject({
+    expect(step('import { run } from "pacote";', "run()")).toMatchObject({
       kind: "external",
     });
-    expect(external('import { run } from "pacote";', "run()")).toMatchObject({
-      kind: "external",
-    });
-    expect(external('import * as a from "./a";', "a.x.y()")).toMatchObject({
-      kind: "external",
-    });
-    expect(external('import a from "./a";', "a.run()")).toMatchObject({
-      kind: "external",
-    });
+    for (const [header, call] of [
+      ['import { nada } from "./a";', "nada()"],
+      ['import { run } from "./nao-existe";', "run()"],
+      ['import * as a from "./a";', "a.x.y()"],
+      ['import a from "./a";', "a.run()"],
+    ] as const) {
+      expect(step(header, call)).toMatchObject({ kind: "code" });
+    }
   });
 });
 

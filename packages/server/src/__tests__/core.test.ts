@@ -857,14 +857,17 @@ describe("composeReadProject: the plugin registry", () => {
     ignoredDirs,
   });
 
-  it("asks the reader for the extensions and ignored folders of every plugin", async () => {
+  it("asks the reader for the extensions, manifests and ignored folders of every plugin", async () => {
     const asked: ReadFilter[] = [];
     const readProject = composeReadProject(
       async (_path, filter) => {
         asked.push(filter);
         return { kind: "not-found" };
       },
-      [plugin("a", [".a", ".b"], ["x"]), plugin("c", [".c"], ["y", "z"])],
+      [
+        { ...plugin("a", [".a", ".b"], ["x"]), manifests: ["m.json"] },
+        plugin("c", [".c"], ["y", "z"]),
+      ],
     );
 
     expect(await readProject("/qualquer")).toEqual({ kind: "not-found" });
@@ -874,12 +877,14 @@ describe("composeReadProject: the plugin registry", () => {
     expect(asked).toEqual([
       {
         extensions: [".a", ".b", ".c"],
+        names: ["m.json"],
         ignoredDirs: ["x", "y", "z"],
         include: [],
         ignoreDependencies: true,
       },
       {
         extensions: [".a", ".b", ".c"],
+        names: ["m.json"],
         ignoredDirs: ["x", "y", "z"],
         include: ["big.a"],
         ignoreDependencies: true,

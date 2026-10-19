@@ -22,6 +22,15 @@ export function pluginForPath(
   return plugins.find((p) => p.extensions.includes(ext));
 }
 
+/** The first plugin that reads `path` as a manifest (a `package.json`, by its exact name), or undefined. */
+export function manifestPlugin(
+  path: string,
+  plugins: LanguagePlugin[],
+): LanguagePlugin | undefined {
+  const base = baseName(path);
+  return plugins.find((p) => p.manifests?.includes(base));
+}
+
 /**
  * Picks the language of a pasted snippet (D5, AD-001): the plugin with the best
  * `detect` score; a tie goes to the first registered. `uncertain` when the best

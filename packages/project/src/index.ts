@@ -11,6 +11,7 @@ export {
   detectLanguage,
   MIN_CONFIDENT_SCORE,
   MIN_SCORE_MARGIN,
+  manifestPlugin,
   pluginForPath,
 } from "./detect";
 export { dirOf, layoutProject } from "./layout";

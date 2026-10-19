@@ -534,7 +534,55 @@ describe("the version of a plugin is the guard of its rows", () => {
         ["python", "1"],
         ["typescript", "3"],
       ],
-      hash: "00b3deb75d157e1b3239fc60f85f99fc21881a6b",
+      hash: "974274cfc2108a7fa412ce485ed9d458d34f373d",
     });
+  });
+});
+
+describe("a manifest (package.json) through the cache", () => {
+  const MONO: SourceFile[] = [
+    { path: "app/package.json", source: '{ "name": "@acme/app" }' },
+    {
+      path: "app/src/main.ts",
+      source:
+        'import { coreFn } from "@acme/core";\nexport function main() {\n  return coreFn();\n}\n',
+    },
+    { path: "core/package.json", source: '{ "name": "@acme/core" }' },
+    {
+      path: "core/src/index.ts",
+      source: "export function coreFn() {\n  return 1;\n}\n",
+    },
+  ];
+  const wires = (parts: StoreParts) =>
+    (
+      JSON.parse(parts.skeleton) as {
+        graph: { edges: { kind: string; source: string; target: string }[] };
+      }
+    ).graph.edges.map((e) => `${e.kind} ${e.source} -> ${e.target}`);
+
+  it("gives the answers of a build without it, and counts no manifest as a file", async () => {
+    const reference = await plain(MONO);
+    const cold = await built(MONO);
+    expect(answers(cold.parts)).toEqual(reference);
+    expect(cold.parts.counts.files).toBe(2);
+    expect(wires(cold.parts)).toContain(
+      "imports file:app/src/main.ts -> file:core/src/index.ts",
+    );
+
+    const warm = await built(MONO);
+    expect(warm.parsed).toEqual([]);
+    expect(answers(warm.parts)).toEqual(reference);
+  });
+
+  it("analyzes again when a package.json changes", async () => {
+    await built(MONO);
+    const renamed = MONO.map((f) =>
+      f.path === "core/package.json"
+        ? { ...f, source: '{ "name": "@acme/outro" }' }
+        : f,
+    );
+    const after = await built(renamed);
+    expect(answers(after.parts)).toEqual(await plain(renamed));
+    expect(wires(after.parts).some((w) => w.startsWith("imports"))).toBe(false);
   });
 });

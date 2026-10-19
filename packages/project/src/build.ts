@@ -11,7 +11,7 @@ import {
   type Offer,
   type SourceFile,
 } from "@8n8/model";
-import { pluginForPath } from "./detect";
+import { manifestPlugin, pluginForPath } from "./detect";
 import { baseName, byCode, dirOf, lastLine, layoutProject } from "./layout";
 import { validateAnalysis } from "./validate";
 
@@ -29,17 +29,34 @@ const EMPTY: LanguageAnalysis = {
   requests: [],
 };
 
-/** Each file goes to the first plugin that serves its extension; the rest are ignored. */
+/**
+ * Each file goes to the first plugin that serves its extension; the rest are ignored.
+ * A manifest (`package.json`) joins the files of the plugin that reads it, in path order,
+ * when that plugin has files: alone it maps nothing.
+ */
 export function groupByPlugin(
   files: SourceFile[],
   plugins: LanguagePlugin[],
 ): Map<LanguagePlugin, SourceFile[]> {
   const groups = new Map<LanguagePlugin, SourceFile[]>();
+  const manifests: [LanguagePlugin, SourceFile][] = [];
   for (const file of [...files].sort((a, b) => byCode(a.path, b.path))) {
     const plugin = pluginForPath(file.path, plugins);
-    if (plugin === undefined) continue;
+    if (plugin === undefined) {
+      const reader = manifestPlugin(file.path, plugins);
+      if (reader !== undefined) manifests.push([reader, file]);
+      continue;
+    }
     groups.set(plugin, [...(groups.get(plugin) ?? []), file]);
   }
+  const joined = new Set<SourceFile[]>();
+  for (const [plugin, file] of manifests) {
+    const group = groups.get(plugin);
+    if (group === undefined) continue;
+    group.push(file);
+    joined.add(group);
+  }
+  for (const group of joined) group.sort((a, b) => byCode(a.path, b.path));
   return groups;
 }
 

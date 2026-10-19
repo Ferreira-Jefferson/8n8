@@ -14,11 +14,14 @@ import { buildGraph } from "./build-graph";
 import { moduleSpecifiers } from "./imports";
 import { collectLinks } from "./links";
 import {
+  type Contribution,
   contributionOf,
   exportInfo,
   indexOfContributions,
-  type ModuleContribution,
+  isManifest,
   type ModuleIndex,
+  manifestContribution,
+  methodsOf,
   resolveMember,
   resolveModulePath,
 } from "./modules";
@@ -48,8 +51,11 @@ function fileGraph({ file, tree, errors }: Parsed, index: ModuleIndex): Graph {
   const id = fileId(file.path);
   const graph = buildGraph(tree, {
     prefix: id,
-    resolveImport: (binding, member) =>
-      member === null ? null : resolveMember(index, file.path, binding, member),
+    resolveImport: (binding, path) =>
+      resolveMember(index, file.path, binding, path),
+    methodsOf: (classId) => methodsOf(index, classId),
+    projectModule: (specifier) =>
+      resolveModulePath(file.path, specifier, index) !== null,
   });
   const head: FlowNode = {
     id,
@@ -105,12 +111,15 @@ function importsEdges(parsed: Parsed[], index: ModuleIndex): FlowEdge[] {
  * each file offers and requests to other languages, with the index of every slice.
  */
 export function openSlice(files: SourceFile[]): AnalysisSlice {
+  const sorted = [...files].sort((a, b) => byCode(a.path, b.path));
   const parsed: Parsed[] = [];
   const dispose = () => {
     for (const { tree } of parsed) tree.delete();
   };
   try {
-    for (const file of [...files].sort((a, b) => byCode(a.path, b.path))) {
+    for (const file of sorted) {
+      // A package.json or a tsconfig.json only gives context: no tree, no graph.
+      if (isManifest(file.path)) continue;
       const parser = file.path.endsWith(".tsx")
         ? parsers.tsx
         : parsers.typescript;
@@ -122,17 +131,24 @@ export function openSlice(files: SourceFile[]): AnalysisSlice {
     dispose();
     throw error;
   }
+  const trees = new Map(parsed.map((p) => [p.file.path, p.tree]));
   return {
     contribute: () =>
-      parsed.map(({ file, tree }) => ({
-        path: file.path,
-        data: contributionOf(tree.rootNode),
-      })),
+      sorted.map((file) => {
+        const tree = trees.get(file.path);
+        return {
+          path: file.path,
+          data:
+            tree === undefined
+              ? manifestContribution(file.path, file.source)
+              : contributionOf(tree.rootNode),
+        };
+      }),
     analyze(contributions) {
       const index = indexOfContributions(
         contributions.map(({ path, data }) => ({
           path,
-          data: data as ModuleContribution,
+          data: data as Contribution,
         })),
       );
       const result: LanguageAnalysis = {

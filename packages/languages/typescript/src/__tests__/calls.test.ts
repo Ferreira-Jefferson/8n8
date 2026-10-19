@@ -122,10 +122,16 @@ describe("external calls", () => {
     );
   });
 
-  it("keeps the local name for a default import of a relative file", () => {
+  it("never makes a call into a relative file external", () => {
     expect(step("util.go();", 'import util from "./util";')).toMatchObject({
-      callee: "util.go",
-      category: "EXTERNO",
+      kind: "code",
+    });
+  });
+
+  it("keeps the table category of a call into a relative file", () => {
+    expect(step("db.query(sql);", 'import db from "./db";')).toMatchObject({
+      kind: "external",
+      category: "BANCO",
     });
   });
 
