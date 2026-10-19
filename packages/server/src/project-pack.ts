@@ -5,6 +5,7 @@ import {
   type FlowEdge,
   type FlowNode,
   fileId,
+  fold,
   folderId,
   type Graph,
   type IgnoredFile,
@@ -75,6 +76,8 @@ export interface PackedFile {
   ids: NodeId[];
   /** The search entries of the nodes of the file, in the order of its nodes. */
   search: { texts: string[]; hits: string[] };
+  /** The search entries of the names that have no node of their own: routes, top-level constants and types, in line order. */
+  names: { texts: string[]; hits: string[] };
   /** Each node whose `target` lies in another file, with that target: the join checks it exists. */
   refTargets: [NodeId, NodeId][];
   others: OtherEdge[];
@@ -115,6 +118,60 @@ function folderChain(path: string): NodeId[] {
   return parts.map((_, i) => folderId(parts.slice(0, i + 1).join("/")));
 }
 
+/**
+ * The declarations at the top of a file (column 0) that a search should find although the
+ * plugins make no node of them: constants, types, interfaces. By the id of the plugin.
+ */
+const TOP_NAMES: Record<string, RegExp> = {
+  typescript:
+    /^(?:export\s+)?(?:default\s+)?(?:declare\s+)?(?:const\s+enum|const|let|var|interface|type|enum|namespace)\s+([A-Za-z_$][\w$]*)/gm,
+  python: /^([A-Za-z_]\w*)\s*(?::[^=\n]+)?=(?!=)/gm,
+};
+
+/**
+ * The names of a file that have no node of their own: the routes it serves (its HTTP offers) and its
+ * top-level declarations. Each points at the smallest node that holds its line; a name whose
+ * smallest node is a function or a class is left out, since that node has its own entry.
+ */
+export function namesOf(
+  pluginId: string,
+  source: string,
+  nodes: readonly FlowNode[],
+  offers: readonly Offer[],
+): { name: string; line: number; node: FlowNode }[] {
+  const holder = (line: number): FlowNode | undefined => {
+    let best: FlowNode | undefined;
+    for (const n of nodes) {
+      const { start, end } = n.range;
+      if (start > line || end < line) continue;
+      if (!best || end - start <= best.range.end - best.range.start) best = n;
+    }
+    return best;
+  };
+  const found: { name: string; line: number; node: FlowNode }[] = [];
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  for (const o of offers) {
+    const node = byId.get(o.nodeId);
+    if (o.channel === "http" && node) {
+      found.push({ name: o.key, line: o.line, node });
+    }
+  }
+  const pattern = TOP_NAMES[pluginId];
+  if (pattern) {
+    let line = 1;
+    let at = 0;
+    for (const m of source.matchAll(pattern)) {
+      for (; at < m.index; at++) if (source[at] === "\n") line++;
+      const node = holder(line);
+      const name = m[1] as string;
+      if (node && node.kind !== "function" && node.kind !== "class") {
+        found.push({ name, line, node });
+      }
+    }
+  }
+  return found.sort((a, b) => a.line - b.line);
+}
+
 /** Packs the graph of one file. Checks what needs nothing from the other files, so a plugin bug names its file. */
 export function packFile(
   plugin: Pick<LanguagePlugin, "id">,
@@ -122,6 +179,8 @@ export function packFile(
   path: string,
   source: string,
   graph: Graph,
+  /** The offers of the plugin whose node lives in this file: its routes are searched by name. */
+  offers: readonly Offer[] = [],
 ): PackedFile {
   const idSet = validateFileGraph(plugin, path, source, graph);
   const { nodes } = graph;
@@ -171,10 +230,7 @@ export function packFile(
 
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const folders = folderChain(path);
-  const texts: string[] = [];
-  const hits: string[] = [];
-  for (const node of nodes) {
-    if (!SEARCHABLE_KINDS.has(node.kind)) continue;
+  const ancestryOf = (node: FlowNode): NodeId[] => {
     const inside: NodeId[] = [];
     for (
       let parent = node.parentId === null ? undefined : byId.get(node.parentId);
@@ -183,8 +239,26 @@ export function packFile(
     ) {
       inside.unshift(parent.id);
     }
+    return [...folders, ...inside];
+  };
+  const texts: string[] = [];
+  const hits: string[] = [];
+  for (const node of nodes) {
+    if (!SEARCHABLE_KINDS.has(node.kind)) continue;
     texts.push(searchText(node));
-    hits.push(JSON.stringify({ node, ancestry: [...folders, ...inside] }));
+    hits.push(JSON.stringify({ node, ancestry: ancestryOf(node) }));
+  }
+  const names: { texts: string[]; hits: string[] } = { texts: [], hits: [] };
+  for (const { name, line, node } of namesOf(
+    plugin.id,
+    source,
+    nodes,
+    offers,
+  )) {
+    names.texts.push(fold(name));
+    names.hits.push(
+      JSON.stringify({ node, ancestry: ancestryOf(node), name, line }),
+    );
   }
 
   const children = nodes.filter((c) => c.parentId === head.id);
@@ -213,6 +287,7 @@ export function packFile(
     edgeCount: graph.edges.length,
     ids: [...idSet],
     search: { texts, hits },
+    names,
     refTargets,
     others,
     linkIds,
@@ -228,6 +303,14 @@ export function packAnalysis(
 ): PackedAnalysis {
   const sources = new Map(files.map((f) => [f.path, f.source]));
   const seen = new Set<string>();
+  const offersOf = new Map<string, Offer[]>();
+  for (const o of analysis.offers) {
+    if (o.channel !== "http") continue;
+    const path = fileOfId(o.nodeId, ctx.paths);
+    const list = offersOf.get(path);
+    if (list) list.push(o);
+    else offersOf.set(path, [o]);
+  }
   return {
     files: analysis.files.map(({ path, graph }) => {
       const source = sources.get(path);
@@ -236,7 +319,7 @@ export function packAnalysis(
       }
       if (seen.has(path)) failAnalysis(plugin, path, "the file appears twice");
       seen.add(path);
-      return packFile(plugin, ctx, path, source, graph);
+      return packFile(plugin, ctx, path, source, graph, offersOf.get(path));
     }),
     imports: analysis.imports,
     offers: analysis.offers,
@@ -437,6 +520,13 @@ export function assemble(input: AssembleInput): StoreParts {
       texts.push(searchText(n));
       hits.push(JSON.stringify({ node: n, ancestry }));
     }
+  }
+  // Then the names with no node of their own, file by file: a node found by its name comes first.
+  for (const n of layout) {
+    if (n.kind !== "file") continue;
+    const { names } = byPath.get(n.path ?? "") as PackedFile;
+    for (const text of names.texts) texts.push(text);
+    for (const hit of names.hits) hits.push(hit);
   }
 
   const folders = layout.filter((n) => n.kind === "folder");

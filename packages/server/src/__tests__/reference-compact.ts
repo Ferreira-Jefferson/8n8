@@ -7,16 +7,18 @@ import { linkProject } from "@8n8/links";
 import {
   type FlowEdge,
   type FlowNode,
+  fold,
   type Graph,
   type IgnoredFile,
   type NodeId,
+  type Offer,
   SEARCHABLE_KINDS,
   type SourceFile,
   searchText,
   skeletonGraphOf,
 } from "@8n8/model";
 import type { ProjectBuild } from "@8n8/project";
-import { lineCount } from "../project-pack";
+import { lineCount, namesOf } from "../project-pack";
 import {
   type CrossCall,
   type FileRecord,
@@ -32,6 +34,8 @@ export interface CompactInput {
   version: string;
   /** The whole graph of the project, with the wires between languages already in it. */
   graph: Graph;
+  /** For the names a search finds besides the nodes: the offers of the plugins and the plugin of each file. */
+  names?: { offers: Offer[]; pluginOf: (path: string) => string | undefined };
 }
 
 /** Wires between languages (D3, D4); the nodes stay as the plugins made them. The project sets `graph.project`. */
@@ -158,6 +162,35 @@ export function compactProject(input: CompactInput): StoreParts {
     }
     texts.push(searchText(node));
     hits.push(JSON.stringify({ node, ancestry }));
+  }
+  // The names with no node of their own, after every node, file by file in the order of the graph.
+  for (const file of graph.nodes) {
+    const plugin = input.names?.pluginOf(file.path ?? "");
+    if (file.kind !== "file" || plugin === undefined) continue;
+    const path = file.path ?? "";
+    const offers = (input.names?.offers ?? []).filter(
+      (o) => o.channel === "http" && fileOfId(o.nodeId, paths) === path,
+    );
+    const source = files.find((f) => f.path === path)?.source ?? "";
+    for (const { name, line, node } of namesOf(
+      plugin,
+      source,
+      nodesByFile.get(path) ?? [],
+      offers,
+    )) {
+      const ancestry: NodeId[] = [];
+      for (
+        let parent =
+          node.parentId === null ? undefined : byId.get(node.parentId);
+        parent;
+        parent =
+          parent.parentId === null ? undefined : byId.get(parent.parentId)
+      ) {
+        ancestry.unshift(parent.id);
+      }
+      texts.push(fold(name));
+      hits.push(JSON.stringify({ node, ancestry, name, line }));
+    }
   }
 
   const stats = {

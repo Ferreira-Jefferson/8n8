@@ -56,7 +56,7 @@ import { externalEffects } from "./panel/effects";
 import { IgnoredFiles } from "./panel/IgnoredFiles";
 import { clampPanel, PanelResizer } from "./panel/PanelResizer";
 import { createProjectStore, type ProjectStore } from "./project-store";
-import { type SearchEntry, searchEntries, searchEntryOf } from "./search/match";
+import { hitEntryOf, type SearchEntry, searchEntries } from "./search/match";
 import { NodeSearch } from "./search/NodeSearch";
 import { SettingsButton, SettingsDialog } from "./settings/SettingsDialog";
 
@@ -605,10 +605,7 @@ export function App({ initialFolder = null }: AppProps) {
       }
       return found.hits.map((hit) => {
         const file = hit.ancestry.flatMap((id) => files.get(id) ?? []).at(-1);
-        return {
-          ...searchEntryOf(hit.node, file, undefined),
-          ancestry: hit.ancestry,
-        };
+        return hitEntryOf(hit, file);
       });
     };
   }, [mapped]);

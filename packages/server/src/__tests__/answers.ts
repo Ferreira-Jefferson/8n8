@@ -1,5 +1,5 @@
 import type { LanguagePlugin, SourceFile } from "@8n8/model";
-import { analyzeProject } from "@8n8/project";
+import { analyzeProject, pluginForPath } from "@8n8/project";
 import { createProjectStore, type StoreParts } from "../project-store";
 import { compactProject, linkedGraph } from "./reference-compact";
 
@@ -37,11 +37,16 @@ export function referenceParts(
   files: SourceFile[],
   plugins: LanguagePlugin[],
 ): StoreParts {
+  const build = analyzeProject(files, plugins);
   return compactProject({
     name,
     files,
     ignored: [],
     version: "v-test",
-    graph: linkedGraph(analyzeProject(files, plugins), name),
+    graph: linkedGraph(build, name),
+    names: {
+      offers: build.offers,
+      pluginOf: (path) => pluginForPath(path, plugins)?.id,
+    },
   });
 }

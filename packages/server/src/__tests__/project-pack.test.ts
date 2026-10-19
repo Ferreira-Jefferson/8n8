@@ -316,3 +316,62 @@ describe("buildInThread refuses what a plugin got wrong, naming the plugin and t
     ).resolves.toBeDefined();
   });
 });
+
+describe("the search finds the names that have no node of their own", () => {
+  const TS = `import { Hono } from "hono";
+export const IGNORED_DIRS = new Set(["a"]);
+export interface SourceFile { path: string }
+type Kind = "a" | "b";
+const app = new Hono();
+app.get("/api/project", (c) => c.json({}));
+app.post("/api/project/search", (c) => c.json({}));
+export function readSourceFile() { return 1; }
+`;
+  const PY = `LIMITE = 3
+LISTA: list[int] = []
+
+def ler():
+    x = 1
+    return x
+`;
+  const files: SourceFile[] = [
+    { path: "src/app.ts", source: TS },
+    { path: "conf.py", source: PY },
+  ];
+  /** Each hit as [name or label, line, node id]. */
+  const search = async (query: string) => {
+    const store = createProjectStore(
+      await sameAsReference(files, languagePlugins),
+    );
+    return store
+      .search(query, 50)
+      .map((h) => [h.name ?? h.node.label, h.line, h.node.id]);
+  };
+
+  it("a route by its path, with its method, line and a node of its file", async () => {
+    expect(await search("/api/project")).toEqual([
+      ["GET /api/project", 6, expect.stringMatching(/^file:src\/app\.ts\//)],
+      [
+        "POST /api/project/search",
+        7,
+        expect.stringMatching(/^file:src\/app\.ts\//),
+      ],
+    ]);
+  });
+
+  it("a top-level constant, interface and type of TypeScript, and an assignment of Python", async () => {
+    const named = async (q: string) =>
+      (await search(q)).map(([name, line]) => [name, line]);
+    expect(await named("IGNORED_DIRS")).toEqual([["IGNORED_DIRS", 2]]);
+    // The function is a node and comes first; the interface comes after it.
+    expect(await named("SourceFile")).toEqual([
+      ["readSourceFile", undefined],
+      ["SourceFile", 3],
+    ]);
+    expect(await named("Kind")).toEqual([["Kind", 4]]);
+    expect(await named("LISTA")).toEqual([["LISTA", 2]]);
+    // A name inside a function is no top-level name, and a function keeps only its own entry.
+    expect(await named("x")).toEqual([]);
+    expect(await named("ler")).toEqual([["ler", undefined]]);
+  });
+});

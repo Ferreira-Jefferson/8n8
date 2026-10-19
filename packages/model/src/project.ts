@@ -61,6 +61,10 @@ export interface FileDetail {
 export interface SearchHit {
   node: FlowNode;
   ancestry: NodeId[];
+  /** A name found inside the node, which has no node of its own: a route (`GET /api/x`), a top-level constant or type. */
+  name?: string;
+  /** The line of `name`. */
+  line?: number;
 }
 
 export interface ProjectExtractor {

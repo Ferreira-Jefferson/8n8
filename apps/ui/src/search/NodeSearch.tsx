@@ -181,7 +181,7 @@ export function NodeSearch({
           <div id={`${base}-list`} role="listbox" aria-label={t("search.list")}>
             {results.map((entry, i) => (
               <button
-                key={entry.id}
+                key={`${entry.id} ${entry.title}`}
                 id={optionId(i)}
                 type="button"
                 role="option"

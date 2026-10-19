@@ -1,4 +1,4 @@
-import { cpSync, mkdtempSync, rmSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -254,6 +254,64 @@ test.describe("Busca de nó", () => {
         );
       })
       .toBeLessThan(10);
+  });
+
+  test("BUSCA: a route and a top-level constant are found by name, with file and line, and the pick goes to the code that holds them", async ({
+    page,
+  }) => {
+    const api = join(tmp, "api");
+    mkdirSync(api, { recursive: true });
+    writeFileSync(
+      join(api, "server.ts"),
+      [
+        'import { Hono } from "hono";',
+        'export const IGNORED_DIRS = new Set(["a"]);',
+        "export interface SourceFile { path: string }",
+        "const app = new Hono();",
+        'app.get("/api/project", (c) => c.json({}));',
+        'app.post("/api/project/search", (c) => c.json({}));',
+        "export function readSourceFile() { return 1; }",
+        "",
+      ].join("\n"),
+    );
+    await page.goto("/");
+    await page.getByLabel("Caminho da pasta").fill(api);
+    await page.getByRole("button", { name: "Mapear pasta" }).click();
+    await expect(lupa(page)).toBeVisible();
+
+    await lupa(page).click();
+    await field(page).fill("/api/project");
+    await expect(options(page).locator("b")).toHaveText([
+      "GET /api/project",
+      "POST /api/project/search",
+    ]);
+    await expect(options(page).locator("i")).toHaveText([
+      "server.ts · 5",
+      "server.ts · 6",
+    ]);
+
+    await field(page).fill("IGNORED_DIRS");
+    await expect(options(page).locator("b")).toHaveText(["IGNORED_DIRS"]);
+    await expect(options(page).locator("i")).toHaveText(["server.ts · 2"]);
+
+    await field(page).fill("SourceFile");
+    await expect(options(page).locator("b")).toHaveText([
+      "ReadSourceFile",
+      "SourceFile",
+    ]);
+
+    await field(page).fill("/api/project");
+    await options(page).filter({ hasText: "GET /api/project" }).click();
+    await expect(field(page)).toBeHidden();
+    await expect(breadcrumb(page).getByRole("button")).toContainText([
+      "api",
+      "server.ts",
+    ]);
+    const card = page.locator('[aria-roledescription="node"]', {
+      has: page.locator(".node.on"),
+    });
+    await expect(card).toHaveCount(1);
+    expect(await card.getAttribute("data-id")).toMatch(/^file:server\.ts\//);
   });
 });
 

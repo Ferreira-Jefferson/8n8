@@ -4,6 +4,7 @@ import {
   type Graph,
   type NodeId,
   SEARCHABLE_KINDS,
+  type SearchHit,
   searchWords,
 } from "@8n8/model";
 import { codeLineOf, provisionalLabel, tagLabel, tagOf } from "../flow/card";
@@ -20,6 +21,8 @@ export interface SearchEntry {
   where: string;
   /** Only on a hit of the server: the parents of a node whose file may not be loaded yet, from the top. */
   ancestry?: NodeId[];
+  /** A hit of the server on a name inside the node (a route, a top-level constant): it keeps its own title. */
+  named?: true;
 }
 
 export interface Part {
@@ -92,6 +95,29 @@ export function searchEntryOf(
   };
 }
 
+/**
+ * The entry of a hit of the server; `file` is the path of the file it lives in. A hit on a name
+ * inside the node (`GET /api/x`, `IGNORED_DIRS`) shows that name and its line, not the node's.
+ */
+export function hitEntryOf(
+  hit: SearchHit,
+  file: string | undefined,
+  t: Translate = defaultT,
+): SearchEntry {
+  const entry = searchEntryOf(hit.node, file, undefined, t);
+  if (hit.name === undefined) return { ...entry, ancestry: hit.ancestry };
+  return {
+    ...entry,
+    title: hit.name,
+    tech: "",
+    where: [(file ?? hit.node.path)?.split("/").at(-1), hit.line]
+      .filter(Boolean)
+      .join(" · "),
+    ancestry: hit.ancestry,
+    named: true,
+  };
+}
+
 /** An entry for each searchable node of the whole graph, at every level. */
 export function searchEntries(
   graph: Graph,
@@ -122,13 +148,18 @@ export function mergeResults(
   limit = MAX_RESULTS,
 ): SearchEntry[] {
   const known = new Map(local.map((e) => [e.id, e]));
-  const heard = new Set(remote.map((e) => e.id));
+  // A hit on a name inside a node stands for the name, not for the node.
+  const heard = new Set(remote.filter((e) => !e.named).map((e) => e.id));
   const merged = [
     ...local.filter((e) => !heard.has(e.id)),
-    ...remote.map((e) => ({
-      ...(known.get(e.id) ?? e),
-      ...(e.ancestry ? { ancestry: e.ancestry } : {}),
-    })),
+    ...remote.map((e) =>
+      e.named
+        ? e
+        : {
+            ...(known.get(e.id) ?? e),
+            ...(e.ancestry ? { ancestry: e.ancestry } : {}),
+          },
+    ),
   ];
   return merged.slice(0, limit);
 }
