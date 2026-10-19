@@ -278,8 +278,36 @@ export function allocateTopLevel(root: Node): TopLevel {
   return { ids, topLevel, names };
 }
 
+/** The methods of each top-level class, by name, with ids as `buildClass` gives them (`cls:X/fn:m`); the last `def` wins. */
+export function classMethodsOf(root: Node): Map<string, Map<string, NodeId>> {
+  const top = allocateTopLevel(root);
+  const classes = new Map<string, Map<string, NodeId>>();
+  let index = 0;
+  for (const statement of root.namedChildren) {
+    if (IGNORED.has(statement.type)) continue;
+    const def = definitionOf(statement);
+    if (def === null) continue;
+    const id = top.ids[index++] ?? "";
+    if (def.type !== "class_definition") continue;
+    const methodId = idAllocator();
+    const methods = new Map<string, NodeId>();
+    for (const member of bodyOf(def)) {
+      const method = definitionOf(member);
+      if (method === null) continue;
+      const kind = method.type === "function_definition" ? "function" : "class";
+      const mid = childId(id, methodId(kind, nameOf(method)));
+      if (kind === "function") methods.set(nameOf(method), mid);
+    }
+    classes.set(nameOf(def), methods);
+  }
+  return classes;
+}
+
 export interface BuildOptions
-  extends Pick<CallContext, "resolveImport" | "projectNames"> {
+  extends Pick<
+    CallContext,
+    "resolveImport" | "projectNames" | "isProjectName"
+  > {
   /** Parent of the top-level nodes, also prefixed to their ids (AD-013). */
   prefix?: NodeId;
   /** Names that `from x import *` bring from the project, to their full names; the file's own imports win. */
@@ -301,6 +329,12 @@ export function buildGraph(tree: Tree, options: BuildOptions = {}): Graph {
         [...top.topLevel].map(([name, id]) => [name, scoped(id)]),
       ),
       methods: new Map(),
+      classMethods: new Map(
+        [...classMethodsOf(tree.rootNode)].map(([name, methods]) => [
+          name,
+          new Map([...methods].map(([m, id]) => [m, scoped(id)])),
+        ]),
+      ),
       aliases: new Map([
         ...(starAliases ?? []),
         ...importAliases(tree.rootNode),

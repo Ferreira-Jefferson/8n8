@@ -1,6 +1,6 @@
 import { childId, fileId, type NodeId } from "@8n8/model";
 import type { Node } from "web-tree-sitter";
-import { allocateTopLevel } from "./build-graph";
+import { allocateTopLevel, classMethodsOf } from "./build-graph";
 import { allNames, importAliases, starModules } from "./imports";
 import { type RouterFacts, routerFactsOf } from "./links";
 
@@ -46,6 +46,8 @@ export interface ModuleEntry {
   stars: string[];
   /** The names of its `__all__`, or null without a plain one. */
   all: string[] | null;
+  /** Top-level class name to its methods, by name, with local ids (`cls:X/fn:m`). */
+  classes: Map<string, Map<string, NodeId>>;
 }
 
 /** Project modules by dotted name. */
@@ -63,6 +65,7 @@ export interface ModuleContribution {
   stars: string[];
   all: string[] | null;
   routes: RouterFacts;
+  classes: [string, [string, NodeId][]][];
 }
 
 /** The contribution of one file: it depends only on the path and the text. */
@@ -78,6 +81,10 @@ export function contributionOf(path: string, root: Node): ModuleContribution {
     stars: starModules(root),
     all: allNames(root),
     routes: routerFactsOf(moduleNameOf(path) ?? "", root, new Map(aliases)),
+    classes: [...classMethodsOf(root)].map(([name, methods]) => [
+      name,
+      [...methods],
+    ]),
   };
 }
 
@@ -95,6 +102,9 @@ export function indexOfContributions(
       aliases: new Map(data.aliases),
       stars: data.stars,
       all: data.all,
+      classes: new Map(
+        data.classes.map(([name, methods]) => [name, new Map(methods)]),
+      ),
     });
   }
   return index;
@@ -106,7 +116,7 @@ export function buildModuleIndex(files: ParsedFile[]): ModuleIndex {
   );
 }
 
-/** Resolves an absolute dotted name whose last segment names a definition. */
+/** Resolves an absolute dotted name whose last segment names a definition, or a method of a class (`m.Class.method`). */
 function resolveAbsolute(
   index: ModuleIndex,
   name: string,
@@ -119,7 +129,17 @@ function resolveAbsolute(
     const entry = index.get(segments.slice(0, n).join("."));
     if (entry === undefined) continue;
     const last = segments[n];
-    if (last === undefined || n !== segments.length - 1) return null;
+    const member = n === segments.length - 2 ? segments[n + 1] : undefined;
+    if (last === undefined) return null;
+    if (member !== undefined) {
+      const method = entry.classes.get(last)?.get(member);
+      if (method !== undefined) return childId(fileId(entry.path), method);
+      const alias = entry.aliases.get(last);
+      return alias === undefined
+        ? null
+        : resolveFrom(index, entry.path, `${alias}.${member}`, visited);
+    }
+    if (n !== segments.length - 1) return null;
     const local = entry.topLevel.get(last);
     if (local !== undefined) return childId(fileId(entry.path), local);
     const alias = entry.aliases.get(last);

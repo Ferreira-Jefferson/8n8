@@ -58,6 +58,8 @@ function fileGraph(
     prefix: id,
     starAliases: stars.aliases,
     resolveImport: (full) => resolveName(index, file.path, full),
+    isProjectName: (full) =>
+      deepestModule(index, file.path, full) !== undefined,
     projectNames,
   });
   const head: FlowNode = {
