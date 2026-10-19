@@ -115,7 +115,7 @@ pnpm install
 pnpm install:cli:global
 ```
 
-O `pnpm install:cli:global` gera o pacote (`release/8-n-8-0.0.2.tgz`) e o instala com `npm install -g`. O pacote não tem dependências nem scripts de instalação: todo o código vai dentro dele. Depois, use o comando `8n8`:
+O `pnpm install:cli:global` gera o pacote (`release/8-n-8-0.1.0.tgz`) e o instala com `npm install -g`. O pacote não tem dependências nem scripts de instalação: todo o código vai dentro dele. Depois, use o comando `8n8`:
 
 ```bash
 8n8 .              # abre o mapa da pasta atual, numa janela própria (Chrome ou Edge)
@@ -345,7 +345,7 @@ Todos os comandos rodam na raiz do repositório.
 | `pnpm dev:ui` | Inicia só a tela, com o Vite. |
 | `pnpm start` | Constrói a tela e inicia o servidor e a tela juntos, sem recarga. Não abre o navegador. |
 | `pnpm open <pasta>` | Constrói o CLI e abre o mapa da pasta. Uma pasta relativa vale a partir de onde você digitou o comando. |
-| `pnpm build:cli` | Gera o pacote do CLI em `release/8-n-8-0.0.2.tgz`. |
+| `pnpm build:cli` | Gera o pacote do CLI em `release/8-n-8-0.1.0.tgz`. |
 | `pnpm build:ext` | Gera o pacote da extensão em `release/8n8-vscode-0.0.1.vsix`. |
 | `pnpm build:all` | Instala as dependências e gera o CLI e a extensão. |
 | `pnpm install:cli:global` | Gera o CLI e instala o comando `8n8` no terminal. |
