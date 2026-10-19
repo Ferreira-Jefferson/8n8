@@ -626,6 +626,72 @@ describe("analyze: offers", () => {
       ).toEqual([]);
     });
 
+    it("offers a route under the prefix where its router is mounted, or its basePath", () => {
+      expect(
+        byChannel(
+          offers(
+            [
+              "import express from 'express';",
+              "import { Hono } from 'hono';",
+              "const app = express();",
+              "const users = express.Router();",
+              "users.get('/users', h);",
+              "users.get('/', h);",
+              "app.use('/api', users);",
+              "const items = new Hono();",
+              "items.post('/items', (c) => c.json(1));",
+              "const web = new Hono().basePath('/web');",
+              "web.route('/v1', items);",
+              "const v2 = web.basePath('/v2');",
+              "v2.get('/z', h);",
+              "app.get('/health', h);",
+            ].join("\n"),
+          ),
+          "http",
+        ).map(([, key, , line]) => [key, line]),
+      ).toEqual([
+        ["GET /api/users", 5],
+        ["GET /api", 6],
+        ["POST /web/v1/items", 9],
+        ["GET /web/v2/z", 13],
+        ["GET /health", 14],
+      ]);
+    });
+
+    it("offers a route of a router mounted in another file under that prefix only", () => {
+      const result = analyze({
+        "routes/users.ts": [
+          "import { Router } from 'express';",
+          "const router = Router();",
+          "router.get('/users/:id', h);",
+          "export default router;",
+        ].join("\n"),
+        "routes/items.ts": [
+          "import { Hono } from 'hono';",
+          "export const items = new Hono();",
+          "items.get('/items', (c) => c.json(1));",
+        ].join("\n"),
+        "server.ts": [
+          "import express from 'express';",
+          "import { Hono } from 'hono';",
+          "import users from './routes/users';",
+          "import { items } from './routes/items';",
+          "const app = express();",
+          "app.use('/api', auth, users);",
+          "const hono = new Hono().basePath('/h');",
+          "hono.route('/v1', items);",
+        ].join("\n"),
+      });
+      expect(
+        result.offers.flatMap((o) =>
+          o.channel === "http" ? [[o.key, o.nodeId]] : [],
+        ),
+      ).toEqual([
+        ["GET /h/v1/items", "file:routes/items.ts/mod/s1"],
+        ["GET /api/users/:id", "file:routes/users.ts/mod/s1"],
+      ]);
+    });
+
     it("does not offer a call on a client of axios, got or ky, or one whose last argument is data", () => {
       expect(
         byChannel(

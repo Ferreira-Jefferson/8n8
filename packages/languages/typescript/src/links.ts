@@ -72,6 +72,15 @@ const CLIENT_FACTORIES = new Map([
   ["got", new Set(["extend"])],
   ["ky", new Set(["create", "extend"])],
 ]);
+/** `new Hono()`, `new Router()`: a router of these libraries, by `new`. */
+const ROUTER_CLASSES = new Set([
+  "hono",
+  "express",
+  "koa-router",
+  "@koa/router",
+]);
+/** `express()`, `express.Router()`, `Router()`, `fastify()`: a router of these libraries, by a call. */
+const ROUTER_CALLS = new Set(["express", "fastify"]);
 /** What a route handler can be: a function, a name, a member or a call that gives one. */
 const HANDLERS = new Set([
   "arrow_function",
@@ -192,6 +201,13 @@ function joinBase(base: Read, url: Read): Read {
   };
 }
 
+/** A route under the prefix of its router: `/api` and `/users` give `/api/users`. */
+function joinPath(prefix: string, path: string): string {
+  if (prefix === "") return path;
+  if (path === "" || path === "/") return prefix;
+  return prefix.replace(/\/+$/, "") + path;
+}
+
 /**
  * The path of a URL (`https://h/api/x?q=1` → `/api/x`); `:param` for a hole. Null if not a path.
  * `dynamicBase` is the code of the value the URL starts with, or of its host, when the code decides it at run
@@ -255,9 +271,11 @@ export interface HttpFacts {
   clients: [string, Read][];
   /** A top-level function that wraps a request, by local name. */
   wrappers: [string, Wrapper][];
+  /** A router of another file this file mounts under a prefix: `app.use("/api", users)`, `users` imported. */
+  mounts: { prefix: string; module: string; imported: string }[];
 }
 
-/** The HTTP facts of every file of the project, to follow a client or a wrapper imported from another file. */
+/** The HTTP facts of every file of the project, to follow a client, a wrapper or a router across files. */
 export interface ProjectHttp {
   index: ModuleIndex;
   facts: Map<string, HttpFacts>;
@@ -369,6 +387,12 @@ interface FileHttp {
   /** Names bound to data, never a route handler. */
   dataNames: Set<string>;
   targetOf(call: Node): Target | null;
+  /** A name the file creates or mounts as a router. */
+  isRouter(name: string): boolean;
+  /** The prefixes a router's routes take, from `basePath` and from where it is mounted; `[""]` for none. */
+  prefixesOf(name: string): string[];
+  /** The routers of other files this file mounts. */
+  mounts: HttpFacts["mounts"];
 }
 
 function scanHttp(
@@ -380,12 +404,55 @@ function scanHttp(
     client?: Read | undefined;
     wrapper?: Wrapper | undefined;
   },
+  mountedFrom: (name: string) => string[],
 ): FileHttp {
   const libOf = (head: string): string | null => {
     const binding = aliases.get(head);
     if (binding) return moduleRoot(binding.module);
     return bound.has(head) ? null : head;
   };
+  /** A router made by `new Hono()`, `express.Router()`..., with its `basePath`, or one made from another router. */
+  const routerOf = (
+    value: Node,
+  ): { parent: string | null; path: string } | null => {
+    const fn = value.childForFieldName(
+      value.type === "new_expression" ? "constructor" : "function",
+    );
+    if (!fn) return null;
+    if (
+      value.type === "call_expression" &&
+      fn.type === "member_expression" &&
+      fn.childForFieldName("property")?.text === "basePath"
+    ) {
+      const path = stringValue(argumentsOf(value)[0] ?? null);
+      const object = fn.childForFieldName("object");
+      if (path === null || !object) return null;
+      if (object.type === "identifier") return { parent: object.text, path };
+      const inner = routerOf(object);
+      return (
+        inner && { parent: inner.parent, path: joinPath(inner.path, path) }
+      );
+    }
+    const [head = "", ...rest] = dottedName(fn)?.split(".") ?? [];
+    const lib = head === "" ? null : libOf(head);
+    if (value.type === "new_expression") {
+      return ROUTER_CLASSES.has(lib ?? "") && rest.length === 0
+        ? { parent: null, path: "" }
+        : null;
+    }
+    const binding = aliases.get(head);
+    const made =
+      value.type === "call_expression" &&
+      ROUTER_CALLS.has(lib ?? "") &&
+      (rest.length === 1
+        ? rest[0] === "Router"
+        : rest.length === 0 &&
+          (binding?.kind !== "named" ||
+            binding.imported === "Router" ||
+            binding.imported === lib));
+    return made ? { parent: null, path: "" } : null;
+  };
+  const routers = new Map<string, { parent: string | null; path: string }>();
   const clients = new Map<string, Read>();
   const dataNames = new Set<string>();
   for (const declarator of root.descendantsOfType("variable_declarator")) {
@@ -393,6 +460,8 @@ function scanHttp(
     const value = declarator.childForFieldName("value");
     if (name?.type !== "identifier" || !value) continue;
     if (DATA.has(value.type)) dataNames.add(name.text);
+    const router = routerOf(value);
+    if (router) routers.set(name.text, router);
     const factory =
       value.type === "call_expression"
         ? value.childForFieldName("function")
@@ -482,20 +551,89 @@ function scanHttp(
       }
     }
   }
-  return { clients, wrappers, dataNames, targetOf };
+  // Mounts: `app.use("/api", users)` (Express), `app.route("/api", users)` (Hono).
+  const local: { child: string; parent: string; path: string }[] = [];
+  for (const [child, { parent, path }] of routers) {
+    if (parent !== null) local.push({ child, parent, path });
+  }
+  const isRouter = (name: string): boolean =>
+    routers.has(name) ||
+    local.some((m) => m.child === name) ||
+    mountedFrom(name).length > 0 ||
+    ROUTER.test(name.split(".").pop() ?? "");
+  for (const call of root.descendantsOfType("call_expression")) {
+    const fn = call.childForFieldName("function");
+    const method = fn?.childForFieldName("property")?.text;
+    const parent = fn?.childForFieldName("object");
+    const args = argumentsOf(call);
+    const path = stringValue(args[0] ?? null);
+    const child = args[args.length - 1];
+    if (
+      fn?.type === "member_expression" &&
+      (method === "use" || method === "route") &&
+      parent?.type === "identifier" &&
+      isRouter(parent.text) &&
+      path?.startsWith("/") &&
+      args.length >= 2 &&
+      child?.type === "identifier"
+    )
+      local.push({ child: child.text, parent: parent.text, path });
+  }
+  const prefixesOf = (name: string, seen = new Set<string>()): string[] => {
+    // A router made from another one (`app.basePath("/api")`) takes its path as a mount.
+    const made = routers.get(name);
+    const own = made?.parent === null ? made.path : "";
+    if (seen.has(name)) return [own];
+    const inner = new Set([...seen, name]);
+    const outer = [
+      ...local
+        .filter((m) => m.child === name)
+        .flatMap((m) =>
+          prefixesOf(m.parent, inner).map((p) => joinPath(p, m.path)),
+        ),
+      ...mountedFrom(name),
+    ];
+    return [
+      ...new Set(
+        (outer.length > 0 ? outer : [""]).map((p) => joinPath(p, own)),
+      ),
+    ];
+  };
+  const mounts: HttpFacts["mounts"] = [];
+  for (const m of local) {
+    const binding = aliases.get(m.child);
+    if (!binding || binding.kind === "namespace") continue;
+    for (const p of prefixesOf(m.parent)) {
+      mounts.push({
+        prefix: joinPath(p, m.path),
+        module: binding.module,
+        imported: binding.imported ?? "default",
+      });
+    }
+  }
+  return {
+    clients,
+    wrappers,
+    dataNames,
+    targetOf,
+    isRouter,
+    prefixesOf,
+    mounts,
+  };
 }
 
 /** The HTTP facts of a file for the other files: its own text only, nothing imported followed. */
 export function httpFactsOf(root: Node): HttpFacts {
   const top = allocateTopLevel(root);
-  const { clients, wrappers } = scanHttp(
+  const { clients, wrappers, mounts } = scanHttp(
     root,
     importBindings(root),
     boundNames(root),
     (name) => top.topLevel.has(name),
     () => ({}),
+    () => [],
   );
-  return { clients: [...clients], wrappers: [...wrappers] };
+  return { clients: [...clients], wrappers: [...wrappers], mounts };
 }
 
 /** The first token of the text arguments that names a file, as written. */
@@ -561,12 +699,26 @@ export function collectLinks(
       wrapper: facts.wrappers.find(([n]) => n === local)?.[1],
     };
   };
+  /** The prefixes other files mount this file's routers under, by local name. */
+  const mountedHere = new Map<string, string[]>();
+  for (const [file, facts] of project?.facts ?? []) {
+    for (const m of facts.mounts) {
+      const local = exports.names.get(m.imported);
+      if (
+        local === undefined ||
+        resolveModulePath(file, m.module, project?.index ?? new Map()) !== path
+      )
+        continue;
+      mountedHere.set(local, [...(mountedHere.get(local) ?? []), m.prefix]);
+    }
+  }
   const http = scanHttp(
     root,
     aliases,
     bound,
     (name) => top.topLevel.has(name),
     imported,
+    (name) => mountedHere.get(name) ?? [],
   );
   const { dataNames } = http;
   const isClient = (name: string): boolean =>
@@ -600,7 +752,7 @@ export function collectLinks(
         ROUTE_VERBS.has(verb) &&
         receiverName !== null &&
         !isClient(receiverName) &&
-        ROUTER.test(receiverName.split(".").pop() ?? "") &&
+        http.isRouter(receiverName) &&
         route?.startsWith("/") &&
         args.length >= 2 &&
         isHandler(args[args.length - 1])
@@ -608,12 +760,14 @@ export function collectLinks(
         const handler = args[args.length - 1];
         const handlerId =
           handler?.type === "identifier" ? localId(handler.text) : undefined;
-        offers.push({
-          channel: "http",
-          key: `${verb === "all" ? "*" : verb.toUpperCase()} ${route}`,
-          nodeId: handlerId ?? nodeAt(line),
-          line,
-        });
+        for (const routerPrefix of http.prefixesOf(receiverName)) {
+          offers.push({
+            channel: "http",
+            key: `${verb === "all" ? "*" : verb.toUpperCase()} ${joinPath(routerPrefix, route)}`,
+            nodeId: handlerId ?? nodeAt(line),
+            line,
+          });
+        }
       }
     }
     if (name === null) continue;
