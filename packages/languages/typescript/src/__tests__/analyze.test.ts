@@ -333,6 +333,114 @@ describe("analyze: requests", () => {
       ).toEqual([]);
     });
 
+    it("reads a client of axios or got with its base: a literal path adds, a host or a run-time value is to check", () => {
+      const keys = analyze({
+        "a.ts": [
+          "import axios from 'axios';",
+          "import got from 'got';",
+          "const api = axios.create({ baseURL: '/api' });",
+          "const ext = axios.create({ baseURL: 'https://backend.example.com/v1' });",
+          "const env = axios.create({ baseURL: process.env.API });",
+          "const bare = axios.create();",
+          "const g = got.extend({ prefixUrl: '/g/' });",
+          "api.get('/users');",
+          "api.post('users', u);",
+          "ext.delete(`/users/${id}`);",
+          "env.get('/a');",
+          "bare.put('/b');",
+          "g.get('c');",
+          "api('/d');",
+          "api({ url: '/e', method: 'patch' });",
+          "api.get('https://other.com/x');",
+          "api.get(id);",
+        ].join("\n"),
+      }).requests.flatMap((r) =>
+        r.channel === "http" ? [[r.key, r.dynamicBase, r.line]] : [],
+      );
+      expect(keys).toEqual([
+        ["GET /api/users", undefined, 8],
+        ["POST /api/users", undefined, 9],
+        ["DELETE /v1/users/:param", "'https://backend.example.com/v1'", 10],
+        ["GET /a", "process.env.API", 11],
+        ["PUT /b", undefined, 12],
+        ["GET /g/c", undefined, 13],
+        ["GET /api/d", undefined, 14],
+        ["PATCH /api/e", undefined, 15],
+        ["GET /x", undefined, 16],
+      ]);
+    });
+
+    it("reads a call of a function that wraps a request, with the method of the function or of its options", () => {
+      const keys = analyze({
+        "a.ts": [
+          "function apiFetch(url: string, init: RequestInit = {}) {",
+          "  return fetch(url, { ...init, headers: {} });",
+          "}",
+          "function post(url, body) {",
+          "  return apiFetch(url, { method: 'POST', body: JSON.stringify(body) });",
+          "}",
+          "const del = (path) => fetch(`/api${path}`, { method: 'DELETE' });",
+          "export const get = async (u) => (await fetch('/v1' + u)).json();",
+          "function load() {",
+          "  post('/api/project', x);",
+          "  apiFetch('/api/languages');",
+          "  apiFetch(`/api/history/${id}`, { method: 'PUT' });",
+          "  del('/items');",
+          "  get(`/a/${id}`);",
+          "  post(path, x);",
+          "  user(id);",
+          "}",
+          "const user = (id) => fetch(`/users/${id}`);",
+        ].join("\n"),
+      }).requests.flatMap((r) =>
+        r.channel === "http" ? [[r.key, r.line]] : [],
+      );
+      // The request inside a wrapper stays where it is when its URL has text; a call whose argument has none
+      // (`user(id)`) is not one more request.
+      expect(keys).toEqual([
+        ["DELETE /api:param", 7],
+        ["GET /v1:param", 8],
+        ["POST /api/project", 10],
+        ["GET /api/languages", 11],
+        ["PUT /api/history/:param", 12],
+        ["DELETE /api/items", 13],
+        ["GET /v1/a/:param", 14],
+        ["GET /users/:param", 18],
+      ]);
+    });
+
+    it("follows a client or a wrapper imported from another file of the project", () => {
+      const result = analyze({
+        "http.ts": [
+          "import axios from 'axios';",
+          "export const api = axios.create({ baseURL: '/api' });",
+          "export function post(url, body) {",
+          "  return fetch(url, { method: 'POST', body });",
+          "}",
+          "export default api;",
+        ].join("\n"),
+        "a.ts": [
+          "import { api, post as enviar } from './http';",
+          "import client from './http';",
+          "api.get('/users');",
+          "enviar('/x', 1);",
+          "client.delete('/y');",
+          "api.post('/z', data);",
+        ].join("\n"),
+      });
+      expect(
+        result.requests.flatMap((r) =>
+          r.channel === "http" ? [[r.key, r.nodeId]] : [],
+        ),
+      ).toEqual([
+        ["GET /api/users", "file:a.ts/mod/s0"],
+        ["POST /x", "file:a.ts/mod/s1"],
+        ["DELETE /api/y", "file:a.ts/mod/s2"],
+        ["POST /api/z", "file:a.ts/mod/s3"],
+      ]);
+      expect(result.offers.filter((o) => o.channel === "http")).toEqual([]);
+    });
+
     it("reads node-fetch under any local name", () => {
       expect(
         requests("import nf from 'node-fetch';\nnf('/a');").filter(

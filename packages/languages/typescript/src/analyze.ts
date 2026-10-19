@@ -12,7 +12,7 @@ import {
 import type { Tree } from "web-tree-sitter";
 import { buildGraph } from "./build-graph";
 import { moduleSpecifiers } from "./imports";
-import { collectLinks } from "./links";
+import { collectLinks, type HttpFacts, httpFactsOf } from "./links";
 import {
   contributionOf,
   exportInfo,
@@ -23,6 +23,9 @@ import {
   resolveModulePath,
 } from "./modules";
 import { parsers } from "./parse";
+
+/** What one file adds to the project: its module entry and its HTTP facts. */
+type Contribution = ModuleContribution & { http: HttpFacts };
 
 interface Parsed {
   file: SourceFile;
@@ -124,15 +127,27 @@ export function openSlice(files: SourceFile[]): AnalysisSlice {
     contribute: () =>
       parsed.map(({ file, tree }) => ({
         path: file.path,
-        data: contributionOf(tree.rootNode),
+        data: {
+          ...contributionOf(tree.rootNode),
+          http: httpFactsOf(tree.rootNode),
+        } satisfies Contribution,
       })),
     analyze(contributions) {
       const index = indexOfContributions(
         contributions.map(({ path, data }) => ({
           path,
-          data: data as ModuleContribution,
+          data: data as Contribution,
         })),
       );
+      const http = {
+        index,
+        facts: new Map(
+          contributions.map(({ path, data }) => [
+            path,
+            (data as Contribution).http,
+          ]),
+        ),
+      };
       const result: LanguageAnalysis = {
         files: [],
         imports: importsEdges(parsed, index),
@@ -146,6 +161,7 @@ export function openSlice(files: SourceFile[]): AnalysisSlice {
           p.tree.rootNode,
           graph,
           exportInfo(p.tree.rootNode),
+          http,
         );
         result.files.push({ path: p.file.path, graph });
         result.offers.push(...offers);
