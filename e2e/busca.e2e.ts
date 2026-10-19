@@ -154,11 +154,11 @@ test.describe("Busca de nó", () => {
     // The fixture has calcular_frete twice (frete/ and legado/): the file tells them apart.
     await expect(options(page)).toHaveCount(2);
     const result = options(page).filter({ hasText: "calculo.py" });
-    await expect(result.locator("b")).toHaveText("Calcular frete");
+    await expect(result.locator("b")).toHaveText("calcular_frete");
     await expect(result.locator("em")).toHaveText("calcular_frete()");
     await expect(result.locator("i")).toHaveText(/^calculo\.py · \d+–\d+$/);
     await expect(result.locator("mark")).toHaveText([
-      "Calcular",
+      "calcular",
       "frete",
       "calcular",
       "frete",

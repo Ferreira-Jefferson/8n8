@@ -130,7 +130,7 @@ describe("searchEntries", () => {
     expect(folder).toMatchObject({ tech: "frete/", where: "PASTA" });
     // A reviewed title only exists for the levels already opened: the rest keeps the provisional name.
     const other = list.find((e) => e.tech === "processar_pedido()");
-    expect(other?.title).toBe("Processar pedido");
+    expect(other?.title).toBe("processar_pedido");
   });
 });
 

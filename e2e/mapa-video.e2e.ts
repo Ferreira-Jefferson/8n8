@@ -118,7 +118,7 @@ test.describe("O visual do vídeo", () => {
     await expectLevel(page, MAIN_FLOW);
     // A leaf opens the panel, whose title uses the display font (VID-25).
     await clickCard(page, `${PEDIDO}/s1`);
-    await expect(panel(page).locator("h2")).toHaveText("Validar pedido");
+    await expect(panel(page).locator("h2")).toHaveText("validar_pedido");
     await page.evaluate(() => document.fonts.ready);
 
     for (const family of ["Archivo Black", "Space Grotesk", "DM Mono"]) {
@@ -173,7 +173,7 @@ test.describe("O visual do vídeo", () => {
     expect(Number(await css(first.locator(".name"), "font-weight"))).toBe(700);
     await expect(first.locator(".fn")).toHaveText("processar_pedido()");
     await expect(cardOf(page, `${PEDIDO}/s5`).locator(".fn")).toHaveText(
-      "db.salvar()",
+      "db.salvar(pedido, total)",
     );
 
     const ports = (id: string) =>
@@ -398,15 +398,15 @@ test.describe("O fluxo principal", () => {
     await expect
       .poll(() => cardNames(page))
       .toEqual([
-        "Processar pedido",
-        "Loads",
-        "Validar pedido",
-        "Buscar cliente",
-        "Calcular frete",
-        "Soma itens",
-        "Salvar",
-        "Enviar email",
-        "Calcular frete",
+        "processar_pedido",
+        "loads",
+        "validar_pedido",
+        "buscar_cliente",
+        "calcular_frete",
+        "soma_itens",
+        "salvar",
+        "enviar_email",
+        "calcular_frete",
       ]);
     await expect(edges(page)).toHaveCount(8);
     // The next wires join the entry and its seven commands; the calls wire
@@ -462,14 +462,14 @@ test.describe("O fluxo principal", () => {
     ]);
     await expect
       .poll(() => cardNames(page))
-      .toEqual(["Código solto", "A", "A", "B", "Print"]);
+      .toEqual(["Código solto", "a", "a", "b", "print"]);
     const loose = await box(cardOf(page, mod));
     const second = await box(cardOf(page, "fn:b"));
     expect(loose.y + loose.height).toBeLessThan(second.y);
 
     await generate(page, OFFLINE, CONSTANTS);
     await expectLevel(page, ["fn:a", "fn:a/s0"]);
-    expect(await cardNames(page)).toEqual(["A", "Print"]);
+    expect(await cardNames(page)).toEqual(["a", "print"]);
   });
 
   test("VID-12: no card on the first level says Módulo; loose code is the CÓDIGO SOLTO card", async ({
@@ -499,13 +499,13 @@ test.describe("O fluxo principal", () => {
     expect(await tagOf(`${PEDIDO}/s5`)).toBe("BANCO");
     expect(await tagOf(`${PEDIDO}/s6`)).toBe("E-MAIL");
     await expect(cardOf(page, `${PEDIDO}/s1`).locator(".fn")).toHaveText(
-      "validar_pedido()",
+      "validar_pedido(pedido)",
     );
     await expect(cardOf(page, `${PEDIDO}/s2`).locator(".fn")).toHaveText(
-      "db.buscar_cliente()",
+      'db.buscar_cliente(pedido["clien…',
     );
     await expect(cardOf(page, `${PEDIDO}/s6`).locator(".fn")).toHaveText(
-      "enviar_email()",
+      "enviar_email(cliente.email, tot…",
     );
 
     const byId = (id: string) => graph.nodes.find((n) => n.id === id);

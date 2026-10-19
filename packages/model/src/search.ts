@@ -37,11 +37,10 @@ export function searchText(node: FlowNode): string {
   switch (node.kind) {
     case "function":
     case "class": {
-      const provisional = (node.label.split(".").at(-1) ?? "").replaceAll(
-        "_",
-        " ",
-      );
-      return fold(`${provisional} ${node.label}()`);
+      const provisional = (node.label.split(".").at(-1) ?? "").trim();
+      const tech =
+        node.kind === "class" ? `class ${node.label}` : `${node.label}()`;
+      return fold(`${provisional} ${tech}`);
     }
     case "folder":
       return fold(`${node.label} ${node.path ?? ""}/`);

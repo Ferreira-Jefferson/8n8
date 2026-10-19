@@ -25,9 +25,10 @@ export function tagLabel(tag: string, t: Translate = defaultT): string {
 export function tagOf(node: FlowNode): string {
   switch (node.kind) {
     case "function":
-    case "class":
     case "call":
       return "FUNÇÃO";
+    case "class":
+      return "CLASSE";
     case "external":
       return categoryTag(node.category ?? "EXTERNO");
     case "condition":
@@ -37,9 +38,13 @@ export function tagOf(node: FlowNode): string {
     case "block":
       return "BLOCO";
     case "code":
-      return "CÓDIGO";
+      // A call whose target only exists when the code runs.
+      return node.callee === undefined ? "CÓDIGO" : "DINÂMICA";
     case "return":
-      return "RETORNO";
+      // A return of an external call keeps the category of the call.
+      return node.category === undefined
+        ? "RETORNO"
+        : categoryTag(node.category);
     case "folder":
       return "PASTA";
     case "file":
@@ -49,7 +54,7 @@ export function tagOf(node: FlowNode): string {
   }
 }
 
-/** The deterministic name shown while there is no reviewed title (VID-15). */
+/** The deterministic name shown while there is no reviewed title (VID-15): a name as the code writes it, the last segment of a dotted one. */
 export function provisionalLabel(
   node: FlowNode,
   t: Translate = defaultT,
@@ -58,12 +63,10 @@ export function provisionalLabel(
     case "function":
     case "class":
     case "call":
-    case "external": {
-      const words = (node.label.split(".").at(-1) ?? "").replaceAll("_", " ");
-      return words.charAt(0).toUpperCase() + words.slice(1);
-    }
+    case "external":
+      return (node.label.split(".").at(-1) ?? "").trim();
     case "code":
-      return t("label.code");
+      return t(node.callee === undefined ? "label.code" : "label.dynamic");
     case "return":
       return t("label.return");
     case "module":
@@ -73,15 +76,49 @@ export function provisionalLabel(
   }
 }
 
+/**
+ * The call of an external step as the code writes it, with its arguments:
+ * `fetch(`${cfg.base}/users`)` tells two `fetch` apart. Without the source,
+ * or when the code writes the name another way (an alias), `callee()`.
+ */
+function externalCall(node: FlowNode, source: string): string {
+  const callee = node.callee ?? node.label;
+  const text = source
+    .split("\n")
+    .slice(node.range.start - 1, node.range.end)
+    .join(" ")
+    .replace(/\s+/g, " ");
+  // The name whole: `fetch(` in `refetch(` is not the call.
+  let at = text.indexOf(`${callee}(`);
+  while (at > 0 && /[\w$.]/.test(text[at - 1] ?? "")) {
+    at = text.indexOf(`${callee}(`, at + 1);
+  }
+  if (at < 0) return `${callee}()`;
+  let depth = 0;
+  let end = text.length;
+  for (let i = at + callee.length; i < text.length; i++) {
+    if (text[i] === "(") depth++;
+    if (text[i] === ")" && --depth === 0) {
+      end = i + 1;
+      break;
+    }
+  }
+  const call = text.slice(at, end);
+  return call.length > CODE_LINE_MAX
+    ? `${call.slice(0, CODE_LINE_MAX - 1)}…`
+    : call;
+}
+
 /** The mono code line of a card (VID-03). */
 export function codeLineOf(node: FlowNode, source: string): string {
   switch (node.kind) {
     case "function":
-    case "class":
     case "call":
       return `${node.label}()`;
+    case "class":
+      return `class ${node.label}`;
     case "external":
-      return `${node.callee ?? node.label}()`;
+      return externalCall(node, source);
     case "condition":
       return `if ${node.label}`;
     case "loop":

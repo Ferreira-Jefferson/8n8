@@ -241,7 +241,7 @@ test.describe("Mapa", () => {
     expect(await nodeIds(page)).toEqual([FRETE, PEDIDO, LOOP]);
     await expect
       .poll(() => cardNames(page))
-      .toEqual(["Calcular frete", "Processar pedido", "for item in itens"]);
+      .toEqual(["calcular_frete", "processar_pedido", "for item in itens"]);
     expect(await cardTags(page)).toEqual(["FUNÇÃO", "FUNÇÃO", "LAÇO"]);
     await expect(edges(page)).toHaveCount(2);
     await expect(edge(page, PEDIDO, LOOP)).toHaveCount(1);
@@ -275,7 +275,7 @@ test.describe("Mapa", () => {
     expect(await nodeIds(page)).toEqual(["mod", "mod/s1", "fn:f"]);
     await expect
       .poll(() => cardNames(page))
-      .toEqual(["Código solto", "Print", "F"]);
+      .toEqual(["Código solto", "print", "f"]);
     expect(await cardTags(page)).toEqual(["CÓDIGO SOLTO", "EXTERNO", "FUNÇÃO"]);
     await expect(canvas(page).getByText("Módulo")).toHaveCount(0);
   });
@@ -320,7 +320,7 @@ test.describe("Mapa", () => {
     );
 
     await expect(nodes(page)).toHaveCount(2);
-    await expect.poll(() => cardNames(page)).toEqual(["A", "B"]);
+    await expect.poll(() => cardNames(page)).toEqual(["a", "b"]);
     await expect(page.getByText(/^Erro de sintaxe na linha \d+$/)).toHaveCount(
       1,
     );
@@ -366,12 +366,12 @@ test.describe("Drill-down", () => {
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "Fluxo principal",
       "for item in itens",
-      "Calcular frete",
+      "calcular_frete",
     ]);
     await expect(nodes(page)).toHaveCount(5);
     await expect
       .poll(() => cardNames(page))
-      .toEqual(["Get", "Código", "peso > 30", "Retorno", "Retorno"]);
+      .toEqual(["get", "Código", "peso > 30", "Retorno", "Retorno"]);
     expect(await cardTags(page)).toEqual([
       "HTTP",
       "CÓDIGO",
@@ -429,14 +429,14 @@ test.describe("Drill-down", () => {
 
     await clickCard(page, `${PEDIDO}/s1`);
     await expect(nodes(page)).toHaveCount(1);
-    await expect.poll(() => cardNames(page)).toEqual(["Calcular frete"]);
+    await expect.poll(() => cardNames(page)).toEqual(["calcular_frete"]);
 
     await clickCard(page, `${PEDIDO}/s1/s0`);
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "Fluxo principal",
-      "Processar pedido",
+      "processar_pedido",
       "for item in itens",
-      "Calcular frete",
+      "calcular_frete",
     ]);
     await expect(nodes(page)).toHaveCount(5);
     await expect(
@@ -445,11 +445,11 @@ test.describe("Drill-down", () => {
     await shot(page, "05-breadcrumb-deep");
 
     await breadcrumb(page)
-      .getByRole("button", { name: "Processar pedido" })
+      .getByRole("button", { name: "processar_pedido" })
       .click();
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "Fluxo principal",
-      "Processar pedido",
+      "processar_pedido",
     ]);
     await expect(nodes(page)).toHaveCount(3);
 
@@ -471,7 +471,7 @@ test.describe("Drill-down", () => {
     await clickCard(page, `${FRETE}/s0`);
 
     await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
-      "Get",
+      "get",
     );
     await expect(panel(page).getByText(/^CÓDIGO · /)).toHaveText(
       "CÓDIGO · trecho.py, linha 5",
@@ -494,7 +494,7 @@ test.describe("Drill-down", () => {
     await openFrete(page);
 
     await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
-      "Calcular frete",
+      "calcular_frete",
     );
     await expect(panel(page).getByText(/^CÓDIGO · /)).toHaveText(
       "CÓDIGO · trecho.py, linhas 4 a 11",
@@ -667,7 +667,7 @@ test.describe("Explicação", () => {
 
     await clickCard(page, FRETE);
     await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
-      "Calcular frete",
+      "calcular_frete",
     );
     await openTab(page, "Resumo");
     await expect(

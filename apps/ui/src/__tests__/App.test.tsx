@@ -751,7 +751,7 @@ describe("App calls in a project (PROJ-04)", () => {
       "loja",
       "pedidos",
       "pedidos.py",
-      "Processar pedido",
+      "processar_pedido",
     ]);
     await openEach(["file:pedidos/pedidos.py/fn:processar_pedido/s1"]);
     await waitFor(() =>
@@ -759,7 +759,7 @@ describe("App calls in a project (PROJ-04)", () => {
         "loja",
         "frete",
         "calculo.py",
-        "Calcular frete",
+        "calcular_frete",
       ]),
     );
     expect(currentCanvas().levelId).toBe(
@@ -817,9 +817,9 @@ describe("App calls in a project (PROJ-04)", () => {
     const byId = (id: string) =>
       sameFile.nodes.find((n) => n.id === id) as FlowNode;
     await openEach(["file:a.py", "file:a.py/fn:f"], byId);
-    expect(breadcrumbItems()).toEqual(["p", "a.py", "F"]);
+    expect(breadcrumbItems()).toEqual(["p", "a.py", "f"]);
     await openEach(["file:a.py/fn:f/s0"], byId);
-    expect(breadcrumbItems()).toEqual(["p", "a.py", "F", "G"]);
+    expect(breadcrumbItems()).toEqual(["p", "a.py", "f", "g"]);
   });
 });
 
@@ -1010,8 +1010,8 @@ describe("App, Esc and the breadcrumb go back (VID-19, VID-23, VID-27)", () => {
     expect(currentCanvas().levelId).toBe("fn:calcular_frete");
     expect(breadcrumbItems()).toEqual([
       "Fluxo principal",
-      "Processar pedido",
-      "Calcular frete",
+      "processar_pedido",
+      "calcular_frete",
     ]);
     fireEvent.keyDown(window, { key: "Escape" });
     expect(currentCanvas().levelId).toBe(P);
@@ -1061,7 +1061,7 @@ describe("App, Esc and the breadcrumb go back (VID-19, VID-23, VID-27)", () => {
     act(() => currentCanvas().onOpen(videoNode(P)));
     act(() => currentCanvas().onOpen(videoNode(`${P}/s3`)));
     expect(
-      screen.getByRole("heading", { level: 2, name: "Calcular frete" }),
+      screen.getByRole("heading", { level: 2, name: "calcular_frete" }),
     ).toBeTruthy();
     expect(explainMock).toHaveBeenLastCalledWith(
       { source: videoSource },
@@ -1117,7 +1117,7 @@ describe("App, titles, code lines and suggestion cards (VID-14, VID-33)", () => 
       );
     await waitFor(() => expect(marked()).toEqual(["13"]));
     expect(
-      screen.getByRole("heading", { level: 2, name: "Processar pedido" }),
+      screen.getByRole("heading", { level: 2, name: "processar_pedido" }),
     ).toBeTruthy();
     fireEvent.click(
       await screen.findByRole("button", { name: "L6", hidden: true }),

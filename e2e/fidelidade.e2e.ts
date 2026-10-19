@@ -83,8 +83,9 @@ async function openFrete(
   ).toBeVisible();
   if (clearLog) await resetFake();
   await clickCard(page, "fn:processar_pedido/s1/s0");
+  // The reviewed title with a key; the name as the code writes it without one.
   await expect(panel(page).getByRole("heading", { level: 2 })).toHaveText(
-    "Calcular frete",
+    /^(Calcular frete|calcular_frete)$/,
   );
   await openTab(page, "Resumo");
 }

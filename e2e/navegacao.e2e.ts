@@ -550,7 +550,7 @@ test.describe("Descida até as folhas", () => {
     await clickCard(page, "fn:contar/s0/b0/s0");
     await expect
       .poll(() => crumbs(page))
-      .toEqual(["Fluxo principal", "Contar até zero", "Contar"]);
+      .toEqual(["Fluxo principal", "Contar até zero", "contar"]);
     await expectLevel(page, inner);
     // The descent waits for the next click.
     await page.waitForTimeout(1500);

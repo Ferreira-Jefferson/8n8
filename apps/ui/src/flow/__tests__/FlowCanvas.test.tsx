@@ -508,7 +508,7 @@ describe("FlowCanvas, level and cards (VID-06, VID-22, VID-27)", () => {
       "Grava o pedido",
     );
     expect(card(container, `${P}/s4`).querySelector(".name")?.textContent).toBe(
-      "Soma itens",
+      "soma_itens",
     );
   });
 

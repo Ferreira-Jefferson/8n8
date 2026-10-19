@@ -812,7 +812,7 @@ describe("DetailPanel like the video (VID-28, VID-29, VID-30, VID-33)", () => {
       />,
     );
     expect(
-      screen.getByRole("heading", { level: 2, name: "Calcular frete" }),
+      screen.getByRole("heading", { level: 2, name: "calcular_frete" }),
     ).toBeTruthy();
   });
 

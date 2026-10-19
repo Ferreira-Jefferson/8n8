@@ -36,13 +36,14 @@ const source = [
 describe("VID-04: tagOf", () => {
   it("names each kind with the label of the table", () => {
     expect(tagOf(node("function", "f"))).toBe("FUNÇÃO");
-    expect(tagOf(node("class", "K"))).toBe("FUNÇÃO");
+    expect(tagOf(node("class", "K"))).toBe("CLASSE");
     expect(tagOf(node("call", "f", { target: "fn:f" }))).toBe("FUNÇÃO");
     expect(tagOf(node("condition", "a > 1"))).toBe("SE");
     expect(tagOf(node("loop", "for x in y"))).toBe("LAÇO");
     expect(tagOf(node("block", "with x"))).toBe("BLOCO");
     expect(tagOf(node("code", "Código"))).toBe("CÓDIGO");
     expect(tagOf(node("return", "a"))).toBe("RETORNO");
+    expect(tagOf(node("code", "Código", { callee: "h[k]" }))).toBe("DINÂMICA");
     expect(tagOf(node("folder", "frete"))).toBe("PASTA");
     expect(tagOf(node("file", "a.py"))).toBe("ARQUIVO");
     expect(tagOf(node("module", "Módulo"))).toBe("CÓDIGO SOLTO");
@@ -75,27 +76,36 @@ describe("VID-04: categoryTag", () => {
 });
 
 describe("VID-15: provisionalLabel", () => {
-  it("turns a function or call name into words", () => {
+  it("shows a function, class or call name as the code writes it", () => {
     expect(provisionalLabel(node("function", "calcular_frete"))).toBe(
-      "Calcular frete",
+      "calcular_frete",
     );
+    expect(provisionalLabel(node("function", "listUsers"))).toBe("listUsers");
+    expect(provisionalLabel(node("function", "_fmt"))).toBe("_fmt");
+    expect(provisionalLabel(node("function", "__init__"))).toBe("__init__");
     expect(
       provisionalLabel(
         node("call", "calcular_frete", { target: "fn:calcular_frete" }),
       ),
-    ).toBe("Calcular frete");
+    ).toBe("calcular_frete");
     expect(provisionalLabel(node("class", "Pedido"))).toBe("Pedido");
   });
 
-  it("keeps only the last segment of an external name", () => {
+  it("keeps only the last segment of an external name, as written", () => {
     expect(
       provisionalLabel(node("external", "db.salvar", { category: "BANCO" })),
-    ).toBe("Salvar");
+    ).toBe("salvar");
     expect(
       provisionalLabel(
         node("external", "db.buscar_cliente", { category: "BANCO" }),
       ),
-    ).toBe("Buscar cliente");
+    ).toBe("buscar_cliente");
+  });
+
+  it("names a dynamic call", () => {
+    expect(
+      provisionalLabel(node("code", "Código", { callee: "handlers[k]" })),
+    ).toBe("Chamada dinâmica");
   });
 
   it("uses the condition text, Código, Retorno and Código solto", () => {
@@ -124,7 +134,7 @@ describe("VID-03: codeLineOf", () => {
     expect(codeLineOf(node("function", "calcular_frete"), source)).toBe(
       "calcular_frete()",
     );
-    expect(codeLineOf(node("class", "Pedido"), source)).toBe("Pedido()");
+    expect(codeLineOf(node("class", "Pedido"), source)).toBe("class Pedido");
     expect(
       codeLineOf(
         node("call", "calcular_frete", { target: "fn:calcular_frete" }),
@@ -143,6 +153,43 @@ describe("VID-03: codeLineOf", () => {
         source,
       ),
     ).toBe("requests.get()");
+  });
+
+  it("shows an external call with its arguments as the code writes them", () => {
+    const code = [
+      "async function f() {",
+      '  await fetch("/health");',
+      `  const r = await refetch(1) + fetch(\`\${cfg.base}/users\`);`,
+      "  await fetch(",
+      '    "/a",',
+      "  );",
+      `  return axios.post(\`\${cfg.base}/users/\${id}/orders\`, body);`,
+      "}",
+    ].join("\n");
+    const ext = (start: number, end = start, callee = "fetch") =>
+      codeLineOf(
+        node("external", callee, {
+          callee,
+          category: "HTTP",
+          range: { start, end },
+        }),
+        code,
+      );
+    expect(ext(2)).toBe('fetch("/health")');
+    expect(ext(3)).toBe(`fetch(\`\${cfg.base}/users\`)`);
+    expect(ext(4, 6)).toBe('fetch( "/a", )');
+    expect(ext(7, 7, "axios.post")).toBe(`axios.post(\`\${cfg.base}/users/$…`);
+    // An alias the code does not write keeps the name alone.
+    expect(ext(2, 2, "node-fetch")).toBe("node-fetch()");
+  });
+
+  it("tags a return of an external call with the category of the call", () => {
+    expect(
+      tagOf(
+        node("return", 'fetch("/a")', { callee: "fetch", category: "HTTP" }),
+      ),
+    ).toBe("HTTP");
+    expect(tagOf(node("return", "f()", { target: "fn:f" }))).toBe("RETORNO");
   });
 
   it("shows the condition and the loop header", () => {

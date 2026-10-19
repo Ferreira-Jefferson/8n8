@@ -615,6 +615,8 @@ body {
 }
 
 .node[data-tag="FUNÇÃO"] .tag,
+.node[data-tag="CLASSE"] .tag,
+.node[data-tag="DINÂMICA"] .tag,
 .node[data-tag="SE"] .tag,
 .node[data-tag="LAÇO"] .tag,
 .node[data-tag="BLOCO"] .tag,
