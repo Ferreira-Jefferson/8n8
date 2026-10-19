@@ -13,14 +13,16 @@ import type { Node, Parser, Tree } from "web-tree-sitter";
 import { buildGraph } from "./build-graph";
 import { markSyntaxErrors } from "./errors";
 import { starModules } from "./imports";
-import { collectLinks } from "./links";
+import { collectLinks, fullName, routePrefixes } from "./links";
 import {
   absoluteName,
+  canonicalName,
   contributionOf,
   indexOfContributions,
   type ModuleContribution,
   type ModuleEntry,
   type ModuleIndex,
+  moduleNameOf,
   packageOf,
   resolveName,
   type StarImports,
@@ -197,14 +199,38 @@ export function openSlice(parser: Parser, files: SourceFile[]): AnalysisSlice {
         path: p.file.path,
         graph: fileGraph(p, index, projectNames, stars[i] as StarImports),
       }));
-      const links = parsed.map((p, i) =>
-        collectLinks(
-          p.file.path,
+      const canonical = (path: string, full: string) =>
+        canonicalName(index, path, full);
+      const prefixes = routePrefixes(
+        all.map(({ path, data }) => ({
+          routers: data.routes.routers.map(([name, prefix]) => [
+            canonical(path, name),
+            prefix,
+          ]),
+          mounts: data.routes.mounts.map(
+            ([child, parent, prefix, replaces]) => [
+              canonical(path, child),
+              canonical(path, parent),
+              prefix,
+              replaces,
+            ],
+          ),
+        })),
+      );
+      const aliasesOf = new Map(all.map((c) => [c.path, c.data.aliases]));
+      const links = parsed.map((p, i) => {
+        const path = p.file.path;
+        const aliases = new Map(aliasesOf.get(path) ?? []);
+        const module = moduleNameOf(path) ?? "";
+        return collectLinks(
+          path,
           p.tree.rootNode,
           graphs[i]?.graph.nodes ?? [],
           stars[i],
-        ),
-      );
+          (receiver) =>
+            prefixes(canonical(path, fullName(module, aliases, receiver))),
+        );
+      });
       return {
         files: graphs,
         imports: importsEdges(parsed, index),

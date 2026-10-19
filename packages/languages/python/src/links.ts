@@ -330,16 +330,136 @@ function requestsOf(
   return requests;
 }
 
+/** Classes whose objects take routes, and the keyword of their own prefix. */
+const ROUTER_CLASSES = new Map([
+  ["APIRouter", "prefix"],
+  ["FastAPI", "prefix"],
+  ["Blueprint", "url_prefix"],
+  ["Flask", "url_prefix"],
+]);
+/** Calls that mount a router on another, and the keyword of the prefix they add. */
+const MOUNT_CALLS = new Map([
+  ["include_router", "prefix"],
+  ["register_blueprint", "url_prefix"],
+]);
+
+/** The routers of a file and where it mounts them, with full dotted names. */
+export interface RouterFacts {
+  /** Router to its own prefix: `router = APIRouter(prefix="/items")`. */
+  routers: [string, string][];
+  /**
+   * `[child, parent, prefix, replaces]` for `parent.include_router(child, prefix=...)`. A Flask
+   * `register_blueprint(bp, url_prefix=...)` replaces the prefix of the blueprint; FastAPI adds to it.
+   */
+  mounts: [string, string, string, boolean][];
+}
+
+/** The full dotted name of `dotted` in the file `module`: by its import, or as a name of the module. */
+export function fullName(
+  module: string,
+  aliases: Map<string, string>,
+  dotted: string,
+): string {
+  const [head = dotted, ...rest] = dotted.split(".");
+  const imported = aliases.get(head);
+  if (imported !== undefined) return [imported, ...rest].join(".");
+  return module === "" ? dotted : `${module}.${dotted}`;
+}
+
+/** The routers and mounts of a file; `aliases` hold absolute full names. */
+export function routerFactsOf(
+  module: string,
+  root: Node,
+  aliases: Map<string, string>,
+): RouterFacts {
+  const routers: [string, string][] = [];
+  const mounts: [string, string, string, boolean][] = [];
+  for (const assignment of root.descendantsOfType("assignment")) {
+    const left = assignment.childForFieldName("left");
+    const right = assignment.childForFieldName("right");
+    if (left?.type !== "identifier" || right?.type !== "call") continue;
+    const cls = calledName(right, aliases)?.split(".").pop() ?? "";
+    const keyword = ROUTER_CLASSES.get(cls);
+    if (keyword === undefined) continue;
+    const prefix = stringValue(keywordArgument(right, keyword)) ?? "";
+    routers.push([fullName(module, aliases, left.text), prefix]);
+  }
+  for (const call of root.descendantsOfType("call")) {
+    const fn = call.childForFieldName("function");
+    const method = fn?.childForFieldName("attribute")?.text ?? "";
+    const keyword = MOUNT_CALLS.get(method);
+    const object = fn?.type === "attribute" && fn.childForFieldName("object");
+    const parent = object ? dottedName(object) : null;
+    const childNode = firstArgument(call);
+    const child = childNode ? dottedName(childNode) : null;
+    if (keyword === undefined || parent === null || child === null) continue;
+    const prefix = stringValue(keywordArgument(call, keyword));
+    mounts.push([
+      fullName(module, aliases, child),
+      fullName(module, aliases, parent),
+      prefix ?? "",
+      method === "register_blueprint" && prefix !== null,
+    ]);
+  }
+  return { routers, mounts };
+}
+
+/** The full prefixes of each router, through the routers that mount it; `canonical` names a router as the project does. */
+export function routePrefixes(
+  facts: RouterFacts[],
+): (router: string) => string[] {
+  const own = new Map<string, string>();
+  const parents = new Map<string, [string, string, boolean][]>();
+  for (const { routers, mounts } of facts) {
+    for (const [name, prefix] of routers) own.set(name, prefix);
+    for (const [child, parent, prefix, replaces] of mounts) {
+      const list = parents.get(child) ?? [];
+      list.push([parent, prefix, replaces]);
+      parents.set(child, list);
+    }
+  }
+  const prefixes = (name: string, seen: Set<string>): string[] => {
+    const mine = own.get(name) ?? "";
+    const mounted = parents.get(name) ?? [];
+    if (mounted.length === 0 || seen.has(name)) return [mine];
+    const next = new Set([...seen, name]);
+    return [
+      ...new Set(
+        mounted.flatMap(([parent, prefix, replaces]) =>
+          prefixes(parent, next).map(
+            (p) => p + prefix + (replaces ? "" : mine),
+          ),
+        ),
+      ),
+    ];
+  };
+  return (router) => prefixes(router, new Set());
+}
+
 /** `GET /x` for each method of a route decorator, or an empty list for any other decorator. */
-function routeKeys(decorator: Node): string[] {
+function routeKeys(
+  decorator: Node,
+  prefixesOf: (receiver: string) => string[],
+): string[] {
   const call = decorator.namedChildren.find((n) => n.type === "call");
   const fn = call?.childForFieldName("function");
   const name = fn ? dottedName(fn) : null;
   const verb = name?.split(".").slice(1).pop();
-  if (!call || verb === undefined) return [];
-  const path = stringValue(firstArgument(call));
-  if (path === null || !path.startsWith("/")) return [];
-  if (VERBS.has(verb)) return [`${verb.toUpperCase()} ${path}`];
+  if (!call || !name || verb === undefined) return [];
+  const route = stringValue(firstArgument(call));
+  if (route === null) return [];
+  const receiver = name.split(".").slice(0, -1).join(".");
+  const paths = prefixesOf(receiver)
+    .map((prefix) => `${prefix}${route}`.replace(/\/{2,}/g, "/"))
+    .filter((path) => path.startsWith("/"));
+  return [...new Set(paths)].flatMap((path) =>
+    methodsOf(call, verb).map((m) => `${m} ${path}`),
+  );
+}
+
+/** The methods of a route decorator with the verb `verb`; empty when it is not one. */
+function methodsOf(call: Node, verb: string): string[] {
+  if (VERBS.has(verb)) return [verb.toUpperCase()];
   if (!ROUTE_DECORATORS.has(verb)) return [];
   const methods = argumentsOf(call)
     .find(
@@ -352,11 +472,16 @@ function routeKeys(decorator: Node): string[] {
     const method = stringValue(m);
     return method === null ? [] : [method.toUpperCase()];
   });
-  return (listed.length > 0 ? listed : ["GET"]).map((m) => `${m} ${path}`);
+  return listed.length > 0 ? listed : ["GET"];
 }
 
 /** Offers of a file: routes, the file's own path, and its top-level functions. */
-function offersOf(path: string, root: Node, nodes: FlowNode[]): Offer[] {
+function offersOf(
+  path: string,
+  root: Node,
+  nodes: FlowNode[],
+  prefixesOf: (receiver: string) => string[],
+): Offer[] {
   const file = fileId(path);
   const offers: Offer[] = [
     { channel: "process", key: path, nodeId: file, line: 1 },
@@ -372,7 +497,7 @@ function offersOf(path: string, root: Node, nodes: FlowNode[]): Offer[] {
     if (owner === undefined) continue;
     for (const decorator of decorated.namedChildren) {
       if (decorator.type !== "decorator") continue;
-      for (const key of routeKeys(decorator)) {
+      for (const key of routeKeys(decorator, prefixesOf)) {
         offers.push({
           channel: "http",
           key,
@@ -401,9 +526,10 @@ export function collectLinks(
   root: Node,
   nodes: FlowNode[],
   stars: StarImports = { aliases: new Map(), open: false },
+  prefixesOf: (receiver: string) => string[] = () => [""],
 ): FileLinks {
   return {
-    offers: offersOf(path, root, nodes),
+    offers: offersOf(path, root, nodes, prefixesOf),
     requests: requestsOf(path, root, nodes, stars),
   };
 }

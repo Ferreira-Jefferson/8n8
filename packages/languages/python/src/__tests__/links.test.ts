@@ -413,6 +413,136 @@ describe("offers", () => {
   });
 });
 
+describe("offers: router prefixes", () => {
+  /** The HTTP offers of a project, as `key nodeId`. */
+  function routesOf(files: { path: string; source: string }[]): string[] {
+    return pythonPlugin
+      .analyze(files)
+      .offers.filter((o) => o.channel === "http")
+      .map((o) => `${o.key} ${o.nodeId}`);
+  }
+
+  it("adds the prefix of an APIRouter and of the include_router that mounts it", () => {
+    expect(
+      routesOf([
+        {
+          path: "api.py",
+          source: [
+            "from fastapi import APIRouter, FastAPI",
+            "",
+            'router = APIRouter(prefix="/items")',
+            "app = FastAPI()",
+            "",
+            '@router.get("/{id}")',
+            "def read(id):",
+            "    return id",
+            "",
+            '@router.post("")',
+            "def create():",
+            "    return 1",
+            "",
+            '@app.get("/ping")',
+            "def ping():",
+            "    return 1",
+            "",
+            'app.include_router(router, prefix="/api")',
+            "",
+          ].join("\n"),
+        },
+      ]),
+    ).toEqual([
+      "GET /api/items/{id} file:api.py/fn:read",
+      "POST /api/items file:api.py/fn:create",
+      "GET /ping file:api.py/fn:ping",
+    ]);
+  });
+
+  it("follows a router mounted from another file, once per mount", () => {
+    expect(
+      routesOf([
+        {
+          path: "app/routes.py",
+          source: [
+            "from fastapi import APIRouter",
+            "",
+            'router = APIRouter(prefix="/items")',
+            "",
+            '@router.get("/{id}")',
+            "def read(id):",
+            "    return id",
+            "",
+          ].join("\n"),
+        },
+        {
+          path: "app/main.py",
+          source: [
+            "from fastapi import FastAPI",
+            "from .routes import router",
+            "",
+            "app = FastAPI()",
+            'app.include_router(router, prefix="/api")',
+            'app.include_router(router, prefix="/v2")',
+            "",
+          ].join("\n"),
+        },
+      ]),
+    ).toEqual([
+      "GET /api/items/{id} file:app/routes.py/fn:read",
+      "GET /v2/items/{id} file:app/routes.py/fn:read",
+    ]);
+  });
+
+  it("takes the url_prefix of a Blueprint, which register_blueprint replaces when it gives one", () => {
+    const blueprint = (register: string) => [
+      {
+        path: "orders.py",
+        source: [
+          "from flask import Blueprint",
+          "",
+          'bp = Blueprint("orders", __name__, url_prefix="/orders")',
+          "",
+          '@bp.route("/<int:oid>", methods=["GET", "DELETE"])',
+          "def order(oid):",
+          "    return str(oid)",
+          "",
+          '@bp.get("/")',
+          "def list_orders():",
+          "    return []",
+          "",
+        ].join("\n"),
+      },
+      {
+        path: "app.py",
+        source: [
+          "from flask import Flask",
+          "from orders import bp",
+          "",
+          "def create_app():",
+          "    app = Flask(__name__)",
+          `    ${register}`,
+          "    return app",
+          "",
+        ].join("\n"),
+      },
+    ];
+
+    expect(routesOf(blueprint("app.register_blueprint(bp)"))).toEqual([
+      "GET /orders/<int:oid> file:orders.py/fn:order",
+      "DELETE /orders/<int:oid> file:orders.py/fn:order",
+      "GET /orders/ file:orders.py/fn:list_orders",
+    ]);
+    expect(
+      routesOf(
+        blueprint('app.register_blueprint(bp, url_prefix="/api/pedidos")'),
+      ),
+    ).toEqual([
+      "GET /api/pedidos/<int:oid> file:orders.py/fn:order",
+      "DELETE /api/pedidos/<int:oid> file:orders.py/fn:order",
+      "GET /api/pedidos/ file:orders.py/fn:list_orders",
+    ]);
+  });
+});
+
 describe("links of a whole fixture", () => {
   it("reads a file with routes, a request and a process", () => {
     const source = readFileSync(

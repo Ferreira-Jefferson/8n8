@@ -2,6 +2,7 @@ import { childId, fileId, type NodeId } from "@8n8/model";
 import type { Node } from "web-tree-sitter";
 import { allocateTopLevel } from "./build-graph";
 import { allNames, importAliases, starModules } from "./imports";
+import { type RouterFacts, routerFactsOf } from "./links";
 
 /** Dotted module name of a POSIX `.py` path; null for the root `__init__.py`. */
 export function moduleNameOf(path: string): string | null {
@@ -61,6 +62,7 @@ export interface ModuleContribution {
   aliases: [string, string][];
   stars: string[];
   all: string[] | null;
+  routes: RouterFacts;
 }
 
 /** The contribution of one file: it depends only on the path and the text. */
@@ -75,6 +77,7 @@ export function contributionOf(path: string, root: Node): ModuleContribution {
     aliases,
     stars: starModules(root),
     all: allNames(root),
+    routes: routerFactsOf(moduleNameOf(path) ?? "", root, new Map(aliases)),
   };
 }
 
@@ -160,6 +163,21 @@ function moduleEntry(
     if (entry !== undefined) return [candidate, entry];
   }
   return null;
+}
+
+/** An absolute `module.name` seen from `callerPath`, under the module the project has: the root first, then the caller's folder. */
+export function canonicalName(
+  index: ModuleIndex,
+  callerPath: string,
+  full: string,
+): string {
+  const pkg = packageOf(callerPath);
+  for (const candidate of pkg === "" ? [full] : [full, `${pkg}.${full}`]) {
+    if (index.has(candidate.split(".").slice(0, -1).join("."))) {
+      return candidate;
+    }
+  }
+  return full;
 }
 
 export interface StarImports {
