@@ -159,7 +159,7 @@ Nos dois caminhos, a janela de arquivos abre em seguida. Selecione `release/8n8-
 
 **5. Usar.** Você também pode rodar **8n8: Abrir mapa** na paleta de comandos. Ele abre a tela inicial, sem mapa: lá você digita a pasta ou cola um trecho. Para mapear uma pasta direto, clique nela com o botão direito no Explorer e escolha **8n8: Abrir mapa desta pasta**. No mapa de uma pasta, o botão **Início** volta à tela inicial.
 
-**Atualizar ou remover.** Para atualizar, gere o `.vsix` de novo e repita o passo 2: o VS Code troca a versão instalada. Para remover, abra a aba **Extensions**, clique na engrenagem do **8n8** e escolha **Uninstall**.
+**Atualizar ou remover.** Para atualizar, gere o `.vsix` de novo e repita o passo 2: o VS Code troca a versão instalada. No terminal, acrescente `--force` (`code --install-extension release/8n8-vscode-0.0.1.vsix --force`): o número da versão não muda, e sem a opção o VS Code mantém a que já está instalada. Depois, recarregue a janela, como no passo 3, para a janela aberta usar a versão nova. Para remover, abra a aba **Extensions**, clique na engrenagem do **8n8** e escolha **Uninstall**.
 
 Para acrescentar outro editor, veja [docs/guides/adicionar-editor.md](docs/guides/adicionar-editor.md).
 
