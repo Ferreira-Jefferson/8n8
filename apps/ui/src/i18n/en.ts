@@ -183,6 +183,11 @@ export const en: Record<MessageKey, string> = {
   "ignored.not-utf8": "not UTF-8",
   "ignored.unreadable": "could not be read",
   "ignored.symlink": "symbolic link not followed",
+  "ignored.output-folder": "build output folder, not read",
+  "ignored.unsupported.one": "{n} file of an unsupported language",
+  "ignored.unsupported.other": "{n} files of an unsupported language",
+  "ignoredItems.one": "{n} item left off the map",
+  "ignoredItems.other": "{n} items left off the map",
   "resizer.aria": "Resize panel",
   "reads.some": "8n8 reads the {list} files in the folder and its subfolders.",
   "reads.none": "8n8 reads the code files in the folder and its subfolders.",
@@ -194,6 +199,7 @@ export const en: Record<MessageKey, string> = {
   "flow.loading": "Loading the file…",
   "flow.loadFailed": "Could not load the file.",
   "flow.retry": "Try again",
+  "flow.drawFailed": "This level could not be drawn.",
   "flow.nodeHelp":
     "Press Enter or Space to select a node. Press Esc to cancel.",
   "flow.nodeHelpKeyboard":

@@ -183,6 +183,11 @@ export const ptBR = {
   "ignored.not-utf8": "não está em UTF-8",
   "ignored.unreadable": "não foi possível ler",
   "ignored.symlink": "link simbólico não seguido",
+  "ignored.output-folder": "pasta de saída de build, não lida",
+  "ignored.unsupported.one": "{n} arquivo de linguagem não suportada",
+  "ignored.unsupported.other": "{n} arquivos de linguagem não suportada",
+  "ignoredItems.one": "{n} item fora do mapa",
+  "ignoredItems.other": "{n} itens fora do mapa",
   "resizer.aria": "Redimensionar painel",
   "reads.some": "O 8n8 lê os arquivos {list} da pasta e das subpastas.",
   "reads.none": "O 8n8 lê os arquivos de código da pasta e das subpastas.",
@@ -194,6 +199,7 @@ export const ptBR = {
   "flow.loading": "Carregando o arquivo…",
   "flow.loadFailed": "Não foi possível carregar o arquivo.",
   "flow.retry": "Tentar de novo",
+  "flow.drawFailed": "Não deu para desenhar este nível.",
   "flow.nodeHelp":
     "Tecle Enter ou espaço para selecionar um nó. Tecle Esc para cancelar.",
   "flow.nodeHelpKeyboard":

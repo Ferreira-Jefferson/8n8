@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { IGNORED_DIRS } from "@8n8/input";
+import { IGNORED_DIRS, OUTPUT_DIRS } from "@8n8/input";
 import { describe, expect, it } from "vitest";
 import { MAX_CACHE_BYTES } from "../analysis-cache";
 import { languagePlugins } from "../core";
@@ -20,12 +20,13 @@ describe("the README tells what 8n8 reads of a folder (CLEAN-03)", () => {
     );
   });
 
-  it.each([...IGNORED_DIRS, ...languagePlugins.flatMap((p) => p.ignoredDirs)])(
-    "names the skipped folder %s",
-    (dir) => {
-      expect(readme).toContain(`\`${dir}\``);
-    },
-  );
+  it.each([
+    ...IGNORED_DIRS,
+    ...OUTPUT_DIRS,
+    ...languagePlugins.flatMap((p) => p.ignoredDirs),
+  ])("names the skipped folder %s", (dir) => {
+    expect(readme).toContain(`\`${dir}\``);
+  });
 
   it("says the history keeps only the path of a folder", () => {
     expect(readme).toContain(

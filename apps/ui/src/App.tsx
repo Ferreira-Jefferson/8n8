@@ -31,6 +31,7 @@ import {
   fetchSearch,
   fetchSettings,
 } from "./api";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { codeLineOf } from "./flow/card";
 import { FlowCanvas } from "./flow/FlowCanvas";
 import { projectLevel } from "./flow/project-level";
@@ -55,7 +56,7 @@ import { externalEffects } from "./panel/effects";
 import { IgnoredFiles } from "./panel/IgnoredFiles";
 import { clampPanel, PanelResizer } from "./panel/PanelResizer";
 import { createProjectStore, type ProjectStore } from "./project-store";
-import { type SearchEntry, searchEntries, searchEntryOf } from "./search/match";
+import { hitEntryOf, type SearchEntry, searchEntries } from "./search/match";
 import { NodeSearch } from "./search/NodeSearch";
 import { SettingsButton, SettingsDialog } from "./settings/SettingsDialog";
 
@@ -604,10 +605,7 @@ export function App({ initialFolder = null }: AppProps) {
       }
       return found.hits.map((hit) => {
         const file = hit.ancestry.flatMap((id) => files.get(id) ?? []).at(-1);
-        return {
-          ...searchEntryOf(hit.node, file, undefined),
-          ancestry: hit.ancestry,
-        };
+        return hitEntryOf(hit, file);
       });
     };
   }, [mapped]);
@@ -815,39 +813,55 @@ export function App({ initialFolder = null }: AppProps) {
             onAdd={(path) => openFolder(mapped.root, [...mapped.include, path])}
           />
         )}
-        <FlowCanvas
-          graph={graph}
-          mapKey={mapped}
-          loading={levelLoading}
-          onRetry={
-            levelFailed && levelFile !== undefined
-              ? () => store?.ensureFile(levelFile)
-              : undefined
+        <ErrorBoundary
+          resetKey={level}
+          fallback={
+            <div className="canvas">
+              <div className="canvas-loading canvas-error" role="alert">
+                <p>{t("flow.drawFailed")}</p>
+                {levelId !== null && (
+                  <button type="button" className="btn-ghost" onClick={back}>
+                    {t("step.backTitle")}
+                  </button>
+                )}
+              </div>
+            </div>
           }
-          levelId={levelId}
-          depth={nav.path.length}
-          selected={nav.selected}
-          titles={titles}
-          codeLineOf={cardCode}
-          suggestions={suggestions}
-          focusId={focusId}
-          centerOn={center}
-          onSelect={select}
-          onInspect={(id) => {
-            select(id);
-            setPanelCollapsed(false);
-          }}
-          onOpen={(node) => {
-            setFocusId(null);
-            setMark(undefined);
-            openNode(node);
-          }}
-          onSuggestion={(id, line) => {
-            setMark((m) => ({ line, nonce: (m?.nonce ?? 0) + 1 }));
-            dispatch({ type: "select", id });
-          }}
-          onBack={back}
-        />
+        >
+          <FlowCanvas
+            graph={graph}
+            mapKey={mapped}
+            loading={levelLoading}
+            onRetry={
+              levelFailed && levelFile !== undefined
+                ? () => store?.ensureFile(levelFile)
+                : undefined
+            }
+            levelId={levelId}
+            depth={nav.path.length}
+            selected={nav.selected}
+            titles={titles}
+            codeLineOf={cardCode}
+            suggestions={suggestions}
+            focusId={focusId}
+            centerOn={center}
+            onSelect={select}
+            onInspect={(id) => {
+              select(id);
+              setPanelCollapsed(false);
+            }}
+            onOpen={(node) => {
+              setFocusId(null);
+              setMark(undefined);
+              openNode(node);
+            }}
+            onSuggestion={(id, line) => {
+              setMark((m) => ({ line, nonce: (m?.nonce ?? 0) + 1 }));
+              dispatch({ type: "select", id });
+            }}
+            onBack={back}
+          />
+        </ErrorBoundary>
       </div>
       {historyOpen && (
         <HistoryDrawer

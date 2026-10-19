@@ -22,7 +22,6 @@ describe("typescriptPlugin", () => {
     expect(typescriptPlugin.extensions).toEqual([".ts", ".tsx"]);
     expect(typescriptPlugin.ignoredDirs).toEqual([
       ".next",
-      "coverage",
       ".turbo",
       "bower_components",
     ]);

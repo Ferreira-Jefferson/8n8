@@ -21,19 +21,44 @@ export interface Position {
   y: number;
 }
 
-/** Left-to-right layout; returns the top-left position of each node. */
+/**
+ * Over this many cards a level skips dagre: it takes seconds there, and a long chain
+ * of calls overflows the browser's stack in its recursion (G13).
+ */
+export const LAYOUT_MAX_NODES = 1000;
+
+/** Cards in code order, left to right, row after row, in a near-square grid: the level shows even when dagre cannot lay it out. */
+export function layoutGrid(nodes: FlowNode[]): Map<NodeId, Position> {
+  const cols = Math.max(1, Math.ceil(Math.sqrt(nodes.length)));
+  return new Map(
+    nodes.map((n, i) => [
+      n.id,
+      {
+        x: (i % cols) * (NODE_WIDTH + NODE_GAP),
+        y: Math.floor(i / cols) * (NODE_HEIGHT + NODE_GAP),
+      },
+    ]),
+  );
+}
+
+/** Left-to-right layout; returns the top-left position of each node. A level too big for dagre, or one dagre fails on, comes back as `layoutGrid`. */
 export function layoutLR(
   nodes: FlowNode[],
   edges: FlowEdge[],
   containerId: NodeId | null = null,
 ): Map<NodeId, Position> {
+  if (nodes.length > LAYOUT_MAX_NODES) return layoutGrid(nodes);
   const g = new Graph();
   g.setGraph({ rankdir: "LR", nodesep: NODE_GAP, ranksep: NODE_GAP });
   g.setDefaultEdgeLabel(() => ({}));
   for (const n of nodes)
     g.setNode(n.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   for (const e of edges) g.setEdge(e.source, e.target);
-  layout(g);
+  try {
+    layout(g);
+  } catch {
+    return layoutGrid(nodes);
+  }
   const out = new Map<NodeId, Position>();
   for (const n of nodes) {
     const p = g.node(n.id);

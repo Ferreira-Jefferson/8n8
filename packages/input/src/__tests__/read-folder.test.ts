@@ -39,6 +39,7 @@ async function makeTree(): Promise<string> {
   }
   await put(".venv/lib/x.py");
   await put("pkg/node_modules/y.py");
+  await put("a/package.json", "{}");
   await put("a/dist/z.py");
   await put("__pycache__/c.py");
   await put("build/b.py");
@@ -97,7 +98,7 @@ describe("readSourceFolder", () => {
       ...r.files.map((f) => f.path),
       ...r.ignored.map((i) => i.path),
     ];
-    // The 8 folders named in the spec (PROJ-01).
+    // The 8 folders named in the spec (PROJ-01); the build outputs are listed as folders.
     for (const bad of [
       ".git",
       ".venv",
@@ -105,10 +106,11 @@ describe("readSourceFolder", () => {
       "node_modules",
       "__pycache__",
       "site-packages",
-      "build",
-      "dist",
     ]) {
       expect(all.some((p) => p.includes(bad))).toBe(false);
+    }
+    for (const out of ["build", "dist"]) {
+      expect(r.files.some((f) => f.path.includes(out))).toBe(false);
     }
     expect(r.files.map((f) => f.path)).toContain("pedidos/itens.py");
   });
@@ -143,6 +145,8 @@ describe("readSourceFolder", () => {
     const r = await readSourceFolder(dir, PY);
     if (r.kind !== "ok") throw new Error("expected ok");
     expect(r.ignored).toEqual([
+      { path: "a/dist", reason: "output-folder" },
+      { path: "build", reason: "output-folder" },
       { path: "grande.py", reason: "too-large", addable: true },
       { path: "latin.py", reason: "not-utf8" },
     ]);
@@ -173,7 +177,7 @@ describe("readSourceFolder", () => {
 });
 
 describe("readSourceFolder: several languages", () => {
-  const TS = { extensions: [".ts", ".tsx"], ignoredDirs: ["coverage"] };
+  const TS = { extensions: [".ts", ".tsx"], ignoredDirs: [".next"] };
 
   /** A mixed tree: Python and TypeScript sources, upper-case extensions, folders of both. */
   async function makeMixed(): Promise<string> {
@@ -187,8 +191,8 @@ describe("readSourceFolder: several languages", () => {
       "web/tipos.d.mts",
       "notas.txt",
       ".venv/x.py",
-      "coverage/c.ts",
-      "coverage/c.py",
+      ".next/c.ts",
+      ".next/c.py",
       ".venv/lib.ts",
       "node_modules/m.ts",
       "dist/d.py",
@@ -224,7 +228,7 @@ describe("readSourceFolder: several languages", () => {
     const root = await makeMixed();
 
     expect(await paths(root, { extensions: [".PY"], ignoredDirs: [] })).toEqual(
-      [".venv/x.py", "UPPER.PY", "a.py", "coverage/c.py"],
+      [".next/c.py", ".venv/x.py", "UPPER.PY", "a.py"],
     );
     // `.venv` is a Python folder: only the Python plugin asks to skip it.
     expect(await paths(root, TS)).toEqual([
@@ -243,7 +247,7 @@ describe("readSourceFolder: several languages", () => {
 
     expect(found).toContain(".venv/x.py");
     expect(found).toContain(".venv/lib.ts");
-    expect(found).toContain("coverage/c.ts");
+    expect(found).toContain(".next/c.ts");
     expect(found.some((p) => p.startsWith("node_modules/"))).toBe(false);
     expect(found.some((p) => p.startsWith("dist/"))).toBe(false);
   });
@@ -252,7 +256,7 @@ describe("readSourceFolder: several languages", () => {
     const root = await makeMixed();
     const found = await paths(root, {
       extensions: [".py", ".ts"],
-      ignoredDirs: [".venv", "coverage"],
+      ignoredDirs: [".venv", ".next"],
     });
 
     expect(found).toEqual(["UPPER.PY", "a.py", "web/app.ts"]);
@@ -280,9 +284,7 @@ describe("readSourceFolder: several languages", () => {
 
 describe("IGNORED_DIRS", () => {
   it("holds only the general folders", () => {
-    expect([...IGNORED_DIRS].sort()).toEqual(
-      [".git", "build", "dist", "node_modules"].sort(),
-    );
+    expect([...IGNORED_DIRS].sort()).toEqual([".git", "node_modules"].sort());
   });
 });
 
@@ -520,5 +522,102 @@ describe("readSourceFolder reads many files at once and keeps the order", () => 
     expect(r.files.find((f) => f.path === "d3/s2/m7.py")?.source).toBe(
       "x = 7\n",
     );
+  });
+});
+
+describe("readSourceFolder: build outputs and other code (G14)", () => {
+  const BOTH = {
+    extensions: [".py", ".ts", ".tsx"],
+    ignoredDirs: [...PY.ignoredDirs, ".next"],
+  };
+  async function tree(files: string[]): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), "input-output-"));
+    made.push(root);
+    for (const rel of files) {
+      await mkdir(join(root, rel, ".."), { recursive: true });
+      await writeFile(join(root, rel), "x\n");
+    }
+    return root;
+  }
+
+  it("reads a build, dist, coverage or out folder deep inside the code", async () => {
+    const root = await tree([
+      "src/commands/build/index.ts",
+      "src/coverage/calc.py",
+      "src/dist/d.ts",
+      "src/out/o.ts",
+    ]);
+    const r = await readSourceFolder(root, BOTH);
+    if (r.kind !== "ok") throw new Error("expected ok");
+    expect(r.files.map((f) => f.path)).toEqual([
+      "src/commands/build/index.ts",
+      "src/coverage/calc.py",
+      "src/dist/d.ts",
+      "src/out/o.ts",
+    ]);
+    expect(r.ignored).toEqual([]);
+  });
+
+  it("skips them at the root and beside a package.json or pyproject.toml, and lists each folder", async () => {
+    const root = await tree([
+      "app.ts",
+      "build/a.ts",
+      "coverage/c.ts",
+      "out/o.ts",
+      "packages/web/package.json",
+      "packages/web/dist/w.ts",
+      "packages/api/pyproject.toml",
+      "packages/api/build/b.py",
+      "packages/api/src/build/keep.py",
+    ]);
+    const r = await readSourceFolder(root, BOTH);
+    if (r.kind !== "ok") throw new Error("expected ok");
+    expect(r.files.map((f) => f.path)).toEqual([
+      "app.ts",
+      "packages/api/src/build/keep.py",
+    ]);
+    expect(r.ignored).toEqual([
+      { path: "build", reason: "output-folder" },
+      { path: "coverage", reason: "output-folder" },
+      { path: "out", reason: "output-folder" },
+      { path: "packages/api/build", reason: "output-folder" },
+      { path: "packages/web/dist", reason: "output-folder" },
+    ]);
+  });
+
+  it("lists neither what the .gitignore covers nor anything when the dependencies are read", async () => {
+    const root = await tree(["dist/a.ts", "build/b.ts"]);
+    await writeFile(join(root, ".gitignore"), "dist/\n");
+    const r = await readSourceFolder(root, BOTH);
+    if (r.kind !== "ok") throw new Error("expected ok");
+    expect(r.ignored).toEqual([{ path: "build", reason: "output-folder" }]);
+    const all = await readSourceFolder(root, {
+      ...BOTH,
+      ignoreDependencies: false,
+    });
+    if (all.kind !== "ok") throw new Error("expected ok");
+    expect(all.files.map((f) => f.path)).toEqual(["build/b.ts", "dist/a.ts"]);
+    expect(all.ignored).toEqual([]);
+  });
+
+  it("counts the files of code no plugin reads, by extension, and not the other files", async () => {
+    const root = await tree([
+      "app.ts",
+      "plain.js",
+      "web/comp.jsx",
+      "web/more.js",
+      "tool.mjs",
+      "main.go",
+      "README.md",
+      "data.json",
+    ]);
+    const r = await readSourceFolder(root, BOTH);
+    if (r.kind !== "ok") throw new Error("expected ok");
+    expect(r.ignored).toEqual([
+      { path: "*.go", reason: "unsupported", count: 1 },
+      { path: "*.js", reason: "unsupported", count: 2 },
+      { path: "*.jsx", reason: "unsupported", count: 1 },
+      { path: "*.mjs", reason: "unsupported", count: 1 },
+    ]);
   });
 });

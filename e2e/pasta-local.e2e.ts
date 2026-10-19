@@ -310,21 +310,24 @@ test.describe("Pasta local", () => {
     const section = page.getByRole("region", { name: "Arquivos ignorados" });
     await expect(section).toHaveCount(0);
 
-    const icon = page.getByRole("button", { name: "2 arquivos ignorados" });
+    // The root dist/ is a build output: listed as a folder, so the icon counts items (G14).
+    const icon = page.getByRole("button", { name: "3 itens fora do mapa" });
     const tip = icon.locator(".ignored-tip");
     await expect(tip).toBeHidden();
     await icon.hover();
     await expect(tip).toBeVisible();
-    await expect(tip).toHaveText("2 arquivos ignorados");
+    await expect(tip).toHaveText("3 itens fora do mapa");
 
     await clickCard(page, "file:main.py");
     await expect(panel(page)).toBeVisible();
     await icon.click();
     await expect(section.locator(".ignored-path")).toHaveText([
+      "dist",
       "grande.py",
       "latin1.py",
     ]);
     await expect(section.locator(".ignored-reason")).toHaveText([
+      "pasta de saída de build, não lida",
       "maior que 1 MB",
       "não está em UTF-8",
     ]);
@@ -354,7 +357,7 @@ test.describe("Pasta local", () => {
     await openFolder(page, loja);
     await clickCard(page, "file:main.py");
     await expect(panel(page)).toBeVisible();
-    await page.getByRole("button", { name: "3 arquivos ignorados" }).click();
+    await page.getByRole("button", { name: "4 itens fora do mapa" }).click();
     const section = page.getByRole("region", { name: "Arquivos ignorados" });
     const long = section.locator(".ignored-path", {
       hasText: "muito_comprido",
@@ -376,7 +379,7 @@ test.describe("Pasta local", () => {
   }) => {
     await openFolder(page, LOJA);
     await expect(nodes(page)).toHaveCount(5);
-    await page.getByRole("button", { name: "2 arquivos ignorados" }).click();
+    await page.getByRole("button", { name: "3 itens fora do mapa" }).click();
     const section = page.getByRole("region", { name: "Arquivos ignorados" });
     const add = section.getByRole("button", { name: "Adicionar ao mapa" });
     await expect(add).toHaveCount(1);
@@ -397,7 +400,7 @@ test.describe("Pasta local", () => {
     await expect(nodeById(page, "file:grande.py")).toBeVisible();
     await expect(nodes(page)).toHaveCount(6);
     await expect(
-      page.getByRole("button", { name: "1 arquivo ignorado" }),
+      page.getByRole("button", { name: "2 itens fora do mapa" }),
     ).toBeVisible();
   });
 
@@ -426,14 +429,48 @@ test.describe("Pasta local", () => {
       .poll(() => levelIds(page))
       .toEqual(["file:pedidos/pedidos.py"]);
 
-    // Only grande.py is left out: latin1.py, gerado/ and its large file are the project's choice.
-    const icon = page.getByRole("button", { name: "1 arquivo ignorado" });
+    // Only dist/ and grande.py are left out: latin1.py, gerado/ and its large file are the project's choice.
+    const icon = page.getByRole("button", { name: "2 itens fora do mapa" });
     await icon.click();
     await expect(
       page
         .getByRole("region", { name: "Arquivos ignorados" })
         .locator(".ignored-path"),
-    ).toHaveText(["grande.py"]);
+    ).toHaveText(["dist", "grande.py"]);
+  });
+
+  test("G14: a build folder deep in the code is on the map; the root dist and the .js files are on the list, with no panel", async ({
+    page,
+  }) => {
+    const app = join(tmp, "saidas", "app");
+    for (const [rel, text] of [
+      ["src/commands/build/index.ts", "export function build() {}\n"],
+      ["dist/app.ts", "export function old() {}\n"],
+      ["plain.js", "export const js1 = 1;\n"],
+      ["web/more.js", "export const js2 = 2;\n"],
+    ] as const) {
+      mkdirSync(join(app, rel, ".."), { recursive: true });
+      writeFileSync(join(app, rel), text);
+    }
+
+    await openFolder(page, app);
+    await expect.poll(() => levelIds(page)).toEqual(["dir:src"]);
+    await clickCard(page, "dir:src");
+    await clickCard(page, "dir:src/commands");
+    await clickCard(page, "dir:src/commands/build");
+    await expect
+      .poll(() => levelIds(page))
+      .toEqual(["file:src/commands/build/index.ts"]);
+
+    await page.getByRole("button", { name: "2 itens fora do mapa" }).click();
+    const section = page.getByRole("region", { name: "Arquivos ignorados" });
+    await expect(section.locator(".ignored-path")).toHaveText(["*.js", "dist"]);
+    await expect(section.locator(".ignored-reason")).toHaveText([
+      "2 arquivos de linguagem não suportada",
+      "pasta de saída de build, não lida",
+    ]);
+    // A folder never opens the panel.
+    await expect(panel(page)).toHaveCount(0);
   });
 
   test("PROJ-07: mapping, drilling, jumping and opening a panel leave the folder untouched", async ({

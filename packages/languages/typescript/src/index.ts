@@ -10,7 +10,7 @@ export const typescriptPlugin: LanguagePlugin = {
   label: "TypeScript",
   extensions: [".ts", ".tsx"],
   manifests: MANIFESTS,
-  ignoredDirs: [".next", "coverage", ".turbo", "bower_components"],
+  ignoredDirs: [".next", ".turbo", "bower_components"],
   commentPrefix: "//",
   detect: detectTypescript,
   extract: extractSnippet,

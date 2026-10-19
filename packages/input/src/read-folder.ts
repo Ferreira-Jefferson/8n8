@@ -1,22 +1,52 @@
-import { basename, join, resolve } from "node:path";
+import { basename, extname, join, resolve } from "node:path";
 import type { IgnoredFile, SourceFile } from "@8n8/model";
 import ignore, { type Ignore } from "ignore";
 import { readdir, readFile, realpath, stat } from "./fs-read";
 import { readSourceFile } from "./read-file";
 
-/** Folders no language wants; each plugin adds its own through `ReadFilter.ignoredDirs`. */
+/** Folders no language wants, at any depth; each plugin adds its own through `ReadFilter.ignoredDirs`. */
 export const IGNORED_DIRS: ReadonlySet<string> = new Set([
   ".git",
   "node_modules",
-  "build",
-  "dist",
 ]);
 
 /** Never read, whatever the settings say: version control is no dependency, but nobody maps it. */
 const ALWAYS_SKIPPED: ReadonlySet<string> = new Set([".git"]);
 
-/** Build outputs are skipped inside a folder, but a project may sit under one (`/srv/dist/app`). */
-const OUTPUT_DIRS: ReadonlySet<string> = new Set(["build", "dist"]);
+/**
+ * Build outputs, skipped only at the root or beside a `package.json`/`pyproject.toml`:
+ * deeper, the name is just a name (`src/commands/build`). A project may sit under one (`/srv/dist/app`).
+ */
+export const OUTPUT_DIRS: ReadonlySet<string> = new Set([
+  "build",
+  "dist",
+  "coverage",
+  "out",
+]);
+
+/** The files that make a folder the root of a package, where its build outputs live. */
+const PACKAGE_FILES = ["package.json", "pyproject.toml"];
+
+/** Code no plugin reads: the map counts these files by extension, so a person knows they were left out. */
+const CODE_EXTENSIONS: ReadonlySet<string> = new Set([
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".cjs",
+  ".vue",
+  ".svelte",
+  ".go",
+  ".rs",
+  ".java",
+  ".kt",
+  ".rb",
+  ".php",
+  ".cs",
+  ".c",
+  ".cpp",
+  ".h",
+  ".swift",
+]);
 
 /** What to read: the files of these extensions (with the dot, any case), skipping these folders besides `IGNORED_DIRS`. */
 export interface ReadFilter {
@@ -91,6 +121,8 @@ export async function readSourceFolder(
   }
 
   const turn = limited(OPEN_AT_ONCE);
+  /** How many files of each code extension no plugin reads. */
+  const unsupported = new Map<string, number>();
 
   /** What a folder holds, in the order of its sorted entries: the files it reads while the others are still being read. */
   async function walk(
@@ -107,6 +139,8 @@ export async function readSourceFolder(
       ? await turn(() => gitignoreOf(abs, rel))
       : undefined;
     const active = own ? [...rules, own] : rules;
+    const packageRoot =
+      rel === "" || entries.some((e) => PACKAGE_FILES.includes(e.name));
     const jobs: Promise<Found>[] = [];
     for (const entry of entries) {
       const entryAbs = join(abs, entry.name);
@@ -118,8 +152,13 @@ export async function readSourceFolder(
         if (
           !wanted.some((e) => name.endsWith(e)) &&
           !names.includes(entry.name)
-        )
+        ) {
+          const ext = extname(name);
+          if (CODE_EXTENSIONS.has(ext)) {
+            unsupported.set(ext, (unsupported.get(ext) ?? 0) + 1);
+          }
           continue;
+        }
         jobs.push(
           turn(() =>
             readSourceFile(entryAbs, entryRel, added.has(entryRel)),
@@ -128,6 +167,18 @@ export async function readSourceFolder(
               ? { files: [read.file], ignored: [] }
               : { files: [], ignored: [read.ignored] },
           ),
+        );
+      } else if (
+        isDir &&
+        ignoreDependencies &&
+        packageRoot &&
+        OUTPUT_DIRS.has(entry.name)
+      ) {
+        jobs.push(
+          Promise.resolve({
+            files: [],
+            ignored: [{ path: entryRel, reason: "output-folder" }],
+          }),
         );
       } else if (isDir && !skipped.has(entry.name)) {
         jobs.push(walk(entryAbs, entryRel, active));
@@ -142,6 +193,9 @@ export async function readSourceFolder(
   }
 
   const { files, ignored } = await walk(root, "", []);
+  for (const [ext, count] of unsupported) {
+    ignored.push({ path: `*${ext}`, reason: "unsupported", count });
+  }
   ignored.sort((a, b) => byCode(a.path, b.path));
   return { kind: "ok", name: folderName(root), root, files, ignored };
 }

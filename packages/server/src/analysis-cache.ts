@@ -11,7 +11,7 @@ import { blobHead, type PackedFile } from "./project-pack";
 // the text comes from reading the folder again. Any failure turns into "no cache" and never stops a build.
 
 /** Change it when the format of a row, or of what is cached, changes: every old row goes away. */
-export const ANALYSIS_CACHE_VERSION = 1;
+export const ANALYSIS_CACHE_VERSION = 2;
 
 /** The version goes in every key too, so a process of an older version, still holding the file open, cannot write rows a newer one would read. */
 const keyOf = (key: string): string => `${ANALYSIS_CACHE_VERSION}|${key}`;

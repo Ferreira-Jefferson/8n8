@@ -57,6 +57,8 @@ export function plural(
     | "line"
     | "file"
     | "ignored"
+    | "ignored.unsupported"
+    | "ignoredItems"
     | "suggestion"
     | "link"
     | "edge.toCheck.alsoProven",

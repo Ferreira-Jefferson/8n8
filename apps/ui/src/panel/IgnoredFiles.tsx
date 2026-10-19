@@ -1,18 +1,27 @@
 import type { IgnoredFile, IgnoreReason } from "@8n8/model";
 import { useState } from "react";
-import { type MessageKey, plural, useT } from "../i18n";
+import { type MessageKey, plural, type Translate, useT } from "../i18n";
 
-const REASONS: Record<IgnoreReason, MessageKey> = {
+const REASONS: Record<Exclude<IgnoreReason, "unsupported">, MessageKey> = {
   "too-large": "ignored.too-large",
   "not-utf8": "ignored.not-utf8",
   unreadable: "ignored.unreadable",
   symlink: "ignored.symlink",
+  "output-folder": "ignored.output-folder",
 };
+
+/** Why a line of the list is off the map; an extension says how many files it has. */
+function reasonOf(f: IgnoredFile, t: Translate): string {
+  return f.reason === "unsupported"
+    ? plural(t, "ignored.unsupported", f.count ?? 0)
+    : t(REASONS[f.reason]);
+}
 
 /**
  * The files left out of the map: a warning icon whose hover says how many, and a click
  * opens the list with each reason. A file over 1 MB (up to 20 MB) can go on the map.
- * Nothing when no file was left out (PROJ-06, CLEAN-04..06).
+ * The list also names the build output folders it skipped and counts the files of
+ * other languages by extension (G14). Nothing when nothing was left out (PROJ-06, CLEAN-04..06).
  */
 export function IgnoredFiles({
   ignored,
@@ -24,7 +33,14 @@ export function IgnoredFiles({
   const t = useT();
   const [open, setOpen] = useState(false);
   if (ignored.length === 0) return null;
-  const count = plural(t, "ignored", ignored.length);
+  const onlyFiles = ignored.every(
+    (f) => f.reason !== "output-folder" && f.reason !== "unsupported",
+  );
+  const count = plural(
+    t,
+    onlyFiles ? "ignored" : "ignoredItems",
+    ignored.length,
+  );
   return (
     <div className="ignored">
       <button
@@ -61,7 +77,7 @@ export function IgnoredFiles({
             {ignored.map((f) => (
               <li key={f.path}>
                 <span className="ignored-path">{f.path}</span>
-                <span className="ignored-reason">{t(REASONS[f.reason])}</span>
+                <span className="ignored-reason">{reasonOf(f, t)}</span>
                 {f.addable && (
                   <button
                     type="button"

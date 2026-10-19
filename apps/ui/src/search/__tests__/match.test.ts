@@ -1,9 +1,16 @@
-import { fold, SEARCHABLE_KINDS, searchText, searchWords } from "@8n8/model";
+import {
+  type FlowNode,
+  fold,
+  SEARCHABLE_KINDS,
+  searchText,
+  searchWords,
+} from "@8n8/model";
 import { describe, expect, it } from "vitest";
 import { lojaGraph } from "../../flow/__tests__/loja-graph";
 import { mistaGraph } from "../../flow/__tests__/mista-graph";
 import {
   highlight,
+  hitEntryOf,
   matchEntries,
   mergeResults,
   type SearchEntry,
@@ -161,5 +168,57 @@ describe("mergeResults", () => {
       3,
     );
     expect(merged.map((x) => x.id)).toEqual(["x", "a", "b"]);
+  });
+
+  it("keeps a hit on a name inside a node as it came, beside the node's own entry", () => {
+    const named: SearchEntry = { ...e("b", "GET /api/x"), named: true };
+    const merged = mergeResults([e("b", "Título revisado")], [named]);
+    expect(merged.map((x) => x.title)).toEqual([
+      "Título revisado",
+      "GET /api/x",
+    ]);
+  });
+});
+
+describe("hitEntryOf", () => {
+  const code: FlowNode = {
+    id: "file:src/app.ts/mod/s2",
+    kind: "code",
+    label: "app.get",
+    parentId: "file:src/app.ts/mod",
+    range: { start: 8, end: 9 },
+    openable: false,
+  };
+
+  it("shows the name the server found and its line, not the node's", () => {
+    expect(
+      hitEntryOf(
+        {
+          node: code,
+          ancestry: ["dir:src", "file:src/app.ts", "file:src/app.ts/mod"],
+          name: "GET /api/project",
+          line: 9,
+        },
+        "src/app.ts",
+      ),
+    ).toEqual({
+      id: "file:src/app.ts/mod/s2",
+      title: "GET /api/project",
+      tech: "",
+      where: "app.ts · 9",
+      ancestry: ["dir:src", "file:src/app.ts", "file:src/app.ts/mod"],
+      named: true,
+    });
+  });
+
+  it("is the node's own entry for a hit on the node", () => {
+    const fn: FlowNode = { ...code, id: "f", kind: "function", label: "ler" };
+    expect(hitEntryOf({ node: fn, ancestry: ["p"] }, "src/app.ts")).toEqual({
+      id: "f",
+      title: "ler",
+      tech: "ler()",
+      where: "app.ts · 8–9",
+      ancestry: ["p"],
+    });
   });
 });
