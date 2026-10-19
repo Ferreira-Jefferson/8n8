@@ -52,7 +52,14 @@ export function useLocale(): Locale {
 /** One or many: the `.one` or `.other` key of a count, with the count as `{n}`. */
 export function plural(
   t: Translate,
-  base: "node" | "line" | "file" | "ignored" | "suggestion",
+  base:
+    | "node"
+    | "line"
+    | "file"
+    | "ignored"
+    | "ignored.unsupported"
+    | "ignoredItems"
+    | "suggestion",
   n: number,
 ): string {
   return t(n === 1 ? `${base}.one` : `${base}.other`, { n });

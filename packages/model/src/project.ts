@@ -6,13 +6,23 @@ export interface SourceFile {
   source: string;
 }
 
-export type IgnoreReason = "too-large" | "not-utf8" | "unreadable" | "symlink";
+/** `output-folder`: a build output folder (`dist`, `build`…) at the root of the project or of a package. `unsupported`: the files of a code extension no plugin reads. */
+export type IgnoreReason =
+  | "too-large"
+  | "not-utf8"
+  | "unreadable"
+  | "symlink"
+  | "output-folder"
+  | "unsupported";
 
 export interface IgnoredFile {
+  /** For `unsupported`, the extension as a pattern (`*.js`). */
   path: string;
   reason: IgnoreReason;
   /** A file over 1 MB and up to 20 MB: the screen offers to put it on the map (CLEAN-06). */
   addable?: boolean;
+  /** For `unsupported`: how many files have the extension. */
+  count?: number;
 }
 
 /** What the server keeps of a folder it read: the whole graph and the source of every file. The screen receives a `ProjectSkeleton`, never this. */

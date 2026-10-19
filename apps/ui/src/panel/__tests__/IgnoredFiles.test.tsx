@@ -90,4 +90,33 @@ describe("IgnoredFiles (PROJ-06, CLEAN-04..06)", () => {
     fireEvent.click(adds[0] as HTMLElement);
     expect(onAdd).toHaveBeenCalledWith("grande.py");
   });
+
+  it("names a skipped build folder and counts the files of another language; the icon counts items (G14)", () => {
+    render(
+      <IgnoredFiles
+        ignored={[
+          { path: "*.js", reason: "unsupported", count: 3 },
+          { path: "*.go", reason: "unsupported", count: 1 },
+          { path: "dist", reason: "output-folder" },
+          { path: "latin1.py", reason: "not-utf8" },
+        ]}
+        onAdd={vi.fn()}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "4 itens fora do mapa" }),
+    );
+    const items = within(list() as HTMLElement)
+      .getAllByRole("listitem")
+      .map((li) => [
+        li.querySelector(".ignored-path")?.textContent,
+        li.querySelector(".ignored-reason")?.textContent,
+      ]);
+    expect(items).toEqual([
+      ["*.js", "3 arquivos de linguagem não suportada"],
+      ["*.go", "1 arquivo de linguagem não suportada"],
+      ["dist", "pasta de saída de build, não lida"],
+      ["latin1.py", "não está em UTF-8"],
+    ]);
+  });
 });
