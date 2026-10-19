@@ -70,12 +70,21 @@ function fileGraph(
     nodes: [head, ...graph.nodes],
   });
   const [fileNode, ...inner] = marked.nodes;
+  // The file card also warns of an error inside one of its nodes: the first one, in code order.
+  const firstError = inner
+    .map((n) => n.syntaxError?.line)
+    .filter((line) => line !== undefined)
+    .sort((a, b) => a - b)[0];
+  const syntaxError =
+    fileNode?.syntaxError ??
+    (firstError === undefined ? undefined : { line: firstError });
   return {
     ...marked,
     nodes: [
       {
         ...(fileNode ?? head),
         range: { start: 1, end: lastLine(file.source) },
+        ...(syntaxError ? { syntaxError } : {}),
       },
       ...inner,
     ],
