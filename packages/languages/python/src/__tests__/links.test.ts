@@ -86,26 +86,88 @@ describe("requests: http", () => {
     ]);
   });
 
-  it("skips a URL that is not a plain literal, not a URL, or a call that is not an HTTP verb", () => {
+  it("skips a URL with no text, not a URL, or a call that is not an HTTP verb", () => {
     const { requests } = linksOf(
       [
         "import requests",
         "",
         "def f(url):",
         "    requests.get(url)",
-        '    requests.get(f"https://x.com/{url}")',
+        '    requests.get(f"{url}")',
         '    requests.get(b"https://x.com/a")',
         '    requests.get("sem-url")',
         "    requests.get()",
         '    requests.Session("https://x.com/a")',
         '    requests.get.cache.clear("https://x.com/a")',
-        '    requests.get(timeout=3, url="https://x.com/a")',
         '    other.get("https://x.com/a")',
         "",
       ].join("\n"),
     );
 
     expect(only(requests, "http")).toEqual([]);
+  });
+
+  it("reads f-strings, `+` chains and `url=`: a hole in the middle is `:param`", () => {
+    const { requests } = linksOf(
+      [
+        "import requests",
+        "",
+        "def f(item_id):",
+        '    requests.get(f"/api/items/{item_id}")',
+        '    requests.get("/api/items/" + str(item_id) + "/tags")',
+        '    requests.get(url="/prices")',
+        '    requests.get(timeout=3, url="https://x.com/a")',
+        '    requests.get("/a" "/b")',
+        "",
+      ].join("\n"),
+    );
+    const { requests: raw } = pythonPlugin.analyze([
+      { path: "app.py", source: "import requests\nrequests.get(f'/x/{y}')\n" },
+    ]);
+
+    expect(only(requests, "http").map((r) => r[1])).toEqual([
+      "GET /api/items/:param",
+      "GET /api/items/:param/tags",
+      "GET /prices",
+      "GET /a",
+      "GET /a/b",
+    ]);
+    expect(raw[0]?.dynamicBase).toBeUndefined();
+  });
+
+  it("keeps a URL that starts with a run-time value, with the code of that value as `dynamicBase`", () => {
+    const { requests } = pythonPlugin.analyze([
+      {
+        path: "app.py",
+        source: [
+          "import requests",
+          "from config import settings",
+          'BASE = "http://localhost:8000"',
+          "",
+          "def f(host):",
+          '    requests.get(f"{BASE}/prices")',
+          '    requests.get(BASE + "/prices")',
+          '    requests.post(settings.API_URL + "/orders/" + str(1))',
+          '    requests.get(f"https://{host}/prices")',
+          '    requests.get(url=f"{ settings.API_URL }/prices")',
+          '    requests.get("https://other.example.com/prices")',
+          "",
+        ].join("\n"),
+      },
+    ]);
+
+    expect(
+      requests
+        .filter((r) => r.channel === "http")
+        .map((r) => [r.key, r.dynamicBase ?? null]),
+    ).toEqual([
+      ["GET /prices", "BASE"],
+      ["GET /prices", "BASE"],
+      ["POST /orders/:param", "settings.API_URL"],
+      ["GET /prices", "host"],
+      ["GET /prices", "settings.API_URL"],
+      ["GET /prices", null],
+    ]);
   });
 
   it("accepts an f-string with no field and a keyword before the URL", () => {
