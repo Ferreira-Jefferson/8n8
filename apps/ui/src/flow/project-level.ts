@@ -76,6 +76,24 @@ function innerLevel(
       };
     }
   }
+  // A class shows its methods like a file shows its functions: with who calls whom.
+  if (containerId !== null && kindOf(graph, containerId) === "class") {
+    const visible = new Set(children.map((n) => n.id));
+    return {
+      nodes: children,
+      edges: [
+        ...graph.edges.filter(
+          (e) =>
+            e.kind !== "calls" &&
+            e.kind !== "extends" &&
+            visible.has(e.source) &&
+            visible.has(e.target),
+        ),
+        ...dependencies(graph, visible, ["calls", "extends"], true),
+      ],
+      reach: "inside",
+    };
+  }
   const visible = new Set(children.map((n) => n.id));
   const edges = graph.edges.filter(
     (e) =>

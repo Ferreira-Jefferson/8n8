@@ -363,6 +363,32 @@ describe("projectLevel on a project graph (PROJ-02, 03, 04)", () => {
     };
     expect(wires(projectLevel(p, "file:a.py"))).toEqual([]);
   });
+
+  it("a class level draws the calls between its methods, and keeps the next wires of its own steps", () => {
+    const K = "file:a.py/cls:K";
+    const nodes = [
+      node("dir:.", "folder", null, { path: "" }),
+      node("file:a.py", "file", "dir:.", { path: "a.py" }),
+      node(K, "class", "file:a.py"),
+      node(`${K}/s0`, "code", K, { openable: false }),
+      node(`${K}/s1`, "code", K, { openable: false }),
+      node(`${K}/fn:m`, "function", K),
+      node(`${K}/fn:n`, "function", K),
+    ];
+    const edges = [
+      edge("next", `${K}/s0`, `${K}/s1`),
+      edge("calls", `${K}/fn:m`, `${K}/fn:n`),
+    ];
+    const ids = (level: Level) => wires(level).map((e) => e.id);
+    expect(
+      ids(projectLevel({ ...graph(nodes, edges), project: { name: "p" } }, K)),
+    ).toEqual([`next:${K}/s0->${K}/s1`, `calls:${K}/fn:m->${K}/fn:n`]);
+    // A snippet draws them too.
+    expect(ids(projectLevel(graph(nodes.slice(2), edges), K))).toEqual([
+      `next:${K}/s0->${K}/s1`,
+      `calls:${K}/fn:m->${K}/fn:n`,
+    ]);
+  });
 });
 
 describe("the hub: the open node drawn as the parent of its level", () => {
