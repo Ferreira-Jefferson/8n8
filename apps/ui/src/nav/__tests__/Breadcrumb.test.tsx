@@ -77,7 +77,7 @@ describe("Breadcrumb on a snippet (VID-19)", () => {
       />,
     );
     expect(nav().textContent).toBe(
-      "Fluxo principal › Processar pedido › Calcular frete",
+      "Fluxo principal › processar_pedido › calcular_frete",
     );
   });
 
@@ -105,9 +105,9 @@ describe("Breadcrumb on a snippet (VID-19)", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Fluxo principal" }));
     expect(onGoTo).toHaveBeenLastCalledWith(0);
-    fireEvent.click(screen.getByRole("button", { name: "Processar pedido" }));
+    fireEvent.click(screen.getByRole("button", { name: "processar_pedido" }));
     expect(onGoTo).toHaveBeenLastCalledWith(1);
-    fireEvent.click(screen.getByRole("button", { name: "Calcular frete" }));
+    fireEvent.click(screen.getByRole("button", { name: "calcular_frete" }));
     expect(onGoTo).toHaveBeenLastCalledWith(2);
   });
 });
@@ -128,7 +128,7 @@ describe("Breadcrumb on a project (PROJ-02, 04)", () => {
       />,
     );
     expect(nav().textContent).toBe(
-      "loja › frete › calculo.py › Calcular frete",
+      "loja › frete › calculo.py › calcular_frete",
     );
   });
 

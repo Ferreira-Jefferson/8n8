@@ -292,9 +292,9 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     <div class="stage" id="anatomy"></div>
     <ul class="callouts">
       <li><span class="n">A</span><span><b>Tag.</b> O tipo do nó, em caixa alta. A cor agrupa os tipos em famílias (capítulo <a href="#cores">Cores</a>).</span></li>
-      <li><span class="n">B</span><span><b>Título.</b> O nome do nó em negrito. Vem de uma frase curta revisada ou, sem ela, do nome técnico.</span></li>
+      <li><span class="n">B</span><span><b>Título.</b> O nome do nó em negrito. Vem de uma frase curta revisada ou, sem ela, do nome técnico como o código escreve (<code>listUsers</code>, <code>__init__</code>). De um nome com ponto fica a última parte: <code>requests.get</code> vira <code>get</code>.</span></li>
       <li><span class="n">C</span><span><b>Marca de abrir (›).</b> Aparece depois do título quando um clique abre o fluxo de dentro do nó. Um nó só abre se tiver algo dentro, e uma chamada só abre se a função chamada estiver no código. Sem a marca, o clique só seleciona.</span></li>
-      <li><span class="n">D</span><span><b>Linha de código.</b> Fonte mono. É o nome técnico (<code>calcular_frete()</code>), o caminho de uma pasta (<code>services/</code>) ou de um arquivo, ou a primeira linha do nó, sem a docstring. Passa de 32 caracteres e corta com "…".</span></li>
+      <li><span class="n">D</span><span><b>Linha de código.</b> Fonte mono. É o nome técnico (<code>calcular_frete()</code>, <code>class Pedido</code>), a chamada externa com os argumentos como o código escreve (<code>fetch(`${cfg.base}/users`)</code>), o caminho de uma pasta (<code>services/</code>) ou de um arquivo, ou a primeira linha do nó, sem a docstring. Passa de 32 caracteres e corta com "…".</span></li>
       <li><span class="n">E</span><span><b>Contagem.</b> O retângulo verde com número. <b>É quantos nós o nível de dentro mostra.</b> Aparece em pastas, arquivos, funções, classes e código solto, nos cartões e no hub. Laço, bloco e chamada abrem, mas não têm contagem. O número 3 quer dizer que, ao abrir, você vê três nós.</span></li>
       <li><span class="n">F</span><span><b>Selo de sugestões.</b> O retângulo na cor do texto (Névoa no escuro, Tinta no claro) com um ponto e um número. <b>É quantas sugestões caem dentro do nó.</b> Cada sugestão vem da LLM, presa a uma linha do código, e vai para o menor cartão visível que contém essa linha. Uma sugestão sem cartão vai para o hub. O selo só aparece depois que as sugestões foram pedidas, no painel ou no modo automático. Um clique abre o balão.</span></li>
       <li><span class="n">G</span><span><b>Porta.</b> O círculo na borda. A aresta sai ou entra por ele. Só aparece onde há aresta. Numa aresta de dependência a porta de origem é um círculo cheio e a de destino é um anel oco.</span></li>
@@ -319,17 +319,19 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
 
   <section id="tags">
     <h2>Os tipos de nó</h2>
-    <p>A tag diz o tipo. Há catorze tags para os doze tipos do modelo: o tipo <code>external</code> tem cinco tags, e o tipo <code>function</code> também aparece como FUNÇÃO quando é uma classe ou uma chamada. A gaveta do histórico usa uma tag a mais, TRECHO, para um mapa de código colado. Os nós que abrem levam a um nível de dentro. Os outros só se selecionam.</p>
+    <p>A tag diz o tipo. Há dezesseis tags para os doze tipos do modelo: o tipo <code>external</code> tem cinco tags, o tipo <code>call</code> também aparece como FUNÇÃO, e o tipo <code>code</code> aparece como DINÂMICA quando é uma chamada dinâmica. A gaveta do histórico usa uma tag a mais, TRECHO, para um mapa de código colado. Os nós que abrem levam a um nível de dentro. Os outros só se selecionam.</p>
     <table>
       <thead><tr><th>Tag</th><th>Tipo no modelo</th><th>O que representa</th><th>Abre?</th><th>Cor da tag</th></tr></thead>
       <tbody>
-        <tr><td class="k">FUNÇÃO</td><td>function, class, call</td><td>Uma função, uma classe ou uma chamada a função do trecho. Uma chamada abre a função chamada. Uma função que ninguém chama é a entrada do nível de fora.</td><td>sim</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
+        <tr><td class="k">FUNÇÃO</td><td>function, call</td><td>Uma função ou uma chamada a função do trecho. Uma chamada abre a função chamada. Uma função que ninguém chama é a entrada do nível de fora.</td><td>sim</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
+        <tr><td class="k">CLASSE</td><td>class</td><td>Uma classe. A linha de código é <code>class Pedido</code>, sem parênteses. Abre para mostrar os métodos e as chamadas entre eles.</td><td>sim</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
         <tr><td class="k">SE</td><td>condition</td><td>Um <code>if</code>. Do nó saem os ramos <b>true</b> e <b>false</b>. O ramo de um <code>elif</code> ou <code>else if</code> leva o texto da condição. O <code>switch</code> do TypeScript também é SE, com um ramo por <code>case</code>, mais <b>padrão</b> e <b>nenhum</b>.</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
         <tr><td class="k">LAÇO</td><td>loop</td><td>Um <code>for</code> ou <code>while</code>. Abre para mostrar o que roda a cada volta.</td><td>sim</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
         <tr><td class="k">BLOCO</td><td>block</td><td>Em Python, um <code>try</code>, <code>with</code> ou <code>match</code>. Em TypeScript, um <code>try</code>.</td><td>sim</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
-        <tr><td class="k">CÓDIGO</td><td>code</td><td>Um grupo de linhas seguidas sem chamada: contas, atribuições.</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
-        <tr><td class="k">RETORNO</td><td>return</td><td>Um <code>return</code>. Não tem aresta de saída: ali a função termina.</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
-        <tr><td class="k">HTTP, BANCO, DISCO, E-MAIL, EXTERNO</td><td>external</td><td>Uma chamada a algo que não é do trecho. A tag diz a categoria: rede, banco de dados, arquivo, e-mail ou outra.</td><td>não</td><td class="n"><span class="sw warm"></span>Cobre</td></tr>
+        <tr><td class="k">CÓDIGO</td><td>code</td><td>Um grupo de linhas seguidas sem chamada: contas, atribuições. A docstring de Python não vira passo. O corpo de um callback, de uma lambda ou de uma função escrita como valor também não: ele roda depois, não ali.</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
+        <tr><td class="k">DINÂMICA</td><td>code, com <code>callee</code></td><td>Uma chamada cujo destino só existe quando o código roda: <code>handlers["a"]()</code>, <code>getattr(o, n)()</code>, <code>mod.add()</code> depois de <code>import()</code>. O título é "Chamada dinâmica", e a linha de código mostra a chamada.</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
+        <tr><td class="k">RETORNO</td><td>return</td><td>Um <code>return</code>. Não tem aresta de saída: ali a função termina. Um <code>return</code> de chamada externa leva a tag da categoria (HTTP, BANCO, DISCO, E-MAIL, EXTERNO), com o título "Retorno".</td><td>não</td><td class="n"><span class="sw second"></span>Névoa</td></tr>
+        <tr><td class="k">HTTP, BANCO, DISCO, E-MAIL, EXTERNO</td><td>external</td><td>Uma chamada a algo que não é do trecho. A tag diz a categoria: rede, banco de dados, arquivo, e-mail ou outra. Criar um cliente (<code>axios.create</code>, <code>requests.Session()</code>) não faz requisição: é EXTERNO, não HTTP.</td><td>não</td><td class="n"><span class="sw warm"></span>Cobre</td></tr>
         <tr><td class="k">PASTA</td><td>folder</td><td>Uma pasta do projeto.</td><td>sim</td><td class="n"><span class="sw main"></span>Petróleo</td></tr>
         <tr><td class="k">ARQUIVO</td><td>file</td><td>Um arquivo de código do projeto.</td><td>sim</td><td class="n"><span class="sw main"></span>Petróleo</td></tr>
         <tr><td class="k">CÓDIGO SOLTO</td><td>module</td><td>O código do arquivo que está fora de qualquer função. Só aparece quando tem chamada.</td><td>sim</td><td class="n"><span class="sw main"></span>Petróleo</td></tr>
@@ -362,7 +364,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <thead><tr><th>Família</th><th>Cor</th><th>Tags</th><th>O que diz</th></tr></thead>
       <tbody>
         <tr><td class="k">Estrutura</td><td class="n"><span class="sw main"></span>Petróleo</td><td>PASTA, ARQUIVO, CÓDIGO SOLTO</td><td>Onde o código mora: a pasta, o arquivo e o que está solto nele.</td></tr>
-        <tr><td class="k">Execução</td><td class="n"><span class="sw second"></span>Névoa</td><td>FUNÇÃO, CÓDIGO, SE, LAÇO, BLOCO, RETORNO</td><td>O que o código faz.</td></tr>
+        <tr><td class="k">Execução</td><td class="n"><span class="sw second"></span>Névoa</td><td>FUNÇÃO, CLASSE, CÓDIGO, DINÂMICA, SE, LAÇO, BLOCO, RETORNO</td><td>O que o código faz.</td></tr>
         <tr><td class="k">Externo</td><td class="n"><span class="sw warm"></span>Cobre</td><td>EXTERNO, HTTP, BANCO, DISCO, E-MAIL</td><td>O que sai do código e toca o mundo de fora. Pede atenção.</td></tr>
       </tbody>
     </table>
@@ -373,7 +375,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <thead><tr><th>Cor</th><th>Em nós</th><th>Em arestas</th><th>Em outras peças</th></tr></thead>
       <tbody>
         <tr><td class="n"><span class="sw main"></span>Petróleo</td><td>Tags PASTA, ARQUIVO e CÓDIGO SOLTO. Borda do nó selecionado. Retângulo da contagem. Marca ›. Portas, menos as de dependência dentro de um arquivo. Ícone e borda do botão de ver detalhes e do botão de voltar. Texto do erro de sintaxe.</td><td>Fluxo (sequência e ramos). Dependências entre arquivos. Rótulo TRUE. O pulso do fluxo. Borda da etiqueta de uma aresta que não cruza linguagens.</td><td>Botão principal. Anel de foco. Resultado ativo da busca. Tag PASTA na gaveta do histórico. Estrela de favorito marcada. Marca "Revisado". Linha marcada no código do painel. "linha N" no balão. Borda verde do canvas num nível de dentro.</td></tr>
-        <tr><td class="n"><span class="sw second"></span>Névoa</td><td>Título do cartão. Tags FUNÇÃO, SE, LAÇO, BLOCO, CÓDIGO e RETORNO. Fundo do selo de sugestões.</td><td>Nenhuma.</td><td>Texto principal da tela e do painel.</td></tr>
+        <tr><td class="n"><span class="sw second"></span>Névoa</td><td>Título do cartão. Tags FUNÇÃO, CLASSE, SE, LAÇO, BLOCO, CÓDIGO, DINÂMICA e RETORNO. Fundo do selo de sugestões.</td><td>Nenhuma.</td><td>Texto principal da tela e do painel.</td></tr>
         <tr><td class="n"><span class="sw accent"></span>Pedra</td><td>Linha de código.</td><td>Rótulos de ramo que não são TRUE (FALSE, PADRÃO) e rótulos de ligação.</td><td>Trilha. Motivo da sugestão. Severidade baixa.</td></tr>
         <tr><td class="n"><span class="sw dim"></span>Dim</td><td>Porta de uma dependência dentro de um arquivo.</td><td>Dependências dentro de um arquivo. Linha de "contém" do hub (as portas dela ficam verdes).</td><td>Números de linha do código. Estrela do favorito desmarcada. Placeholders. Arquivo e linhas num resultado da busca.</td></tr>
         <tr><td class="n"><span class="sw warm"></span>Cobre</td><td>Tags HTTP, BANCO, DISCO, E-MAIL e EXTERNO.</td><td>Borda e tipo da etiqueta de uma ligação entre linguagens.</td><td>Severidade média no balão. Aviso de Claude Code ausente. Mensagens de erro da tela, como "Pasta não encontrada".</td></tr>
@@ -384,8 +386,8 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     <h3>Limites conhecidos</h3>
     <ol class="findings">
       <li><span class="n">1</span><span><b>O Petróleo carrega muitos papéis.</b> Ele marca três tags de estrutura e também o fluxo, o ramo TRUE, a seleção, o foco, a contagem, a marca ›, as portas, as dependências entre arquivos e a ação principal. O manual diz que o Petróleo perde o sentido de foco se passa de 5% da tela. Numa tela de pasta, onde quase todo cartão é estrutura, ele pode passar disso. A proporção não foi medida.</span></li>
-      <li><span class="n">2</span><span><b>Dentro de uma família, a cor não separa os tipos.</b> SE, LAÇO, BLOCO, CÓDIGO, RETORNO e FUNÇÃO têm a mesma cor. HTTP, BANCO, DISCO e E-MAIL também. Quem separa os tipos é a tag escrita.</span></li>
-      <li><span class="n">3</span><span><b>FUNÇÃO cobre três tipos.</b> Função, classe e chamada usam a mesma tag e a mesma cor. Uma classe não se distingue de uma função pela tag.</span></li>
+      <li><span class="n">2</span><span><b>Dentro de uma família, a cor não separa os tipos.</b> SE, LAÇO, BLOCO, CÓDIGO, DINÂMICA, RETORNO, CLASSE e FUNÇÃO têm a mesma cor. HTTP, BANCO, DISCO e E-MAIL também. Quem separa os tipos é a tag escrita.</span></li>
+      <li><span class="n">3</span><span><b>FUNÇÃO cobre dois tipos.</b> Função e chamada usam a mesma tag e a mesma cor. Quem separa as duas é a marca › e o nível: a chamada fica no fluxo de quem chama.</span></li>
       <li><span class="n">4</span><span><b>A cor sozinha não basta.</b> Verde, Cobre e Névoa se confundem para quem não distingue cores. A tag escrita aparece em todo cartão.</span></li>
     </ol>
   </section>
@@ -528,6 +530,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <tbody>
         <tr><td class="k">Fora de um trecho</td><td>Funções e classes de topo, e os passos das entradas</td><td>Sequência e ramos (fluxo). Chama e herda entre funções e classes, com alça de recursão.</td><td class="n"><span class="sw dim"></span>Cinza</td></tr>
         <tr><td class="k">Dentro de uma função</td><td>Os passos dela</td><td>Sequência e ramos. Nenhuma dependência: a chamada já é um cartão.</td><td>Não se aplica</td></tr>
+        <tr><td class="k">Dentro de uma classe</td><td>Os métodos dela e o código solto do corpo</td><td>Chama e herda entre os métodos, com alça de recursão, como num arquivo. Sequência entre os passos do corpo.</td><td class="n"><span class="sw dim"></span>Cinza</td></tr>
         <tr><td class="k">Arquivo de um projeto</td><td>Funções e classes do arquivo</td><td>Chama e herda entre elas, com alça de recursão. O hub liga ao que nenhuma linha alcança por "contém".</td><td class="n"><span class="sw dim"></span>Cinza</td></tr>
         <tr><td class="k">Pasta de um projeto</td><td>Arquivos e subpastas</td><td>Chama, herda e importa, levantados dos nós de dentro até os arquivos e pastas visíveis. Ligações entre linguagens, com rótulo. O hub liga ao que nenhuma linha alcança por "contém".</td><td class="n"><span class="sw main"></span>Verde</td></tr>
       </tbody>
@@ -541,7 +544,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <thead><tr><th>Situação</th><th>Por que não</th><th>Onde aparece</th></tr></thead>
       <tbody>
         <tr><td class="k">Chamada a biblioteca</td><td>Uma linha para <code>requests</code> criaria um cartão que não é do código do usuário.</td><td>Passo <b>EXTERNO</b> dentro da função, com a categoria (HTTP, BANCO, DISCO, E-MAIL).</td></tr>
-        <tr><td class="k">Método chama método da mesma classe</td><td>É detalhe interno da classe.</td><td>Num cartão de chamada, dentro do fluxo do método. O nível de dentro da classe não desenha a linha.</td></tr>
+        <tr><td class="k">Chamada dentro de um callback</td><td>O corpo de um callback, de uma lambda ou de uma função escrita como valor roda depois, não onde está escrito.</td><td>Em nenhum passo. Uma função do trecho chamada ali ganha a aresta de chamada a partir de quem escreve o callback.</td></tr>
         <tr><td class="k">Chamada dentro de uma função aberta</td><td>Ela já é um cartão de chamada no fluxo. Uma linha de dependência repetiria a informação.</td><td>O cartão de chamada, que abre a função chamada.</td></tr>
         <tr><td class="k">Retorno de valor</td><td>O extrator não resolve para onde o valor vai. Toda chamada devolve algo, então desenhar o retorno dobraria as linhas.</td><td>O passo <b>RETORNO</b> dentro da função.</td></tr>
         <tr><td class="k">Nome sem definição no trecho</td><td>Não há destino para ligar. Exemplo: chamar <code>fun1()</code> quando só existe <code>fun</code>.</td><td>Passo EXTERNO, porque o nome não é do trecho.</td></tr>
@@ -555,10 +558,10 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     <p>O nível de fora de um trecho com cinco funções e um arquivo vizinho.</p>
     <div class="stage go" id="stage"></div>
     <ol class="small" style="margin:0;padding-left:22px;display:grid;gap:6px;max-width:72ch">
-      <li><b>Fun2 → Fun1.</b> Traços que encurtam, cinza. Fun2 chama Fun1, dentro do mesmo arquivo. O extremo cheio está em Fun2.</li>
-      <li><b>Fun1 → Contar.</b> Mesma leitura. Fun1 chama Contar.</li>
-      <li><b>Alça em Contar.</b> Contar chama a si mesma. É recursão.</li>
-      <li><b>Contar → limpar.</b> Traços verdes. Contar chama uma função de <code>util.py</code>, outro arquivo.</li>
+      <li><b>fun2 → fun1.</b> Traços que encurtam, cinza. fun2 chama fun1, dentro do mesmo arquivo. O extremo cheio está em fun2.</li>
+      <li><b>fun1 → contar.</b> Mesma leitura. fun1 chama contar.</li>
+      <li><b>Alça em contar.</b> contar chama a si mesma. É recursão.</li>
+      <li><b>contar → limpar.</b> Traços verdes. contar chama uma função de <code>util.py</code>, outro arquivo.</li>
       <li><b>par ⇄ impar.</b> Duas linhas. Cada uma sai de um nó e volta ao outro. As duas funções chamam uma à outra.</li>
     </ol>
     <p class="small muted">As linhas não dizem onde está a chamada, em qual linha nem dentro de quê. Para saber, abra o nó de origem.</p>
@@ -658,7 +661,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
         <tr><td class="k">Configurações</td><td>Um diálogo sobre a tela. No título, dois botões de ícone: o tema e o idioma.</td><td><b>Tema:</b> cada clique troca entre sistema (meio círculo), claro (sol) e escuro (lua). <b>Idioma:</b> cada clique troca entre BR e EN; os resumos e as sugestões são pedidos de novo no idioma novo. Os dois salvam na hora. O resto salva com "Salvar": provedor, chave de API ("Chave guardada" e "Apagar chave" quando já existe), caminho do Claude Code ("Alterar", "Escolher…", "Usar o automático"), modelo (vazio usa o padrão do provedor), <b>Resumo automático</b> e <b>Sugestão automática</b>. Ligadas, essas duas opções pedem o resumo e as sugestões ao selecionar um nó. "Salvar" e "Fechar" têm o mesmo tamanho: só o preenchimento separa um do outro. Um campo definido por variável de ambiente fica travado e diz qual variável.</td></tr>
         <tr><td class="k">Mensagens de erro</td><td>Texto em Cobre sob o conteúdo.</td><td>"Não foi possível gerar o mapa.", "Pasta não encontrada: caminho", "Nenhuma função ou instrução encontrada." num trecho, "Nenhum arquivo .py, .ts ou .tsx encontrado na pasta." numa pasta.</td></tr>
         <tr><td class="k">Moldura de abertura</td><td>Uma borda verde que cresce do cartão até o canvas, em 1,1 s.</td><td>Mostra que você entrou no nó. Num nível de dentro, o canvas mantém a borda verde.</td></tr>
-        <tr><td class="k">Títulos dos cartões</td><td>Um nome provisório, depois a frase revisada.</td><td>O 8n8 pede à LLM os títulos de cada nível aberto, mesmo sem a geração automática. Até chegarem, o cartão mostra o nome técnico em forma legível ("Calcular frete", "Código", "Retorno", "Código solto").</td></tr>
+        <tr><td class="k">Títulos dos cartões</td><td>Um nome provisório, depois a frase revisada.</td><td>O 8n8 pede à LLM os títulos de cada nível aberto, mesmo sem a geração automática. Até chegarem, o cartão mostra o nome técnico como o código escreve ("calcular_frete", "listUsers") ou a palavra do tipo ("Código", "Retorno", "Chamada dinâmica", "Código solto").</td></tr>
       </tbody>
     </table>
   </section>
@@ -742,7 +745,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
   function svgOf(w, h, label, inner) {
     return '<svg viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + esc(label) + '" style="width:100%;height:auto;display:block">' + inner + '</svg>';
   }
-  var FAM = { 'FUNÇÃO': 'second', 'SE': 'second', 'LAÇO': 'second', 'BLOCO': 'second', 'CÓDIGO': 'second', 'RETORNO': 'second',
+  var FAM = { 'FUNÇÃO': 'second', 'CLASSE': 'second', 'DINÂMICA': 'second', 'SE': 'second', 'LAÇO': 'second', 'BLOCO': 'second', 'CÓDIGO': 'second', 'RETORNO': 'second',
     'HTTP': 'warm', 'BANCO': 'warm', 'DISCO': 'warm', 'E-MAIL': 'warm', 'EXTERNO': 'warm' };
   function card(n) {
     var tag = n.tag ? '<text class="tt ' + (FAM[n.tag] || '') + '" x="' + (n.x + 10) + '" y="' + (n.y + 16) + '">' + n.tag + '</text>' : '';
@@ -855,7 +858,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       code: 'if ok:\n    enviar()', nodes: [['SE', 'if ok'], ['FUNÇÃO', 'enviar']], draw: function (a, b) { return line(R(a), Lp(b), 'flow') + '<text class="tl" x="140" y="22">TRUE</text>'; } },
     { name: 'Chamada no mesmo arquivo', model: 'calls', trace: 'Traços que encurtam', color: 'Cinza', src: 'build-graph.ts do extrator', where: 'Nível de fora de um trecho. Nível de arquivo de um projeto.',
       what: 'A origem chama o destino em algum lugar dentro dela. A linha não diz onde: abra a origem para ver se é num <code>if</code>, num laço ou num <code>return</code>.',
-      code: 'def fun1(): ...\ndef fun2():\n    return fun1()', nodes: [['FUNÇÃO', 'Fun2'], ['FUNÇÃO', 'Fun1']], draw: function (a, b) { return line(R(a), Lp(b), 'call-in'); } },
+      code: 'def fun1(): ...\ndef fun2():\n    return fun1()', nodes: [['FUNÇÃO', 'fun2'], ['FUNÇÃO', 'fun1']], draw: function (a, b) { return line(R(a), Lp(b), 'call-in'); } },
     { name: 'Chamada para outro arquivo', model: 'calls', trace: 'Traços que encurtam', color: 'Verde', src: 'build-graph.ts, levantada até o arquivo ou a pasta', where: 'Nível de pasta de um projeto.',
       what: 'Os mesmos traços, na cor verde. A cor avisa que a chamada cruza a fronteira do arquivo. A chamada sai da função e é levantada até o arquivo, ou até a pasta, que o nível mostra.',
       code: 'from util import limpar\nlimpar(x)', nodes: [['ARQUIVO', 'pedido.py'], ['ARQUIVO', 'util.py']], draw: function (a, b) { return line(R(a), Lp(b), 'call-out'); } },
@@ -873,7 +876,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       code: 'def contar(n):\n    return contar(n - 1)', nodes: [['FUNÇÃO', 'contar']], layout: 'one', draw: function (a) { return loop(a, 'call-in'); } },
     { name: 'Herança', model: 'extends', trace: 'Traço, ponto, ponto', color: 'Cinza dentro do arquivo, verde entre arquivos', src: 'build-graph.ts do extrator', where: 'Nível de fora de um trecho, nível de arquivo e nível de pasta.',
       what: 'A classe filha aponta para a classe base. Só a base que o trecho ou o projeto define vira linha. O padrão é parado.',
-      code: 'class Animal: ...\nclass Cao(Animal): ...', nodes: [['FUNÇÃO', 'Cao'], ['FUNÇÃO', 'Animal']], draw: function (a, b) { return line(R(a), Lp(b), 'kin-in'); } }
+      code: 'class Animal: ...\nclass Cao(Animal): ...', nodes: [['CLASSE', 'Cao'], ['CLASSE', 'Animal']], draw: function (a, b) { return line(R(a), Lp(b), 'kin-in'); } }
   ];
   document.getElementById('cat').innerHTML = C.map(function (c) {
     var lay = c.layout || 'two', h = 84;
@@ -890,9 +893,9 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
 
   /* Cena */
   (function () {
-    var f2 = { x: 14, y: 80, tag: 'FUNÇÃO', t: 'Fun2' };
-    var f1 = { x: 214, y: 80, tag: 'FUNÇÃO', t: 'Fun1' };
-    var ct = { x: 414, y: 80, tag: 'FUNÇÃO', t: 'Contar' };
+    var f2 = { x: 14, y: 80, tag: 'FUNÇÃO', t: 'fun2' };
+    var f1 = { x: 214, y: 80, tag: 'FUNÇÃO', t: 'fun1' };
+    var ct = { x: 414, y: 80, tag: 'FUNÇÃO', t: 'contar' };
     var u = { x: 614, y: 80, tag: 'FUNÇÃO', t: 'limpar' };
     var ip = { x: 214, y: 200, tag: 'FUNÇÃO', t: 'impar' };
     var pa = { x: 414, y: 200, tag: 'FUNÇÃO', t: 'par' };
@@ -901,6 +904,6 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
     s += line(R(ip), Lp(pa), 'call-in') + curve(B(pa), B(ip), 'call-in');
     s += [f2, f1, ct, u, pa, ip].map(card).join('');
     s += '<text class="tw" x="520" y="52">recursão</text><text class="tc" x="226" y="302">chamada nos dois sentidos</text>';
-    document.getElementById('stage').innerHTML = svgOf(770, 310, 'Fun2 chama Fun1, que chama Contar. Contar chama a si mesma e chama limpar, de util.py. par e impar chamam um ao outro.', s);
+    document.getElementById('stage').innerHTML = svgOf(770, 310, 'fun2 chama fun1, que chama contar. contar chama a si mesma e chama limpar, de util.py. par e impar chamam um ao outro.', s);
   })();
 </script>

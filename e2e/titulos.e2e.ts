@@ -115,7 +115,7 @@ test.describe("Títulos", () => {
     await expect.poll(async () => titleCalls(await fakeLog())).toHaveLength(1);
     // The request is answered; give the page time to show a title if it came.
     await page.waitForLoadState("networkidle");
-    expect((await cardNames(page))[0]).toBe("Registrar log");
+    expect((await cardNames(page))[0]).toBe("registrar_log");
     await expect(
       page.getByText("Registrar a mensagem no log do sistema"),
     ).toHaveCount(0);
@@ -145,7 +145,7 @@ test.describe("Títulos", () => {
     expect(lastUser(titleReviews(await fakeLog())[0] as FakeCall)).toContain(
       "Aplicar desconto no total",
     );
-    expect(await cardNames(page)).toEqual(["Aplicar desconto"]);
+    expect(await cardNames(page)).toEqual(["aplicar_desconto"]);
     await expect(page.getByText("Aplicar desconto no total")).toHaveCount(0);
     expect(titleEntries()).toEqual([]);
   });
@@ -198,33 +198,33 @@ test.describe("Títulos", () => {
 });
 
 test.describe("Nomes provisórios", () => {
-  test("VID-15: with no key the cards show provisional names: last segment, spaces, capital; condition text; Código", async ({
+  test("VID-15: with no key the cards show provisional names: last segment, as the code writes it; condition text; Código", async ({
     page,
   }) => {
     await generate(page, OFFLINE, VIDEO);
     await expectLevel(page, MAIN_FLOW);
     await page.waitForLoadState("networkidle");
     expect(await cardNames(page)).toEqual([
-      "Processar pedido",
-      "Loads",
-      "Validar pedido",
-      "Buscar cliente",
-      "Calcular frete",
-      "Soma itens",
-      "Salvar",
-      "Enviar email",
-      "Calcular frete",
+      "processar_pedido",
+      "loads",
+      "validar_pedido",
+      "buscar_cliente",
+      "calcular_frete",
+      "soma_itens",
+      "salvar",
+      "enviar_email",
+      "calcular_frete",
     ]);
     // The full name stays in the title attribute, without the open mark.
     await expect(
       nodeById(page, `${PEDIDO}/s3`).locator(".name"),
-    ).toHaveAttribute("title", "Calcular frete");
+    ).toHaveAttribute("title", "calcular_frete");
 
     await clickCard(page, `${PEDIDO}/s3`);
     await expectLevel(page, FRETE_LEVEL);
     expect(await cardNames(page)).toEqual([
-      "Get",
-      "Sum",
+      "get",
+      "sum",
       "peso > 30",
       "Retorno",
       "Retorno",
@@ -234,7 +234,7 @@ test.describe("Nomes provisórios", () => {
     await expectLevel(page, ["fn:f", "fn:f/s1"]);
     await clickCard(page, "fn:f");
     await expectLevel(page, ["fn:f/s0", "fn:f/s1"]);
-    expect(await cardNames(page)).toEqual(["Código", "Print"]);
+    expect(await cardNames(page)).toEqual(["Código", "print"]);
   });
 
   test("VID-15: a failed title request keeps the provisional name and the map keeps working", async ({
@@ -245,7 +245,7 @@ test.describe("Nomes provisórios", () => {
     await expectLevel(page, ["fn:falha_titulo", "fn:falha_titulo/s0"]);
     await expect.poll(async () => titleCalls(await fakeLog())).toHaveLength(1);
     await page.waitForLoadState("networkidle");
-    expect(await cardNames(page)).toEqual(["Falha titulo", "Print"]);
+    expect(await cardNames(page)).toEqual(["falha_titulo", "print"]);
     await clickCard(page, "fn:falha_titulo");
     await expectLevel(page, ["fn:falha_titulo/s0"]);
     await expect(nodes(page)).toHaveCount(1);

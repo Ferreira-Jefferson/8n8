@@ -50,7 +50,7 @@ describe("methods of the project's classes", () => {
         {
           "repo.ts": repo,
           "main.ts":
-            'import { Repo } from "./repo";\nconst svc = new Repo();\nfunction run() {\n  const u = new Repo();\n  u.find("a");\n  [1].map(() => svc.find("b"));\n}\n',
+            'import { Repo } from "./repo";\nconst svc = new Repo();\nfunction run() {\n  const u = new Repo();\n  u.find("a");\n  if (u) {\n    svc.find("b");\n  }\n}\n',
         },
         "main.ts",
       ),

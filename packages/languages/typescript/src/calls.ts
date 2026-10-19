@@ -32,7 +32,56 @@ export interface CallContext {
 
 export type CallResolution =
   | { kind: "call"; target: NodeId; label?: string }
-  | { kind: "external"; callee: string; category: ExternalCategory };
+  | { kind: "external"; callee: string; category: ExternalCategory }
+  /** A call whose target only exists when the code runs: `handlers[k]()`, `make()()`, `mod.f()` after `import()`. */
+  | { kind: "dynamic"; callee: string };
+
+/** Nodes whose body runs later, not where they are written: a callback, a nested function, a class. */
+const DEFERRED = new Set([
+  "arrow_function",
+  "function_expression",
+  "function",
+  "function_declaration",
+  "generator_function",
+  "generator_function_declaration",
+  "method_definition",
+  "class",
+  "class_declaration",
+  "abstract_class_declaration",
+]);
+
+/** Whether `call` sits in a function or class written inside `statement` (the statement itself included). */
+function isDeferred(call: Node, statement: Node): boolean {
+  for (let n: Node | null = call; n !== null; n = n.parent) {
+    if (DEFERRED.has(n.type)) return true;
+    if (n.id === statement.id) return false;
+  }
+  return false;
+}
+
+/** Names bound to a module loaded when the code runs: `const mod = await import("./x")`. */
+const runtimeImports = new WeakMap<object, Set<string>>();
+
+function importedAtRuntime(node: Node): Set<string> {
+  const known = runtimeImports.get(node.tree);
+  if (known) return known;
+  const names = new Set<string>();
+  for (const d of node.tree.rootNode.descendantsOfType("variable_declarator")) {
+    let value = d.childForFieldName("value");
+    if (value?.type === "await_expression")
+      value = value.namedChildren[0] ?? null;
+    const name = d.childForFieldName("name");
+    if (
+      name?.type === "identifier" &&
+      value?.type === "call_expression" &&
+      value.childForFieldName("function")?.type === "import"
+    ) {
+      names.add(name.text);
+    }
+  }
+  runtimeImports.set(node.tree, names);
+  return names;
+}
 
 /** `a`, `this.b`, `a.b.c`...; null when the expression is not a plain dotted name. */
 export function dottedName(node: Node): string | null {
@@ -199,7 +248,12 @@ function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
       ? call.childForFieldName("constructor")
       : call.childForFieldName("function");
   const name = fn ? dottedName(fn) : null;
-  if (name === null) return chainedMethod(fn);
+  if (name === null) {
+    if (fn?.type === "subscript_expression" || fn?.type === "call_expression") {
+      return { kind: "dynamic", callee: fn.text };
+    }
+    return chainedMethod(fn);
+  }
 
   const local = ctx.topLevel.get(name);
   if (local !== undefined) return { kind: "call", target: local };
@@ -220,6 +274,8 @@ function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
     const target =
       ctx.resolveImport?.(binding, importPath(binding, rest)) ?? null;
     if (target !== null) return { kind: "call", target, label: name };
+  } else if (rest.length > 0 && importedAtRuntime(call).has(head)) {
+    return { kind: "dynamic", callee: name };
   }
   // The receiver of a chained method, as `foo()` in `foo().push(x)`, keeps
   // only the table, so the chain stays judged by `chainedMethod`.
@@ -240,15 +296,16 @@ function resolveOne(call: Node, ctx: CallContext): CallResolution | null {
   return { kind: "external", callee, category };
 }
 
-/**
- * Decides whether a statement is a `call` step, an `external` step or
- * neither. A call to the snippet wins; otherwise the first external call in
- * code order counts.
- */
-export function resolveCall(
-  statement: Node,
-  ctx: CallContext,
-): CallResolution | null {
+/** Whether the result of `call` is called right away, as `make()` in `make()()`. */
+function isCalled(call: Node): boolean {
+  return (
+    call.parent?.type === "call_expression" &&
+    call.parent.childForFieldName("function")?.id === call.id
+  );
+}
+
+/** The calls of a statement in code order, the statement itself included. */
+function callsOf(statement: Node): Node[] {
   const found = new Map<number, Node>();
   for (const node of statement.descendantsOfType([
     "call_expression",
@@ -262,12 +319,39 @@ export function resolveCall(
   ) {
     found.set(statement.id, statement);
   }
-  const calls = [...found.values()].sort((a, b) => a.startIndex - b.startIndex);
+  return [...found.values()].sort((a, b) => a.startIndex - b.startIndex);
+}
+
+/**
+ * Decides whether a statement is a `call` step, an `external` step, a
+ * `dynamic` step or neither. A call to the snippet wins; otherwise the first
+ * external call in code order counts, then the first dynamic one. A call
+ * inside a callback or a nested function does not run here and does not count.
+ */
+export function resolveCall(
+  statement: Node,
+  ctx: CallContext,
+): CallResolution | null {
   let external: CallResolution | null = null;
-  for (const call of calls) {
+  let dynamic: CallResolution | null = null;
+  for (const call of callsOf(statement)) {
+    if (isDeferred(call, statement)) continue;
     const resolved = resolveOne(call, ctx);
     if (resolved?.kind === "call") return resolved;
-    external ??= resolved;
+    if (resolved?.kind === "dynamic") dynamic ??= resolved;
+    // `pick(k)` in `pick(k)()` only finds the target of the dynamic call.
+    else if (!isCalled(call)) external ??= resolved;
   }
-  return external;
+  return external ?? dynamic;
+}
+
+/** The snippet's functions called inside a callback or a nested function of `statement`: a dependency, not a step. */
+export function deferredTargets(statement: Node, ctx: CallContext): NodeId[] {
+  const targets: NodeId[] = [];
+  for (const call of callsOf(statement)) {
+    if (!isDeferred(call, statement)) continue;
+    const resolved = resolveOne(call, ctx);
+    if (resolved?.kind === "call") targets.push(resolved.target);
+  }
+  return targets;
 }

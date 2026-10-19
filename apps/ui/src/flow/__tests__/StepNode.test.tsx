@@ -75,7 +75,7 @@ describe("StepNode, the three-line card (VID-03, VID-26)", () => {
 
   it("shows the provisional name without a title (VID-15)", () => {
     const { container } = renderStep(node());
-    expect(part(container, ".name")).toBe("Calcular frete›");
+    expect(part(container, ".name")).toBe("calcular_frete›");
   });
 
   it("shows the title, not the provisional name, when the title is given (VID-14)", () => {
@@ -85,7 +85,7 @@ describe("StepNode, the three-line card (VID-03, VID-26)", () => {
 
   it("gives a leaf no › mark (VID-26)", () => {
     const { container } = renderStep(httpStep, { codeLine: "requests.get()" });
-    expect(part(container, ".name")).toBe("Get");
+    expect(part(container, ".name")).toBe("get");
     expect(container.querySelector(".open-mark")).toBeNull();
   });
 

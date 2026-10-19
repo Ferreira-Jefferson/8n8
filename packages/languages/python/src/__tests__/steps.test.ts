@@ -578,3 +578,65 @@ describe("buildSteps: return (VID-20)", () => {
     ]);
   });
 });
+
+describe("buildSteps: docstrings, lambdas and dynamic calls", () => {
+  it("makes no step of the docstring of a function or a class", async () => {
+    const graph = await graphOf(
+      lines(
+        "def f():",
+        '    """Doc."""',
+        "    x = 1",
+        "class C:",
+        '    """Doc."""',
+        "    def m(self):",
+        '        """Doc."""',
+        "        return 1",
+      ),
+    );
+    expect(stepsOf(graph, "fn:f").map((n) => [n.kind, n.range])).toEqual([
+      ["code", { start: 3, end: 3 }],
+    ]);
+    expect(stepsOf(graph, "cls:C").map((n) => n.id)).toEqual(["cls:C/fn:m"]);
+    expect(stepsOf(graph, "cls:C/fn:m").map((n) => n.kind)).toEqual(["return"]);
+  });
+
+  it("makes no step of a call inside a lambda or a nested def, but keeps the calls wire", async () => {
+    const graph = await graphOf(
+      lines(
+        "def target(a, b):",
+        "    return a",
+        "lam = lambda x: target(x, x)",
+        "def f():",
+        "    handlers = {'a': lambda: target(1, 2)}",
+        "    def inner():",
+        "        target(3, 4)",
+      ),
+    );
+    expect(stepsOf(graph, "mod").map((n) => [n.kind, n.target])).toEqual([
+      ["code", undefined],
+    ]);
+    expect(stepsOf(graph, "fn:f").map((n) => [n.kind, n.target])).toEqual([
+      ["code", undefined],
+    ]);
+    expect(edgeIds(graph, "calls")).toEqual([
+      "calls:mod->fn:target",
+      "calls:fn:f->fn:target",
+    ]);
+  });
+
+  it("marks a computed call as a dynamic code step with its callee", async () => {
+    const graph = await graphOf(
+      lines(
+        "def f(o, n, handlers):",
+        "    getattr(o, n)()",
+        "    handlers['a']()",
+      ),
+    );
+    expect(
+      stepsOf(graph, "fn:f").map((n) => [n.kind, n.callee, n.range.start]),
+    ).toEqual([
+      ["code", "getattr(o, n)", 2],
+      ["code", "handlers['a']", 3],
+    ]);
+  });
+});

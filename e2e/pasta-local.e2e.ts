@@ -179,13 +179,13 @@ test.describe("Pasta local", () => {
       "loja",
       "pedidos",
       "pedidos.py",
-      "Processar pedido",
+      "processar_pedido",
     ]);
     await levelIds(page);
     const step = nodeById(page, `${PEDIDO}/s1`);
     await expect(step.locator(".name")).toHaveAttribute(
       "title",
-      "Calcular frete",
+      "calcular_frete",
     );
     await expect(step.locator("[data-tag]")).toHaveAttribute(
       "data-tag",
@@ -197,7 +197,7 @@ test.describe("Pasta local", () => {
       "loja",
       "frete",
       "calculo.py",
-      "Calcular frete",
+      "calcular_frete",
     ]);
     await expect(nodes(page)).toHaveCount(3);
     expect(await levelIds(page)).toEqual([
@@ -225,11 +225,12 @@ test.describe("Pasta local", () => {
     await expect(breadcrumb(page).getByRole("button")).toHaveText([
       "loja",
       "relatorio.py",
-      "Gerar",
+      "gerar",
     ]);
     await levelIds(page);
-    // `return calcular_frete(10)` is a RETORNO step (VID-20); the call it holds
-    // is EXTERNO, with no target and no calls wire (PROJ-09).
+    // `return calcular_frete(10)` is a return step (VID-20); the call it holds
+    // is EXTERNO, with no target and no calls wire (PROJ-09), and the card
+    // keeps the EXTERNO tag of the call.
     const STEP = "file:relatorio.py/fn:gerar/s0";
     const node = detail.nodes.find((n) => n.id === STEP);
     expect(node?.kind).toBe("return");
@@ -246,7 +247,7 @@ test.describe("Pasta local", () => {
     const step = nodeById(page, STEP);
     await expect(step.locator("[data-tag]")).toHaveAttribute(
       "data-tag",
-      "RETORNO",
+      "EXTERNO",
     );
     await expect(step.locator(".fn")).toHaveText("return calcular_frete(10)");
 
@@ -467,7 +468,7 @@ test.describe("Pasta local", () => {
       "loja",
       "frete",
       "calculo.py",
-      "Calcular frete",
+      "calcular_frete",
     ]);
     await breadcrumb(page).getByRole("button", { name: "calculo.py" }).click();
     await clickCard(page, FRETE);

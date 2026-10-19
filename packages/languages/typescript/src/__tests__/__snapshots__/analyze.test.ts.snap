@@ -424,25 +424,12 @@ exports[`analyze: one graph per file > is the same for the same files, in any or
             "parentId": "file:server.ts/mod",
             "range": {
               "start": 11,
-              "end": 11
+              "end": 15
             },
             "openable": false
           },
           {
             "id": "file:server.ts/mod/s2",
-            "kind": "external",
-            "label": "notificar",
-            "parentId": "file:server.ts/mod",
-            "range": {
-              "start": 12,
-              "end": 15
-            },
-            "openable": false,
-            "callee": "notificar",
-            "category": "EXTERNO"
-          },
-          {
-            "id": "file:server.ts/mod/s3",
             "kind": "external",
             "label": "exec",
             "parentId": "file:server.ts/mod",
@@ -490,12 +477,6 @@ exports[`analyze: one graph per file > is the same for the same files, in any or
             "kind": "next",
             "source": "file:server.ts/mod/s1",
             "target": "file:server.ts/mod/s2"
-          },
-          {
-            "id": "next:file:server.ts/mod/s2->file:server.ts/mod/s3",
-            "kind": "next",
-            "source": "file:server.ts/mod/s2",
-            "target": "file:server.ts/mod/s3"
           },
           {
             "id": "calls:file:server.ts/fn:handler->file:main.ts/fn:main",
@@ -692,7 +673,7 @@ exports[`analyze: one graph per file > is the same for the same files, in any or
     {
       "channel": "http",
       "key": "POST /api/pedidos",
-      "nodeId": "file:server.ts/mod/s2",
+      "nodeId": "file:server.ts/mod/s1",
       "line": 12
     },
     {
@@ -724,13 +705,13 @@ exports[`analyze: one graph per file > is the same for the same files, in any or
     {
       "channel": "name",
       "key": "notificar",
-      "nodeId": "file:server.ts/mod/s2",
+      "nodeId": "file:server.ts/mod/s1",
       "line": 13
     },
     {
       "channel": "process",
       "key": "relatorio.py",
-      "nodeId": "file:server.ts/mod/s3",
+      "nodeId": "file:server.ts/mod/s2",
       "line": 17
     },
     {

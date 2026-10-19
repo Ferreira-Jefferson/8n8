@@ -61,6 +61,9 @@ const TABLE: [ExternalCategory, string[]][] = [
   ["EMAIL", ["nodemailer", "@sendgrid/mail", "resend"]],
 ];
 
+/** Methods of an HTTP library that build a client or a server, and send no request. */
+const HTTP_FACTORIES = new Set(["create", "Agent", "createServer"]);
+
 /** `node:fs/promises` → `fs`; `@prisma/client/edge` → `@prisma/client`. */
 export function moduleRoot(specifier: string): string {
   const bare = specifier.replace(/^node:/, "");
@@ -82,7 +85,10 @@ export function classify(callee: string, module?: string): ExternalCategory {
     module === undefined ? undefined : moduleRoot(module),
   ];
   for (const [category, names] of TABLE) {
-    if (names.some((n) => keys.includes(n))) return category;
+    if (!names.some((n) => keys.includes(n))) continue;
+    const last = segments[segments.length - 1] ?? "";
+    if (category === "HTTP" && HTTP_FACTORIES.has(last)) return "EXTERNO";
+    return category;
   }
   return "EXTERNO";
 }

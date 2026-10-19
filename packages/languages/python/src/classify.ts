@@ -11,13 +11,25 @@ const TABLE: [ExternalCategory, string[]][] = [
   ["EMAIL", ["smtplib"]],
 ];
 
+/** Names of an HTTP library that build a client, and send no request. */
+const HTTP_FACTORIES = new Set([
+  "Session",
+  "Client",
+  "AsyncClient",
+  "ClientSession",
+]);
+
 /** `callee` is the full dotted name, with import aliases already replaced. */
 export function classify(callee: string): ExternalCategory {
   const segments = callee.split(".");
   const first = segments[0];
   const last = `.${segments[segments.length - 1]}`;
   for (const [category, prefixes] of TABLE) {
-    if (prefixes.some((p) => p === first || p === last)) return category;
+    if (!prefixes.some((p) => p === first || p === last)) continue;
+    if (category === "HTTP" && HTTP_FACTORIES.has(last.slice(1))) {
+      return "EXTERNO";
+    }
+    return category;
   }
   return "EXTERNO";
 }
