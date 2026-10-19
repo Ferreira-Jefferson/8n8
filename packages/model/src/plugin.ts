@@ -23,6 +23,8 @@ export interface LinkRequest {
   key: string;
   nodeId: NodeId;
   line: number;
+  /** O código de onde vem o começo da URL quando ele só existe em execução (`config.baseUrl`): a ligação fica "a conferir". */
+  dynamicBase?: string;
 }
 
 /** O que um plugin entende de um conjunto de arquivos da sua linguagem. */

@@ -318,6 +318,51 @@ describe("WireEdge, a dependency wire", () => {
     }
   });
 
+  const toCheck = { code: "config.baseUrl", path: "web/api.ts", line: 12 };
+
+  it("tells in the tag of a wire to check the code of the value and the place of the call", () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = renderWire(
+        { ...dep, info: { ...info, toCheck } },
+        "HTTP GET /users",
+      );
+      fireEvent.mouseEnter(container.querySelector("path.wire-hit") as Element);
+      act(() => {
+        vi.advanceTimersByTime(TAG_DELAY_MS);
+      });
+      const check = container.querySelector(".wire-tag-check");
+      expect(check?.querySelector(".wire-tag-kind")?.textContent).toBe(
+        "a conferir",
+      );
+      expect(check?.textContent).toContain("config.baseUrl");
+      expect(check?.textContent).toContain("web/api.ts:12");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("puts the mark of a wire to check in the middle of the wire, and none on a proven wire", () => {
+    const proto = SVGElement.prototype as unknown as Record<string, unknown>;
+    proto.getTotalLength = () => 100;
+    proto.getPointAtLength = (at: number) => ({ x: at * 2, y: at });
+    try {
+      const marked = renderWire({ ...dep, info: { ...info, toCheck } });
+      const mark = marked.container.querySelector(".wire-check-mark");
+      expect(mark?.textContent).toBe("a conferir");
+      expect((mark as HTMLElement).style.transform).toBe(
+        "translate(-50%, -50%) translate(100px, 50px)",
+      );
+      cleanup();
+      const proven = renderWire({ ...dep, info });
+      expect(proven.container.querySelector(".wire-check-mark")).toBeNull();
+      expect(proven.container.querySelector(".wire-tag-check")).toBeNull();
+    } finally {
+      delete proto.getTotalLength;
+      delete proto.getPointAtLength;
+    }
+  });
+
   it("has no hover strip when it is not a dependency wire, and keeps its label visible", () => {
     const { container } = renderWire(timed, "true");
     expect(container.querySelector("path.wire-hit")).toBeNull();

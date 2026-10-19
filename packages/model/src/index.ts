@@ -61,6 +61,7 @@ export type {
   LineRange,
   NodeId,
   NodeKind,
+  ToCheck,
 } from "./graph";
 export type { HistoryEntry, HistoryItem } from "./history";
 export { childId, fileId, folderId, topLevelId } from "./ids";

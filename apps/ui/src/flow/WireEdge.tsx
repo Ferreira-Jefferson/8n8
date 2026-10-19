@@ -1,11 +1,11 @@
-import type { EdgeLabelKey } from "@8n8/model";
+import type { EdgeLabelKey, ToCheck } from "@8n8/model";
 import {
   type Edge,
   EdgeLabelRenderer,
   type EdgeProps,
   useReactFlow,
 } from "@xyflow/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { type MessageKey, useT } from "../i18n";
 import { NODE_HEIGHT } from "./layout";
 import { Side } from "./sides";
@@ -38,6 +38,8 @@ export interface WireInfo {
   reach: "inside" | "across" | "language";
   from: string;
   to: string;
+  /** The code does not prove the target: what to check, and where. */
+  toCheck?: ToCheck | undefined;
 }
 
 /** The pointer rests this long on a dependency wire before its tag shows. */
@@ -259,9 +261,24 @@ export function WireEdge({
   const hasLabel = typeof label === "string" && label !== "";
   const showLabel = hasLabel && !data?.dep;
   const info = data?.info;
+  const toCheck = info?.toCheck;
+  /** The middle of a wire to check, where its mark sits; null where the browser cannot measure a path. */
+  const wire = useRef<SVGPathElement>(null);
+  const [middle, setMiddle] = useState<{ x: number; y: number } | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `d` is the path the ref measures; a new path moves the middle.
+  useLayoutEffect(() => {
+    const path = wire.current;
+    if (!toCheck || !path || typeof path.getTotalLength !== "function") {
+      setMiddle(null);
+      return;
+    }
+    const p = path.getPointAtLength(path.getTotalLength() / 2);
+    setMiddle({ x: p.x, y: p.y });
+  }, [d, toCheck]);
   return (
     <>
       <path
+        ref={wire}
         className={hovered ? "wire wire-hover" : "wire"}
         d={d}
         {...(data?.dep ? {} : { pathLength: 1 })}
@@ -336,7 +353,34 @@ export function WireEdge({
               <dt>{t("edge.tag.to")}</dt>
               <dd>{info.to}</dd>
             </dl>
+            {toCheck && (
+              <div className="wire-tag-check" data-to-check={toCheck.code}>
+                <div className="wire-tag-kind">{t("edge.toCheck")}</div>
+                <p>{t("edge.toCheck.why")}</p>
+                <dl>
+                  <dt>{t("edge.toCheck.code")}</dt>
+                  <dd>{toCheck.code}</dd>
+                  <dt>{t("edge.toCheck.at")}</dt>
+                  <dd>
+                    {toCheck.path}:{toCheck.line}
+                  </dd>
+                </dl>
+              </div>
+            )}
           </div>
+        </EdgeLabelRenderer>
+      )}
+      {toCheck && middle && (
+        <EdgeLabelRenderer>
+          <span
+            className="wire-check-mark"
+            aria-hidden="true"
+            style={{
+              transform: `translate(-50%, -50%) translate(${middle.x}px, ${middle.y}px)`,
+            }}
+          >
+            {t("edge.toCheck")}
+          </span>
         </EdgeLabelRenderer>
       )}
     </>

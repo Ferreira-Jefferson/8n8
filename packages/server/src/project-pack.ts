@@ -401,7 +401,12 @@ export function assemble(input: AssembleInput): StoreParts {
     const to = fileIds.get(fileOfId(e.target, paths));
     if (from === undefined || to === undefined || from === to) continue;
     const id = `${e.kind}:${from}->${to}`;
-    if (skeletonEdges.has(id)) continue;
+    const known = skeletonEdges.get(id);
+    if (known) {
+      // One wire still to check keeps the joined wire "to check", as `skeletonGraphOf` does.
+      if (e.toCheck && !known.toCheck) known.toCheck = e.toCheck;
+      continue;
+    }
     skeletonEdges.set(id, {
       id,
       kind: e.kind,
@@ -409,6 +414,7 @@ export function assemble(input: AssembleInput): StoreParts {
       target: to,
       ...(e.label === undefined ? {} : { label: e.label }),
       ...(e.labelKey === undefined ? {} : { labelKey: e.labelKey }),
+      ...(e.toCheck === undefined ? {} : { toCheck: e.toCheck }),
     });
   }
 
@@ -539,7 +545,8 @@ function linkNodes(
   const named = new Set<NodeId>();
   for (const { nodeId } of [...offers, ...requests]) {
     const path = fileOfId(nodeId, paths);
-    if (path === "" || named.has(nodeId)) continue;
+    // The file node is already in `nodes`: a copy under its id would hide its path.
+    if (path === "" || named.has(nodeId) || nodeId === fileId(path)) continue;
     named.add(nodeId);
     nodes.push({
       id: nodeId,

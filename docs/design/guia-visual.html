@@ -450,6 +450,7 @@ svg .contains { fill: none; stroke: var(--dim); stroke-width: 1.8; stroke-dashar
       <dt>Canal</dt><dd>Só existe numa ligação entre linguagens, como <code>HTTP POST /api/approval</code>, <code>processo</code> ou <code>nome</code>.</dd>
       <dt>De e Para</dt><dd>Os dois nós que a aresta liga, só pelo nome. Entre arquivos, o nome do arquivo. Dentro de um arquivo, o nome da função.</dd>
       <dt>Cor</dt><dd>Cobre na borda e no tipo quando a ligação cruza de uma linguagem para outra. Verde nos demais casos.</dd>
+      <dt>A conferir</dt><dd>Só existe numa ligação HTTP que o código não prova, como <code>fetch(`${config.baseUrl}/api/frete`)</code>: o começo da URL só existe em execução e pode apontar para outro serviço. A etiqueta diz o <b>Valor</b> (o código de onde vem a URL, como <code>config.baseUrl</code>) e a <b>Chamada</b> (arquivo e linha, como <code>web.ts:3</code>). A aresta leva também uma marca <b>a conferir</b> à vista, no meio da linha, com borda tracejada cinza. Uma URL literal, como <code>fetch("/api/frete")</code>, é uma ligação provada e não leva marca.</dd>
     </dl>
     <ul class="findings">
       <li><span class="n">1</span><span><b>Só sobre a linha.</b> A linha fina tem uma faixa invisível de 22 px de largura para o mouse acertar. Sobre a faixa, a linha engrossa.</span></li>

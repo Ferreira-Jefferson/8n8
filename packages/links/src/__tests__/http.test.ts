@@ -150,6 +150,38 @@ describe("http channel through linkProject", () => {
     expect(out.ambiguous).toEqual([]);
   });
 
+  it("marks the wire to check, with the code and the place of the call, when the URL base is known only at run time", () => {
+    const req = {
+      ...request("http", "GET /users", "b.ts", "h"),
+      line: 7,
+      dynamicBase: "config.baseUrl",
+    };
+    const out = linkProject({
+      nodes,
+      offers: [offer("http", "GET /users", "d.py", "h")],
+      requests: [req],
+    });
+    expect(out.edges.map((e) => e.toCheck)).toEqual([
+      { code: "config.baseUrl", path: "b.ts", line: 7 },
+    ]);
+  });
+
+  it("keeps a wire to check when another call of the same node is literal", () => {
+    const literal = request("http", "GET /users", "b.ts", "h");
+    const dynamic = { ...literal, line: 9, dynamicBase: "base" };
+    for (const requests of [
+      [literal, dynamic],
+      [dynamic, literal],
+    ]) {
+      const out = linkProject({
+        nodes,
+        offers: [offer("http", "GET /users", "d.py", "h")],
+        requests,
+      });
+      expect(out.edges.map((e) => e.toCheck?.code)).toEqual(["base"]);
+    }
+  });
+
   it("may link inside the same language", () => {
     const out = linkProject({
       nodes,

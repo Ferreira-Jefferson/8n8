@@ -62,9 +62,14 @@ const PATH_TOKEN = /^[\w@./\\-]*[\w-]\.[A-Za-z][A-Za-z0-9]*$/;
 
 /**
  * The text of a string-like expression, with `HOLE` where the value is not
- * known; null when no part of it is text.
+ * known, and the code of each hole in order; null when no part of it is text.
  */
-function textOf(node: Node | null): string | null {
+function readText(node: Node | null): { text: string; holes: string[] } | null {
+  const holes: string[] = [];
+  const hole = (code: Node): string => {
+    holes.push(code.text.replace(/\s+/g, " "));
+    return HOLE;
+  };
   const parts = (n: Node): string => {
     switch (n.type) {
       case "string":
@@ -72,36 +77,56 @@ function textOf(node: Node | null): string | null {
       case "template_string":
         return n.children
           .map((c) =>
-            c.type === "template_substitution" ? HOLE : c.isNamed ? c.text : "",
+            c.type === "template_substitution"
+              ? hole(c.namedChildren[0] ?? c)
+              : c.isNamed
+                ? c.text
+                : "",
           )
           .join("");
       case "parenthesized_expression":
-        return n.namedChildren[0] ? parts(n.namedChildren[0]) : HOLE;
+        return n.namedChildren[0] ? parts(n.namedChildren[0]) : hole(n);
       case "binary_expression": {
         const left = n.childForFieldName("left");
         const right = n.childForFieldName("right");
         return n.childForFieldName("operator")?.text === "+" && left && right
           ? parts(left) + parts(right)
-          : HOLE;
+          : hole(n);
       }
       default:
-        return HOLE;
+        return hole(n);
     }
   };
   if (node === null) return null;
   const text = parts(node);
-  return text.replaceAll(HOLE, "") === "" ? null : text;
+  return text.replaceAll(HOLE, "") === "" ? null : { text, holes };
 }
 
-/** The path of a URL (`https://h/api/x?q=1` → `/api/x`); `:param` for a hole. Null if not a path. */
-function pathOf(node: Node | null): string | null {
-  let text = textOf(node);
-  if (text === null) return null;
-  if (text.startsWith(HOLE)) text = text.replace(new RegExp(`^${HOLE}+`), "");
-  const absolute = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]*(.*)$/i.exec(text);
-  const path = absolute ? `/${(absolute[1] ?? "").replace(/^\//, "")}` : text;
+function textOf(node: Node | null): string | null {
+  return readText(node)?.text ?? null;
+}
+
+/**
+ * The path of a URL (`https://h/api/x?q=1` → `/api/x`); `:param` for a hole. Null if not a path.
+ * `dynamicBase` is the code of the value the URL starts with, or of its host, when the code decides it at run
+ * time (`${config.baseUrl}/users`): the path may belong to another service.
+ */
+function urlOf(
+  node: Node | null,
+): { path: string; dynamicBase?: string } | null {
+  const read = readText(node);
+  if (read === null) return null;
+  let { text } = read;
+  const lead = text.length - text.replace(new RegExp(`^${HOLE}+`), "").length;
+  text = text.slice(lead);
+  const absolute = /^[a-z][a-z0-9+.-]*:\/\/([^/?#]*)(.*)$/i.exec(text);
+  const path = absolute ? `/${(absolute[2] ?? "").replace(/^\//, "")}` : text;
   if (!path.startsWith("/")) return null;
-  return path.replace(/[?#].*$/, "").replaceAll(HOLE, ":param");
+  const dynamic = lead > 0 || (absolute?.[1] ?? "").includes(HOLE);
+  return {
+    path: path.replace(/[?#].*$/, "").replaceAll(HOLE, ":param"),
+    ...(dynamic && read.holes[0] ? { dynamicBase: read.holes[0] } : {}),
+  };
 }
 
 /** The value of `name: ...` in an object literal. */
@@ -230,14 +255,15 @@ export function collectLinks(
         options = urlNode;
         urlNode = propertyOf(urlNode, "url") ?? undefined;
       }
-      const url = pathOf(urlNode ?? null);
+      const url = urlOf(urlNode ?? null);
       if (url !== null) {
         const method = verb ? verb.toUpperCase() : methodOf(options);
         requests.push({
           channel: "http",
-          key: `${method} ${url}`,
+          key: `${method} ${url.path}`,
           nodeId: nodeAt(line),
           line,
+          ...(url.dynamicBase ? { dynamicBase: url.dynamicBase } : {}),
         });
       }
     }

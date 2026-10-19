@@ -1012,6 +1012,36 @@ body {
   margin: 0;
 }
 
+/* A wire the code does not prove: a mark in its middle, and in the tag what to check and where. */
+.wire-check-mark {
+  position: absolute;
+  pointer-events: none;
+  padding: 1px 6px;
+  border: 1px dashed var(--accent);
+  border-radius: 4px;
+  background: var(--ground);
+  color: var(--second);
+  font: 500 12px var(--font-mono);
+  white-space: nowrap;
+}
+
+.wire-tag-check {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--card-border);
+}
+
+.wire-tag-check .wire-tag-kind {
+  color: var(--second);
+}
+
+.wire-tag-check p {
+  max-width: 320px;
+  margin: 2px 0 0;
+  font-family: var(--font-sans);
+  white-space: normal;
+}
+
 /* The channel inside the tag (HTTP GET /pedidos). */
 .branch-label.dep-label {
   position: static;

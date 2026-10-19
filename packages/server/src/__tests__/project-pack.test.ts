@@ -316,3 +316,27 @@ describe("buildInThread refuses what a plugin got wrong, naming the plugin and t
     ).resolves.toBeDefined();
   });
 });
+
+describe("a link the code does not prove", () => {
+  it("reaches the skeleton to check, with the code of the value and the file and line of the call", async () => {
+    const built = await buildInThread(
+      input([
+        {
+          path: "servidor.ts",
+          source:
+            'const app = new Hono();\napp.post("/api/frete", (c) => c);\n',
+        },
+        {
+          path: "web/api.ts",
+          source:
+            "export function enviar() {\n  fetch(`${config.baseUrl}/api/frete`, { method: 'POST' });\n}\n",
+        },
+      ]),
+      languagePlugins,
+    );
+    const { graph } = JSON.parse(built.skeleton) as { graph: Graph };
+    expect(
+      graph.edges.filter((e) => e.kind === "calls").map((e) => e.toCheck),
+    ).toEqual([{ code: "config.baseUrl", path: "web/api.ts", line: 2 }]);
+  });
+});

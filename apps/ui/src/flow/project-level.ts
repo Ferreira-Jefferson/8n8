@@ -249,7 +249,11 @@ function lifted(
     )
       continue;
     const id = `${kind}:${source}->${target}`;
-    if (!out.has(id)) {
+    const known = out.get(id);
+    if (known) {
+      // One wire still to check keeps the lifted wire "to check".
+      if (e.toCheck && !known.toCheck) known.toCheck = e.toCheck;
+    } else {
       out.set(id, {
         id,
         kind,
@@ -257,6 +261,7 @@ function lifted(
         target,
         ...(e.label === undefined ? {} : { label: e.label }),
         ...(e.labelKey === undefined ? {} : { labelKey: e.labelKey }),
+        ...(e.toCheck === undefined ? {} : { toCheck: e.toCheck }),
       });
     }
   }

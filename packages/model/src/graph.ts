@@ -84,6 +84,17 @@ export interface FlowEdge {
   label?: string;
   /** Set when the system wrote the label: the screen shows its own words for the key, never `label`. */
   labelKey?: EdgeLabelKey;
+  /** Set when the code does not prove the target: the URL starts with a value known only at run time. */
+  toCheck?: ToCheck;
+}
+
+/** What to check on a wire the code does not prove: the code of the value, and where the call is. */
+export interface ToCheck {
+  /** The code the value comes from, as written: `config.baseUrl`, `process.env.API_URL`. */
+  code: string;
+  /** The file of the call, relative to the root. */
+  path: string;
+  line: number;
 }
 
 export interface Graph {

@@ -214,6 +214,11 @@ export const en: Record<MessageKey, string> = {
   "edge.reach.language": "across languages",
   "edge.tag.from": "From",
   "edge.tag.to": "To",
+  "edge.toCheck": "to check",
+  "edge.toCheck.why":
+    "The URL starts with a value known only at run time. The code does not prove the target.",
+  "edge.toCheck.code": "Value",
+  "edge.toCheck.at": "Call",
   "severity.alta": "high",
   "severity.media": "medium",
   "severity.baixa": "low",

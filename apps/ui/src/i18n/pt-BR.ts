@@ -214,6 +214,11 @@ export const ptBR = {
   "edge.reach.language": "entre linguagens",
   "edge.tag.from": "De",
   "edge.tag.to": "Para",
+  "edge.toCheck": "a conferir",
+  "edge.toCheck.why":
+    "A URL começa com um valor que só existe em execução. O código não prova o destino.",
+  "edge.toCheck.code": "Valor",
+  "edge.toCheck.at": "Chamada",
   "severity.alta": "alta",
   "severity.media": "média",
   "severity.baixa": "baixa",

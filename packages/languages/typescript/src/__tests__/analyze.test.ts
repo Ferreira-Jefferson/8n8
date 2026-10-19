@@ -286,6 +286,29 @@ describe("analyze: requests", () => {
       ]);
     });
 
+    it("keeps the code of a URL base or host known only at run time, and nothing for a literal one", () => {
+      const bases = analyze({
+        "a.ts": [
+          "fetch(`${config.baseUrl}/users/${id}`);",
+          "fetch(process.env.API_URL + '/users');",
+          "fetch(`https://${host}/users`);",
+          "fetch((cfg.base) + '/users');",
+          "fetch('/users');",
+          "fetch(`/users/${id}`);",
+          "fetch('https://api.x.com/users');",
+        ].join("\n"),
+      }).requests.map((r) => [r.key, r.dynamicBase]);
+      expect(bases).toEqual([
+        ["GET /users/:param", "config.baseUrl"],
+        ["GET /users", "process.env.API_URL"],
+        ["GET /users", "host"],
+        ["GET /users", "cfg.base"],
+        ["GET /users", undefined],
+        ["GET /users/:param", undefined],
+        ["GET /users", undefined],
+      ]);
+    });
+
     it("skips a URL that is not a path or is not text", () => {
       expect(
         requests(
@@ -581,6 +604,7 @@ describe("analyze: offers", () => {
         key: "GET /api/frete",
         nodeId: "file:ui.tsx/fn:Tela/s0",
         line: 5,
+        dynamicBase: "BASE",
       },
     ]);
   });

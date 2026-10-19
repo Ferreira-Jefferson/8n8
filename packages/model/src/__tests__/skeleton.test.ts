@@ -93,6 +93,20 @@ describe("skeletonGraphOf", () => {
     ]);
   });
 
+  it("keeps a joined wire to check when any of its wires is to check", () => {
+    const toCheck = { code: "config.baseUrl", path: "a.py", line: 4 };
+    const joined = skeletonGraphOf({
+      ...graph,
+      edges: [
+        edge("calls", "file:a.py/fn:g", "file:b.ts/fn:h"),
+        edge("calls", "file:a.py/fn:f", "file:b.ts/fn:k", { toCheck }),
+      ],
+    });
+    expect(joined.edges).toEqual([
+      edge("calls", "file:a.py", "file:b.ts", { toCheck }),
+    ]);
+  });
+
   it("drops a wire inside one file and a wire with an end in no file", () => {
     const loose = skeletonGraphOf({
       ...graph,

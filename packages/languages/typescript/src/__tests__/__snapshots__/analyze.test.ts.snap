@@ -737,7 +737,8 @@ exports[`analyze: one graph per file > is the same for the same files, in any or
       "channel": "http",
       "key": "GET /api/frete",
       "nodeId": "file:ui.tsx/fn:Tela/s0",
-      "line": 5
+      "line": 5,
+      "dynamicBase": "BASE"
     }
   ]
 }"

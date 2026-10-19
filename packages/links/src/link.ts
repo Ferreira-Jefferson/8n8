@@ -127,6 +127,16 @@ export function linkProject(input: LinkInput): LinkResult {
       else if (rest.length > 0) ambiguous.push({ request, candidates });
       else {
         const id = `link:${request.channel}:${request.nodeId}->${only.nodeId}`;
+        // Two calls of one node join on one wire: one that still needs checking keeps the wire "to check".
+        const toCheck =
+          edges.get(id)?.toCheck ??
+          (request.dynamicBase === undefined
+            ? undefined
+            : {
+                code: request.dynamicBase,
+                path: ctx.fileOf(request.nodeId)?.path ?? "",
+                line: request.line,
+              });
         edges.set(id, {
           id,
           kind: "calls",
@@ -134,6 +144,7 @@ export function linkProject(input: LinkInput): LinkResult {
           target: only.nodeId,
           label: linker.label(request, only),
           ...(linker.labelKey ? { labelKey: linker.labelKey } : {}),
+          ...(toCheck ? { toCheck } : {}),
         });
         linkedHere.push(request.nodeId);
       }

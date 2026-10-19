@@ -72,7 +72,12 @@ export function skeletonGraphOf(graph: Graph): Graph {
     const to = fileIds.get(filePathOf(e.target));
     if (from === undefined || to === undefined || from === to) continue;
     const id = `${e.kind}:${from}->${to}`;
-    if (edges.has(id)) continue;
+    const known = edges.get(id);
+    if (known) {
+      // One wire still to check keeps the joined wire "to check".
+      if (e.toCheck && !known.toCheck) known.toCheck = e.toCheck;
+      continue;
+    }
     edges.set(id, {
       id,
       kind: e.kind,
@@ -80,6 +85,7 @@ export function skeletonGraphOf(graph: Graph): Graph {
       target: to,
       ...(e.label === undefined ? {} : { label: e.label }),
       ...(e.labelKey === undefined ? {} : { labelKey: e.labelKey }),
+      ...(e.toCheck === undefined ? {} : { toCheck: e.toCheck }),
     });
   }
 
