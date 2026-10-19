@@ -68,7 +68,19 @@ export function wireSides(
     const to = positions.get(e.target);
     if (!from || !to || e.source === e.target) continue;
     if (back.has(e.id)) {
-      sides.set(e.id, backSides(from, to));
+      // The far ends of the other wires of both cards: the back wire takes the side they leave free.
+      const pair = new Set([e.source, e.target]);
+      const others = edges.flatMap((o) => {
+        const far = pair.has(o.source)
+          ? o.target
+          : pair.has(o.target)
+            ? o.source
+            : null;
+        const p =
+          far === null || pair.has(far) ? undefined : positions.get(far);
+        return p ? [p] : [];
+      });
+      sides.set(e.id, backSides(from, to, others));
       continue;
     }
     const facing =

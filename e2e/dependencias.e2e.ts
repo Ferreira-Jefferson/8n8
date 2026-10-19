@@ -414,3 +414,84 @@ test.describe("Uma pasta com chamadas entre arquivos", () => {
     expect(errors).toEqual([]);
   });
 });
+
+/** The pairs of wires whose paths cross, away from the cards they share. */
+async function crossingWires(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const lines = [
+      ...document.querySelectorAll('[aria-roledescription="edge"]'),
+    ].flatMap((g) => {
+      const path = g.querySelector<SVGPathElement>("path.wire");
+      const ctm = path?.getScreenCTM();
+      if (!path || !ctm) return [];
+      const length = path.getTotalLength();
+      const points: DOMPoint[] = [];
+      for (let at = 0; at <= length; at += 6) {
+        const p = path.getPointAtLength(at);
+        points.push(new DOMPoint(p.x, p.y).matrixTransform(ctm));
+      }
+      return [{ label: g.getAttribute("aria-label") ?? "", points }];
+    });
+    const side = (a: DOMPoint, b: DOMPoint, c: DOMPoint) =>
+      (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    const found: string[] = [];
+    for (let i = 0; i < lines.length; i++) {
+      for (let j = i + 1; j < lines.length; j++) {
+        const a = lines[i]?.points ?? [];
+        const b = lines[j]?.points ?? [];
+        // Skip the ends: two wires of one card meet at its port.
+        let crosses = false;
+        for (let k = 2; k < a.length - 3 && !crosses; k++) {
+          for (let m = 2; m < b.length - 3 && !crosses; m++) {
+            const [p, q, r, s] = [a[k], a[k + 1], b[m], b[m + 1]];
+            if (!p || !q || !r || !s) continue;
+            crosses =
+              side(p, q, r) * side(p, q, s) < 0 &&
+              side(r, s, p) * side(r, s, q) < 0;
+          }
+        }
+        if (crosses) found.push(`${lines[i]?.label} x ${lines[j]?.label}`);
+      }
+    }
+    return found;
+  });
+}
+
+test.describe("Uma pasta com dois itens que se importam", () => {
+  // Like the root of the 8n8 repo: testes/ and config.ts import each other, and testes/ also imports lib/.
+  let root = "";
+  test.beforeAll(() => {
+    root = mkdtempSync(join(tmpdir(), "8n8-ciclo-"));
+    const files: Record<string, string> = {
+      "testes/spec.ts":
+        'import { cfg } from "../config";\nimport { util } from "../lib/util";\nexport const s = () => util(cfg);\n',
+      "config.ts":
+        'import { s } from "./testes/spec";\nexport const cfg = 1;\nexport const t = s;\n',
+      "lib/util.ts": "export function util(x: number) {\n  return x;\n}\n",
+    };
+    for (const [path, source] of Object.entries(files)) {
+      mkdirSync(join(root, path, ".."), { recursive: true });
+      writeFileSync(join(root, path), source);
+    }
+  });
+  test.afterAll(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  test("the wire that runs back takes the free side, so it crosses no other wire", async ({
+    page,
+  }) => {
+    const errors = watchErrors(page);
+    await page.goto(`${OFFLINE}/`);
+    await page.getByLabel("Caminho da pasta").fill(root);
+    await page.getByRole("button", { name: "Mapear pasta" }).click();
+    await expect(wire(page, "dir:testes", "file:config.ts")).toHaveCount(1);
+    await expect(wire(page, "file:config.ts", "dir:testes")).toHaveCount(1);
+    await expect(wire(page, "dir:testes", "dir:lib")).toHaveCount(1);
+    // Either wire of the pair may be the one that runs back.
+    const pair =
+      /Aresta de (dir:testes|file:config\.ts) para (dir:testes|file:config\.ts)/;
+    expect((await crossingWires(page)).filter((c) => pair.test(c))).toEqual([]);
+    await expectSound(page, errors);
+  });
+});

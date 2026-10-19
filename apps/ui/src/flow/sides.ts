@@ -28,12 +28,25 @@ export function pickSides(source: Position, target: Position): [Side, Side] {
 /**
  * The sides of the wire that runs back between two cards a wire already joins:
  * below both cards when they stand side by side, on their left when they stand
- * one above the other. It never crosses a card.
+ * one above the other. It never crosses a card. `others` are the far ends of the
+ * other wires of the two cards: the wire takes the side they leave free, above
+ * when more of them sit below, on the right when more sit to the left.
  */
-export function backSides(source: Position, target: Position): [Side, Side] {
+export function backSides(
+  source: Position,
+  target: Position,
+  others: readonly Position[] = [],
+): [Side, Side] {
   const dx = target.x - source.x;
   const dy = target.y - source.y;
-  return Math.abs(dx) >= Math.abs(dy)
-    ? [Side.Bottom, Side.Bottom]
-    : [Side.Left, Side.Left];
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    const mid = (source.y + target.y) / 2;
+    const below = others.filter((p) => p.y > mid).length;
+    const above = others.filter((p) => p.y < mid).length;
+    return below > above ? [Side.Top, Side.Top] : [Side.Bottom, Side.Bottom];
+  }
+  const mid = (source.x + target.x) / 2;
+  const left = others.filter((p) => p.x < mid).length;
+  const right = others.filter((p) => p.x > mid).length;
+  return left > right ? [Side.Right, Side.Right] : [Side.Left, Side.Left];
 }

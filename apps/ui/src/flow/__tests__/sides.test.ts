@@ -41,4 +41,28 @@ describe("backSides", () => {
   it("runs on the left of both cards when they stand one above the other", () => {
     expect(backSides(at(0, 400), at(0, 0))).toEqual([Side.Left, Side.Left]);
   });
+
+  it("runs above two cards side by side when more of their other wires go below", () => {
+    expect(backSides(at(500, 0), at(0, 0), [at(500, 300), at(0, 400)])).toEqual(
+      [Side.Top, Side.Top],
+    );
+  });
+
+  it("stays below on a tie or when the other wires go above", () => {
+    expect(backSides(at(500, 0), at(0, 0), [at(0, 300), at(0, -300)])).toEqual([
+      Side.Bottom,
+      Side.Bottom,
+    ]);
+    expect(backSides(at(500, 0), at(0, 0), [at(500, -300)])).toEqual([
+      Side.Bottom,
+      Side.Bottom,
+    ]);
+  });
+
+  it("runs on the right of two stacked cards when more of their other wires go left", () => {
+    expect(backSides(at(400, 400), at(400, 0), [at(0, 200)])).toEqual([
+      Side.Right,
+      Side.Right,
+    ]);
+  });
 });
