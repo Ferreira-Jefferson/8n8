@@ -18,6 +18,6 @@
   },
   "devDependencies": {
     "@8n8/lang-testkit": "workspace:*",
-    "@types/node": "22.20.5"
+    "@types/node": "26.6.5"
   }
 }
