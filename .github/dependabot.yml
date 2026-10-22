@@ -5,10 +5,24 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # O dependency-cruiser (pnpm check, guardas SEC/DIST) ainda não suporta
+    # typescript >= 7: com o TS 7 ele cruza 0 módulos e desarma as fronteiras sem
+    # erro. Segurar só o major até o cruiser suportar; minor e patch seguem vindo.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
-      dependencies:
-        patterns: ["*"]
+      # Patch e minor num PR só: rotina de baixo risco.
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+      # Major isolado: cada quebra potencial chega sozinha, visível e testável.
+      major:
+        update-types: ["major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      # As actions num PR só por semana, cada SHA ainda visível no diff.
+      actions:
+        patterns: ["*"]
