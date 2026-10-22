@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@8n8/model": "workspace:*",
-    "ignore": "7.0.12"
+    "ignore": "7.0.13"
   },
   "devDependencies": {
     "@types/node": "26.6.5"
