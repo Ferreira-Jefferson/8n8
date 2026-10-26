@@ -43,6 +43,7 @@ function harness(env: Record<string, string> = {}) {
     env,
     cwd: home,
     home,
+    version: "9.9.9-test",
     paths: { web: undefined, ptsRules: pts, steRules: ste },
     out: (line) => {
       out.push(line);
@@ -196,6 +197,15 @@ describe("8n8 --help (DIST-08)", () => {
     ]) {
       expect(text).toContain(part);
     }
+    expect(h.events.filter((e) => !e.startsWith("out:"))).toEqual([]);
+  });
+});
+
+describe("8n8 --version", () => {
+  it("prints the version and starts nothing", async () => {
+    const h = harness();
+    expect(await run(["--version"], h.deps)).toBe(0);
+    expect(h.out).toEqual(["9.9.9-test"]);
     expect(h.events.filter((e) => !e.startsWith("out:"))).toEqual([]);
   });
 });

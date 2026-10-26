@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,12 +8,19 @@ import { run } from "./run";
 
 // The CLI run from the repository (pnpm dev): Vite serves the screen, and the PTS rules
 // come from docs/. The installed package enters through bin.ts instead.
-const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
+const cliRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = join(cliRoot, "../..");
+const version = (
+  JSON.parse(readFileSync(join(cliRoot, "package.json"), "utf8")) as {
+    version: string;
+  }
+).version;
 
 process.exitCode = await run(process.argv.slice(2), {
   env: process.env,
   cwd: process.cwd(),
   home: homedir(),
+  version,
   paths: {
     web: undefined,
     ptsRules: join(

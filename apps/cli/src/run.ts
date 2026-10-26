@@ -19,6 +19,8 @@ export interface RunDeps {
   cwd: string;
   /** The user's home: data and settings live in <home>/.8n8 (DIST-09, CFG-19). */
   home: string;
+  /** The package version, printed by --version. */
+  version: string;
   paths: {
     /** The built screen to serve; undefined when Vite serves it (pnpm dev). */
     web: string | undefined;
@@ -45,7 +47,7 @@ const isFolder = (path: string) => {
   }
 };
 
-/** `8n8 [pasta] [--no-open] [--no-app] [--help]`; the result is the exit code. */
+/** `8n8 [pasta] [--no-open] [--no-app] [--help] [--version]`; the result is the exit code. */
 export async function run(argv: string[], deps: RunDeps): Promise<number> {
   const data = join(deps.home, ".8n8");
   const settings = createFileSettingsStore(
@@ -67,6 +69,10 @@ export async function run(argv: string[], deps: RunDeps): Promise<number> {
   }
   if (args.values.help) {
     deps.out(t("cli.help"));
+    return 0;
+  }
+  if (args.values.version) {
+    deps.out(deps.version);
     return 0;
   }
 
@@ -131,6 +137,7 @@ function parse(argv: string[]) {
     allowPositionals: true,
     options: {
       help: { type: "boolean" },
+      version: { type: "boolean" },
       "no-open": { type: "boolean" },
       "no-app": { type: "boolean" },
     },
