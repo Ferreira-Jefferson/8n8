@@ -19,7 +19,7 @@
     "@8n8/llm": "workspace:*",
     "@8n8/model": "workspace:*",
     "@8n8/project": "workspace:*",
-    "hono": "4.13.13",
+    "hono": "4.13.14",
     "zod": "4.6.7"
   },
   "devDependencies": {
