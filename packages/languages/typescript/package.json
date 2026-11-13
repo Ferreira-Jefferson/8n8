@@ -14,10 +14,10 @@
     "@8n8/lang-treesitter": "workspace:*",
     "@8n8/model": "workspace:*",
     "tree-sitter-typescript": "0.23.2",
-    "web-tree-sitter": "0.27.1"
+    "web-tree-sitter": "0.27.2"
   },
   "devDependencies": {
     "@8n8/lang-testkit": "workspace:*",
-    "@types/node": "26.6.5"
+    "@types/node": "26.6.6"
   }
 }
